@@ -79,7 +79,10 @@ export default function _JournalPortlet({
 			`${namespace}titleMapAsXML`
 		);
 
-		if (!titleInputComponent?.getValue(defaultLanguageId)) {
+		if (
+			!editingDefaultValues &&
+			!titleInputComponent?.getValue(defaultLanguageId)
+		) {
 			showAlert(
 				Liferay.Util.sub(
 					Liferay.Language.get(
