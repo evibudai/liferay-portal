@@ -454,6 +454,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		String subtitle = ParamUtil.getString(actionRequest, "subtitle");
 		String title = ParamUtil.getString(actionRequest, "title");
 		String urlTitle = ParamUtil.getString(actionRequest, "urlTitle");
+		String permission = ParamUtil.getString(actionRequest, "permission");
 
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth");

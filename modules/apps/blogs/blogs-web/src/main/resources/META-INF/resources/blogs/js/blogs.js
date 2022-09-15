@@ -377,6 +377,7 @@ export default class Blogs {
 
 				const allowPingbacks = this._getElementById('allowPingbacks');
 				const allowTrackbacks = this._getElementById('allowTrackbacks');
+				const permission = this._getElementById('inputPermissionsViewRole').value;
 
 				const bodyData = addNamespace(
 					{
@@ -416,6 +417,7 @@ export default class Blogs {
 						subtitle,
 						title,
 						urlTitle,
+						permission,
 						workflowAction: constants.ACTION_SAVE_DRAFT,
 					},
 					namespace
