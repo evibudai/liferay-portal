@@ -472,8 +472,13 @@ public class DefaultObjectEntryManagerImpl
 
 		_checkObjectEntryObjectDefinitionId(objectDefinition, objectEntry);
 
-		return _toObjectEntry(
+		ObjectEntry toObjectEntry = _toObjectEntry(
 			dtoConverterContext, objectDefinition, objectEntry);
+
+		_restoreRichTextFormatting(
+			toObjectEntry, objectDefinition, objectEntry);
+
+		return toObjectEntry;
 	}
 
 	@Override
@@ -770,6 +775,32 @@ public class DefaultObjectEntryManagerImpl
 			nestedAggregation.addChildAggregation(filterAggregation);
 
 			searchRequestBuilder.addAggregation(nestedAggregation);
+		}
+	}
+
+	private void _restoreRichTextFormatting(
+		ObjectEntry toObjectEntry,
+		ObjectDefinition objectDefinition,
+		com.liferay.object.model.ObjectEntry objectEntry) {
+
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFields(
+				objectDefinition.getObjectDefinitionId(), false);
+
+		Map<String, Object> properties = toObjectEntry.getProperties();
+
+		for (ObjectField objectField : objectFields) {
+			String objectFieldName = objectField.getName();
+
+			Object property = properties.get(objectFieldName);
+
+			if (property != null && Objects.equals(
+				objectField.getBusinessType(),
+				ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
+
+				properties.put(objectFieldName,
+					objectEntry.getValues().get(objectFieldName));
+			}
 		}
 	}
 
