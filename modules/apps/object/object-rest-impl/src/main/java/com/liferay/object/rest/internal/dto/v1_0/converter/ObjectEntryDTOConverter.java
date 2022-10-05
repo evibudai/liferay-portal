@@ -384,8 +384,7 @@ public class ObjectEntryDTOConverter
 
 				map.put(
 					objectFieldName,
-					ObjectEntryFieldValueUtil.getValueString(
-						objectField, values));
+					GetterUtil.getString(values.get(objectFieldName)));
 			}
 			else if ((nestedFieldsDepth > 0) &&
 					 Objects.equals(

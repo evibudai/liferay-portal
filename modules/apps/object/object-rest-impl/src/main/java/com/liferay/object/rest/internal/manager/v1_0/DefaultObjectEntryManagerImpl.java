@@ -44,6 +44,7 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.object.system.SystemObjectDefinitionMetadata;
 import com.liferay.object.system.SystemObjectDefinitionMetadataTracker;
+import com.liferay.object.util.ObjectEntryFieldValueUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -641,8 +642,13 @@ public class DefaultObjectEntryManagerImpl
 
 		_checkObjectEntryObjectDefinitionId(objectDefinition, objectEntry);
 
-		return _toObjectEntry(
+		ObjectEntry toObjectEntry = _toObjectEntry(
 			dtoConverterContext, objectDefinition, objectEntry);
+
+		_removeRichTextFormatting(
+			toObjectEntry, objectDefinition, objectEntry);
+
+		return toObjectEntry;
 	}
 
 	private String _getObjectEntryPermissionName(long objectDefinitionId) {
@@ -770,6 +776,34 @@ public class DefaultObjectEntryManagerImpl
 			nestedAggregation.addChildAggregation(filterAggregation);
 
 			searchRequestBuilder.addAggregation(nestedAggregation);
+		}
+	}
+
+	private void _removeRichTextFormatting(
+		ObjectEntry toObjectEntry,
+		ObjectDefinition objectDefinition,
+		com.liferay.object.model.ObjectEntry objectEntry) {
+
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFields(
+				objectDefinition.getObjectDefinitionId(), false);
+
+		Map<String, Object> properties = toObjectEntry.getProperties();
+
+		for (ObjectField objectField : objectFields) {
+			String objectFieldName = objectField.getName();
+
+			Object property = properties.get(objectFieldName);
+
+			if (property != null && Objects.equals(
+				objectField.getBusinessType(),
+				ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
+
+				properties.put(
+					objectFieldName,
+					ObjectEntryFieldValueUtil.getValueString(
+						objectField, objectEntry.getValues()));
+			}
 		}
 	}
 
