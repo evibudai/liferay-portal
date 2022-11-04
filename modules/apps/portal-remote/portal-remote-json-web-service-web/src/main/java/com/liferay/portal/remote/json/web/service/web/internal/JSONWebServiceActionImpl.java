@@ -14,6 +14,7 @@
 
 package com.liferay.portal.remote.json.web.service.web.internal;
 
+import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -29,6 +30,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MethodParameter;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.typeconverter.DDMFormValuesConverter;
+import com.liferay.portal.typeconverter.NumberArrayConverter;
 import com.liferay.portal.util.PropsUtil;
 
 import java.io.File;
@@ -712,6 +715,8 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 		typeConverterManager.register(Date.class, new DateTypeConverter());
 		typeConverterManager.register(Locale.class, new LocaleTypeConverter());
+		typeConverterManager.register(
+			DDMFormValues.class, new DDMFormValuesConverter());
 	}
 
 }
