@@ -961,7 +961,7 @@ public class DLFileEntryFinderImpl
 								getPermissionWherePredicate(
 									DLFileEntry.class,
 									DLFileVersionTable.INSTANCE.fileEntryId,
-									groupId);
+									null, groupId);
 						}
 
 						return null;
