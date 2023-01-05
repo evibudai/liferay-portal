@@ -120,6 +120,8 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 
 		File file = null;
 
+		boolean backgroundTaskFailed = false;
+
 		for (FileEntry attachmentsFileEntry : attachmentsFileEntries) {
 			try {
 				file = _file.createTempFile("lar");
@@ -162,6 +164,8 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 				_layoutSetLocalService.updateLayoutSet(
 					layoutSetPrototypeLayoutSet);
 
+				backgroundTaskFailed = true;
+
 				_log.error(
 					StringBundler.concat(
 						"Merge fail count increased to ", mergeFailCount,
@@ -176,7 +180,17 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 			}
 		}
 
-		return BackgroundTaskResult.SUCCESS;
+		BackgroundTaskResult backgroundTaskResult;
+
+		if (backgroundTaskFailed) {
+			backgroundTaskResult = new BackgroundTaskResult(
+				BackgroundTaskConstants.STATUS_FAILED);
+		}
+		else {
+			backgroundTaskResult = BackgroundTaskResult.SUCCESS;
+		}
+
+		return backgroundTaskResult;
 	}
 
 	@Activate
