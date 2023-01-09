@@ -416,8 +416,6 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		PermissionChecker permissionChecker, String modelClassName,
 		Column<T, Long> classPKColumn, long[] groupIds) {
 
-		T table = classPKColumn.getTable();
-
 		DSLQuery resourcePermissionDSLQuery = _getResourcePermissionQuery(
 			permissionChecker, modelClassName, groupIds);
 
@@ -464,6 +462,8 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		}
 
 		if (groupIdSet != null) {
+			T table = classPKColumn.getTable();
+
 			Column<T, Long> groupIdColumn = table.getColumn(
 				"groupId", Long.class);
 
