@@ -47,6 +47,8 @@ patch {
 	}
 
 	fileNames "org/eclipse/equinox/http/servlet/internal/context/ContextController.java"
+	fileNames "org/eclipse/equinox/http/servlet/internal/servlet/HttpServletResponseWrapperImpl.java"
+	fileNames "org/eclipse/equinox/http/servlet/internal/servlet/ResponseStateHandler.java"
 
 	originalLibModuleName = "org.eclipse.equinox.http.servlet"
 	originalLibSrcBaseUrl = "https://repository-cdn.liferay.com/nexus/content/groups/public/com/liferay/"
