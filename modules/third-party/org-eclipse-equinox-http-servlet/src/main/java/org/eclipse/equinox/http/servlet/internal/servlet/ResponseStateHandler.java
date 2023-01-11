@@ -20,6 +20,7 @@ import org.eclipse.equinox.http.servlet.internal.context.ContextController;
 import org.eclipse.equinox.http.servlet.internal.context.DispatchTargets;
 import org.eclipse.equinox.http.servlet.internal.registration.EndpointRegistration;
 import org.eclipse.equinox.http.servlet.internal.registration.FilterRegistration;
+import org.eclipse.equinox.http.servlet.internal.servlet.HttpServletResponseWrapperImpl;
 
 /**
  * @author Raymond Augé
@@ -218,44 +219,26 @@ public class ResponseStateHandler {
 			throw new IllegalStateException("Response isn't a wrapper"); //$NON-NLS-1$
 		}
 
-		HttpServletResponseWrapper wrapper = (HttpServletResponseWrapper)response;
+		final HttpServletResponseWrapperImpl responseWrapper = HttpServletResponseWrapperImpl.findHttpRuntimeResponse(response);
 
-		final int status = wrapper.getStatus();
+		if (responseWrapper == null) {
+			throw new IllegalStateException("Can't locate response impl"); //$NON-NLS-1$
+		}
+
+		final int status = responseWrapper.getInternalStatus();
 
 		if (status < HttpServletResponse.SC_BAD_REQUEST) {
 			return;
 		}
 
-		HttpServletResponseWrapperImpl wrapperImpl = null;
-
-		while (true) {
-			if (wrapper instanceof HttpServletResponseWrapperImpl) {
-				wrapperImpl = (HttpServletResponseWrapperImpl)wrapper;
-			}
-			else if (wrapper.getResponse() instanceof HttpServletResponseWrapper) {
-				wrapper = (HttpServletResponseWrapper)wrapper.getResponse();
-
-				continue;
-			}
-
-			break;
-		}
-
-		if (wrapperImpl == null) {
-			throw new IllegalStateException("Can't locate response impl"); //$NON-NLS-1$
-		}
-
-		final HttpServletResponseWrapperImpl finalWrapperImpl = wrapperImpl;
-
-		HttpServletResponse wrappedResponse = (HttpServletResponse)finalWrapperImpl.getResponse();
-
 		if (status == -1) {
 			// There's nothing more we can do here.
 			return;
 		}
+
+		HttpServletResponse wrappedResponse = (HttpServletResponse)responseWrapper.getResponse();
+
 		if (wrappedResponse.isCommitted()) {
-			// the response is committed already, but we need to propagate the error code anyway
-			wrappedResponse.sendError(status, wrapperImpl.getMessage());
 			// There's nothing more we can do here.
 			return;
 		}
@@ -266,7 +249,7 @@ public class ResponseStateHandler {
 			String.valueOf(status), null, null, null, null, null, Match.EXACT, null);
 
 		if (errorDispatchTargets == null) {
-			wrappedResponse.sendError(status, wrapperImpl.getMessage());
+			wrappedResponse.sendError(status, responseWrapper.getMessage());
 
 			return;
 		}
@@ -284,7 +267,7 @@ public class ResponseStateHandler {
 				public Object getAttribute(String attributeName) {
 					if (getDispatcherType() == DispatcherType.ERROR) {
 						if (attributeName.equals(RequestDispatcher.ERROR_MESSAGE)) {
-							return finalWrapperImpl.getMessage();
+							return responseWrapper.getMessage();
 						} else if (attributeName.equals(RequestDispatcher.ERROR_REQUEST_URI)) {
 							return request.getRequestURI();
 						} else if (attributeName.equals(RequestDispatcher.ERROR_SERVLET_NAME)) {
@@ -338,3 +321,4 @@ public class ResponseStateHandler {
 	HttpServletResponse response;
 
 }
+/* @generated */

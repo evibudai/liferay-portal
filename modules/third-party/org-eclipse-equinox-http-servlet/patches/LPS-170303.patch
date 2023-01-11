@@ -1,0 +1,208 @@
+diff --git a/org/eclipse/equinox/http/servlet/internal/servlet/HttpServletResponseWrapperImpl.java b/org/eclipse/equinox/http/servlet/internal/servlet/HttpServletResponseWrapperImpl.java
+index 89287d8133c9..9f955949d82a 100644
+--- a/org/eclipse/equinox/http/servlet/internal/servlet/HttpServletResponseWrapperImpl.java
++++ b/org/eclipse/equinox/http/servlet/internal/servlet/HttpServletResponseWrapperImpl.java
+@@ -11,6 +11,9 @@
+ 
+ package org.eclipse.equinox.http.servlet.internal.servlet;
+ 
++import java.io.IOException;
++import javax.servlet.ServletOutputStream;
++import javax.servlet.WriteListener;
+ import javax.servlet.http.HttpServletResponse;
+ import javax.servlet.http.HttpServletResponseWrapper;
+ 
+@@ -49,10 +52,97 @@ public class HttpServletResponseWrapperImpl extends HttpServletResponseWrapper {
+ 
+ 	@Override
+ 	public int getStatus() {
++		if (status == -1) {
++			return super.getStatus();
++		}
++		return status;
++	}
++
++	public int getInternalStatus() {
+ 		return status;
+ 	}
+ 
++	@Override
++	public void flushBuffer() throws IOException {
++		if (status != -1) {
++			HttpServletResponse wrappedResponse = (HttpServletResponse)this.getResponse();
++			wrappedResponse.sendError(status, getMessage());
++		}
++		super.flushBuffer();
++	}
++
++	public boolean isCompleted() {
++		return completed;
++	}
++
++	public void setCompleted(boolean completed) {
++		this.completed = completed;
++	}
++
++	public static HttpServletResponseWrapperImpl findHttpRuntimeResponse(
++		HttpServletResponse response) {
++		while (response instanceof HttpServletResponseWrapper) {
++			if (response instanceof HttpServletResponseWrapperImpl) {
++				return (HttpServletResponseWrapperImpl)response;
++			}
++			response = (HttpServletResponse)((HttpServletResponseWrapper)response).getResponse();
++		}
++		return null;
++	}
++
+ 	private int status = -1;
+ 	private String message;
++	private boolean completed;
++
++	private class InternalOutputStream extends ServletOutputStream {
++		public InternalOutputStream(ServletOutputStream originalOutputStream) {
++			this.originalOutputStream = originalOutputStream;
++		}
++		@Override
++		public void close() throws IOException {
++			originalOutputStream.close();
++		}
++
++		@Override
++		public void flush() throws IOException {
++			if (getInternalStatus() != -1) {
++				HttpServletResponse wrappedResponse = (HttpServletResponse) HttpServletResponseWrapperImpl.this.getResponse();
++				wrappedResponse.sendError(getInternalStatus(), getMessage());
++			}
++			originalOutputStream.flush();
++		}
++
++		@Override
++		public boolean isReady() {
++			return originalOutputStream.isReady();
++		}
++		@Override
++		public void setWriteListener(WriteListener writeListener) {
++			originalOutputStream.setWriteListener(writeListener);
++		}
++		@Override
++		public void write(int b) throws IOException {
++			if (isCompleted()) {
++				return;
++			}
++			originalOutputStream.write(b);
++		}
++		@Override
++		public void write(byte[] b) throws IOException {
++			if (isCompleted()) {
++				return;
++			}
++			originalOutputStream.write(b);
++		}
++		@Override
++		public void write(byte[] b, int off, int len) throws IOException {
++			if (isCompleted()) {
++				return;
++			}
++			originalOutputStream.write(b, off, len);
++		}
++		private final ServletOutputStream originalOutputStream;
++	}
+ 
+-}
+\ No newline at end of file
++}
++/* @generated */
+\ No newline at end of file
+diff --git a/org/eclipse/equinox/http/servlet/internal/servlet/ResponseStateHandler.java b/org/eclipse/equinox/http/servlet/internal/servlet/ResponseStateHandler.java
+index aee80f3b2e2a..737afc06c992 100644
+--- a/org/eclipse/equinox/http/servlet/internal/servlet/ResponseStateHandler.java
++++ b/org/eclipse/equinox/http/servlet/internal/servlet/ResponseStateHandler.java
+@@ -20,6 +20,7 @@ import org.eclipse.equinox.http.servlet.internal.context.ContextController;
+ import org.eclipse.equinox.http.servlet.internal.context.DispatchTargets;
+ import org.eclipse.equinox.http.servlet.internal.registration.EndpointRegistration;
+ import org.eclipse.equinox.http.servlet.internal.registration.FilterRegistration;
++import org.eclipse.equinox.http.servlet.internal.servlet.HttpServletResponseWrapperImpl;
+ 
+ /**
+  * @author Raymond Augé
+@@ -218,44 +219,26 @@ public class ResponseStateHandler {
+ 			throw new IllegalStateException("Response isn't a wrapper"); //$NON-NLS-1$
+ 		}
+ 
+-		HttpServletResponseWrapper wrapper = (HttpServletResponseWrapper)response;
+-
+-		final int status = wrapper.getStatus();
+-
+-		if (status < HttpServletResponse.SC_BAD_REQUEST) {
+-			return;
+-		}
+-
+-		HttpServletResponseWrapperImpl wrapperImpl = null;
++		final HttpServletResponseWrapperImpl responseWrapper = HttpServletResponseWrapperImpl.findHttpRuntimeResponse(response);
+ 
+-		while (true) {
+-			if (wrapper instanceof HttpServletResponseWrapperImpl) {
+-				wrapperImpl = (HttpServletResponseWrapperImpl)wrapper;
+-			}
+-			else if (wrapper.getResponse() instanceof HttpServletResponseWrapper) {
+-				wrapper = (HttpServletResponseWrapper)wrapper.getResponse();
+-
+-				continue;
+-			}
+-
+-			break;
+-		}
+-
+-		if (wrapperImpl == null) {
++		if (responseWrapper == null) {
+ 			throw new IllegalStateException("Can't locate response impl"); //$NON-NLS-1$
+ 		}
+ 
+-		final HttpServletResponseWrapperImpl finalWrapperImpl = wrapperImpl;
++		final int status = responseWrapper.getInternalStatus();
+ 
+-		HttpServletResponse wrappedResponse = (HttpServletResponse)finalWrapperImpl.getResponse();
++		if (status < HttpServletResponse.SC_BAD_REQUEST) {
++			return;
++		}
+ 
+ 		if (status == -1) {
+ 			// There's nothing more we can do here.
+ 			return;
+ 		}
++
++		HttpServletResponse wrappedResponse = (HttpServletResponse)responseWrapper.getResponse();
++
+ 		if (wrappedResponse.isCommitted()) {
+-			// the response is committed already, but we need to propagate the error code anyway
+-			wrappedResponse.sendError(status, wrapperImpl.getMessage());
+ 			// There's nothing more we can do here.
+ 			return;
+ 		}
+@@ -266,7 +249,7 @@ public class ResponseStateHandler {
+ 			String.valueOf(status), null, null, null, null, null, Match.EXACT, null);
+ 
+ 		if (errorDispatchTargets == null) {
+-			wrappedResponse.sendError(status, wrapperImpl.getMessage());
++			wrappedResponse.sendError(status, responseWrapper.getMessage());
+ 
+ 			return;
+ 		}
+@@ -284,7 +267,7 @@ public class ResponseStateHandler {
+ 				public Object getAttribute(String attributeName) {
+ 					if (getDispatcherType() == DispatcherType.ERROR) {
+ 						if (attributeName.equals(RequestDispatcher.ERROR_MESSAGE)) {
+-							return finalWrapperImpl.getMessage();
++							return responseWrapper.getMessage();
+ 						} else if (attributeName.equals(RequestDispatcher.ERROR_REQUEST_URI)) {
+ 							return request.getRequestURI();
+ 						} else if (attributeName.equals(RequestDispatcher.ERROR_SERVLET_NAME)) {
+@@ -337,4 +320,5 @@ public class ResponseStateHandler {
+ 	HttpServletRequest request;
+ 	HttpServletResponse response;
+ 
+-}
+\ No newline at end of file
++}
++/* @generated */
+\ No newline at end of file
