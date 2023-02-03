@@ -27,6 +27,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -110,7 +111,7 @@ public class BackgroundTaskStatusRegistryImpl
 			Future<BackgroundTaskStatus> future =
 				_clusterMasterExecutor.executeOnMaster(methodHandler);
 
-			return future.get();
+			return future.get(10, TimeUnit.SECONDS);
 		}
 		catch (Exception exception) {
 			_log.error(
