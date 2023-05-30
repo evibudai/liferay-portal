@@ -123,6 +123,10 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 
 		Theme theme = getTheme(companyId, themeId);
 
+		if (theme == null) {
+			return ColorSchemeFactoryUtil.getDefaultRegularColorScheme();
+		}
+
 		Map<String, ColorScheme> colorSchemesMap = theme.getColorSchemesMap();
 
 		ColorScheme colorScheme = colorSchemesMap.get(colorSchemeId);
