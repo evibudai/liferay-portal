@@ -104,7 +104,30 @@ public class EditCategoriesBulkSelectionAction
 	}
 
 	private long[] _getLongArray(Map<String, Serializable> map, String key) {
-		return ArrayUtil.toArray((Long[])map.getOrDefault(key, new Long[0]));
+		Serializable value = map.get(key);
+
+		long[] result;
+
+		if (value instanceof long[]) {
+			return (long[])value;
+		}
+		else if (value instanceof Long[]) {
+			result = ArrayUtil.toArray((Long[])value);
+		}
+		else if (value instanceof Integer[]) {
+			result = ArrayUtil.toLongArray((Integer[])value);
+		}
+		else if (value instanceof String[]) {
+			result = ArrayUtil.toLongArray((String[])value);
+		}
+		else if (value instanceof Object[]) {
+			result = ArrayUtil.toArray((Object[])value);
+		}
+		else {
+			result = new long[0];
+		}
+
+		return result;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
