@@ -620,6 +620,10 @@ public class ArrayUtil_IW {
 		return ArrayUtil.toArray(array);
 	}
 
+	public long[] toArray(java.lang.Object[] array) {
+		return ArrayUtil.toArray(array);
+	}
+
 	public java.lang.Short[] toArray(short[] array) {
 		return ArrayUtil.toArray(array);
 	}
@@ -655,11 +659,19 @@ public class ArrayUtil_IW {
 		return ArrayUtil.toLongArray(array);
 	}
 
+	public long[] toLongArray(java.lang.Integer[] array) {
+		return ArrayUtil.toLongArray(array);
+	}
+
 	public java.lang.Long[] toLongArray(long[] array) {
 		return ArrayUtil.toLongArray(array);
 	}
 
 	public java.lang.Long[] toLongArray(java.lang.Object[] array) {
+		return ArrayUtil.toLongArray(array);
+	}
+
+	public long[] toLongArray(java.lang.String[] array) {
 		return ArrayUtil.toLongArray(array);
 	}
 

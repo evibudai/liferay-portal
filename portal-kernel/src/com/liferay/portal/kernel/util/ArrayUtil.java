@@ -1854,6 +1854,27 @@ public class ArrayUtil {
 		return newArray;
 	}
 
+	public static long[] toArray(Object[] array) {
+		long[] newArray = new long[array.length];
+
+		for (int i = 0; i < array.length; i++) {
+			if (array[i] instanceof Long) {
+				newArray[i] = (Long)array[i];
+			}
+			else if (array[i] instanceof Integer) {
+				newArray[i] = ((Integer)array[i]).longValue();
+			}
+			else if (array[i] instanceof String) {
+				newArray[i] = GetterUtil.getLong(array[i]);
+			}
+			else {
+				newArray[i] = 0L;
+			}
+		}
+
+		return newArray;
+	}
+
 	public static Short[] toArray(short[] array) {
 		Short[] newArray = new Short[array.length];
 
@@ -2007,6 +2028,16 @@ public class ArrayUtil {
 		return newArray;
 	}
 
+	public static long[] toLongArray(Integer[] array) {
+		long[] newArray = new long[array.length];
+
+		for (int i = 0; i < array.length; i++) {
+			newArray[i] = array[i].longValue();
+		}
+
+		return newArray;
+	}
+
 	public static Long[] toLongArray(long[] array) {
 		Long[] newArray = new Long[array.length];
 
@@ -2022,6 +2053,16 @@ public class ArrayUtil {
 
 		for (int i = 0; i < array.length; i++) {
 			newArray[i] = (Long)array[i];
+		}
+
+		return newArray;
+	}
+
+	public static long[] toLongArray(String[] array) {
+		long[] newArray = new long[array.length];
+
+		for (int i = 0; i < array.length; i++) {
+			newArray[i] = GetterUtil.getLong(array[i]);
 		}
 
 		return newArray;
