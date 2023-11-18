@@ -3,48 +3,40 @@ definition {
 	macro deleteConfigFile {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "delete-dependency-file  -Dliferay.dependency.config=${configFile} -Dliferay.home=${liferayHome}");
+		AntCommands.runCommand("build-test.xml", "delete-dependency-file  -Dliferay.dependency.config=${configFile} -Dliferay.home=${liferayHome}");
 	}
 
 	macro deleteJarOffline {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "delete-dependency-file  -Dliferay.dependency.jar=${jarFile} -Dliferay.home=${liferayHome}");
+		AntCommands.runCommand("build-test.xml", "delete-dependency-file  -Dliferay.dependency.jar=${jarFile} -Dliferay.home=${liferayHome}");
 	}
 
 	macro deletePortalJarOffline {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "delete-dependency-file  -Dliferay.portal.dependency.jar=${jarFile} -Dliferay.home=${liferayHome}");
+		AntCommands.runCommand("build-test.xml", "delete-dependency-file  -Dliferay.home=${liferayHome} -Dliferay.portal.dependency.jar=${jarFile}");
 	}
 
 	macro deleteWarOffline {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "delete-dependency-file  -Dliferay.dependency.war=${warFile} -Dliferay.home=${liferayHome}");
+		AntCommands.runCommand("build-test.xml", "delete-dependency-file  -Dliferay.dependency.war=${warFile} -Dliferay.home=${liferayHome}");
 	}
 
 	macro deployFileOnServer {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		if (("${bundleIndex}" == "0") || !(isSet(bundleIndex))) {
+		if ((${bundleIndex} == 0) || !(isSet(bundleIndex))) {
 			var deployDir = "${liferayHome}/deploy";
 		}
 		else {
 			var deployDir = "${liferayHome}-${bundleIndex}/deploy";
 		}
 
-		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "${jarFile}");
+		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = ${jarFile});
 
-		ArchiveUtil.archive("${dependencyFilePath}", "${deployDir}/${jarFile}");
+		ArchiveUtil.archive(${dependencyFilePath}, "${deployDir}/${jarFile}");
 	}
 
 }

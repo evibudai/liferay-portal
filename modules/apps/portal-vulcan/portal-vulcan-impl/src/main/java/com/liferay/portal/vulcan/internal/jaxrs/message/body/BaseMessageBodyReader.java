@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.message.body;
@@ -21,8 +12,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.extension.EntityExtensionThreadLocal;
-import com.liferay.portal.vulcan.internal.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.internal.jaxrs.validation.ValidationUtil;
 
 import java.io.IOException;
@@ -39,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -151,6 +141,10 @@ public abstract class BaseMessageBodyReader
 		List<String> fieldNames = new ArrayList<>();
 
 		for (Field field : clazz.getDeclaredFields()) {
+			if (StringUtil.equals("_extendedProperties", field.getName())) {
+				continue;
+			}
+
 			fieldNames.add(field.getName());
 		}
 
@@ -201,14 +195,19 @@ public abstract class BaseMessageBodyReader
 	}
 
 	private ObjectMapper _getObjectMapper(Class<?> clazz) {
-		return Optional.ofNullable(
-			_providers.getContextResolver(_contextType, _mediaType)
-		).map(
-			contextResolver -> contextResolver.getContext(clazz)
-		).orElseThrow(
-			() -> new InternalServerErrorException(
-				"Unable to generate object mapper for class " + clazz)
-		);
+		ContextResolver<? extends ObjectMapper> contextResolver =
+			_providers.getContextResolver(_contextType, _mediaType);
+
+		if (contextResolver != null) {
+			ObjectMapper objectMapper = contextResolver.getContext(clazz);
+
+			if (objectMapper != null) {
+				return objectMapper;
+			}
+		}
+
+		throw new InternalServerErrorException(
+			"Unable to generate object mapper for class " + clazz);
 	}
 
 	private boolean _isCreateOrUpdateMethod(String method) {

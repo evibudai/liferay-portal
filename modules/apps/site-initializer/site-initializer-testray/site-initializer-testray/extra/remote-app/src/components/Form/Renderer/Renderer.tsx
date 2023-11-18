@@ -1,105 +1,147 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Form from '..';
-import React, {useEffect, useState} from 'react';
+import React, {
+	Dispatch,
+	memo,
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react';
+import {useParams} from 'react-router-dom';
 
+import {Operators} from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import fetcher from '../../../services/fetcher';
+import {safeJSONParse} from '../../../util';
 import {AutoCompleteProps} from '../AutoComplete';
 
 type RenderedFieldOptions = string[] | {label: string; value: string}[];
 
 export type RendererFields = {
+	disabled?: boolean;
 	label: string;
 	name: string;
+	operator?: Operators;
 	options?: RenderedFieldOptions;
+	placeholder?: string;
+	removeQuoteMark?: boolean;
 	type:
 		| 'autocomplete'
 		| 'checkbox'
-		| 'text'
-		| 'textarea'
+		| 'date'
+		| 'multiselect'
+		| 'number'
 		| 'select'
-		| 'multiselect';
+		| 'text'
+		| 'textarea';
 } & Partial<AutoCompleteProps>;
 
+export type FieldOptions = {[key: string]: any[]};
+
 type RendererProps = {
+	fieldOptions: FieldOptions;
 	fields: RendererFields[];
 	filter?: string;
 	form: any;
 	onChange: (event: any) => void;
+	setFieldOptions: Dispatch<FieldOptions>;
 };
 
 const Renderer: React.FC<RendererProps> = ({
+	fieldOptions,
 	fields,
 	filter,
 	form,
 	onChange,
+	setFieldOptions,
 }) => {
-	const [disabledFields, setDisableFields] = useState({});
-	const [gqlOptions, setGqlOptions] = useState<{[key: string]: []}>({});
+	const params = useParams();
 
-	const fieldsFiltered = fields.filter(({label}) =>
-		filter ? label.toLowerCase().includes(filter.toLowerCase()) : true
+	const [fieldDisabled, setFieldDisabled] = useState({});
+
+	const paramsMemoized = useMemo(() => {
+		const testrayModalParams = document.getElementById(
+			'testray-modal-params'
+		);
+
+		if (testrayModalParams) {
+			return testrayModalParams.textContent!;
+		}
+
+		return JSON.stringify(params);
+	}, [params]);
+
+	const fieldsMemoized = useMemo(() => fields, [fields]);
+
+	const setFieldOpt = useCallback(
+		(abc: any) => {
+			setFieldOptions(abc);
+		},
+		[setFieldOptions]
 	);
 
-	const fetchQueries = (
-		gqlQueries: (RendererFields | (() => Promise<any>))[][]
-	) => {
-		Promise.allSettled(
-			gqlQueries.map(([, query]) => (query as any)())
-		).then((results) => {
-			let i = 0;
-			const _gqlOptions: any = {};
-			for (const result of results) {
-				if (result.status === 'fulfilled') {
-					const queries: any[][] = [...(gqlQueries as any)];
-					const field: RendererFields = queries[i][0];
+	const fieldsFilteredMemoized = useMemo(
+		() =>
+			fieldsMemoized.filter(({label}) =>
+				filter
+					? label.toLowerCase().includes(filter.toLowerCase())
+					: true
+			),
+		[fieldsMemoized, filter]
+	);
 
-					if (field.transformData) {
-						_gqlOptions[field.name] = field.transformData(
-							result.value
-						);
-					}
-				}
-				i++;
+	const fetchResources = useCallback(async () => {
+		const parameters = safeJSONParse(paramsMemoized);
+
+		const fieldsWithResource = fieldsMemoized.filter(
+			({resource}) => resource
+		);
+
+		const _fieldOptions: any = {};
+
+		for (const field of fieldsWithResource) {
+			const result = await fetcher(
+				(typeof field.resource === 'function'
+					? field.resource(parameters)
+					: field.resource) as string
+			);
+
+			if (field.transformData) {
+				const parsedValue = field.transformData(result);
+
+				_fieldOptions[field.name] = parsedValue;
 			}
+		}
 
-			setGqlOptions(_gqlOptions);
-		});
-	};
+		setFieldOpt(_fieldOptions);
+	}, [fieldsMemoized, paramsMemoized, setFieldOpt]);
 
 	useEffect(() => {
-		const gqlQueries = fields
-			.filter(({resource}) => resource)
-			.map(({resource, ...field}) => [
-				field,
-				() => fetcher(resource as string),
-			]);
-
-		fetchQueries(gqlQueries);
-	}, [fields]);
+		fetchResources();
+	}, [fetchResources]);
 
 	return (
 		<div className="form-renderer">
-			{fieldsFiltered.map((field, index) => {
-				const {label, name, type, options = [], resource} = field;
+			{fieldsFilteredMemoized.map((field, index) => {
+				const {
+					label,
+					disabled,
+					name,
+					type,
+					options = [],
+					resource,
+				} = field;
+
 				const currentValue = form[name];
 
 				const getOptions = () => {
 					const _options =
-						gqlOptions[name] ||
+						fieldOptions[name] ||
 						(options || []).map((option) =>
 							typeof option === 'object'
 								? option
@@ -112,25 +154,28 @@ const Renderer: React.FC<RendererProps> = ({
 					return _options;
 				};
 
-				if (['text', 'textarea'].includes(type)) {
+				if (['date', 'number', 'text', 'textarea'].includes(type)) {
 					return (
 						<div key={index}>
 							<Form.Input
-								disabled={(disabledFields as any)[name]}
+								disabled={
+									(disabled ?? (fieldDisabled as any))[name]
+								}
 								onChange={onChange}
 								value={currentValue}
-								{...field}
+								{...(field as any)}
 							/>
 
 							{type === 'textarea' && (
 								<Form.Checkbox
+									disabled={disabled}
 									label={i18n.sub('no-x', field.label)}
 									onClick={() => {
 										onChange({target: {name, value: null}});
 
-										setDisableFields({
-											...disabledFields,
-											[name]: !(disabledFields as any)[
+										setFieldDisabled({
+											...fieldDisabled,
+											[name]: !(fieldDisabled as any)[
 												name
 											],
 										});
@@ -144,6 +189,7 @@ const Renderer: React.FC<RendererProps> = ({
 				if (type === 'select') {
 					return (
 						<Form.Select
+							disabled={disabled}
 							key={index}
 							label={label}
 							name={name}
@@ -175,24 +221,30 @@ const Renderer: React.FC<RendererProps> = ({
 						<div key={index}>
 							<label>{label}</label>
 
-							{options.map((option, index) => (
-								<Form.Checkbox
-									checked={form[name]?.includes(option)}
-									key={index}
-									label={
-										typeof option === 'string'
-											? option
-											: option.label
-									}
-									name={name}
-									onChange={onCheckboxChange}
-									value={
-										typeof option === 'string'
-											? option
-											: option.value
-									}
-								/>
-							))}
+							{options.map((option, index) => {
+								const optionValue =
+									typeof option === 'string'
+										? option
+										: option.value;
+
+								return (
+									<Form.Checkbox
+										checked={form[name]?.includes(
+											optionValue
+										)}
+										disabled={disabled}
+										key={index}
+										label={
+											typeof option === 'string'
+												? option
+												: option.label
+										}
+										name={name}
+										onChange={onCheckboxChange}
+										value={optionValue}
+									/>
+								);
+							})}
 						</div>
 					);
 				}
@@ -211,7 +263,10 @@ const Renderer: React.FC<RendererProps> = ({
 					return (
 						<div className="mb-2" key={index}>
 							<Form.MultiSelect
+								disabled={disabled}
 								label={label}
+								name={name}
+								onChange={onChange}
 								options={getOptions()}
 								value={currentValue}
 							/>
@@ -222,11 +277,11 @@ const Renderer: React.FC<RendererProps> = ({
 				return null;
 			})}
 
-			{!fieldsFiltered.length && (
+			{!fieldsFilteredMemoized.length && (
 				<p>{i18n.translate('there-are-no-matching-results')}</p>
 			)}
 		</div>
 	);
 };
 
-export default Renderer;
+export default memo(Renderer);

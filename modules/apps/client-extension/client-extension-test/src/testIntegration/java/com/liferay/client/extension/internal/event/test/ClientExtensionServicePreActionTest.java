@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.internal.event.test;
@@ -19,30 +10,33 @@ import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.events.LifecycleEvent;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -52,6 +46,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 import junit.framework.Assert;
@@ -81,16 +76,67 @@ public class ClientExtensionServicePreActionTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
-
-		_user = UserTestUtil.addCompanyAdminUser(_company);
-
 		_group = GroupTestUtil.addGroup(
-			_company.getCompanyId(), _user.getUserId(),
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			GroupConstants.DEFAULT_PARENT_GROUP_ID);
 
 		_layout = LayoutTestUtil.addTypeContentLayout(
-			_user.getUserId(), _group);
+			TestPropsValues.getUserId(), _group);
+	}
+
+	@Test
+	public void testProcessServicePreActionControlPanelLayoutThemeCSS()
+		throws Exception {
+
+		_addThemeCSSClientExtensionEntry();
+
+		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			_portal.getClassNameId(Layout.class), _layout.getPlid(),
+			_clientExtensionEntry.getExternalReferenceCode(),
+			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Group controlPanelGroup = _groupLocalService.getGroup(
+			TestPropsValues.getCompanyId(), GroupConstants.CONTROL_PANEL);
+
+		Layout controlPanelLayout = _layoutLocalService.fetchDefaultLayout(
+			controlPanelGroup.getGroupId(), true);
+
+		_assertThemeCSSURLs(controlPanelLayout, Collections.emptyMap(), false);
+
+		_assertThemeCSSURLs(
+			controlPanelLayout,
+			HashMapBuilder.put(
+				"p_l_mode", Constants.PREVIEW
+			).build(),
+			false);
+
+		_assertThemeCSSURLs(
+			controlPanelLayout,
+			HashMapBuilder.put(
+				"p_l_mode", Constants.PREVIEW
+			).put(
+				"p_p_id",
+				ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
+			).build(),
+			false);
+
+		_assertThemeCSSURLs(
+			controlPanelLayout,
+			HashMapBuilder.put(
+				"p_l_mode", Constants.PREVIEW
+			).put(
+				"p_p_id",
+				ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
+			).put(
+				StringBundler.concat(
+					StringPool.UNDERLINE,
+					ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+					"_selPlid"),
+				String.valueOf(_layout.getPlid())
+			).build(),
+			true);
 	}
 
 	@Test
@@ -98,10 +144,11 @@ public class ClientExtensionServicePreActionTest {
 		_addFaviconClientExtensionEntry();
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(Layout.class), _layout.getPlid(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_assertFaviconURL();
 	}
@@ -113,10 +160,11 @@ public class ClientExtensionServicePreActionTest {
 		LayoutSet layoutSet = _group.getPublicLayoutSet();
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(LayoutSet.class), layoutSet.getLayoutSetId(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_assertFaviconURL();
 	}
@@ -130,12 +178,13 @@ public class ClientExtensionServicePreActionTest {
 		LayoutSet layoutSet = _group.getPublicLayoutSet();
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(LayoutSet.class), layoutSet.getLayoutSetId(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		_assertThemeCSSURLs();
+		_assertThemeCSSURLs(_layout, Collections.emptyMap(), true);
 	}
 
 	@Test
@@ -143,12 +192,13 @@ public class ClientExtensionServicePreActionTest {
 		_addThemeCSSClientExtensionEntry();
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(Layout.class), _layout.getPlid(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		_assertThemeCSSURLs();
+		_assertThemeCSSURLs(_layout, Collections.emptyMap(), true);
 	}
 
 	@Test
@@ -159,22 +209,23 @@ public class ClientExtensionServicePreActionTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_user.getUserId(), _group.getGroupId(), 0,
+				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(Layout.class),
 			masterLayoutPageTemplateEntry.getPlid(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
 
-		_layoutLocalService.updateLayout(_layout);
+		_layout = _layoutLocalService.updateLayout(_layout);
 
 		_assertFaviconURL();
 	}
@@ -187,30 +238,31 @@ public class ClientExtensionServicePreActionTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_user.getUserId(), _group.getGroupId(), 0,
+				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			_user.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(Layout.class),
 			masterLayoutPageTemplateEntry.getPlid(),
 			_clientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
 
-		_layoutLocalService.updateLayout(_layout);
+		_layout = _layoutLocalService.updateLayout(_layout);
 
-		_assertThemeCSSURLs();
+		_assertThemeCSSURLs(_layout, Collections.emptyMap(), true);
 	}
 
 	private void _addFaviconClientExtensionEntry() throws Exception {
 		_clientExtensionEntry =
 			_clientExtensionEntryLocalService.addClientExtensionEntry(
-				RandomTestUtil.randomString(), _user.getUserId(),
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 				StringPool.BLANK,
 				Collections.singletonMap(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()),
@@ -226,7 +278,7 @@ public class ClientExtensionServicePreActionTest {
 	private void _addThemeCSSClientExtensionEntry() throws Exception {
 		_clientExtensionEntry =
 			_clientExtensionEntryLocalService.addClientExtensionEntry(
-				RandomTestUtil.randomString(), _user.getUserId(),
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 				StringPool.BLANK,
 				Collections.singletonMap(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()),
@@ -243,7 +295,7 @@ public class ClientExtensionServicePreActionTest {
 
 	private void _assertFaviconURL() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
-			_getMockHttpServletRequest();
+			_getMockHttpServletRequest(_layout, Collections.emptyMap());
 
 		_processServicePreAction(mockHttpServletRequest);
 
@@ -254,18 +306,30 @@ public class ClientExtensionServicePreActionTest {
 		Assert.assertEquals(_URL_FAVICON, themeDisplay.getFaviconURL());
 	}
 
-	private void _assertThemeCSSURLs() throws Exception {
-		MockHttpServletRequest mockHttpServletRequest =
-			_getMockHttpServletRequest();
+	private void _assertThemeCSSURLs(
+			Layout layout, Map<String, String> params,
+			boolean clientExtensionApplied)
+		throws Exception {
 
-		_processServicePreAction(mockHttpServletRequest);
+		MockHttpServletRequest mockHttpServletRequest =
+			_getMockHttpServletRequest(layout, params);
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)mockHttpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Assert.assertEquals(_URL_CLAY_CSS, themeDisplay.getClayCSSURL());
-		Assert.assertEquals(_URL_MAIN_CSS, themeDisplay.getMainCSSURL());
+		String expectedClayCSSURL = _URL_CLAY_CSS;
+		String expectedMainCSSURL = _URL_MAIN_CSS;
+
+		if (!clientExtensionApplied) {
+			expectedClayCSSURL = themeDisplay.getClayCSSURL();
+			expectedMainCSSURL = themeDisplay.getMainCSSURL();
+		}
+
+		_processServicePreAction(mockHttpServletRequest);
+
+		Assert.assertEquals(expectedClayCSSURL, themeDisplay.getClayCSSURL());
+		Assert.assertEquals(expectedMainCSSURL, themeDisplay.getMainCSSURL());
 	}
 
 	private LifecycleAction _getLifecycleAction() {
@@ -293,25 +357,38 @@ public class ClientExtensionServicePreActionTest {
 			"ClientExtensionsServicePreAction is not registered");
 	}
 
-	private MockHttpServletRequest _getMockHttpServletRequest()
+	private MockHttpServletRequest _getMockHttpServletRequest(
+			Layout layout, Map<String, String> params)
 		throws Exception {
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
+		ThemeDisplay themeDisplay = _getThemeDisplay(layout);
+
+		themeDisplay.setRequest(mockHttpServletRequest);
+
 		mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay());
+			WebKeys.THEME_DISPLAY, themeDisplay);
+
+		mockHttpServletRequest.setParameters(params);
 
 		return mockHttpServletRequest;
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws Exception {
+	private ThemeDisplay _getThemeDisplay(Layout layout) throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		themeDisplay.setCompany(_company);
-		themeDisplay.setLayout(_layout);
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
+		themeDisplay.setLayout(layout);
 		themeDisplay.setLifecycleRender(true);
-		themeDisplay.setUser(_user);
+
+		LayoutSet layoutSet = _group.getPublicLayoutSet();
+
+		themeDisplay.setLookAndFeel(layoutSet.getTheme(), null);
+
+		themeDisplay.setUser(TestPropsValues.getUser());
 
 		return themeDisplay;
 	}
@@ -345,11 +422,14 @@ public class ClientExtensionServicePreActionTest {
 	private ClientExtensionEntryRelLocalService
 		_clientExtensionEntryRelLocalService;
 
-	@DeleteAfterTestRun
-	private Company _company;
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 	private Layout _layout;
 
@@ -362,7 +442,5 @@ public class ClientExtensionServicePreActionTest {
 
 	@Inject
 	private Portal _portal;
-
-	private User _user;
 
 }

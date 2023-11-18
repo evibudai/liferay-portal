@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.internal.search;
@@ -36,6 +27,7 @@ import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -66,8 +58,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -318,7 +308,7 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing discount " + commerceDiscount);
+			_log.debug("Indexing commerce discount " + commerceDiscount);
 		}
 
 		CommerceDiscountTarget commerceDiscountTarget =
@@ -331,51 +321,30 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 		Document document = getBaseModelDocument(CLASS_NAME, commerceDiscount);
 
 		document.addText(Field.TITLE, commerceDiscount.getTitle());
-
-		document.addText(
-			FIELD_TARGET_TYPE, commerceDiscountTargetType.toString());
 		document.addText(Field.USER_NAME, commerceDiscount.getUserName());
 		document.addKeyword(FIELD_ACTIVE, commerceDiscount.isActive());
 		document.addKeyword(
 			FIELD_COUPON_CODE, commerceDiscount.getCouponCode());
+		document.addText(
+			FIELD_TARGET_TYPE, commerceDiscountTargetType.toString());
 		document.addKeyword(
 			FIELD_USE_COUPON_CODE, commerceDiscount.isUseCouponCode());
 
-		List<CommerceDiscountAccountRel> commerceDiscountAccountRels =
-			_commerceDiscountAccountRelLocalService.
-				getCommerceDiscountAccountRels(
-					commerceDiscount.getCommerceDiscountId(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null);
-
-		Stream<CommerceDiscountAccountRel> commerceDiscountAccountRelsStream =
-			commerceDiscountAccountRels.stream();
-
-		LongStream commerceAccountIdLongStream =
-			commerceDiscountAccountRelsStream.mapToLong(
-				CommerceDiscountAccountRel::getCommerceAccountId);
-
-		long[] commerceAccountIds = commerceAccountIdLongStream.toArray();
-
-		document.addNumber("commerceAccountId", commerceAccountIds);
-
-		List<CommerceDiscountCommerceAccountGroupRel>
-			commerceDiscountCommerceAccountGroupRels =
-				_commerceDiscountCommerceAccountGroupRelLocalService.
-					getCommerceDiscountCommerceAccountGroupRels(
+		document.addNumber(
+			"commerceAccountId",
+			TransformUtil.transformToLongArray(
+				_commerceDiscountAccountRelLocalService.
+					getCommerceDiscountAccountRels(
 						commerceDiscount.getCommerceDiscountId(),
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
+				CommerceDiscountAccountRel::getCommerceAccountId));
 
-		Stream<CommerceDiscountCommerceAccountGroupRel>
-			commerceDiscountCommerceAccountGroupRelsStream =
-				commerceDiscountCommerceAccountGroupRels.stream();
-
-		LongStream commerceAccountGroupIdLongStream =
-			commerceDiscountCommerceAccountGroupRelsStream.mapToLong(
-				CommerceDiscountCommerceAccountGroupRel::
-					getCommerceAccountGroupId);
-
-		long[] commerceAccountGroupIds =
-			commerceAccountGroupIdLongStream.toArray();
+		long[] commerceAccountGroupIds = TransformUtil.transformToLongArray(
+			_commerceDiscountCommerceAccountGroupRelLocalService.
+				getCommerceDiscountCommerceAccountGroupRels(
+					commerceDiscount.getCommerceDiscountId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null),
+			CommerceDiscountCommerceAccountGroupRel::getCommerceAccountGroupId);
 
 		document.addNumber("commerceAccountGroupIds", commerceAccountGroupIds);
 		document.addNumber(
@@ -404,42 +373,21 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 			groupIdList.add(commerceChannel.getGroupId());
 		}
 
-		Stream<Long> channelIdStream = channelIdList.stream();
-
-		long[] channelIds = channelIdStream.mapToLong(
-			l -> l
-		).toArray();
-
-		document.addNumber("commerceChannelId", channelIds);
-
-		List<CommerceDiscountOrderTypeRel> commerceDiscountOrderTypeRels =
-			_commerceDiscountOrderTypeRelLocalService.
-				getCommerceDiscountOrderTypeRels(
-					commerceDiscount.getCommerceDiscountId());
-
-		Stream<CommerceDiscountOrderTypeRel>
-			commerceDiscountOrderTypeRelsStream =
-				commerceDiscountOrderTypeRels.stream();
-
-		LongStream commerceOrderTypeIdLongStream =
-			commerceDiscountOrderTypeRelsStream.mapToLong(
-				CommerceDiscountOrderTypeRel::getCommerceOrderTypeId);
-
-		long[] commerceOrderTypeIds = commerceOrderTypeIdLongStream.toArray();
-
-		document.addNumber("commerceOrderTypeId", commerceOrderTypeIds);
-
-		Stream<Long> groupIdStream = groupIdList.stream();
-
-		long[] groupIds = groupIdStream.mapToLong(
-			l -> l
-		).toArray();
-
-		document.addNumber(FIELD_GROUP_IDS, groupIds);
+		document.addNumber(
+			"commerceChannelId", ArrayUtil.toLongArray(channelIdList));
+		document.addNumber(
+			"commerceOrderTypeId",
+			TransformUtil.transformToLongArray(
+				_commerceDiscountOrderTypeRelLocalService.
+					getCommerceDiscountOrderTypeRels(
+						commerceDiscount.getCommerceDiscountId()),
+				CommerceDiscountOrderTypeRel::getCommerceOrderTypeId));
+		document.addNumber(FIELD_GROUP_IDS, ArrayUtil.toLongArray(groupIdList));
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Document " + commerceDiscount + " indexed successfully");
+				"Commerce discount " + commerceDiscount +
+					" indexed successfully");
 		}
 
 		if (commerceDiscountTarget instanceof CommerceDiscountProductTarget) {
@@ -509,7 +457,7 @@ public class CommerceDiscountIndexer extends BaseIndexer<CommerceDiscount> {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index commerce discount " +
-								commerceDiscount.getCommerceDiscountId(),
+								commerceDiscount,
 							portalException);
 					}
 				}

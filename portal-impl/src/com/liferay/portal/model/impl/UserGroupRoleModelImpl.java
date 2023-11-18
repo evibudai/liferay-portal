@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -230,62 +221,82 @@ public class UserGroupRoleModelImpl
 	public Map<String, Function<UserGroupRole, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<UserGroupRole, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<UserGroupRole, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<UserGroupRole, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<UserGroupRole, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<UserGroupRole, Object>>();
-		Map<String, BiConsumer<UserGroupRole, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<UserGroupRole, ?>>();
+		private static final Map<String, Function<UserGroupRole, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", UserGroupRole::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", UserGroupRole::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"userGroupRoleId", UserGroupRole::getUserGroupRoleId);
-		attributeSetterBiConsumers.put(
-			"userGroupRoleId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setUserGroupRoleId);
-		attributeGetterFunctions.put("companyId", UserGroupRole::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setCompanyId);
-		attributeGetterFunctions.put("userId", UserGroupRole::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setUserId);
-		attributeGetterFunctions.put("groupId", UserGroupRole::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setGroupId);
-		attributeGetterFunctions.put("roleId", UserGroupRole::getRoleId);
-		attributeSetterBiConsumers.put(
-			"roleId",
-			(BiConsumer<UserGroupRole, Long>)UserGroupRole::setRoleId);
+		static {
+			Map<String, Function<UserGroupRole, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<UserGroupRole, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", UserGroupRole::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", UserGroupRole::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"userGroupRoleId", UserGroupRole::getUserGroupRoleId);
+			attributeGetterFunctions.put(
+				"companyId", UserGroupRole::getCompanyId);
+			attributeGetterFunctions.put("userId", UserGroupRole::getUserId);
+			attributeGetterFunctions.put("groupId", UserGroupRole::getGroupId);
+			attributeGetterFunctions.put("roleId", UserGroupRole::getRoleId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<UserGroupRole, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<UserGroupRole, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<UserGroupRole, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<UserGroupRole, Long>)UserGroupRole::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<UserGroupRole, Long>)
+					UserGroupRole::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"userGroupRoleId",
+				(BiConsumer<UserGroupRole, Long>)
+					UserGroupRole::setUserGroupRoleId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<UserGroupRole, Long>)UserGroupRole::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<UserGroupRole, Long>)UserGroupRole::setUserId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<UserGroupRole, Long>)UserGroupRole::setGroupId);
+			attributeSetterBiConsumers.put(
+				"roleId",
+				(BiConsumer<UserGroupRole, Long>)UserGroupRole::setRoleId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -684,7 +695,8 @@ public class UserGroupRoleModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<UserGroupRole, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

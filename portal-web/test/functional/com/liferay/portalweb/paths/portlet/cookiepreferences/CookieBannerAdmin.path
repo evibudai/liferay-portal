@@ -36,6 +36,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTENT_TEXT</td>
+	<td>//span[normalize-space(text())='${key_text}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PRIVACY_POLICY_LINK</td>
 	<td>//textarea[contains(@name,'privacyPolicyLink')]</td>
 	<td></td>
@@ -52,7 +57,7 @@
 </tr>
 <tr>
 	<td>MENU_ITEMS_IN_ORDER</td>
-	<td>//*[@class="nav nav-stacked"]/li/a[contains(.,'Preference Handling')]/../following-sibling::li/a[contains(.,'Banner')]/../following-sibling::li/a[contains(.,'Consent Panel')]</td>
+	<td>//*[@class="nav nav-nested"]/li/a[contains(.,'Preference Handling')]/../following-sibling::li/a[contains(.,'Banner')]/../following-sibling::li/a[contains(.,'Consent Panel')]</td>
 	<td></td>
 </tr>
 </tbody>

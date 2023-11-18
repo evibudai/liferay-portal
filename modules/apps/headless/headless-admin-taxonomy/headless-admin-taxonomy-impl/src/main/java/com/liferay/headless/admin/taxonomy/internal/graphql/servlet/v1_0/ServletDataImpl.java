@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.graphql.servlet.v1_0;
@@ -97,6 +88,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createAssetLibraryKeywordsPageExportBatch",
+						new ObjectValuePair<>(
+							KeywordResourceImpl.class,
+							"postAssetLibraryKeywordsPageExportBatch"));
+					put(
 						"mutation#createAssetLibraryKeyword",
 						new ObjectValuePair<>(
 							KeywordResourceImpl.class,
@@ -136,6 +132,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							KeywordResourceImpl.class,
 							"putKeywordUnsubscribe"));
+					put(
+						"mutation#createSiteKeywordsPageExportBatch",
+						new ObjectValuePair<>(
+							KeywordResourceImpl.class,
+							"postSiteKeywordsPageExportBatch"));
 					put(
 						"mutation#createSiteKeyword",
 						new ObjectValuePair<>(
@@ -185,6 +186,11 @@ public class ServletDataImpl implements ServletData {
 							TaxonomyCategoryResourceImpl.class,
 							"putTaxonomyCategoryPermissionsPage"));
 					put(
+						"mutation#createTaxonomyVocabularyTaxonomyCategoriesPageExportBatch",
+						new ObjectValuePair<>(
+							TaxonomyCategoryResourceImpl.class,
+							"postTaxonomyVocabularyTaxonomyCategoriesPageExportBatch"));
+					put(
 						"mutation#createTaxonomyVocabularyTaxonomyCategory",
 						new ObjectValuePair<>(
 							TaxonomyCategoryResourceImpl.class,
@@ -204,6 +210,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TaxonomyCategoryResourceImpl.class,
 							"putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode"));
+					put(
+						"mutation#createAssetLibraryTaxonomyVocabulariesPageExportBatch",
+						new ObjectValuePair<>(
+							TaxonomyVocabularyResourceImpl.class,
+							"postAssetLibraryTaxonomyVocabulariesPageExportBatch"));
 					put(
 						"mutation#createAssetLibraryTaxonomyVocabulary",
 						new ObjectValuePair<>(
@@ -229,6 +240,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TaxonomyVocabularyResourceImpl.class,
 							"putAssetLibraryTaxonomyVocabularyPermissionsPage"));
+					put(
+						"mutation#createSiteTaxonomyVocabulariesPageExportBatch",
+						new ObjectValuePair<>(
+							TaxonomyVocabularyResourceImpl.class,
+							"postSiteTaxonomyVocabulariesPageExportBatch"));
 					put(
 						"mutation#createSiteTaxonomyVocabulary",
 						new ObjectValuePair<>(
@@ -383,6 +399,37 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TaxonomyVocabularyResourceImpl.class,
 							"getTaxonomyVocabularyPermissionsPage"));
+
+					put(
+						"query#TaxonomyCategory.permissions",
+						new ObjectValuePair<>(
+							TaxonomyCategoryResourceImpl.class,
+							"getTaxonomyCategoryPermissionsPage"));
+					put(
+						"query#TaxonomyVocabulary.permissions",
+						new ObjectValuePair<>(
+							TaxonomyVocabularyResourceImpl.class,
+							"getTaxonomyVocabularyPermissionsPage"));
+					put(
+						"query#TaxonomyVocabulary.taxonomyCategories",
+						new ObjectValuePair<>(
+							TaxonomyCategoryResourceImpl.class,
+							"getTaxonomyVocabularyTaxonomyCategoriesPage"));
+					put(
+						"query#TaxonomyCategory.taxonomyCategories",
+						new ObjectValuePair<>(
+							TaxonomyCategoryResourceImpl.class,
+							"getTaxonomyCategoryTaxonomyCategoriesPage"));
+					put(
+						"query#TaxonomyCategory.taxonomyVocabulary",
+						new ObjectValuePair<>(
+							TaxonomyVocabularyResourceImpl.class,
+							"getTaxonomyVocabulary"));
+					put(
+						"query#TaxonomyVocabulary.taxonomyCategoryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							TaxonomyCategoryResourceImpl.class,
+							"getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode"));
 				}
 			};
 

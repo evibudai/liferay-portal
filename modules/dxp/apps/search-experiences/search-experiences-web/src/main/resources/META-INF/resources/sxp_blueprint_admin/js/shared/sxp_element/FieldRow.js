@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
@@ -19,8 +13,10 @@ import {ClayTooltipProvider} from '@clayui/tooltip';
 import fuzzy from 'fuzzy';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
-import {alphabeticalSort, stringLengthSort} from '../../utils/sort';
-import {isDefined, isEmpty} from '../../utils/utils';
+import isDefined from '../../utils/functions/is_defined';
+import isEmpty from '../../utils/functions/is_empty';
+import sortAlphabetically from '../../utils/functions/sort_alphabetically';
+import sortByStringLength from '../../utils/functions/sort_by_string_length';
 import ThemeContext from '../ThemeContext';
 
 const USER_LANGUAGE_VARIABLE = '${context.language_id}';
@@ -39,10 +35,10 @@ function filterAndSortIndexFields(indexFields, field) {
 			indexField.name.toLowerCase().includes(field.toLowerCase())
 		)
 		.sort((a, b) => {
-			const sort = stringLengthSort(a.name, b.name);
+			const sort = sortByStringLength(a.name, b.name);
 
 			if (sort === 0 || field === '') {
-				return alphabeticalSort(a.name, b.name);
+				return sortAlphabetically(a.name, b.name);
 			}
 
 			return sort;
@@ -229,7 +225,7 @@ function FieldRow({
 								}
 								onSetActive={setShowDropDown}
 							>
-								<ClayDropDown.ItemList className="sxp-blueprint-field-row-dropdown">
+								<ClayDropDown.ItemList className="sxp-field-row-dropdown-root">
 									{filteredIndexFields.map(
 										(indexField, index) => (
 											<AutocompleteItem

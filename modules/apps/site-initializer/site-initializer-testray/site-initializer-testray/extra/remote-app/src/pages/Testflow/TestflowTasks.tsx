@@ -1,95 +1,92 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
-import {Dispatch} from 'react';
+import {Dispatch, useContext} from 'react';
 import {Link, useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
-
-import Avatar from '../../components/Avatar';
-import AssignToMe from '../../components/Avatar/AssigneToMe';
-import Code from '../../components/Code';
-import FloatingBox from '../../components/FloatingBox/index';
-import Container from '../../components/Layout/Container';
-import ListView from '../../components/ListView';
-import Loading from '../../components/Loading';
-import TaskbarProgress from '../../components/ProgressBar/TaskbarProgress';
-import StatusBadge from '../../components/StatusBadge';
-import {StatusBadgeType} from '../../components/StatusBadge/StatusBadge';
-import QATable from '../../components/Table/QATable';
-import {ListViewTypes} from '../../context/ListViewContext';
-import useCaseResultGroupBy from '../../data/useCaseResultGroupBy';
-import {useFetch} from '../../hooks/useFetch';
-import useHeader from '../../hooks/useHeader';
-import useMutate from '../../hooks/useMutate';
-import i18n from '../../i18n';
-import {filters} from '../../schema/filter';
-import {Liferay} from '../../services/liferay';
+import Avatar from '~/components/Avatar';
+import AssignToMe from '~/components/Avatar/AssignToMe';
+import Code from '~/components/Code';
+import FloatingBox from '~/components/FloatingBox/index';
+import Container from '~/components/Layout/Container';
+import ListView from '~/components/ListView';
+import Loading from '~/components/Loading';
+import TaskbarProgress from '~/components/ProgressBar/TaskbarProgress';
+import StatusBadge from '~/components/StatusBadge';
+import {StatusBadgeType} from '~/components/StatusBadge/StatusBadge';
+import QATable from '~/components/Table/QATable';
+import {ListViewTypes} from '~/context/ListViewContext';
+import {TestrayContext} from '~/context/TestrayContext';
+import SearchBuilder from '~/core/SearchBuilder';
+import useCaseResultGroupBy from '~/hooks/data/useCaseResultGroupBy';
+import useSubtaskScore from '~/hooks/data/useSubtaskScore';
+import useHeader from '~/hooks/useHeader';
+import useMutate from '~/hooks/useMutate';
+import i18n from '~/i18n';
+import {Liferay} from '~/services/liferay';
 import {
-	APIResponse,
 	PickList,
 	TestraySubTask,
 	TestrayTask,
 	TestrayTaskUser,
 	UserAccount,
-	testrayTaskImpl,
-	testrayTaskUsersImpl,
-} from '../../services/rest';
-import {testraySubTaskImpl} from '../../services/rest/TestraySubtask';
-import {StatusesProgressScore, chartClassNames} from '../../util/constants';
-import {getTimeFromNow} from '../../util/date';
-import {SearchBuilder} from '../../util/search';
-import {SubTaskStatuses} from '../../util/statuses';
+} from '~/services/rest';
+import {testraySubTaskImpl} from '~/services/rest/TestraySubtask';
+import {StatusesProgressScore, chartClassNames} from '~/util/constants';
+import {getTimeFromNow} from '~/util/date';
+import {SubTaskStatuses} from '~/util/statuses';
+
 import SubtaskCompleteModal from './Subtask/SubtaskCompleteModal';
 import useSubtasksActions from './Subtask/useSubtasksActions';
+import TaskHeaderActions from './TaskHeaderActions';
 
 type OutletContext = {
-	mutateTask?: KeyedMutator<TestrayTask>;
-	testrayTask: TestrayTask;
+	data: {
+		testrayTask: TestrayTask & {
+			actions: {
+				[key: string]: string;
+			};
+		};
+		testrayTaskUser: TestrayTaskUser[];
+	};
+	revalidate: {revalidateSubtask: () => void};
 };
-
 const ShortcutIcon = () => (
 	<ClayIcon className="ml-2" fontSize={12} symbol="shortcut" />
 );
 
 const TestFlowTasks = () => {
-	const {mutateTask, testrayTask} = useOutletContext<OutletContext>();
-	const {updateItemFromList} = useMutate();
+	const {
+		data: {testrayTask, testrayTaskUser},
+		revalidate: {revalidateSubtask},
+	} = useOutletContext<OutletContext>();
+	const {actions, completeModal, forceRefetch} = useSubtasksActions();
 	const {taskId} = useParams();
-	const {actions, completeModal} = useSubtasksActions();
+	const {updateItemFromList} = useMutate();
 
-	const {data: taskUserResponse} = useFetch<APIResponse<TestrayTaskUser>>(
-		testrayTask?.id
-			? `${testrayTaskImpl.getNestedObject(
-					'taskToTasksUsers',
-					testrayTask.id
-			  )}?nestedFields=task,user`
-			: null,
-		(response) => testrayTaskUsersImpl.transformDataFromList(response)
-	);
+	const [{myUserAccount}] = useContext(TestrayContext);
 
-	const taskUsers: TestrayTaskUser[] = taskUserResponse?.items || [];
-
-	const users = taskUsers
-		.filter(({user}) => user)
-		.map(({user}) => user as UserAccount);
-
-	useHeader({useTabs: []});
+	useHeader({
+		heading: [
+			{
+				category: i18n.translate('task'),
+				title: testrayTask?.name,
+			},
+		],
+		tabs: [],
+	});
 
 	const {
 		donut: {columns},
 	} = useCaseResultGroupBy(testrayTask?.build?.id);
+
+	const subtaskScore = useSubtaskScore({
+		testrayTask,
+		userId: myUserAccount?.id as number,
+	});
 
 	if (!testrayTask) {
 		return <Loading />;
@@ -113,7 +110,6 @@ const TestFlowTasks = () => {
 					user.id.toString() !== Liferay.ThemeDisplay.getUserId()
 			)
 			.map(({name}) => ({
-				header: name,
 				text: i18n.sub(
 					'subtask-x-must-be-assigned-to-you-to-be-user-in-a-merge',
 					name
@@ -155,7 +151,9 @@ const TestFlowTasks = () => {
 
 	return (
 		<>
-			<Container collapsable title={i18n.translate('task-details')}>
+			{testrayTask.actions?.update && <TaskHeaderActions />}
+
+			<Container collapsable title={i18n.sub('task-x', 'details')}>
 				<div className="d-flex flex-wrap">
 					<div className="col-4 col-lg-4 col-md-12 p-0">
 						<QATable
@@ -176,14 +174,16 @@ const TestFlowTasks = () => {
 									title: i18n.translate('assigned-users'),
 									value: (
 										<Avatar.Group
-											assignedUsers={users.map(
-												({givenName}) => ({
-													name: givenName,
-													url:
-														'https://picsum.photos/200',
-												})
-											)}
-											groupSize={3}
+											assignedUsers={testrayTaskUser
+												.map(
+													({user}) =>
+														user as UserAccount
+												)
+												.map(({image, name}) => ({
+													name,
+													url: image,
+												}))}
+											groupSize={5}
 										/>
 									),
 								},
@@ -263,34 +263,37 @@ const TestFlowTasks = () => {
 					<TaskbarProgress
 						displayTotalCompleted
 						items={[
-							[StatusesProgressScore.SELF, 0],
+							[
+								StatusesProgressScore.SELF,
+								Number(subtaskScore.selfCompleted ?? 0),
+							],
 							[
 								StatusesProgressScore.OTHER,
-								Number(testrayTask.subtaskScoreCompleted ?? 0),
+								Number(subtaskScore.othersCompleted ?? 0),
 							],
 							[
 								StatusesProgressScore.INCOMPLETE,
-								Number(testrayTask.subtaskScoreIncomplete ?? 0),
+								Number(subtaskScore.incomplete ?? 0),
 							],
 						]}
 						legend
 						taskbarClassNames={chartClassNames}
-						totalCompleted={Number(
-							testrayTask.subtaskScoreCompleted ?? 0
-						)}
+						totalCompleted={Number(subtaskScore.completed ?? 0)}
 					/>
 				</div>
 			</Container>
 
 			<Container className="mt-3">
 				<ListView
+					forceRefetch={forceRefetch}
 					managementToolbarProps={{
-						filterFields: filters.subtasks as any,
+						filterSchema: 'subtasks',
 						title: i18n.translate('subtasks'),
 					}}
 					resource={testraySubTaskImpl.resource}
 					tableProps={{
 						actions,
+						bodyVerticalAlignment: 'top',
 						columns: [
 							{
 								clickable: true,
@@ -334,7 +337,11 @@ const TestFlowTasks = () => {
 								key: 'user',
 								render: (
 									_: any,
-									subtask: TestraySubTask,
+									subtask: TestraySubTask & {
+										actions: {
+											[key: string]: string;
+										};
+									},
 									mutate
 								) => {
 									if (subtask.user) {
@@ -342,16 +349,16 @@ const TestFlowTasks = () => {
 											<Avatar
 												className="text-capitalize"
 												displayName
-												name={`${subtask?.user?.emailAddress
-													.split('@')[0]
-													.replace('.', ' ')}`}
+												name={subtask?.user?.name}
 												size="sm"
+												url={subtask.user.image}
 											/>
 										);
 									}
 
 									return (
 										<AssignToMe
+											hidden={!subtask.actions.update}
 											onClick={() =>
 												testraySubTaskImpl
 													.assignToMe(subtask)
@@ -426,7 +433,7 @@ const TestFlowTasks = () => {
 
 			<SubtaskCompleteModal
 				modal={completeModal}
-				mutate={mutateTask}
+				revalidateSubtask={revalidateSubtask}
 				subtask={completeModal.modalState}
 			/>
 		</>

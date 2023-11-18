@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.portlet.container.test;
@@ -39,6 +30,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.WebAppPool;
 
@@ -63,8 +55,6 @@ import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.ServletContext;
-
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -87,14 +77,17 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Test
 	public void testLoadGetPortletsByCompany() throws Exception {
 		Company company1 = CompanyTestUtil.addCompany();
 		Company company2 = CompanyTestUtil.addCompany();
 
-		PortalInstances.reload(_servletContext);
+		PortalInstances.initCompany(company1);
+		PortalInstances.initCompany(company2);
 
 		try {
 			setUpPortlet(
@@ -132,7 +125,8 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 
 			_companyLocalService.deleteCompany(company1);
 
-			PortalInstances.reload(_servletContext);
+			PortalInstances.removeCompany(company1.getCompanyId());
+			PortalInstances.removeCompany(company2.getCompanyId());
 		}
 	}
 
@@ -145,7 +139,7 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 
 			companies.add(company1);
 
-			PortalInstances.reload(_servletContext);
+			PortalInstances.initCompany(company1);
 
 			setUpPortlet(
 				_internalClassTestPortlet,
@@ -160,7 +154,7 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 
 			companies.add(company2);
 
-			PortalInstances.reload(_servletContext);
+			PortalInstances.initCompany(company2);
 
 			Map<String, Portlet> portlets =
 				_portletLocalService.loadGetPortletsMap(
@@ -185,10 +179,12 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 			serviceRegistrations.clear();
 
 			_companyLocalService.forEachCompany(
-				company -> _companyLocalService.deleteCompany(company),
-				companies);
+				company -> {
+					_companyLocalService.deleteCompany(company);
 
-			PortalInstances.reload(_servletContext);
+					PortalInstances.removeCompany(company.getCompanyId());
+				},
+				companies);
 		}
 	}
 
@@ -221,7 +217,8 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 		Company company1 = CompanyTestUtil.addCompany();
 		Company company2 = CompanyTestUtil.addCompany();
 
-		PortalInstances.reload(_servletContext);
+		PortalInstances.initCompany(company1);
+		PortalInstances.initCompany(company2);
 
 		try {
 			setUpPortlet(
@@ -264,7 +261,8 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 
 			_companyLocalService.deleteCompany(company1);
 
-			PortalInstances.reload(_servletContext);
+			PortalInstances.removeCompany(company1.getCompanyId());
+			PortalInstances.removeCompany(company2.getCompanyId());
 		}
 	}
 
@@ -467,9 +465,6 @@ public class PortletTrackerTest extends BasePortletContainerTestCase {
 
 	@Inject
 	private PortletLocalService _portletLocalService;
-
-	@Inject(filter = "original.bean=true")
-	private ServletContext _servletContext;
 
 	private class InternalClassTestPortlet extends TestPortlet {
 

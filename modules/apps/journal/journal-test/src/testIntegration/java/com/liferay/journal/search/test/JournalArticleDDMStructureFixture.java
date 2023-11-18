@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.search.test;
@@ -17,6 +8,7 @@ package com.liferay.journal.search.test;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.journal.model.JournalArticle;
@@ -27,6 +19,7 @@ import com.liferay.journal.test.util.search.JournalArticleSearchFixture;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.ArrayList;
@@ -40,12 +33,13 @@ import java.util.Locale;
 public class JournalArticleDDMStructureFixture {
 
 	public JournalArticleDDMStructureFixture(
-		Group group, JournalArticleLocalService journalArticleLocalService) {
+		DDMStructureLocalService ddmStructureLocalService, Group group,
+		JournalArticleLocalService journalArticleLocalService, Portal portal) {
 
 		_group = group;
 
 		_journalArticleSearchFixture = new JournalArticleSearchFixture(
-			journalArticleLocalService);
+			ddmStructureLocalService, journalArticleLocalService, portal);
 	}
 
 	public DDMStructure createStructureWithJournalArticle(
@@ -71,7 +65,7 @@ public class JournalArticleDDMStructureFixture {
 		getTemplates().add(ddmTemplate);
 
 		JournalArticle journalArticle = _journalArticleSearchFixture.addArticle(
-			journalArticleBlueprint, ddmStructure.getStructureKey(),
+			journalArticleBlueprint, ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey());
 
 		getJournalArticles().add(journalArticle);

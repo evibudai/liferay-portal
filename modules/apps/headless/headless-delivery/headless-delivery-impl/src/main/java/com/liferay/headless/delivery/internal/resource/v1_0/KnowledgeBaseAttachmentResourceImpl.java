@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -18,17 +9,19 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseAttachment;
 import com.liferay.headless.delivery.dto.v1_0.util.ContentValueUtil;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseAttachmentResource;
+import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleService;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 
-import java.util.Optional;
+import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
 
@@ -56,6 +49,25 @@ public class KnowledgeBaseAttachmentResourceImpl
 	}
 
 	@Override
+	public void
+			deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		KBArticle kbArticle =
+			_kbArticleService.getLatestKBArticleByExternalReferenceCode(
+				siteId, knowledgeBaseArticleExternalReferenceCode);
+
+		FileEntry fileEntry =
+			kbArticle.getAttachmentsFileEntryByExternalReferenceCode(
+				externalReferenceCode);
+
+		_portletFileRepository.deletePortletFileEntry(
+			fileEntry.getFileEntryId());
+	}
+
+	@Override
 	public Page<KnowledgeBaseAttachment>
 			getKnowledgeBaseArticleKnowledgeBaseAttachmentsPage(
 				Long knowledgeBaseArticleId)
@@ -65,6 +77,14 @@ public class KnowledgeBaseAttachmentResourceImpl
 			knowledgeBaseArticleId, WorkflowConstants.STATUS_APPROVED);
 
 		return Page.of(
+			HashMapBuilder.<String, Map<String, String>>put(
+				"createBatch",
+				addAction(
+					KBActionKeys.ADD_KB_ARTICLE, kbArticle.getResourcePrimKey(),
+					"postKnowledgeBaseArticleKnowledgeBaseAttachmentBatch",
+					kbArticle.getUserId(), KBConstants.RESOURCE_NAME_ADMIN,
+					kbArticle.getGroupId())
+			).build(),
 			transform(
 				kbArticle.getAttachmentsFileEntries(),
 				this::_toKnowledgeBaseAttachment));
@@ -78,6 +98,22 @@ public class KnowledgeBaseAttachmentResourceImpl
 		return _toKnowledgeBaseAttachment(
 			_portletFileRepository.getPortletFileEntry(
 				knowledgeBaseAttachmentId));
+	}
+
+	@Override
+	public KnowledgeBaseAttachment
+			getSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		KBArticle kbArticle =
+			_kbArticleService.getLatestKBArticleByExternalReferenceCode(
+				siteId, knowledgeBaseArticleExternalReferenceCode);
+
+		return _toKnowledgeBaseAttachment(
+			kbArticle.getAttachmentsFileEntryByExternalReferenceCode(
+				externalReferenceCode));
 	}
 
 	@Override
@@ -97,11 +133,27 @@ public class KnowledgeBaseAttachmentResourceImpl
 
 		return _toKnowledgeBaseAttachment(
 			_portletFileRepository.addPortletFileEntry(
-				null, kbArticle.getGroupId(), contextUser.getUserId(),
+				_getKnowledgeBaseAttachmentExternalReferenceCode(multipartBody),
+				kbArticle.getGroupId(), contextUser.getUserId(),
 				KBArticle.class.getName(), kbArticle.getClassPK(),
 				KBConstants.SERVICE_NAME, kbArticle.getAttachmentsFolderId(),
 				binaryFile.getInputStream(), binaryFile.getFileName(),
-				binaryFile.getFileName(), false));
+				binaryFile.getContentType(), false));
+	}
+
+	private String _getKnowledgeBaseAttachmentExternalReferenceCode(
+			MultipartBody multipartBody)
+		throws Exception {
+
+		KnowledgeBaseAttachment knowledgeBaseAttachment =
+			multipartBody.getValueAsInstance(
+				"knowledgeBaseAttachment", KnowledgeBaseAttachment.class);
+
+		if (knowledgeBaseAttachment == null) {
+			return null;
+		}
+
+		return knowledgeBaseAttachment.getExternalReferenceCode();
 	}
 
 	private KnowledgeBaseAttachment _toKnowledgeBaseAttachment(
@@ -110,13 +162,13 @@ public class KnowledgeBaseAttachmentResourceImpl
 
 		return new KnowledgeBaseAttachment() {
 			{
-				contentUrl = _dlURLHelper.getPreviewURL(
-					fileEntry, fileEntry.getFileVersion(), null, "", false,
-					false);
+				contentUrl = _portletFileRepository.getPortletFileEntryURL(
+					null, fileEntry, null);
 				contentValue = ContentValueUtil.toContentValue(
 					"contentValue", fileEntry::getContentStream,
-					Optional.of(contextUriInfo));
+					contextUriInfo);
 				encodingFormat = fileEntry.getMimeType();
+				externalReferenceCode = fileEntry.getExternalReferenceCode();
 				fileExtension = fileEntry.getExtension();
 				id = fileEntry.getFileEntryId();
 				sizeInBytes = fileEntry.getSize();

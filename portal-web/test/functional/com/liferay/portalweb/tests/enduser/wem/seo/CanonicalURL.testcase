@@ -1,6 +1,7 @@
 @component-name = "portal-lima"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "locale.default.request=true${line.separator}locale.prepend.friendly.url.style=1";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -13,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,9 +25,9 @@ definition {
 	}
 
 	@description = "This test covers LPS-121201. It ensures that a site can be exported after a user sets a custom canonical URL at the page level."
-	@priority = "4"
+	@priority = 4
 	test ExportSiteWithCustomURL {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -56,9 +57,10 @@ definition {
 	}
 
 	@description = "This test ensures that when a user sets a custom canonical URL at the page level, it will overwrite system level settings."
-	@priority = "5"
+	@priority = 5
 	test SetCustomURLAtPageLevel {
-		property test.name.skip.portal.instance = "CanonicalURL#SetCustomURLAtPageLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -72,7 +74,7 @@ definition {
 
 		Page.assertCanonicalURL(
 			pageName = "Canonical URL Test Page",
-			portalURL = "${portalURL}");
+			portalURL = ${portalURL});
 
 		User.loginPG(
 			password = "test",
@@ -114,13 +116,14 @@ definition {
 	}
 
 	@description = "This ensures that canonical URLs can be set for each active language during page creation."
-	@priority = "5"
+	@priority = 5
 	test SetCustomURLAtPageLevelForEachActiveLanguage {
-		property test.name.skip.portal.instance = "CanonicalURL#SetCustomURLAtPageLevelForEachActiveLanguage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
 
@@ -158,9 +161,9 @@ definition {
 	}
 
 	@description = "This test covers LPS-122797. It ensures that the Canonical URL does not have a limit of 75 characters."
-	@priority = "4"
+	@priority = 4
 	test SetCustomURLWith76Characters {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -189,15 +192,16 @@ definition {
 			value1 = "http://mycustomizedcharactersurl.com/mydesiredmorethan75charactersurlfortest");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SetDefaultURLAtSystemLevel {
-		property test.name.skip.portal.instance = "CanonicalURL#SetDefaultURLAtSystemLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		User.logoutPG();
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}");
+		Page.assertCanonicalURL(portalURL = ${portalURL});
 
 		User.loginPG(
 			password = "test",
@@ -220,26 +224,27 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/es/");
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}");
+		Page.assertCanonicalURL(portalURL = ${portalURL});
 
 		Page.assertAlternateURL(
 			locale = "es",
-			portalURL = "${portalURL}");
+			portalURL = ${portalURL});
 
 		Page.assertAlternateURL(
 			locale = "zh",
-			portalURL = "${portalURL}");
+			portalURL = ${portalURL});
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SetLocalizedURLAtSystemLevel {
-		property test.name.skip.portal.instance = "CanonicalURL#SetLocalizedURLAtSystemLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		User.logoutPG();
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}");
+		Page.assertCanonicalURL(portalURL = ${portalURL});
 
 		User.loginPG(
 			password = "test",
@@ -260,24 +265,25 @@ definition {
 
 		User.logoutPG();
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}");
+		Page.assertCanonicalURL(portalURL = ${portalURL});
 
 		Navigator.openSpecificURL(url = "${portalURL}/zh/");
 
 		Page.assertCanonicalURL(
 			locale = "zh",
-			portalURL = "${portalURL}");
+			portalURL = ${portalURL});
 
 		Page.assertAlternateURL(
 			locale = "es",
-			portalURL = "${portalURL}");
+			portalURL = ${portalURL});
 	}
 
 	@description = "This test covers LPS-127840. It ensures that the Canonical URL has page name."
-	@priority = "3"
+	@priority = 3
 	test ViewPageNameInCanonicalURL {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
-		property test.name.skip.portal.instance = "CanonicalURL#ViewPageNameInCanonicalURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var num : list "1,2") {
 			JSONLayout.addPublicLayout(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.staging.test;
@@ -40,11 +31,13 @@ import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSetBranchConstants;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetBranchLocalServiceUtil;
@@ -71,9 +64,10 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
+import com.liferay.portal.kernel.zip.ZipReaderFactory;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.staging.configuration.StagingConfiguration;
@@ -123,6 +117,71 @@ public class StagingImplTest {
 		_group = GroupTestUtil.addGroup();
 		_remoteLiveGroup = GroupTestUtil.addGroup();
 		_remoteStagingGroup = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testDisableRemoteStagingWithIncorrectLiveGroupHiddenError()
+		throws Exception {
+
+		enableRemoteStaging(false);
+
+		Throwable caughtThrowable = null;
+
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"TUNNEL_SERVLET_HIDE_EXCEPTION_DATA", true)) {
+
+			caughtThrowable = _disableRemoteStagingWithIncorrectLiveGroupId();
+		}
+
+		Assert.assertNotNull(caughtThrowable);
+
+		Class<? extends Throwable> caughtExceptionClass =
+			caughtThrowable.getClass();
+
+		Assert.assertNotEquals(
+			NoSuchGroupException.class, caughtExceptionClass);
+		Assert.assertNotEquals(PortalException.class, caughtExceptionClass);
+		Assert.assertEquals(RemoteExportException.class, caughtExceptionClass);
+		Assert.assertNotEquals(SystemException.class, caughtExceptionClass);
+
+		RemoteExportException remoteExportException =
+			(RemoteExportException)caughtThrowable;
+
+		Assert.assertEquals(
+			remoteExportException.getType(), RemoteExportException.NO_GROUP);
+	}
+
+	@Test
+	public void testDisableRemoteStagingWithIncorrectLiveGroupVisibleError()
+		throws Exception {
+
+		enableRemoteStaging(false);
+
+		Throwable caughtThrowable = null;
+
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"TUNNEL_SERVLET_HIDE_EXCEPTION_DATA", false)) {
+
+			caughtThrowable = _disableRemoteStagingWithIncorrectLiveGroupId();
+		}
+
+		Assert.assertNotNull(caughtThrowable);
+
+		Class<? extends Throwable> caughtExceptionClass =
+			caughtThrowable.getClass();
+
+		Assert.assertEquals(NoSuchGroupException.class, caughtExceptionClass);
+		Assert.assertNotEquals(PortalException.class, caughtExceptionClass);
+		Assert.assertNotEquals(
+			RemoteExportException.class, caughtExceptionClass);
+		Assert.assertNotEquals(SystemException.class, caughtExceptionClass);
+
+		Assert.assertEquals(
+			"No Group exists with the primary key " +
+				(_remoteLiveGroup.getGroupId() + 1),
+			caughtThrowable.getMessage());
 	}
 
 	@Test
@@ -391,7 +450,7 @@ public class StagingImplTest {
 		PortletDataContext portletDataContext =
 			PortletDataContextFactoryUtil.createImportPortletDataContext(
 				_group.getCompanyId(), _group.getGroupId(), parameterMap,
-				userIdStrategy, ZipReaderFactoryUtil.getZipReader(larFile));
+				userIdStrategy, _zipReaderFactory.getZipReader(larFile));
 
 		String journalPortletPath = ExportImportPathUtil.getPortletPath(
 			portletDataContext, JournalPortletKeys.JOURNAL);
@@ -648,6 +707,39 @@ public class StagingImplTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
+	private Throwable _disableRemoteStagingWithIncorrectLiveGroupId() {
+		Throwable caughtThrowable = null;
+
+		try (SafeCloseable safeCloseable1 =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"TUNNELING_SERVLET_SHARED_SECRET",
+					"F0E1D2C3B4A5968778695A4B3C2D1E0F");
+			SafeCloseable safeCloseable2 =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"TUNNELING_SERVLET_SHARED_SECRET_HEX", true);
+			LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.servlet.TunnelServlet",
+				LoggerTestUtil.OFF)) {
+
+			_setLiveGroupUnicodePropertiesIncorrectGroupId();
+
+			try {
+				StagingLocalServiceUtil.disableStaging(
+					_remoteLiveGroup,
+					ServiceContextTestUtil.getServiceContext(
+						_remoteStagingGroup.getGroupId()));
+			}
+			catch (Throwable throwable) {
+				caughtThrowable = throwable;
+			}
+			finally {
+				GroupUtil.clearCache();
+			}
+		}
+
+		return caughtThrowable;
+	}
+
 	private Throwable _enableRemoteStagingWithError() throws PortalException {
 		Throwable caughtThrowable = null;
 
@@ -709,6 +801,22 @@ public class StagingImplTest {
 		}
 	}
 
+	private void _setLiveGroupUnicodePropertiesIncorrectGroupId() {
+		UnicodeProperties typeSettingsUnicodeProperties =
+			_remoteLiveGroup.getTypeSettingsProperties();
+
+		typeSettingsUnicodeProperties.setProperty("remoteAddress", "localhost");
+		typeSettingsUnicodeProperties.setProperty(
+			"remoteGroupId", String.valueOf(_remoteLiveGroup.getGroupId() + 1));
+		typeSettingsUnicodeProperties.setProperty(
+			"remotePort",
+			String.valueOf(PortalUtil.getPortalServerPort(false)));
+		typeSettingsUnicodeProperties.setProperty(
+			"staged", Boolean.TRUE.toString());
+		typeSettingsUnicodeProperties.setProperty(
+			"stagedRemotely", Boolean.TRUE.toString());
+	}
+
 	private static final Locale[] _locales = {
 		LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US
 	};
@@ -721,5 +829,8 @@ public class StagingImplTest {
 
 	@DeleteAfterTestRun
 	private Group _remoteStagingGroup;
+
+	@Inject
+	private ZipReaderFactory _zipReaderFactory;
 
 }

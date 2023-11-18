@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.recommendation.test;
@@ -17,6 +8,7 @@ package com.liferay.commerce.machine.learning.recommendation.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.machine.learning.recommendation.UserCommerceMLRecommendation;
 import com.liferay.commerce.machine.learning.recommendation.UserCommerceMLRecommendationManager;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -35,8 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,32 +58,23 @@ public class UserCommerceMLRecommendationManagerTest {
 				RandomTestUtil.randomInt(
 					0, _userCommerceMLRecommendations.size() - 1));
 
-		Stream<UserCommerceMLRecommendation>
-			userCommerceMLRecommendationStream =
-				_userCommerceMLRecommendations.stream();
-
 		Comparator<UserCommerceMLRecommendation>
 			userCommerceMLRecommendationComparator = Comparator.comparingDouble(
 				UserCommerceMLRecommendation::getScore);
-
-		List<UserCommerceMLRecommendation>
-			expectedUserCommerceMLRecommendations =
-				userCommerceMLRecommendationStream.filter(
-					recommendation ->
-						recommendation.getEntryClassPK() ==
-							userCommerceMLRecommendation.getEntryClassPK()
-				).sorted(
-					userCommerceMLRecommendationComparator.reversed()
-				).collect(
-					Collectors.toList()
-				);
 
 		IdempotentRetryAssert.retryAssert(
 			3, TimeUnit.SECONDS,
 			() -> {
 				_assetResultEquals(
 					userCommerceMLRecommendation.getEntryClassPK(), null,
-					expectedUserCommerceMLRecommendations);
+					ListUtil.sort(
+						ListUtil.filter(
+							_userCommerceMLRecommendations,
+							recommendation ->
+								recommendation.getEntryClassPK() ==
+									userCommerceMLRecommendation.
+										getEntryClassPK()),
+						userCommerceMLRecommendationComparator.reversed()));
 
 				return null;
 			});
@@ -108,29 +89,9 @@ public class UserCommerceMLRecommendationManagerTest {
 				RandomTestUtil.randomInt(
 					0, _userCommerceMLRecommendations.size() - 1));
 
-		Stream<UserCommerceMLRecommendation>
-			userCommerceMLRecommendationStream =
-				_userCommerceMLRecommendations.stream();
-
 		Comparator<UserCommerceMLRecommendation>
 			userCommerceMLRecommendationComparator = Comparator.comparingDouble(
 				UserCommerceMLRecommendation::getScore);
-
-		List<UserCommerceMLRecommendation>
-			expectedUserCommerceMLRecommendations =
-				userCommerceMLRecommendationStream.filter(
-					recommendation ->
-						recommendation.getEntryClassPK() ==
-							userCommerceMLRecommendation.getEntryClassPK()
-				).filter(
-					recommendation -> _filterAssetCategories(
-						recommendation.getAssetCategoryIds(),
-						userCommerceMLRecommendation.getAssetCategoryIds())
-				).sorted(
-					userCommerceMLRecommendationComparator.reversed()
-				).collect(
-					Collectors.toList()
-				);
 
 		IdempotentRetryAssert.retryAssert(
 			3, TimeUnit.SECONDS,
@@ -138,7 +99,24 @@ public class UserCommerceMLRecommendationManagerTest {
 				_assetResultEquals(
 					userCommerceMLRecommendation.getEntryClassPK(),
 					userCommerceMLRecommendation.getAssetCategoryIds(),
-					expectedUserCommerceMLRecommendations);
+					ListUtil.sort(
+						TransformUtil.transform(
+							_userCommerceMLRecommendations,
+							recommendation -> {
+								if ((recommendation.getEntryClassPK() !=
+										userCommerceMLRecommendation.
+											getEntryClassPK()) ||
+									!_filterAssetCategories(
+										recommendation.getAssetCategoryIds(),
+										userCommerceMLRecommendation.
+											getAssetCategoryIds())) {
+
+									return null;
+								}
+
+								return recommendation;
+							}),
+						userCommerceMLRecommendationComparator.reversed()));
 
 				return null;
 			});
@@ -250,16 +228,15 @@ public class UserCommerceMLRecommendationManagerTest {
 	private boolean _filterAssetCategories(
 		long[] assetCategoryIds, long[] expectedAssetCategoryIds) {
 
-		List<Long> assetCategoryIdList = ListUtil.fromArray(assetCategoryIds);
+		for (long expectedAssetCategoryId : expectedAssetCategoryIds) {
+			if (!ArrayUtil.contains(
+					assetCategoryIds, expectedAssetCategoryId)) {
 
-		List<Long> expectedAssetCategoryIdList = ListUtil.fromArray(
-			expectedAssetCategoryIds);
+				return false;
+			}
+		}
 
-		Stream<Long> expectedAssetCategoryIdStream =
-			expectedAssetCategoryIdList.stream();
-
-		return expectedAssetCategoryIdStream.allMatch(
-			assetCategoryIdList::contains);
+		return true;
 	}
 
 	private static final int _MAX_ASSET_CATEGORY_COUNT = 5;

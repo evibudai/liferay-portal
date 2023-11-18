@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -29,6 +20,7 @@ page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.asset.SearchableAssetClassNamesProvider" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortlet" %><%@
 page import="com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
@@ -47,7 +39,7 @@ ObjectDefinitionLocalService objectDefinitionLocalService = (ObjectDefinitionLoc
 
 SearchableAssetClassNamesProvider searchableAssetClassNamesProvider = (SearchableAssetClassNamesProvider)request.getAttribute(SearchableAssetClassNamesProvider.class.getName());
 
-TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferencesImpl(objectDefinitionLocalService, java.util.Optional.of(portletPreferences), searchableAssetClassNamesProvider);
+TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferencesImpl(objectDefinitionLocalService, portletPreferences, searchableAssetClassNamesProvider);
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -58,6 +50,7 @@ TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal
 	action="<%= configurationActionURL %>"
 	method="post"
 	name="fm"
+	onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveConfiguration();" %>'
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
@@ -69,7 +62,7 @@ TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal
 		>
 			<div class="display-template">
 				<liferay-template:template-selector
-					className="<%= AssetEntriesSearchFacetDisplayContext.class.getName() %>"
+					className="<%= TypeFacetPortlet.class.getName() %>"
 					displayStyle="<%= typeFacetPortletInstanceConfiguration.displayStyle() %>"
 					displayStyleGroupId="<%= assetEntriesSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 					refreshURL="<%= configurationRenderURL %>"
@@ -86,9 +79,16 @@ TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal
 
 			<aui:input label="frequency-threshold" name="<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_FREQUENCY_THRESHOLD) %>" value="<%= typeFacetPortletPreferences.getFrequencyThreshold() %>" />
 
+			<aui:select label="order-terms-by" name="<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_ORDER) %>" value="<%= typeFacetPortletPreferences.getOrder() %>">
+				<aui:option label="term-frequency-descending" value="count:desc" />
+				<aui:option label="term-frequency-ascending" value="count:asc" />
+				<aui:option label="term-value-ascending" value="key:asc" />
+				<aui:option label="term-value-descending" value="key:desc" />
+			</aui:select>
+
 			<aui:input label="display-frequencies" name="<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_FREQUENCIES_VISIBLE) %>" type="checkbox" value="<%= typeFacetPortletPreferences.isFrequenciesVisible() %>" />
 
-			<aui:input name="<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES) %>" type="hidden" value="<%= typeFacetPortletPreferences.getAssetTypesString() %>" />
+			<aui:input name="<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES) %>" type="hidden" value="<%= typeFacetPortletPreferences.getAssetTypes() %>" />
 
 			<liferay-ui:input-move-boxes
 				leftBoxName="currentAssetTypes"
@@ -107,21 +107,22 @@ TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal
 </liferay-frontend:edit-form>
 
 <script>
-	var form = document.<portlet:namespace />fm;
+	function <portlet:namespace />saveConfiguration() {
+		var form = document.<portlet:namespace />fm;
 
-	var currentAssetTypes = Liferay.Util.getFormElement(form, 'currentAssetTypes');
+		var currentAssetTypes = Liferay.Util.getFormElement(
+			form,
+			'currentAssetTypes'
+		);
 
-	if (currentAssetTypes) {
-		form.addEventListener('submit', (event) => {
-			event.preventDefault();
+		var data = {};
 
-			var data = {};
-
+		if (currentAssetTypes) {
 			data[
 				'<%= PortletPreferencesJspUtil.getInputName(TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES) %>'
 			] = Liferay.Util.getSelectedOptionValues(currentAssetTypes);
+		}
 
-			Liferay.Util.postForm(form, {data: data});
-		});
+		Liferay.Util.postForm(form, {data: data});
 	}
 </script>

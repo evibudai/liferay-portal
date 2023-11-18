@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.internal.upgrade.registry;
@@ -19,9 +10,8 @@ import com.liferay.blogs.internal.upgrade.v1_1_2.BlogsImagesUpgradeProcess;
 import com.liferay.blogs.internal.upgrade.v2_0_0.util.BlogsEntryTable;
 import com.liferay.blogs.internal.upgrade.v2_0_0.util.BlogsStatsUserTable;
 import com.liferay.blogs.internal.upgrade.v2_2_0.BlogsEntryExternalReferenceCodeUpgradeProcess;
-import com.liferay.blogs.internal.upgrade.v3_0_0.BlogsStatsUserUpgradeProcess;
 import com.liferay.blogs.model.BlogsEntry;
-import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.message.boards.model.MBDiscussion;
@@ -77,7 +67,7 @@ public class BlogsServiceUpgradeStepRegistrator
 
 		registry.register(
 			"1.1.2", "1.1.3",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				BlogsEntry.class.getName(),
 				_getUpgradeDiscussionSubscriptionClassNameUnsafeBiFunction()));
@@ -113,7 +103,9 @@ public class BlogsServiceUpgradeStepRegistrator
 			"2.1.2", "2.2.0",
 			new BlogsEntryExternalReferenceCodeUpgradeProcess());
 
-		registry.register("2.2.0", "3.0.0", new BlogsStatsUserUpgradeProcess());
+		registry.register(
+			"2.2.0", "3.0.0",
+			UpgradeProcessFactory.dropTables("BlogsStatsUser"));
 
 		registry.register(
 			"3.0.0", "3.1.0", new CTModelUpgradeProcess("BlogsEntry"));

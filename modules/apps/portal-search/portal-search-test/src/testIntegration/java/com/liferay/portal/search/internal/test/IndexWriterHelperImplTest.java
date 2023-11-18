@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.test;
@@ -23,15 +14,18 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
+import com.liferay.portal.kernel.search.SearchEngine;
+import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.CountSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.CountSearchResponse;
+import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.TermQuery;
 import com.liferay.portal.test.rule.Inject;
@@ -39,6 +33,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -144,21 +139,8 @@ public class IndexWriterHelperImplTest {
 		Map<Long, Long> originalCounts, String className) {
 
 		for (long companyId : _getCompanyIds()) {
-			CountSearchRequest countSearchRequest = new CountSearchRequest();
-
-			countSearchRequest.setIndexNames("liferay-" + companyId);
-
-			TermQuery termQuery = _queries.term(
-				Field.ENTRY_CLASS_NAME, className);
-
-			countSearchRequest.setQuery(termQuery);
-
-			CountSearchResponse countSearchResponse =
-				_searchEngineAdapter.execute(countSearchRequest);
-
+			Long newCount = Long.valueOf(_getCount(companyId, className));
 			Long originalCount = originalCounts.get(companyId);
-
-			Long newCount = Long.valueOf(countSearchResponse.getCount());
 
 			Assert.assertEquals(
 				className + " companyId=" + companyId, originalCount, newCount);
@@ -176,50 +158,68 @@ public class IndexWriterHelperImplTest {
 		return companyIds;
 	}
 
+	private long _getCount(long companyId, String className) {
+		CountSearchRequest countSearchRequest = new CountSearchRequest();
+
+		if (_isSearchEngine("Solr")) {
+			countSearchRequest.setIndexNames("liferay");
+		}
+		else {
+			countSearchRequest.setIndexNames("liferay-" + companyId);
+		}
+
+		TermQuery classNameTermQuery = _queries.term(
+			Field.ENTRY_CLASS_NAME, className);
+		TermQuery companyTermQuery = _queries.term(Field.COMPANY_ID, companyId);
+
+		BooleanQuery booleanQuery = _queries.booleanQuery();
+
+		booleanQuery.addMustQueryClauses(classNameTermQuery, companyTermQuery);
+
+		countSearchRequest.setQuery(booleanQuery);
+
+		CountSearchResponse countSearchResponse = _searchEngineAdapter.execute(
+			countSearchRequest);
+
+		return countSearchResponse.getCount();
+	}
+
+	private boolean _isSearchEngine(String vendor) {
+		SearchEngine searchEngine = _searchEngineHelper.getSearchEngine();
+
+		return Objects.equals(searchEngine.getVendor(), vendor);
+	}
+
 	private void _populateOriginalCounts(
 		Map<Long, Long> originalCounts, String className,
 		boolean systemIndexer) {
 
 		for (long companyId : _getCompanyIds()) {
-			CountSearchRequest countSearchRequest = new CountSearchRequest();
-
-			countSearchRequest.setIndexNames("liferay-" + companyId);
-
-			TermQuery termQuery = _queries.term(
-				Field.ENTRY_CLASS_NAME, className);
-
-			countSearchRequest.setQuery(termQuery);
-
-			CountSearchResponse countSearchResponse =
-				_searchEngineAdapter.execute(countSearchRequest);
+			long count = _getCount(companyId, className);
 
 			if (systemIndexer) {
 				if (companyId == CompanyConstants.SYSTEM) {
-					_assertCountGreaterThanZero(
-						className, companyId, countSearchResponse.getCount());
+					_assertCountGreaterThanZero(className, companyId, count);
 				}
 				else {
-					_assertCountEqualsZero(
-						className, companyId, countSearchResponse.getCount());
+					_assertCountEqualsZero(className, companyId, count);
 				}
 			}
 			else {
 				if (companyId == CompanyConstants.SYSTEM) {
-					_assertCountEqualsZero(
-						className, companyId, countSearchResponse.getCount());
+					_assertCountEqualsZero(className, companyId, count);
 				}
 				else {
-					_assertCountGreaterThanZero(
-						className, companyId, countSearchResponse.getCount());
+					_assertCountGreaterThanZero(className, companyId, count);
 				}
 			}
 
-			originalCounts.put(companyId, countSearchResponse.getCount());
+			originalCounts.put(companyId, count);
 		}
 	}
 
 	private void _reindex(String className) throws Exception {
-		String jobName = "reindex-".concat(_portalUUID.generate());
+		String jobName = "reindex-".concat(PortalUUIDUtil.generate());
 
 		_indexWriterHelper.reindex(
 			UserConstants.USER_ID_DEFAULT, jobName, _getCompanyIds(), className,
@@ -246,12 +246,12 @@ public class IndexWriterHelperImplTest {
 	private PortalInstancesLocalService _portalInstancesLocalService;
 
 	@Inject
-	private PortalUUID _portalUUID;
-
-	@Inject
 	private Queries _queries;
 
 	@Inject
 	private SearchEngineAdapter _searchEngineAdapter;
+
+	@Inject
+	private SearchEngineHelper _searchEngineHelper;
 
 }

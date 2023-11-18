@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.service.impl;
 
 import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
+import com.liferay.data.engine.model.DEDataDefinitionFieldLinkTable;
 import com.liferay.data.engine.service.base.DEDataDefinitionFieldLinkLocalServiceBaseImpl;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
@@ -128,6 +121,23 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 	}
 
 	@Override
+	public List<Long> getClassPKS(long classNameId, long ddmStructureId) {
+		return deDataDefinitionFieldLinkPersistence.dslQuery(
+			DSLQueryFactoryUtil.selectDistinct(
+				DEDataDefinitionFieldLinkTable.INSTANCE.classPK
+			).from(
+				DEDataDefinitionFieldLinkTable.INSTANCE
+			).where(
+				DEDataDefinitionFieldLinkTable.INSTANCE.classNameId.eq(
+					classNameId
+				).and(
+					DEDataDefinitionFieldLinkTable.INSTANCE.ddmStructureId.eq(
+						ddmStructureId)
+				)
+			));
+	}
+
+	@Override
 	public List<DEDataDefinitionFieldLink> getDEDataDefinitionFieldLinks(
 		long ddmStructureId) {
 
@@ -171,6 +181,15 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 
 		return deDataDefinitionFieldLinkPersistence.findByDDMSI_F(
 			ddmStructureId, fieldNames);
+	}
+
+	@Override
+	public List<DEDataDefinitionFieldLink>
+		getDEDataDefinitionFieldLinksByClassNameIdAndClassPK(
+			long classNameId, long classPK) {
+
+		return deDataDefinitionFieldLinkPersistence.findByC_C(
+			classNameId, classPK);
 	}
 
 	@Reference

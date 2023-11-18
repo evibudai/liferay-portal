@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.model.impl;
@@ -217,99 +208,115 @@ public class BatchEngineImportTaskErrorModelImpl
 	public Map<String, Function<BatchEngineImportTaskError, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<BatchEngineImportTaskError, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<BatchEngineImportTaskError, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<BatchEngineImportTaskError, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<BatchEngineImportTaskError, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<BatchEngineImportTaskError, Object>>();
-		Map<String, BiConsumer<BatchEngineImportTaskError, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<BatchEngineImportTaskError, ?>>();
+		private static final Map
+			<String, Function<BatchEngineImportTaskError, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", BatchEngineImportTaskError::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<BatchEngineImportTaskError, Long>)
-				BatchEngineImportTaskError::setMvccVersion);
-		attributeGetterFunctions.put(
-			"batchEngineImportTaskErrorId",
-			BatchEngineImportTaskError::getBatchEngineImportTaskErrorId);
-		attributeSetterBiConsumers.put(
-			"batchEngineImportTaskErrorId",
-			(BiConsumer<BatchEngineImportTaskError, Long>)
-				BatchEngineImportTaskError::setBatchEngineImportTaskErrorId);
-		attributeGetterFunctions.put(
-			"companyId", BatchEngineImportTaskError::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<BatchEngineImportTaskError, Long>)
-				BatchEngineImportTaskError::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", BatchEngineImportTaskError::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<BatchEngineImportTaskError, Long>)
-				BatchEngineImportTaskError::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", BatchEngineImportTaskError::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<BatchEngineImportTaskError, Date>)
-				BatchEngineImportTaskError::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", BatchEngineImportTaskError::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<BatchEngineImportTaskError, Date>)
-				BatchEngineImportTaskError::setModifiedDate);
-		attributeGetterFunctions.put(
-			"batchEngineImportTaskId",
-			BatchEngineImportTaskError::getBatchEngineImportTaskId);
-		attributeSetterBiConsumers.put(
-			"batchEngineImportTaskId",
-			(BiConsumer<BatchEngineImportTaskError, Long>)
-				BatchEngineImportTaskError::setBatchEngineImportTaskId);
-		attributeGetterFunctions.put(
-			"item", BatchEngineImportTaskError::getItem);
-		attributeSetterBiConsumers.put(
-			"item",
-			(BiConsumer<BatchEngineImportTaskError, String>)
-				BatchEngineImportTaskError::setItem);
-		attributeGetterFunctions.put(
-			"itemIndex", BatchEngineImportTaskError::getItemIndex);
-		attributeSetterBiConsumers.put(
-			"itemIndex",
-			(BiConsumer<BatchEngineImportTaskError, Integer>)
-				BatchEngineImportTaskError::setItemIndex);
-		attributeGetterFunctions.put(
-			"message", BatchEngineImportTaskError::getMessage);
-		attributeSetterBiConsumers.put(
-			"message",
-			(BiConsumer<BatchEngineImportTaskError, String>)
-				BatchEngineImportTaskError::setMessage);
+		static {
+			Map<String, Function<BatchEngineImportTaskError, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String,
+						 Function<BatchEngineImportTaskError, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", BatchEngineImportTaskError::getMvccVersion);
+			attributeGetterFunctions.put(
+				"batchEngineImportTaskErrorId",
+				BatchEngineImportTaskError::getBatchEngineImportTaskErrorId);
+			attributeGetterFunctions.put(
+				"companyId", BatchEngineImportTaskError::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", BatchEngineImportTaskError::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", BatchEngineImportTaskError::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", BatchEngineImportTaskError::getModifiedDate);
+			attributeGetterFunctions.put(
+				"batchEngineImportTaskId",
+				BatchEngineImportTaskError::getBatchEngineImportTaskId);
+			attributeGetterFunctions.put(
+				"item", BatchEngineImportTaskError::getItem);
+			attributeGetterFunctions.put(
+				"itemIndex", BatchEngineImportTaskError::getItemIndex);
+			attributeGetterFunctions.put(
+				"message", BatchEngineImportTaskError::getMessage);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<BatchEngineImportTaskError, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<BatchEngineImportTaskError, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<BatchEngineImportTaskError, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<BatchEngineImportTaskError, Long>)
+					BatchEngineImportTaskError::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"batchEngineImportTaskErrorId",
+				(BiConsumer<BatchEngineImportTaskError, Long>)
+					BatchEngineImportTaskError::
+						setBatchEngineImportTaskErrorId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<BatchEngineImportTaskError, Long>)
+					BatchEngineImportTaskError::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<BatchEngineImportTaskError, Long>)
+					BatchEngineImportTaskError::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<BatchEngineImportTaskError, Date>)
+					BatchEngineImportTaskError::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<BatchEngineImportTaskError, Date>)
+					BatchEngineImportTaskError::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"batchEngineImportTaskId",
+				(BiConsumer<BatchEngineImportTaskError, Long>)
+					BatchEngineImportTaskError::setBatchEngineImportTaskId);
+			attributeSetterBiConsumers.put(
+				"item",
+				(BiConsumer<BatchEngineImportTaskError, String>)
+					BatchEngineImportTaskError::setItem);
+			attributeSetterBiConsumers.put(
+				"itemIndex",
+				(BiConsumer<BatchEngineImportTaskError, Integer>)
+					BatchEngineImportTaskError::setItemIndex);
+			attributeSetterBiConsumers.put(
+				"message",
+				(BiConsumer<BatchEngineImportTaskError, String>)
+					BatchEngineImportTaskError::setMessage);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -806,7 +813,8 @@ public class BatchEngineImportTaskErrorModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<BatchEngineImportTaskError, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
@@ -20,13 +11,16 @@ import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import getCN from 'classnames';
 import {addParams, fetch, navigate} from 'frontend-js-web';
-import React, {useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 
 import useDebounceCallback from '../hooks/useDebounceCallback';
+import cleanSuggestionsContributorConfiguration from '../utils/clean_suggestions_contributor_configuration';
 
 export default function SearchBar({
 	destinationFriendlyURL,
 	emptySearchEnabled,
+	isDXP = true,
+	isSearchExperiencesSupported = true,
 	keywords = '',
 	keywordsParameterName = 'q',
 	letUserChooseScope = false,
@@ -40,6 +34,11 @@ export default function SearchBar({
 	suggestionsDisplayThreshold = '2',
 	suggestionsURL = '/o/portal-search-rest/v1.0/suggestions',
 }) {
+	const fetchURL = new URL(
+		`${Liferay.ThemeDisplay.getPathContext()}${suggestionsURL}`,
+		Liferay.ThemeDisplay.getPortalURL()
+	);
+
 	const [active, setActive] = useState(false);
 	const [autocompleteSearchValue, setAutocompleteSearchValue] = useState('');
 	const [inputValue, setInputValue] = useState(keywords);
@@ -56,6 +55,51 @@ export default function SearchBar({
 	const alignElementRef = useRef();
 	const dropdownRef = useRef();
 
+	/**
+	 * Returns the lowest suggestions display threshold available.
+	 * If a suggestions contributor does not set its own threshold,
+	 * it uses the global one.
+	 */
+
+	const _getLowestSuggestionsDisplayThreshold = useCallback(() => {
+		const characterThresholdArray = cleanSuggestionsContributorConfiguration(
+			suggestionsContributorConfiguration,
+			isDXP,
+			isSearchExperiencesSupported
+		).map((config) =>
+			config.attributes?.characterThreshold
+				? parseInt(config.attributes.characterThreshold, 10)
+				: parseInt(suggestionsDisplayThreshold, 10)
+		);
+
+		return Math.min(...characterThresholdArray);
+	}, [
+		isDXP,
+		isSearchExperiencesSupported,
+		suggestionsContributorConfiguration,
+		suggestionsDisplayThreshold,
+	]);
+
+	/**
+	 * Filters out blueprint suggestion contributors if search
+	 * experiences is not supported.
+	 */
+	const _getSuggestionsContributorConfiguration = useCallback(
+		() =>
+			JSON.stringify(
+				cleanSuggestionsContributorConfiguration(
+					suggestionsContributorConfiguration,
+					isDXP,
+					isSearchExperiencesSupported
+				)
+			),
+		[
+			isDXP,
+			isSearchExperiencesSupported,
+			suggestionsContributorConfiguration,
+		]
+	);
+
 	const _fetchSuggestions = (searchValue, scopeValue) => {
 		fetch(
 			addParams(
@@ -65,14 +109,15 @@ export default function SearchBar({
 						? destinationFriendlyURL
 						: '/search',
 					groupId: Liferay.ThemeDisplay.getScopeGroupId(),
+					keywordsParameterName,
 					plid: Liferay.ThemeDisplay.getPlid(),
 					scope: scopeValue,
 					search: searchValue,
 				},
-				suggestionsURL
+				fetchURL.href
 			),
 			{
-				body: suggestionsContributorConfiguration,
+				body: _getSuggestionsContributorConfiguration(),
 				headers: new Headers({
 					'Accept': 'application/json',
 					'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
@@ -108,6 +153,19 @@ export default function SearchBar({
 		setScope(event.target.value);
 	};
 
+	const _handleFocus = () => {
+		if (
+			_getLowestSuggestionsDisplayThreshold() === 0 &&
+			inputValue === ''
+		) {
+			setLoading(true);
+
+			_fetchSuggestions(inputValue, scope);
+
+			setActive(true);
+		}
+	};
+
 	const _handleSubmit = (event) => {
 		event.preventDefault();
 		event.stopPropagation();
@@ -124,7 +182,7 @@ export default function SearchBar({
 
 		setInputValue(value);
 
-		if (value.trim().length > parseInt(suggestionsDisplayThreshold, 10)) {
+		if (value.trim().length >= _getLowestSuggestionsDisplayThreshold()) {
 
 			// Immediately show loading spinner unless the value hasn't changed.
 			// If the value hasn't changed, no new request will be made and the
@@ -158,6 +216,7 @@ export default function SearchBar({
 					data-qa-id="searchInput"
 					name={keywordsParameterName}
 					onChange={_handleValueChange}
+					onFocus={_handleFocus}
 					onKeyDown={_handleKeyDown}
 					placeholder={Liferay.Language.get('search-...')}
 					title={Liferay.Language.get('search')}
@@ -195,6 +254,7 @@ export default function SearchBar({
 							data-qa-id="searchInput"
 							name={keywordsParameterName}
 							onChange={_handleValueChange}
+							onFocus={_handleFocus}
 							onKeyDown={_handleKeyDown}
 							placeholder={Liferay.Language.get('search-...')}
 							type="text"
@@ -202,12 +262,14 @@ export default function SearchBar({
 						/>
 
 						<ClayInput.GroupInsetItem after>
-							<ClayLoadingIndicator
-								className={getCN({
-									invisible: !loading,
-								})}
-								small
-							/>
+							<span className="c-mr-2 inline-item">
+								<ClayLoadingIndicator
+									className={getCN({
+										invisible: !loading,
+									})}
+									small
+								/>
+							</span>
 						</ClayInput.GroupInsetItem>
 					</ClayInput.Group>
 				</ClayInput.GroupItem>
@@ -234,7 +296,7 @@ export default function SearchBar({
 					</ClaySelect>
 				</ClayInput.GroupItem>
 
-				<ClayInput.GroupItem append className="mr-0" shrink>
+				<ClayInput.GroupItem append className="c-mr-0" shrink>
 					<ClayButton
 						aria-label={Liferay.Language.get('search')}
 						displayType="secondary"
@@ -251,7 +313,7 @@ export default function SearchBar({
 	const _updateQueryString = (queryString) => {
 		const searchParams = new URLSearchParams(queryString);
 
-		if (inputValue) {
+		if (emptySearchEnabled || inputValue) {
 			searchParams.set(
 				keywordsParameterName,
 				inputValue.replace(/^\s+|\s+$/, '')

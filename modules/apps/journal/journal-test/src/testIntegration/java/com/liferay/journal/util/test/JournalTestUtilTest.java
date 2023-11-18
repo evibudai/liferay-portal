@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.util.test;
@@ -38,9 +29,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.xml.Document;
-import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
@@ -186,17 +174,6 @@ public class JournalTestUtilTest {
 	}
 
 	@Test
-	public void testAddDynamicElement() {
-		Document document = SAXReaderUtil.createDocument();
-
-		Element rootElement = document.addElement("root");
-
-		Assert.assertNotNull(
-			JournalTestUtil.addDynamicElementElement(
-				rootElement, "text", "name"));
-	}
-
-	@Test
 	public void testAddFolder() throws Exception {
 		Assert.assertNotNull(
 			JournalTestUtil.addFolder(_group.getGroupId(), 0, "Test Folder"));
@@ -260,16 +237,6 @@ public class JournalTestUtilTest {
 		Assert.assertNotNull(
 			JournalTestUtil.updateArticle(
 				article, article.getTitle(), localizedContent));
-	}
-
-	protected Map<String, String> getTokens() throws Exception {
-		return HashMapBuilder.put(
-			"article_group_id", String.valueOf(TestPropsValues.getGroupId())
-		).put(
-			"company_id", String.valueOf(TestPropsValues.getCompanyId())
-		).put(
-			"ddm_structure_id", String.valueOf(_ddmStructure.getStructureId())
-		).build();
 	}
 
 	@DeleteAfterTestRun

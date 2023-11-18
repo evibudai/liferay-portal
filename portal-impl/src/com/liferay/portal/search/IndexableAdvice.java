@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.aop.AopMethodInvocation;
 import com.liferay.portal.kernel.aop.ChainableMethodAdvice;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
@@ -28,6 +20,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.util.PortalInstances;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -75,11 +68,11 @@ public class IndexableAdvice extends ChainableMethodAdvice {
 			return;
 		}
 
-		if (CompanyThreadLocal.isDeleteInProcess() ||
+		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
 			IndexWriterHelperUtil.isIndexReadOnly()) {
 
 			if (_log.isDebugEnabled()) {
-				if (CompanyThreadLocal.isDeleteInProcess()) {
+				if (PortalInstances.isCurrentCompanyInDeletionProcess()) {
 					_log.debug(
 						"Skip indexing because company delete is in process");
 				}
@@ -98,24 +91,31 @@ public class IndexableAdvice extends ChainableMethodAdvice {
 
 		Indexer<Object> indexer = IndexerRegistryUtil.getIndexer(name);
 
-		if (indexer == null) {
-			DependencyManagerSyncUtil.registerSyncCallable(
-				() -> {
-					Indexer<Object> curIndexer = IndexerRegistryUtil.getIndexer(
-						name);
-
-					if (curIndexer != null) {
-						_reindex(
-							curIndexer, indexableContext, arguments, result);
-					}
-
-					return null;
-				});
+		if (indexer != null) {
+			_reindex(indexer, indexableContext, arguments, result);
 
 			return;
 		}
 
-		_reindex(indexer, indexableContext, arguments, result);
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		DependencyManagerSyncUtil.registerSyncCallable(
+			() -> {
+				Indexer<Object> curIndexer = IndexerRegistryUtil.getIndexer(
+					name);
+
+				if (curIndexer == null) {
+					return null;
+				}
+
+				try (SafeCloseable safeCloseable =
+						CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+
+					_reindex(curIndexer, indexableContext, arguments, result);
+				}
+
+				return null;
+			});
 	}
 
 	private int _getServiceContextParameterIndex(Method method) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.change.tracking.spi.display;
@@ -19,8 +10,11 @@ import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.util.AudioProcessor;
+import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.ImageProcessor;
 import com.liferay.document.library.kernel.util.PDFProcessor;
 import com.liferay.document.library.kernel.util.VideoProcessor;
@@ -30,6 +24,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 
@@ -57,9 +52,14 @@ public class DLFileEntryCTDisplayRenderer
 			DLFileEntry dlFileEntry, String key)
 		throws PortalException {
 
+		PDFProcessor pdfProcessor = (PDFProcessor)_pdfDLProcessor;
+
+		ImageProcessor imageProcessor = (ImageProcessor)_imageDLProcessor;
+
 		return DLFileVersionCTDisplayRenderer.getDownloadInputStream(
-			_audioProcessor, _dlAppLocalService, dlFileEntry.getFileVersion(),
-			_imageProcessor, key, _pdfProcessor, _videoProcessor);
+			_store, _audioProcessor, _dlAppLocalService,
+			dlFileEntry.getFileVersion(), imageProcessor, key, pdfProcessor,
+			_videoProcessor);
 	}
 
 	@Override
@@ -105,6 +105,13 @@ public class DLFileEntryCTDisplayRenderer
 	}
 
 	@Override
+	public boolean isHideable(DLFileEntry dlFileEntry) {
+		String title = dlFileEntry.getTitle();
+
+		return title.contains(TempFileEntryUtil.TEMP_RANDOM_SUFFIX);
+	}
+
+	@Override
 	public void render(DisplayContext<DLFileEntry> displayContext)
 		throws Exception {
 
@@ -133,14 +140,23 @@ public class DLFileEntryCTDisplayRenderer
 	@Reference
 	private GroupLocalService _groupLocalService;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private ImageProcessor _imageProcessor;
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(type=" + DLProcessorConstants.IMAGE_PROCESSOR + ")"
+	)
+	private DLProcessor _imageDLProcessor;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private PDFProcessor _pdfProcessor;
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(type=" + DLProcessorConstants.PDF_PROCESSOR + ")"
+	)
+	private DLProcessor _pdfDLProcessor;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(target = "(default=true)")
+	private Store _store;
 
 	@Reference
 	private TrashHelper _trashHelper;

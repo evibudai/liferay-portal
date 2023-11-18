@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.data.provider;
@@ -29,6 +20,8 @@ import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
 import com.liferay.analytics.reports.web.internal.model.TrafficChannel;
 import com.liferay.analytics.reports.web.internal.model.TrafficSource;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,26 +31,26 @@ import com.liferay.portal.kernel.util.Http;
 
 import java.time.format.DateTimeFormatter;
 
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author David Arques
  */
 public class AnalyticsReportsDataProvider {
 
-	public AnalyticsReportsDataProvider(Http http) {
+	public AnalyticsReportsDataProvider(
+		AnalyticsSettingsManager analyticsSettingsManager, Http http) {
+
 		if (http == null) {
 			throw new IllegalArgumentException("Http is null");
 		}
 
-		_asahFaroBackendClient = new AsahFaroBackendClient(http);
+		_asahFaroBackendClient = new AsahFaroBackendClient(
+			analyticsSettingsManager, http);
 	}
 
 	public Map<String, AcquisitionChannel> getAcquisitionChannels(
@@ -65,6 +58,9 @@ public class AnalyticsReportsDataProvider {
 		throws PortalException {
 
 		try {
+			Map<String, AcquisitionChannel> acquisitionChannels =
+				new HashMap<>();
+
 			String response = _asahFaroBackendClient.doGet(
 				companyId,
 				String.format(
@@ -78,32 +74,32 @@ public class AnalyticsReportsDataProvider {
 
 			TypeFactory typeFactory = _objectMapper.getTypeFactory();
 
-			Map<String, Long> acquisitionChannels = _objectMapper.readValue(
-				response,
-				typeFactory.constructMapType(
-					Map.class, typeFactory.constructType(String.class),
-					typeFactory.constructType(Long.class)));
+			Map<String, Long> acquisitionChannelValues =
+				_objectMapper.readValue(
+					response,
+					typeFactory.constructMapType(
+						Map.class, typeFactory.constructType(String.class),
+						typeFactory.constructType(Long.class)));
 
-			Collection<Long> values = acquisitionChannels.values();
+			Double total = 0.0;
 
-			Stream<Long> valuesStream = values.stream();
+			Collection<Long> values = acquisitionChannelValues.values();
 
-			Double total = Double.valueOf(valuesStream.reduce(0L, Long::sum));
+			for (Long value : values) {
+				total += value;
+			}
 
-			Set<Map.Entry<String, Long>> entries =
-				acquisitionChannels.entrySet();
+			for (Map.Entry<String, Long> entry :
+					acquisitionChannelValues.entrySet()) {
 
-			Stream<Map.Entry<String, Long>> entriesStream = entries.stream();
-
-			return entriesStream.map(
-				entry -> new AbstractMap.SimpleEntry<>(
+				acquisitionChannels.put(
 					entry.getKey(),
 					new AcquisitionChannel(
 						entry.getKey(), entry.getValue(),
-						(entry.getValue() / total) * 100))
-			).collect(
-				Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-			);
+						(entry.getValue() / total) * 100));
+			}
+
+			return acquisitionChannels;
 		}
 		catch (Exception exception) {
 			throw new PortalException(
@@ -135,16 +131,10 @@ public class AnalyticsReportsDataProvider {
 					Map.class, typeFactory.constructType(String.class),
 					typeFactory.constructType(Long.class)));
 
-			Set<Map.Entry<String, Long>> entries = pageReferrerHosts.entrySet();
-
-			Stream<Map.Entry<String, Long>> entriesStream = entries.stream();
-
-			return entriesStream.map(
+			return TransformUtil.transform(
+				pageReferrerHosts.entrySet(),
 				entry -> new ReferringURL(
-					Math.toIntExact(entry.getValue()), entry.getKey())
-			).collect(
-				Collectors.toList()
-			);
+					Math.toIntExact(entry.getValue()), entry.getKey()));
 		}
 		catch (Exception exception) {
 			throw new PortalException(
@@ -224,16 +214,10 @@ public class AnalyticsReportsDataProvider {
 					Map.class, typeFactory.constructType(String.class),
 					typeFactory.constructType(Long.class)));
 
-			Set<Map.Entry<String, Long>> entries = pageReferrers.entrySet();
-
-			Stream<Map.Entry<String, Long>> entriesStream = entries.stream();
-
-			return entriesStream.map(
+			return TransformUtil.transform(
+				pageReferrers.entrySet(),
 				entry -> new ReferringURL(
-					Math.toIntExact(entry.getValue()), entry.getKey())
-			).collect(
-				Collectors.toList()
-			);
+					Math.toIntExact(entry.getValue()), entry.getKey()));
 		}
 		catch (Exception exception) {
 			throw new PortalException(
@@ -265,17 +249,10 @@ public class AnalyticsReportsDataProvider {
 					Map.class, typeFactory.constructType(String.class),
 					typeFactory.constructType(Long.class)));
 
-			Set<Map.Entry<String, Long>> entries =
-				socialPageReferrers.entrySet();
-
-			Stream<Map.Entry<String, Long>> entriesStream = entries.stream();
-
-			return entriesStream.map(
+			return TransformUtil.transform(
+				socialPageReferrers.entrySet(),
 				entry -> new ReferringSocialMedia(
-					entry.getKey(), Math.toIntExact(entry.getValue()))
-			).collect(
-				Collectors.toList()
-			);
+					entry.getKey(), Math.toIntExact(entry.getValue())));
 		}
 		catch (Exception exception) {
 			throw new PortalException(
@@ -322,22 +299,23 @@ public class AnalyticsReportsDataProvider {
 		throws PortalException {
 
 		try {
+			Map<TrafficChannel.Type, TrafficChannel> trafficChannels =
+				new HashMap<>();
+
 			Map<String, AcquisitionChannel> acquisitionChannels =
 				getAcquisitionChannels(companyId, timeRange, url);
 
 			Collection<AcquisitionChannel> values =
 				acquisitionChannels.values();
 
-			Stream<AcquisitionChannel> stream = values.stream();
+			for (TrafficChannel trafficChannel :
+					TransformUtil.transform(
+						values, TrafficChannel::newInstance)) {
 
-			return stream.map(
-				TrafficChannel::newInstance
-			).map(
-				trafficChannel -> new AbstractMap.SimpleEntry<>(
-					trafficChannel.getType(), trafficChannel)
-			).collect(
-				Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-			);
+				trafficChannels.put(trafficChannel.getType(), trafficChannel);
+			}
+
+			return trafficChannels;
 		}
 		catch (Exception exception) {
 			throw new PortalException(
@@ -349,25 +327,23 @@ public class AnalyticsReportsDataProvider {
 		long companyId, String url) {
 
 		try {
+			Map<String, TrafficSource> trafficSources = new HashMap<>();
+
 			String response = _asahFaroBackendClient.doGet(
 				companyId, "api/seo/1.0/traffic-sources?url=" + url);
 
 			TypeFactory typeFactory = _objectMapper.getTypeFactory();
 
-			List<TrafficSource> trafficSources = _objectMapper.readValue(
-				response,
-				typeFactory.constructCollectionType(
-					List.class, TrafficSource.class));
+			for (TrafficSource trafficSource :
+					(List<TrafficSource>)_objectMapper.readValue(
+						response,
+						typeFactory.constructCollectionType(
+							List.class, TrafficSource.class))) {
 
-			Stream<TrafficSource> trafficSourcesStream =
-				trafficSources.stream();
+				trafficSources.put(trafficSource.getName(), trafficSource);
+			}
 
-			return trafficSourcesStream.map(
-				trafficSource -> new AbstractMap.SimpleEntry<>(
-					trafficSource.getName(), trafficSource)
-			).collect(
-				Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-			);
+			return trafficSources;
 		}
 		catch (Exception exception) {
 			_log.error("Unable to get traffic sources", exception);
@@ -376,7 +352,7 @@ public class AnalyticsReportsDataProvider {
 		}
 	}
 
-	public boolean isValidAnalyticsConnection(long companyId) {
+	public boolean isValidAnalyticsConnection(long companyId) throws Exception {
 		return _asahFaroBackendClient.isValidConnection(companyId);
 	}
 

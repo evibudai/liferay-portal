@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.internal.change.tracking.spi.reference;
@@ -84,6 +75,26 @@ public class LayoutTableReferenceDefinition
 								PortletConstants.LAYOUT_SEPARATOR + "%")))
 				)
 			)
+		).referenceInnerJoin(
+			fromStep -> {
+				LayoutTable aliasLayoutTable = LayoutTable.INSTANCE.as(
+					"aliasLayoutTable");
+
+				return fromStep.from(
+					aliasLayoutTable
+				).innerJoinON(
+					LayoutTable.INSTANCE,
+					LayoutTable.INSTANCE.plid.eq(aliasLayoutTable.classPK)
+				).innerJoinON(
+					ClassNameTable.INSTANCE,
+					ClassNameTable.INSTANCE.value.eq(
+						Layout.class.getName()
+					).and(
+						aliasLayoutTable.classNameId.eq(
+							ClassNameTable.INSTANCE.classNameId)
+					)
+				);
+			}
 		).assetEntryReference(
 			LayoutTable.INSTANCE.plid, Layout.class
 		).resourcePermissionReference(
@@ -121,26 +132,6 @@ public class LayoutTableReferenceDefinition
 					).and(
 						LayoutTable.INSTANCE.privateLayout.eq(
 							aliasLayoutTable.privateLayout)
-					)
-				);
-			}
-		).referenceInnerJoin(
-			fromStep -> {
-				LayoutTable aliasLayoutTable = LayoutTable.INSTANCE.as(
-					"aliasLayoutTable");
-
-				return fromStep.from(
-					aliasLayoutTable
-				).innerJoinON(
-					LayoutTable.INSTANCE,
-					LayoutTable.INSTANCE.classPK.eq(aliasLayoutTable.plid)
-				).innerJoinON(
-					ClassNameTable.INSTANCE,
-					ClassNameTable.INSTANCE.value.eq(
-						Layout.class.getName()
-					).and(
-						LayoutTable.INSTANCE.classNameId.eq(
-							ClassNameTable.INSTANCE.classNameId)
 					)
 				);
 			}

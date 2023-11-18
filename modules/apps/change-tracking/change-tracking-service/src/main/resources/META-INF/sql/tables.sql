@@ -12,17 +12,33 @@ create table CTAutoResolutionInfo (
 
 create table CTCollection (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	ctCollectionId LONG not null primary key,
 	companyId LONG,
 	userId LONG,
 	createDate DATE null,
 	modifiedDate DATE null,
+	ctRemoteId LONG,
 	schemaVersionId LONG,
 	name VARCHAR(75) null,
 	description VARCHAR(200) null,
+	onDemandUserId LONG,
+	shareable BOOLEAN,
 	status INTEGER,
 	statusByUserId LONG,
 	statusDate DATE null
+);
+
+create table CTCollectionTemplate (
+	mvccVersion LONG default 0 not null,
+	ctCollectionTemplateId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	createDate DATE null,
+	modifiedDate DATE null,
+	name VARCHAR(75) null,
+	description VARCHAR(75) null
 );
 
 create table CTComment (
@@ -39,6 +55,8 @@ create table CTComment (
 
 create table CTEntry (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	ctEntryId LONG not null primary key,
 	companyId LONG,
 	userId LONG,
@@ -76,7 +94,22 @@ create table CTProcess (
 	userId LONG,
 	createDate DATE null,
 	ctCollectionId LONG,
-	backgroundTaskId LONG
+	backgroundTaskId LONG,
+	type_ INTEGER
+);
+
+create table CTRemote (
+	mvccVersion LONG default 0 not null,
+	ctRemoteId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	createDate DATE null,
+	modifiedDate DATE null,
+	name VARCHAR(75) null,
+	description VARCHAR(75) null,
+	url VARCHAR(75) null,
+	clientId VARCHAR(75) null,
+	clientSecret VARCHAR(75) null
 );
 
 create table CTSchemaVersion (

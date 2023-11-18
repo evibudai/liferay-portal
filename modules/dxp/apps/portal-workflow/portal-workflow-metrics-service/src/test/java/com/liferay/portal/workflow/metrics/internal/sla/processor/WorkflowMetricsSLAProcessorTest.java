@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.sla.processor;
@@ -21,7 +12,6 @@ import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.internal.document.DocumentBuilderImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.workflow.metrics.internal.sla.calendar.DefaultWorkflowMetricsSLACalendar;
-import com.liferay.portal.workflow.metrics.internal.sla.calendar.WorkflowMetricsSLACalendarRegistryImpl;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersion;
 import com.liferay.portal.workflow.metrics.sla.calendar.WorkflowMetricsSLACalendarRegistry;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
@@ -548,10 +538,10 @@ public class WorkflowMetricsSLAProcessorTest {
 				{
 					setElapsedTime(10000);
 					setModifiedLocalDateTime(nowLocalDateTime);
+					setOnTime(true);
 					setRemainingTime(0);
 					setWorkflowMetricsSLAStatus(
 						WorkflowMetricsSLAStatus.STOPPED);
-					setOnTime(true);
 				}
 			},
 			nowLocalDateTime, true, 0, 1, workflowMetricsSLADefinitionVersion,
@@ -605,19 +595,19 @@ public class WorkflowMetricsSLAProcessorTest {
 	}
 
 	private WorkflowMetricsSLACalendarRegistry
-			_mockWorkflowMetricsSLACalendarRegistry()
-		throws Exception {
+		_mockWorkflowMetricsSLACalendarRegistry() {
 
-		WorkflowMetricsSLACalendarRegistryImpl
-			workflowMetricsSLACalendarRegistryImpl =
-				new WorkflowMetricsSLACalendarRegistryImpl();
+		WorkflowMetricsSLACalendarRegistry workflowMetricsSLACalendarRegistry =
+			Mockito.mock(WorkflowMetricsSLACalendarRegistry.class);
 
-		ReflectionTestUtil.setFieldValue(
-			workflowMetricsSLACalendarRegistryImpl,
-			"_defaultWorkflowMetricsSLACalendar",
-			new DefaultWorkflowMetricsSLACalendar());
+		Mockito.when(
+			workflowMetricsSLACalendarRegistry.getWorkflowMetricsSLACalendar(
+				Mockito.anyString())
+		).thenReturn(
+			new DefaultWorkflowMetricsSLACalendar()
+		);
 
-		return workflowMetricsSLACalendarRegistryImpl;
+		return workflowMetricsSLACalendarRegistry;
 	}
 
 	private void _test(
@@ -654,17 +644,20 @@ public class WorkflowMetricsSLAProcessorTest {
 	}
 
 	private void _test(
-			LocalDateTime completionLocalDateTime,
-			LocalDateTime createLocalDateTime, List<Document> documents,
-			long elapsedTime,
-			WorkflowMetricsSLAInstanceResult
-				lastWorkflowMetricsSLAInstanceResult,
-			LocalDateTime nowLocalDateTime, boolean onTime, long remainingTime,
-			long startNodeId,
-			WorkflowMetricsSLADefinitionVersion
-				workflowMetricsSLADefinitionVersion,
-			WorkflowMetricsSLAStatus workflowMetricsSLAStatus)
-		throws Exception {
+		LocalDateTime completionLocalDateTime,
+		LocalDateTime createLocalDateTime, List<Document> documents,
+		long elapsedTime,
+		WorkflowMetricsSLAInstanceResult lastWorkflowMetricsSLAInstanceResult,
+		LocalDateTime nowLocalDateTime, boolean onTime, long remainingTime,
+		long startNodeId,
+		WorkflowMetricsSLADefinitionVersion workflowMetricsSLADefinitionVersion,
+		WorkflowMetricsSLAStatus workflowMetricsSLAStatus) {
+
+		Mockito.when(
+			workflowMetricsSLADefinitionVersion.getCalendarKey()
+		).thenReturn(
+			""
+		);
 
 		WorkflowMetricsSLAProcessor workflowMetricsSLAProcessor =
 			new WorkflowMetricsSLAProcessor();

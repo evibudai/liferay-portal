@@ -1,20 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.wab.extender.internal;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.events.StartupHelperUtil;
+import com.liferay.portal.kernel.concurrent.SystemExecutorServiceUtil;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,8 +21,10 @@ import com.liferay.portal.profile.PortalProfile;
 
 import java.util.Dictionary;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -37,7 +33,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.tracker.BundleTracker;
@@ -49,35 +44,62 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  */
 @Component(
 	configurationPid = "com.liferay.portal.osgi.web.wab.extender.internal.configuration.WabExtenderConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	service = {}
 )
 public class WabFactory
-	implements BundleTrackerCustomizer<WabFactory.WABExtension> {
+	implements BundleTrackerCustomizer<Supplier<WabFactory.WABExtension>> {
 
 	@Override
-	public WABExtension addingBundle(Bundle bundle, BundleEvent bundleEvent) {
+	public Supplier<WABExtension> addingBundle(
+		Bundle bundle, BundleEvent bundleEvent) {
+
 		String contextPath = WabUtil.getWebContextPath(bundle);
 
 		if (contextPath == null) {
 			return null;
 		}
 
-		WABExtension wabExtension = new WABExtension(bundle);
+		FutureTask<WABExtension> futureTask = new FutureTask<>(
+			() -> {
+				WABExtension wabExtension = new WABExtension(bundle);
 
-		wabExtension.start();
+				wabExtension.start();
 
-		return wabExtension;
+				return wabExtension;
+			});
+
+		if (_parallel) {
+			ExecutorService executorService =
+				SystemExecutorServiceUtil.getExecutorService();
+
+			executorService.submit(futureTask);
+		}
+		else {
+			futureTask.run();
+		}
+
+		return () -> {
+			try {
+				return futureTask.get();
+			}
+			catch (Exception exception) {
+				return ReflectionUtil.throwException(exception);
+			}
+		};
 	}
 
 	@Override
 	public void modifiedBundle(
-		Bundle bundle, BundleEvent bundleEvent, WABExtension wabExtension) {
+		Bundle bundle, BundleEvent bundleEvent,
+		Supplier<WABExtension> wabExtensionSupplier) {
 	}
 
 	@Override
 	public void removedBundle(
-		Bundle bundle, BundleEvent bundleEvent, WABExtension wabExtension) {
+		Bundle bundle, BundleEvent bundleEvent,
+		Supplier<WABExtension> wabExtensionSupplier) {
+
+		WABExtension wabExtension = wabExtensionSupplier.get();
 
 		wabExtension.destroy();
 	}
@@ -127,6 +149,8 @@ public class WabFactory
 
 	@Activate
 	protected void activate(ComponentContext componentContext) {
+		_parallel = StartupHelperUtil.isDBWarmed();
+
 		BundleContext bundleContext = componentContext.getBundleContext();
 
 		Dictionary<String, Object> properties =
@@ -139,23 +163,16 @@ public class WabFactory
 			bundleContext, _jspServletFactory, _jspTaglibHelper, properties);
 
 		_bundleTracker = new BundleTracker<>(
-			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
+			bundleContext, Bundle.ACTIVE, this);
 
-		FutureTask<Void> futureTask = new FutureTask<>(
-			() -> {
-				_bundleTracker.open();
+		DependencyManagerSyncUtil.registerSyncFutureTask(
+			new FutureTask<>(
+				() -> {
+					_bundleTracker.open();
 
-				return null;
-			});
-
-		Thread bundleTrackerOpenerThread = new Thread(
-			futureTask, WabFactory.class.getName() + "-BundleTrackerOpener");
-
-		bundleTrackerOpenerThread.setDaemon(true);
-
-		bundleTrackerOpenerThread.start();
-
-		DependencyManagerSyncUtil.registerSyncFuture(futureTask);
+					return null;
+				}),
+			WabFactory.class.getName() + "-BundleTrackerOpener");
 	}
 
 	@Deactivate
@@ -179,6 +196,8 @@ public class WabFactory
 
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
+	private boolean _parallel;
 
 	@Reference
 	private ServletContextHelperFactory _servletContextHelperFactory;

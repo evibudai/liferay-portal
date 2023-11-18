@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.web.internal.struts;
@@ -18,11 +9,15 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
@@ -33,17 +28,12 @@ import com.liferay.saml.runtime.servlet.profile.SamlSpIdpConnectionsProfile;
 import com.liferay.saml.util.JspUtil;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Stian Sigvartsen
@@ -90,17 +80,10 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 			return null;
 		}
 
-		List<SamlSpIdpConnection> samlSpIdpConnections =
-			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(companyId);
-
-		Stream<SamlSpIdpConnection> stream = samlSpIdpConnections.stream();
-
-		samlSpIdpConnections = stream.filter(
+		List<SamlSpIdpConnection> samlSpIdpConnections = ListUtil.filter(
+			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(companyId),
 			samlSpIdpConnection -> isEnabled(
-				samlSpIdpConnection, httpServletRequest)
-		).collect(
-			Collectors.toList()
-		);
+				samlSpIdpConnection, httpServletRequest));
 
 		if (samlSpIdpConnections.isEmpty()) {
 			SamlProviderConfiguration samlProviderConfiguration =
@@ -111,6 +94,17 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 			}
 		}
 
+		boolean samlIdpRedirectMessageEnabled = GetterUtil.getBoolean(
+			_props.get("saml.idp.redirect.message.enabled"), true);
+
+		if (samlIdpRedirectMessageEnabled) {
+			httpServletRequest.setAttribute(
+				SamlWebKeys.SAML_IDP_REDIRECT_MESSAGE,
+				_language.get(
+					httpServletRequest,
+					"redirecting-to-your-identity-provider"));
+		}
+
 		httpServletRequest.setAttribute(
 			SamlWebKeys.SAML_SSO_LOGIN_CONTEXT,
 			_toJSONObject(samlSpIdpConnections));
@@ -118,7 +112,8 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		JspUtil.dispatch(
 			httpServletRequest, httpServletResponse,
 			"/portal/saml/select_idp.jsp",
-			"please-select-your-identity-provider", false);
+			"please-select-your-identity-provider",
+			!samlIdpRedirectMessageEnabled);
 
 		return null;
 	}
@@ -127,8 +122,11 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		SamlSpIdpConnection samlSpIdpConnection,
 		HttpServletRequest httpServletRequest) {
 
-		if (_samlSpIdpConnectionsProfile != null) {
-			return _samlSpIdpConnectionsProfile.isEnabled(
+		SamlSpIdpConnectionsProfile samlSpIdpConnectionsProfile =
+			_samlSpIdpConnectionsProfileSnapshot.get();
+
+		if (samlSpIdpConnectionsProfile != null) {
+			return samlSpIdpConnectionsProfile.isEnabled(
 				samlSpIdpConnection, httpServletRequest);
 		}
 
@@ -154,23 +152,27 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		return JSONUtil.put("relevantIdpConnections", jsonArray);
 	}
 
+	private static final Snapshot<SamlSpIdpConnectionsProfile>
+		_samlSpIdpConnectionsProfileSnapshot = new Snapshot<>(
+			SamlLoginAction.class, SamlSpIdpConnectionsProfile.class, null,
+			true);
+
 	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Props _props;
 
 	@Reference
 	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;
 
 	@Reference
 	private SamlSpIdpConnectionLocalService _samlSpIdpConnectionLocalService;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile SamlSpIdpConnectionsProfile _samlSpIdpConnectionsProfile;
 
 }

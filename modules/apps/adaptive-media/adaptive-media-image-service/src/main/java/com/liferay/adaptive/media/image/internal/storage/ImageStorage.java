@@ -1,44 +1,35 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.storage;
 
 import com.liferay.adaptive.media.exception.AMRuntimeException;
-import com.liferay.document.library.kernel.store.DLStoreRequest;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 
 import java.io.InputStream;
 
-import org.osgi.service.component.annotations.Component;
-
 /**
  * @author Adolfo Pérez
  */
-@Component(service = ImageStorage.class)
 public class ImageStorage {
 
+	public ImageStorage(Store store) {
+		_store = store;
+	}
+
 	public void delete(FileVersion fileVersion, String configurationUuid) {
-		DLStoreUtil.deleteDirectory(
+		_store.deleteDirectory(
 			fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
 			AMStoreUtil.getFileVersionPath(fileVersion, configurationUuid));
 	}
 
 	public void delete(long companyId, String configurationUuid) {
-		DLStoreUtil.deleteDirectory(
+		_store.deleteDirectory(
 			companyId, CompanyConstants.SYSTEM,
 			getConfigurationEntryPath(configurationUuid));
 	}
@@ -50,9 +41,9 @@ public class ImageStorage {
 			String fileVersionPath = AMStoreUtil.getFileVersionPath(
 				fileVersion, configurationUuid);
 
-			return DLStoreUtil.getFileAsStream(
+			return _store.getFileAsStream(
 				fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
-				fileVersionPath);
+				fileVersionPath, Store.VERSION_DEFAULT);
 		}
 		catch (PortalException portalException) {
 			throw new AMRuntimeException.IOException(portalException);
@@ -62,17 +53,12 @@ public class ImageStorage {
 	public boolean hasContent(
 		FileVersion fileVersion, String configurationUuid) {
 
-		try {
-			String fileVersionPath = AMStoreUtil.getFileVersionPath(
-				fileVersion, configurationUuid);
+		String fileVersionPath = AMStoreUtil.getFileVersionPath(
+			fileVersion, configurationUuid);
 
-			return DLStoreUtil.hasFile(
-				fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
-				fileVersionPath);
-		}
-		catch (PortalException portalException) {
-			throw new AMRuntimeException.IOException(portalException);
-		}
+		return _store.hasFile(
+			fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
+			fileVersionPath, Store.VERSION_DEFAULT);
 	}
 
 	public void save(
@@ -83,18 +69,9 @@ public class ImageStorage {
 			String fileVersionPath = AMStoreUtil.getFileVersionPath(
 				fileVersion, configurationUuid);
 
-			DLStoreUtil.addFile(
-				DLStoreRequest.builder(
-					fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
-					fileVersionPath
-				).className(
-					this
-				).size(
-					fileVersion.getSize()
-				).sourceFileName(
-					fileVersion.getFileName()
-				).build(),
-				inputStream);
+			_store.addFile(
+				fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
+				fileVersionPath, Store.VERSION_DEFAULT, inputStream);
 		}
 		catch (PortalException portalException) {
 			throw new AMRuntimeException.IOException(portalException);
@@ -104,5 +81,7 @@ public class ImageStorage {
 	protected String getConfigurationEntryPath(String configurationUuid) {
 		return String.format("adaptive/%s", configurationUuid);
 	}
+
+	private final Store _store;
 
 }

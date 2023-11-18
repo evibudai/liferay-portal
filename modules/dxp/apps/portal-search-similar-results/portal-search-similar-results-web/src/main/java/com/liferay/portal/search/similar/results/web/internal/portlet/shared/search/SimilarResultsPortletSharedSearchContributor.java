@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.similar.results.web.internal.portlet.shared.search;
@@ -46,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.portlet.RenderRequest;
 
@@ -67,17 +57,30 @@ public class SimilarResultsPortletSharedSearchContributor
 	public void contribute(
 		PortletSharedSearchSettings portletSharedSearchSettings) {
 
-		Optional<SimilarResultsRoute> optional =
+		SimilarResultsRoute similarResultsRoute =
 			similarResultsContributorsRegistry.detectRoute(
 				_getURLString(portletSharedSearchSettings));
 
-		optional.flatMap(
-			similarResultsRoute -> _getSimilarResultsInputOptional(
-				getGroupId(portletSharedSearchSettings), similarResultsRoute)
-		).ifPresent(
-			similarResultsInput -> contribute(
-				similarResultsInput, portletSharedSearchSettings)
-		);
+		if (similarResultsRoute == null) {
+			return;
+		}
+
+		SimilarResultsContributor similarResultsContributor =
+			similarResultsRoute.getContributor();
+
+		CriteriaBuilderImpl criteriaBuilderImpl = new CriteriaBuilderImpl();
+
+		CriteriaHelper criteriaHelper = new CriteriaHelperImpl(
+			getGroupId(portletSharedSearchSettings), similarResultsRoute);
+
+		similarResultsContributor.resolveCriteria(
+			criteriaBuilderImpl, criteriaHelper);
+
+		Criteria criteria = criteriaBuilderImpl.build();
+
+		if (criteria != null) {
+			contribute(criteria, portletSharedSearchSettings);
+		}
 	}
 
 	protected void contribute(
@@ -86,12 +89,11 @@ public class SimilarResultsPortletSharedSearchContributor
 
 		SimilarResultsPortletPreferences similarResultsPortletPreferences =
 			new SimilarResultsPortletPreferencesImpl(
-				portletSharedSearchSettings.getPortletPreferencesOptional());
+				portletSharedSearchSettings.getPortletPreferences());
 
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getFederatedSearchRequestBuilder(
-				Optional.of(
-					similarResultsPortletPreferences.getFederatedSearchKey()));
+				similarResultsPortletPreferences.getFederatedSearchKey());
 
 		_filterByEntryClassName(
 			criteria, portletSharedSearchSettings, searchRequestBuilder);
@@ -160,24 +162,19 @@ public class SimilarResultsPortletSharedSearchContributor
 		PortletSharedSearchSettings portletSharedSearchSettings,
 		SearchRequestBuilder searchRequestBuilder) {
 
-		Optional<String> optional =
-			portletSharedSearchSettings.getParameterOptional(
-				"similar.results.all.classes");
+		String parameterValue = portletSharedSearchSettings.getParameter(
+			"similar.results.all.classes");
 
-		if (optional.isPresent()) {
+		if (parameterValue != null) {
 			return;
 		}
 
-		Optional<String> classNameOptional = criteria.getTypeOptional();
+		String className = criteria.getType();
 
-		classNameOptional.ifPresent(
-			className -> {
-				if (!Validator.isBlank(className)) {
-					searchRequestBuilder.addComplexQueryPart(
-						_getComplexQueryPart(
-							_getEntryClassNameQuery(className)));
-				}
-			});
+		if (!Validator.isBlank(className)) {
+			searchRequestBuilder.addComplexQueryPart(
+				_getComplexQueryPart(_getEntryClassNameQuery(className)));
+		}
 	}
 
 	private void _filterByGroupId(
@@ -219,23 +216,6 @@ public class SimilarResultsPortletSharedSearchContributor
 		_populate(moreLikeThisQuery, similarResultsPortletPreferences);
 
 		return moreLikeThisQuery;
-	}
-
-	private Optional<Criteria> _getSimilarResultsInputOptional(
-		long groupId, SimilarResultsRoute similarResultsRoute) {
-
-		SimilarResultsContributor similarResultsContributor =
-			similarResultsRoute.getContributor();
-
-		CriteriaBuilderImpl criteriaBuilderImpl = new CriteriaBuilderImpl();
-
-		CriteriaHelper criteriaHelper = new CriteriaHelperImpl(
-			groupId, similarResultsRoute);
-
-		similarResultsContributor.resolveCriteria(
-			criteriaBuilderImpl, criteriaHelper);
-
-		return criteriaBuilderImpl.build();
 	}
 
 	private String _getURLString(

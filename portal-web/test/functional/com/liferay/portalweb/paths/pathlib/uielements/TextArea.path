@@ -22,17 +22,22 @@
 </tr>
 <tr>
 	<td>ANY_LABELED</td>
-	<td>//*[normalize-space(text())='${key_label}']/following-sibling::textarea | //div[normalize-space()='${key_label}']/following-sibling::textarea</td>
+	<td>//*[normalize-space(text())='${key_label}']/..//textarea | //label[normalize-space()='${key_label}']/..//textarea | //label[normalize-space(text())='${key_label}']//..//following-sibling::textarea</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ANY_LABELED_N</td>
-	<td>xpath=(//*[normalize-space(text())='${key_label}']/following-sibling::textarea)[${key_indexNumber}]</td>
+	<td>xpath=(//*[normalize-space(text())='${key_label}']//..//textarea)[${key_indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CHANGE_LOG</td>
 	<td>//textarea[contains(@id,'ChangeLog')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_ID</td>
+	<td>//textarea[contains(@id,'${key_fieldId}')]</td>
 	<td></td>
 </tr>
 <tr>

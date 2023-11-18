@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -27,9 +21,10 @@ import useDidUpdateEffect from '../../hooks/useDidUpdateEffect';
 import ErrorListItem from '../../shared/ErrorListItem';
 import {PreviewModalWithCopyDownload} from '../../shared/PreviewModal';
 import SearchInput from '../../shared/SearchInput';
-import {sub} from '../../utils/language';
+import isDefined from '../../utils/functions/is_defined';
+import parseAndPrettifyJSON from '../../utils/functions/parse_and_prettify_json';
+import sub from '../../utils/language/sub';
 import {TEST_IDS} from '../../utils/testIds';
-import {isDefined, parseAndPrettifyJSON} from '../../utils/utils';
 import PreviewAttributesModal from './PreviewAttributesModal';
 import ResultListItem from './ResultListItem';
 
@@ -292,7 +287,10 @@ function PreviewSidebar({
 						_renderHits()
 					) : totalHits === 0 ? (
 						<div className="empty-list-message">
-							<ClayEmptyState description="" />
+							<ClayEmptyState
+								description=""
+								title={Liferay.Language.get('no-results-found')}
+							/>
 						</div>
 					) : (
 						!errors.length && (

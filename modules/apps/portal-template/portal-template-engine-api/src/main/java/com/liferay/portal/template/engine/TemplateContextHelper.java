@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.engine;
@@ -18,15 +9,15 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil_IW;
 import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
-import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -48,28 +39,25 @@ import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserService;
-import com.liferay.portal.kernel.service.permission.CommonPermissionUtil;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil_IW;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
-import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
-import com.liferay.portal.kernel.service.permission.PasswordPolicyPermissionUtil;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
-import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
-import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
-import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
-import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
+import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil_IW;
+import com.liferay.portal.kernel.service.permission.PortalPermissionUtil_IW;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil_IW;
+import com.liferay.portal.kernel.service.permission.RolePermissionUtil_IW;
+import com.liferay.portal.kernel.service.permission.UserPermissionUtil_IW;
+import com.liferay.portal.kernel.template.TemplateContextContributor;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil_IW;
-import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil_IW;
 import com.liferay.portal.kernel.util.DateUtil_IW;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GetterUtil_IW;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HtmlUtil_IW;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
@@ -91,6 +79,10 @@ import com.liferay.portal.kernel.util.Validator_IW;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.service.permission.CommonPermissionUtil_IW;
+import com.liferay.portal.service.permission.PasswordPolicyPermissionUtil_IW;
+import com.liferay.portal.service.permission.UserGroupPermissionUtil_IW;
+import com.liferay.portal.servlet.BrowserSnifferUtil_IW;
 import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
 import com.liferay.portal.template.ServiceLocator;
@@ -115,6 +107,8 @@ import javax.portlet.RenderResponse;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Tina Tian
@@ -158,6 +152,10 @@ public class TemplateContextHelper {
 		return templateVariableGroups;
 	}
 
+	public void destory() {
+		_serviceTrackerList.close();
+	}
+
 	public Map<String, Object> getHelperUtilities(boolean restricted) {
 		if (_helperUtilitiesMapArray == null) {
 			_helperUtilitiesMapArray = (Map<String, Object>[])new Map<?, ?>[2];
@@ -192,6 +190,12 @@ public class TemplateContextHelper {
 
 	public Set<String> getRestrictedVariables() {
 		return Collections.emptySet();
+	}
+
+	public void init(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, TemplateContextContributor.class,
+			"(type=" + TemplateContextContributor.TYPE_GLOBAL + ")");
 	}
 
 	public void prepare(
@@ -298,7 +302,7 @@ public class TemplateContextHelper {
 			contextObjects.put(
 				"scopeGroupId", Long.valueOf(themeDisplay.getScopeGroupId()));
 			contextObjects.put(
-				"siteSpritemap", FrontendIconsUtil.getSpritemap(themeDisplay));
+				"siteSpritemap", themeDisplay.getPathThemeSpritemap());
 			contextObjects.put("themeDisplay", themeDisplay);
 			contextObjects.put("timeZone", themeDisplay.getTimeZone());
 
@@ -362,6 +366,12 @@ public class TemplateContextHelper {
 		_helperUtilitiesMapArray = null;
 	}
 
+	protected Iterable<TemplateContextContributor>
+		getTemplateContextContributors() {
+
+		return _serviceTrackerList;
+	}
+
 	protected void populateCommonHelperUtilities(
 		Map<String, Object> variables) {
 
@@ -393,7 +403,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"browserSniffer", BrowserSnifferUtil.getBrowserSniffer());
+				"browserSniffer", BrowserSnifferUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -401,13 +411,7 @@ public class TemplateContextHelper {
 
 		// Calendar factory
 
-		try {
-			variables.put(
-				"calendarFactory", CalendarFactoryUtil.getCalendarFactory());
-		}
-		catch (SecurityException securityException) {
-			_log.error(securityException);
-		}
+		variables.put("calendarFactory", CalendarFactoryUtil_IW.getInstance());
 
 		// Date format
 
@@ -490,7 +494,7 @@ public class TemplateContextHelper {
 		// Html util
 
 		try {
-			variables.put("htmlUtil", HtmlUtil.getHtml());
+			variables.put("htmlUtil", HtmlUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -516,7 +520,7 @@ public class TemplateContextHelper {
 		// Image tool util
 
 		try {
-			variables.put("imageToolUtil", ImageToolUtil.getImageTool());
+			variables.put("imageToolUtil", ImageToolUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -542,8 +546,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"unicodeLanguageUtil",
-				UnicodeLanguageUtil.getUnicodeLanguage());
+				"unicodeLanguageUtil", UnicodeFormatter_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -664,7 +667,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"commonPermission", CommonPermissionUtil.getCommonPermission());
+				"commonPermission", CommonPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -672,7 +675,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"groupPermission", GroupPermissionUtil.getGroupPermission());
+				"groupPermission", GroupPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -689,7 +692,7 @@ public class TemplateContextHelper {
 		try {
 			variables.put(
 				"organizationPermission",
-				OrganizationPermissionUtil.getOrganizationPermission());
+				OrganizationPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -698,7 +701,7 @@ public class TemplateContextHelper {
 		try {
 			variables.put(
 				"passwordPolicyPermission",
-				PasswordPolicyPermissionUtil.getPasswordPolicyPermission());
+				PasswordPolicyPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -706,7 +709,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"portalPermission", PortalPermissionUtil.getPortalPermission());
+				"portalPermission", PortalPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -714,8 +717,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"portletPermission",
-				PortletPermissionUtil.getPortletPermission());
+				"portletPermission", PortletPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -737,7 +739,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"rolePermission", RolePermissionUtil.getRolePermission());
+				"rolePermission", RolePermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -746,7 +748,7 @@ public class TemplateContextHelper {
 		try {
 			variables.put(
 				"userGroupPermission",
-				UserGroupPermissionUtil.getUserGroupPermission());
+				UserGroupPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -754,7 +756,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"userPermission", UserPermissionUtil.getUserPermission());
+				"userPermission", UserPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -790,7 +792,7 @@ public class TemplateContextHelper {
 		try {
 			variables.put(
 				"locationPermission",
-				OrganizationPermissionUtil.getOrganizationPermission());
+				OrganizationPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -851,6 +853,8 @@ public class TemplateContextHelper {
 		TemplateContextHelper.class);
 
 	private Map<String, Object>[] _helperUtilitiesMapArray;
+	private volatile ServiceTrackerList<TemplateContextContributor>
+		_serviceTrackerList;
 
 	private static class HttpWrapper implements Http {
 
@@ -1026,7 +1030,7 @@ public class TemplateContextHelper {
 			if (!HTTP.equals(protocol) && !HTTPS.equals(protocol)) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						". $httpUtil template variable supports only HTTP and ",
 						"HTTPS protocols."));
 			}
@@ -1034,7 +1038,7 @@ public class TemplateContextHelper {
 			if (isLocationAccessDenied(url.toString())) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						" using $httpUtil variable from a template. Please ",
 						"use restricted variable $httpUtilUnsafe to access ",
 						"local network."));

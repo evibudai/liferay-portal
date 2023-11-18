@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm, {ClayInput, ClaySelect} from '@clayui/form';
@@ -37,6 +31,9 @@ const BaseActionsInfo = ({
 	setScript,
 	setScriptLanguage,
 	setSelectedActionType,
+	setStatus,
+	status,
+	statuses,
 	updateActionInfo,
 }) => {
 	useEffect(() => {
@@ -73,6 +70,7 @@ const BaseActionsInfo = ({
 							priority,
 							script,
 							scriptLanguage,
+							status,
 						})
 					}
 					onChange={({target}) => {
@@ -98,6 +96,7 @@ const BaseActionsInfo = ({
 							priority,
 							script,
 							scriptLanguage,
+							status,
 						})
 					}
 					onChange={({target}) => {
@@ -118,7 +117,7 @@ const BaseActionsInfo = ({
 				<ClaySelect
 					aria-label="Select"
 					className={!selectedActionType ? 'select-placeholder' : ''}
-					defaultValue={scriptLanguage}
+					defaultValue={status ? 'update-status' : scriptLanguage}
 					id="type"
 					onChange={({target}) => {
 						setScriptLanguage(target.value);
@@ -178,6 +177,7 @@ const BaseActionsInfo = ({
 								priority,
 								script,
 								scriptLanguage,
+								status: undefined,
 							})
 						}
 						onChange={({target}) => {
@@ -187,6 +187,48 @@ const BaseActionsInfo = ({
 						type="text"
 						value={script}
 					/>
+				</ClayForm.Group>
+			)}
+
+			{selectedActionType?.type === 'status' && (
+				<ClayForm.Group>
+					<label htmlFor="update-status">Status</label>
+
+					<ClaySelect
+						aria-label="Select"
+						className={!status ? 'select-placeholder' : ''}
+						defaultValue={status}
+						id="update-status"
+						onChange={({target}) => {
+							setStatus(target.value);
+						}}
+						onClickCapture={() =>
+							updateActionInfo({
+								description,
+								executionType,
+								name,
+								priority,
+								scriptLanguage,
+								status,
+							})
+						}
+					>
+						<ClaySelect.Option
+							hidden
+							key={0}
+							label={Liferay.Language.get('choose-an-option')}
+							value="choose-an-option"
+						/>
+
+						{statuses &&
+							statuses.map((item) => (
+								<ClaySelect.Option
+									key={item.value}
+									label={item.label}
+									value={item.value}
+								/>
+							))}
+					</ClaySelect>
 				</ClayForm.Group>
 			)}
 
@@ -211,6 +253,7 @@ const BaseActionsInfo = ({
 								priority,
 								script,
 								scriptLanguage,
+								status,
 							})
 						}
 					>
@@ -257,6 +300,7 @@ const BaseActionsInfo = ({
 							priority,
 							script,
 							scriptLanguage,
+							status,
 						});
 					}}
 					onChange={({target}) => {

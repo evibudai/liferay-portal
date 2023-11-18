@@ -1,11 +1,13 @@
+@import 'atlas-variables';
+
 .lfr__notification-template {
 	&-container {
 		background-color: #f1f2f5;
 	}
 
 	&-cards {
-		margin-left: 15rem;
-		margin-right: 15rem;
+		margin-left: 35vw;
+		margin-right: 35vw;
 	}
 
 	&-card {
@@ -13,16 +15,18 @@
 		margin-top: 5rem;
 	}
 
+	&-email-notification-settings-tooltip-icon {
+		color: $secondary-l1;
+		cursor: pointer;
+	}
+
+	&-email-notification-settings-tooltip-icon:hover {
+		color: $secondary-d1;
+	}
+
 	&-label {
 		margin-left: 32px;
 		margin-top: 1px;
-	}
-
-	&-management-toolbar {
-		box-shadow: 0 0.125rem 0.75rem rgb(0 0 0 / 8%);
-		position: fixed;
-		width: 100%;
-		z-index: 1;
 	}
 }
 
@@ -41,7 +45,7 @@
 	}
 }
 
-@include responsiveCards(3840px, 80rem);
+@include responsiveCards(3840px, 40rem);
 @include responsiveCards(2160px, 29rem);
 @include responsiveCards(1920px, 21rem);
 @include responsiveCards(1600px, 11rem);

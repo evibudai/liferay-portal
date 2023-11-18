@@ -1,28 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.context.vocabulary.internal.options.provider.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.configuration.admin.definition.ConfigurationFieldOptionsProvider;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.segments.context.Context;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -43,33 +33,20 @@ public class EntityFieldConfigurationFieldOptionsProviderTest {
 
 	@Test
 	public void testGetOptionsWithDoubleEntityField() {
-		List<ConfigurationFieldOptionsProvider.Option> options =
-			_configurationFieldOptionsProvider.getOptions();
-
-		Stream<ConfigurationFieldOptionsProvider.Option> stream =
-			options.stream();
-
 		Assert.assertFalse(
-			stream.filter(
+			ListUtil.exists(
+				_configurationFieldOptionsProvider.getOptions(),
 				option -> Objects.equals(
-					option.getValue(), Context.DEVICE_SCREEN_RESOLUTION_HEIGHT)
-			).findAny(
-			).isPresent());
+					Context.DEVICE_SCREEN_RESOLUTION_HEIGHT,
+					option.getValue())));
 	}
 
 	@Test
 	public void testGetOptionsWithStringEntityField() {
-		List<ConfigurationFieldOptionsProvider.Option> options =
-			_configurationFieldOptionsProvider.getOptions();
-
-		Stream<ConfigurationFieldOptionsProvider.Option> stream =
-			options.stream();
-
 		Assert.assertTrue(
-			stream.filter(
-				option -> Objects.equals(option.getValue(), Context.BROWSER)
-			).findAny(
-			).isPresent());
+			ListUtil.exists(
+				_configurationFieldOptionsProvider.getOptions(),
+				option -> Objects.equals(Context.BROWSER, option.getValue())));
 	}
 
 	@Inject(

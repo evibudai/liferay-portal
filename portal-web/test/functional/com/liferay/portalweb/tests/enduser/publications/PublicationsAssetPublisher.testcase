@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -15,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,9 +24,9 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewProductionWebContentInPublication {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONWebcontent.addWebContent(
 			content = "Web Content Content",
@@ -63,17 +62,17 @@ definition {
 
 		AssetPublisherPortlet.viewDisplayOrderPG(
 			assetTitle = "Publication WC",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		AssetPublisherPortlet.viewDisplayOrderPG(
 			assetTitle = "Production WC",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Publications.workOnProduction();
 
 		AssetPublisherPortlet.viewDisplayOrderPG(
 			assetTitle = "Production WC",
-			rowNumber = "1");
+			rowNumber = 1);
 	}
 
 }

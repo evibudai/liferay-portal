@@ -1,30 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.partition.internal.messaging;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.db.partition.internal.configuration.DBPartitionConfiguration;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageBusInterceptor;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.db.partition.internal.configuration.DBPartitionConfiguration",
-	immediate = true, service = MessageBusInterceptor.class
+	service = MessageBusInterceptor.class
 )
 public class DBPartitionMessageBusInterceptor implements MessageBusInterceptor {
 
@@ -49,7 +41,7 @@ public class DBPartitionMessageBusInterceptor implements MessageBusInterceptor {
 	public boolean intercept(
 		MessageBus messageBus, String destinationName, Message message) {
 
-		if (_databasePartitionEnabled &&
+		if (DBPartition.isPartitionEnabled() &&
 			(message.getLong("companyId") == CompanyConstants.SYSTEM) &&
 			!_excludedMessageBusDestinationNames.contains(destinationName) &&
 			!_excludedSchedulerJobNames.contains(
@@ -59,7 +51,10 @@ public class DBPartitionMessageBusInterceptor implements MessageBusInterceptor {
 
 			_companyLocalService.forEachCompany(
 				company -> {
-					if (!company.isActive()) {
+					if (!company.isActive() ||
+						PortalInstances.isCompanyInDeletionProcess(
+							company.getCompanyId())) {
+
 						return;
 					}
 
@@ -76,9 +71,6 @@ public class DBPartitionMessageBusInterceptor implements MessageBusInterceptor {
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
-		_databasePartitionEnabled = GetterUtil.getBoolean(
-			_props.get("database.partition.enabled"));
-
 		modified(properties);
 	}
 
@@ -93,8 +85,6 @@ public class DBPartitionMessageBusInterceptor implements MessageBusInterceptor {
 		_excludedSchedulerJobNames = SetUtil.fromArray(
 			dbPartitionConfiguration.excludedSchedulerJobNames());
 	}
-
-	private static boolean _databasePartitionEnabled;
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

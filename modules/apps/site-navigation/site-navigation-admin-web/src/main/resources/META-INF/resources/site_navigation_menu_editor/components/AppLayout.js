@@ -1,26 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 
 import {APP_LAYOUT_CONTENT_CLASS_NAME} from '../constants/appLayoutClassName';
+import {useConstants} from '../contexts/ConstantsContext';
 import {
 	useSetSidebarPanelId,
 	useSidebarPanelId,
 } from '../contexts/SidebarPanelIdContext';
+import DragPreview from './DragPreview';
+import KeyboardMovementText from './KeyboardMovementText';
 
 const DEFAULT_SIDEBAR_PANELS = [];
 
@@ -28,9 +23,14 @@ export function AppLayout({
 	contentChildren,
 	sidebarPanels = DEFAULT_SIDEBAR_PANELS,
 	toolbarChildren,
+	sidebarPanelRef,
+	configButtonRef,
 }) {
 	const setSidebarPanelId = useSetSidebarPanelId();
 	const sidebarPanelId = useSidebarPanelId();
+	const titleId = useId();
+
+	const {portletNamespace} = useConstants();
 
 	const SidebarPanel = useMemo(
 		() =>
@@ -39,6 +39,8 @@ export function AppLayout({
 			)?.component,
 		[sidebarPanelId, sidebarPanels]
 	);
+
+	const appLayoutContentRef = useRef();
 
 	useEffect(() => {
 		const handler = onProductMenuOpen(() => setSidebarPanelId(null));
@@ -54,6 +56,21 @@ export function AppLayout({
 		}
 	}, [SidebarPanel]);
 
+	useEffect(() => {
+		const key = `${portletNamespace}itemAdded`;
+
+		const itemAdded = window.sessionStorage.getItem(key);
+
+		if (itemAdded) {
+			appLayoutContentRef.current?.scrollTo(
+				0,
+				appLayoutContentRef.current?.scrollHeight
+			);
+
+			window.sessionStorage.removeItem(key);
+		}
+	}, [portletNamespace]);
+
 	return (
 		<>
 			<div className="bg-white component-tbar tbar">
@@ -68,19 +85,32 @@ export function AppLayout({
 				className={classNames(APP_LAYOUT_CONTENT_CLASS_NAME, {
 					[`${APP_LAYOUT_CONTENT_CLASS_NAME}--with-sidebar`]: !!SidebarPanel,
 				})}
+				ref={appLayoutContentRef}
 			>
+				<DragPreview wrapperRef={appLayoutContentRef} />
+
 				{contentChildren}
 
 				<div
+					aria-labelledby={titleId}
 					className={classNames(
 						'site_navigation_menu_editor_AppLayout-sidebar',
 						{
 							'site_navigation_menu_editor_AppLayout-sidebar--visible': !!SidebarPanel,
 						}
 					)}
+					ref={sidebarPanelRef}
+					tabIndex={-1}
 				>
-					{SidebarPanel && <SidebarPanel />}
+					{SidebarPanel && (
+						<SidebarPanel
+							configButtonRef={configButtonRef}
+							titleId={titleId}
+						/>
+					)}
 				</div>
+
+				<KeyboardMovementText />
 			</div>
 		</>
 	);

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -22,12 +13,15 @@ import {
 	AutoComplete,
 	FormError,
 	Input,
+	REQUIRED_MSG,
+	getLocalizableLabel,
 	stringIncludesQuery,
 	useForm,
 } from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {useMemo, useState} from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES as EVENT_TYPES, useLayoutContext} from '../objectLayoutContext';
 import {TObjectLayoutTab, TObjectRelationship} from '../types';
 
@@ -82,8 +76,6 @@ interface TabTypeProps extends React.HTMLAttributes<HTMLElement> {
 	type: string;
 }
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 function TabType({
 	description,
 	disabled = false,
@@ -136,6 +128,7 @@ export function ModalAddObjectLayoutTab({
 }: ModalAddObjectLayoutTabProps) {
 	const [
 		{
+			creationLanguageId,
 			objectLayout: {objectLayoutTabs},
 			objectRelationships,
 		},
@@ -150,14 +143,12 @@ export function ModalAddObjectLayoutTab({
 	const filteredRelationships = useMemo(() => {
 		return objectRelationships.filter(
 			({inLayout, label, name}) =>
-				(stringIncludesQuery(
-					label[defaultLanguageId] as string,
+				stringIncludesQuery(
+					getLocalizableLabel(creationLanguageId, label, name),
 					query
-				) ??
-					stringIncludesQuery(name, query)) &&
-				!inLayout
+				) && !inLayout
 		);
-	}, [objectRelationships, query]);
+	}, [creationLanguageId, objectRelationships, query]);
 
 	const selectedRelationshipInfo: TLabelInfo = useMemo(() => {
 		return getRelationshipInfo(selectedRelationship?.reverse ?? false);
@@ -180,15 +171,15 @@ export function ModalAddObjectLayoutTab({
 	const onValidate = (values: Partial<TObjectLayoutTab>) => {
 		const errors: FormError<TObjectLayoutTab> = {};
 
-		if (!values.name?.[defaultLanguageId]) {
-			errors.name = Liferay.Language.get('required');
+		if (!getLocalizableLabel(creationLanguageId, values.name)) {
+			errors.name = REQUIRED_MSG;
 		}
 
 		if (
 			!values.objectRelationshipId &&
 			selectedType === TYPES.RELATIONSHIPS
 		) {
-			errors.objectRelationshipId = Liferay.Language.get('required');
+			errors.objectRelationshipId = REQUIRED_MSG;
 		}
 
 		return errors;
@@ -223,7 +214,10 @@ export function ModalAddObjectLayoutTab({
 							});
 						}}
 						required
-						value={values.name?.[defaultLanguageId]}
+						value={getLocalizableLabel(
+							creationLanguageId,
+							values.name
+						)}
 					/>
 
 					<ClayForm.Group>
@@ -267,8 +261,12 @@ export function ModalAddObjectLayoutTab({
 								'there-are-no-relationship-for-this-object'
 							)}
 							error={errors.objectRelationshipId}
+							id="modalAddObjectLayoutTab"
 							items={filteredRelationships}
 							label={Liferay.Language.get('relationship')}
+							onActive={(item) =>
+								item.name === selectedRelationship?.name
+							}
 							onChangeQuery={setQuery}
 							onSelectItem={(item) => {
 								setSelectedRelationship(item);
@@ -278,11 +276,11 @@ export function ModalAddObjectLayoutTab({
 							}}
 							query={query}
 							required
-							value={
-								selectedRelationship?.label[
-									defaultLanguageId
-								] ?? selectedRelationship?.name
-							}
+							value={getLocalizableLabel(
+								creationLanguageId,
+								selectedRelationship?.label,
+								selectedRelationship?.name
+							)}
 						>
 							{({label, name, reverse}) => {
 								const relationshipInfo = getRelationshipInfo(
@@ -292,7 +290,11 @@ export function ModalAddObjectLayoutTab({
 								return (
 									<div className="d-flex justify-content-between">
 										<div>
-											{label[defaultLanguageId] ?? name}
+											{getLocalizableLabel(
+												creationLanguageId,
+												label,
+												name
+											)}
 										</div>
 
 										<div className="object-web-relationship-item-label">

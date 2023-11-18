@@ -1,26 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.icons.web.internal.servlet.taglib;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -34,7 +22,7 @@ import org.osgi.service.component.annotations.Component;
 /**
  * @author Bryce Osterhaus
  */
-@Component(immediate = true, service = DynamicInclude.class)
+@Component(service = DynamicInclude.class)
 public class FrontendIconsSpritemapTopHeadDynamicInclude
 	extends BaseDynamicInclude {
 
@@ -51,10 +39,6 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 		sb.append("<script data-senna-track=\"temporary\">");
 		sb.append("var Liferay = window.Liferay || {};");
 		sb.append("Liferay.Icons = Liferay.Icons || {};");
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.basePath = '", FrontendIconsUtil.getBasePath(),
-				"';"));
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -62,21 +46,12 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 
 		sb.append(
 			StringBundler.concat(
+				"Liferay.Icons.controlPanelSpritemap = '",
+				themeDisplay.getPathControlPanelSpritemap(), "';"));
+		sb.append(
+			StringBundler.concat(
 				"Liferay.Icons.spritemap = '",
-				FrontendIconsUtil.getSpritemap(themeDisplay), "';"));
-
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-145112"))) {
-			sb.append(
-				StringBundler.concat(
-					"Liferay.Icons.systemSpritemap = '",
-					FrontendIconsUtil.getSystemSpritemap(), "';"));
-		}
-		else {
-			sb.append(
-				StringBundler.concat(
-					"Liferay.Icons.systemSpritemap = '",
-					FrontendIconsUtil.getSpritemap(themeDisplay), "';"));
-		}
+				themeDisplay.getPathThemeSpritemap(), "';"));
 
 		sb.append("</script>");
 

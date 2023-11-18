@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.document.library.thumbnails.internal.util;
@@ -20,16 +11,14 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.util.PrefsPropsUtil;
 
 import java.io.IOException;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,9 +32,9 @@ public class AMCompanyThumbnailConfigurationInitializer {
 	public void initializeCompany(Company company)
 		throws AMImageConfigurationException, IOException {
 
-		int dlFileEntryPreviewMaxHeight = PrefsPropsUtil.getInteger(
+		int dlFileEntryPreviewMaxHeight = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_HEIGHT);
-		int dlFileEntryPreviewMaxWidth = PrefsPropsUtil.getInteger(
+		int dlFileEntryPreviewMaxWidth = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_WIDTH);
 
 		if ((dlFileEntryPreviewMaxHeight > 0) ||
@@ -56,9 +45,9 @@ public class AMCompanyThumbnailConfigurationInitializer {
 				dlFileEntryPreviewMaxWidth);
 		}
 
-		int dlFileEntryThumbnailMaxHeight = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailMaxHeight = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT);
-		int dlFileEntryThumbnailMaxWidth = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailMaxWidth = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_WIDTH);
 
 		if ((dlFileEntryThumbnailMaxHeight > 0) &&
@@ -69,9 +58,9 @@ public class AMCompanyThumbnailConfigurationInitializer {
 				dlFileEntryThumbnailMaxWidth);
 		}
 
-		int dlFileEntryThumbnailCustom1MaxHeight = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailCustom1MaxHeight = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT);
-		int dlFileEntryThumbnailCustom1MaxWidth = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailCustom1MaxWidth = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH);
 
 		if ((dlFileEntryThumbnailCustom1MaxHeight > 0) &&
@@ -82,9 +71,9 @@ public class AMCompanyThumbnailConfigurationInitializer {
 				dlFileEntryThumbnailCustom1MaxWidth);
 		}
 
-		int dlFileEntryThumbnailCustom2MaxHeight = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailCustom2MaxHeight = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT);
-		int dlFileEntryThumbnailCustom2MaxWidth = PrefsPropsUtil.getInteger(
+		int dlFileEntryThumbnailCustom2MaxWidth = _prefsProps.getInteger(
 			PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_WIDTH);
 
 		if ((dlFileEntryThumbnailCustom2MaxHeight > 0) &&
@@ -140,20 +129,18 @@ public class AMCompanyThumbnailConfigurationInitializer {
 
 		Collection<AMImageConfigurationEntry> amImageConfigurationEntries =
 			_amImageConfigurationHelper.getAMImageConfigurationEntries(
-				companyId, amImageConfigurationEntry -> true);
+				companyId,
+				amImageConfigurationEntry -> {
+					if (name.equals(amImageConfigurationEntry.getName()) ||
+						uuid.equals(amImageConfigurationEntry.getUUID())) {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
-			amImageConfigurationEntries.stream();
+						return true;
+					}
 
-		Optional<AMImageConfigurationEntry>
-			duplicateNameAMImageConfigurationEntryOptional =
-				amImageConfigurationEntryStream.filter(
-					amImageConfigurationEntry ->
-						name.equals(amImageConfigurationEntry.getName()) ||
-						uuid.equals(amImageConfigurationEntry.getUUID())
-				).findFirst();
+					return false;
+				});
 
-		return duplicateNameAMImageConfigurationEntryOptional.isPresent();
+		return !amImageConfigurationEntries.isEmpty();
 	}
 
 	private String _normalize(String str) {
@@ -166,5 +153,8 @@ public class AMCompanyThumbnailConfigurationInitializer {
 
 	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
+
+	@Reference
+	private PrefsProps _prefsProps;
 
 }

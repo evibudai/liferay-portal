@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.renderer.internal;
@@ -29,9 +20,11 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.SettingsDDMFormFieldsUtil;
-import com.liferay.osgi.service.tracker.collections.ServiceTrackerMapBuilder;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
@@ -58,8 +51,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -103,15 +94,14 @@ public class DDMFormTemplateContextFactoryImpl
 					_ddmFormFieldTypeServicesRegistry,
 					ddmFormLayoutDDMFormField.getType());
 
-			List<DDMFormField> visualPropertiesDDMFormFields = ListUtil.filter(
-				new ArrayList<>(settingsDDMFormFieldsMap.values()),
-				visualPropertyDDMFormField ->
-					visualPropertyDDMFormField.isVisualProperty() &&
-					!StringUtil.equals(
-						visualPropertyDDMFormField.getName(), "required"));
-
 			for (DDMFormField visualPropertyDDMFormField :
-					visualPropertiesDDMFormFields) {
+					ListUtil.filter(
+						new ArrayList<>(settingsDDMFormFieldsMap.values()),
+						visualPropertyDDMFormField1 ->
+							visualPropertyDDMFormField1.isVisualProperty() &&
+							!StringUtil.equals(
+								visualPropertyDDMFormField1.getName(),
+								"required"))) {
 
 				Object value = ddmFormLayoutDDMFormField.getProperty(
 					visualPropertyDDMFormField.getName());
@@ -153,16 +143,12 @@ public class DDMFormTemplateContextFactoryImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerMap =
-			ServiceTrackerMapBuilder.SelectorFactory.newSelector(
-				bundleContext, DDMValidation.class
-			).map(
-				"ddm.validation.data.type"
-			).collectMultiValue(
-				Collections.reverseOrder(
-					new PropertyServiceReferenceComparator<>(
-						"ddm.validation.ranking"))
-			).build();
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
+			bundleContext, DDMValidation.class, null,
+			new PropertyServiceReferenceMapper<>("ddm.validation.data.type"),
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"ddm.validation.ranking")));
 	}
 
 	@Deactivate
@@ -173,16 +159,12 @@ public class DDMFormTemplateContextFactoryImpl
 	protected ResourceBundle getResourceBundle(Locale locale) {
 		List<ResourceBundle> resourceBundles = new ArrayList<>();
 
-		ResourceBundle portalResourceBundle = _portal.getResourceBundle(locale);
-
-		resourceBundles.add(portalResourceBundle);
+		resourceBundles.add(_portal.getResourceBundle(locale));
 
 		_collectResourceBundles(getClass(), resourceBundles, locale);
 
-		ResourceBundle[] resourceBundlesArray = resourceBundles.toArray(
-			new ResourceBundle[0]);
-
-		return new AggregateResourceBundle(resourceBundlesArray);
+		return new AggregateResourceBundle(
+			resourceBundles.<ResourceBundle>toArray(new ResourceBundle[0]));
 	}
 
 	protected String getTemplateNamespace(DDMFormLayout ddmFormLayout) {
@@ -225,6 +207,8 @@ public class DDMFormTemplateContextFactoryImpl
 			DDMFormRenderingContext ddmFormRenderingContext)
 		throws PortalException {
 
+		Map<String, Object> templateContext = new HashMap<>();
+
 		String containerId = ddmFormRenderingContext.getContainerId();
 
 		if (Validator.isNull(containerId)) {
@@ -239,8 +223,6 @@ public class DDMFormTemplateContextFactoryImpl
 			locale = LocaleThreadLocal.getSiteDefaultLocale();
 		}
 
-		Map<String, Object> templateContext = new HashMap<>();
-
 		ResourceBundle resourceBundle = getResourceBundle(locale);
 
 		String cancelLabel = GetterUtil.getString(
@@ -250,6 +232,14 @@ public class DDMFormTemplateContextFactoryImpl
 		templateContext.put("cancelLabel", cancelLabel);
 
 		templateContext.put("containerId", containerId);
+
+		String contentType = GetterUtil.getString(
+			ddmFormRenderingContext.getProperty("contentType"));
+
+		if (Validator.isNotNull(contentType)) {
+			templateContext.put("contentType", contentType);
+		}
+
 		templateContext.put(
 			"currentPage",
 			ParamUtil.getString(
@@ -401,14 +391,10 @@ public class DDMFormTemplateContextFactoryImpl
 		HashMap<String, Object> map = new HashMap<>();
 
 		for (String key : _serviceTrackerMap.keySet()) {
-			List<DDMValidation> ddmValidations = _serviceTrackerMap.getService(
-				key);
-
-			Stream<DDMValidation> stream = ddmValidations.stream();
-
 			map.put(
 				key,
-				stream.map(
+				TransformUtil.transformToArray(
+					_serviceTrackerMap.getService(key),
 					ddmValidation -> HashMapBuilder.put(
 						"label", ddmValidation.getLabel(locale)
 					).put(
@@ -418,8 +404,8 @@ public class DDMFormTemplateContextFactoryImpl
 						ddmValidation.getParameterMessage(locale)
 					).put(
 						"template", ddmValidation.getTemplate()
-					).build()
-				).toArray());
+					).build(),
+					Object.class));
 		}
 
 		return map;
@@ -457,13 +443,7 @@ public class DDMFormTemplateContextFactoryImpl
 			return Collections.emptyList();
 		}
 
-		Stream<DDMFormRule> stream = ddmFormRules.stream();
-
-		return stream.map(
-			this::_toMap
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(ddmFormRules, this::_toMap);
 	}
 
 	@Reference

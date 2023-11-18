@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -21,11 +12,12 @@ import {
 	API,
 	FormError,
 	Input,
+	REQUIRED_MSG,
 	useForm,
 } from '@liferay/object-js-components-web';
 import React, {useState} from 'react';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+import {defaultLanguageId} from '../utils/constants';
 
 interface IProps extends React.HTMLAttributes<HTMLElement> {
 	apiURL: string;
@@ -53,7 +45,11 @@ export function ModalBasicWithFieldName({
 
 	const onSubmit = async ({name}: TInitialValues) => {
 		try {
-			await API.save(apiURL, {name: {[defaultLanguageId]: name}}, 'POST');
+			await API.save({
+				item: {name: {[defaultLanguageId]: name}},
+				method: 'POST',
+				url: apiURL,
+			});
 
 			onClose();
 			window.location.reload();
@@ -67,7 +63,7 @@ export function ModalBasicWithFieldName({
 		const errors: FormError<TInitialValues> = {};
 
 		if (name[defaultLanguageId] === '') {
-			errors.name = Liferay.Language.get('required');
+			errors.name = REQUIRED_MSG;
 		}
 
 		return errors;

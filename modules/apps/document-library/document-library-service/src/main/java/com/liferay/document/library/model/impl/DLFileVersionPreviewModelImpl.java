@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.model.impl;
@@ -220,84 +211,99 @@ public class DLFileVersionPreviewModelImpl
 	public Map<String, Function<DLFileVersionPreview, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<DLFileVersionPreview, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<DLFileVersionPreview, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<DLFileVersionPreview, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<DLFileVersionPreview, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<DLFileVersionPreview, Object>>();
-		Map<String, BiConsumer<DLFileVersionPreview, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<DLFileVersionPreview, ?>>();
+		private static final Map<String, Function<DLFileVersionPreview, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", DLFileVersionPreview::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", DLFileVersionPreview::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"dlFileVersionPreviewId",
-			DLFileVersionPreview::getDlFileVersionPreviewId);
-		attributeSetterBiConsumers.put(
-			"dlFileVersionPreviewId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setDlFileVersionPreviewId);
-		attributeGetterFunctions.put(
-			"groupId", DLFileVersionPreview::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", DLFileVersionPreview::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setCompanyId);
-		attributeGetterFunctions.put(
-			"fileEntryId", DLFileVersionPreview::getFileEntryId);
-		attributeSetterBiConsumers.put(
-			"fileEntryId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setFileEntryId);
-		attributeGetterFunctions.put(
-			"fileVersionId", DLFileVersionPreview::getFileVersionId);
-		attributeSetterBiConsumers.put(
-			"fileVersionId",
-			(BiConsumer<DLFileVersionPreview, Long>)
-				DLFileVersionPreview::setFileVersionId);
-		attributeGetterFunctions.put(
-			"previewStatus", DLFileVersionPreview::getPreviewStatus);
-		attributeSetterBiConsumers.put(
-			"previewStatus",
-			(BiConsumer<DLFileVersionPreview, Integer>)
-				DLFileVersionPreview::setPreviewStatus);
+		static {
+			Map<String, Function<DLFileVersionPreview, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<DLFileVersionPreview, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", DLFileVersionPreview::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", DLFileVersionPreview::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"dlFileVersionPreviewId",
+				DLFileVersionPreview::getDlFileVersionPreviewId);
+			attributeGetterFunctions.put(
+				"groupId", DLFileVersionPreview::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", DLFileVersionPreview::getCompanyId);
+			attributeGetterFunctions.put(
+				"fileEntryId", DLFileVersionPreview::getFileEntryId);
+			attributeGetterFunctions.put(
+				"fileVersionId", DLFileVersionPreview::getFileVersionId);
+			attributeGetterFunctions.put(
+				"previewStatus", DLFileVersionPreview::getPreviewStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<DLFileVersionPreview, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<DLFileVersionPreview, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<DLFileVersionPreview, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"dlFileVersionPreviewId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setDlFileVersionPreviewId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"fileEntryId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setFileEntryId);
+			attributeSetterBiConsumers.put(
+				"fileVersionId",
+				(BiConsumer<DLFileVersionPreview, Long>)
+					DLFileVersionPreview::setFileVersionId);
+			attributeSetterBiConsumers.put(
+				"previewStatus",
+				(BiConsumer<DLFileVersionPreview, Integer>)
+					DLFileVersionPreview::setPreviewStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -715,7 +721,8 @@ public class DLFileVersionPreviewModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<DLFileVersionPreview, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

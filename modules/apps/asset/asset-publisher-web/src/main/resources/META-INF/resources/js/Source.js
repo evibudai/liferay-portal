@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -21,8 +12,8 @@ import {
 	toggleSelectBox,
 } from 'frontend-js-web';
 
-const ANY = 'any';
-const SELECT_MORE_THAN_ONE = 'select-more-than-one';
+const ANY_VALUE = 'true';
+const SELECT_MORE_THAN_ONE_VALUE = 'false';
 
 export default function ({assetPublisherNamespace, classTypes, namespace}) {
 	const mapDDMStructures = {};
@@ -130,8 +121,8 @@ export default function ({assetPublisherNamespace, classTypes, namespace}) {
 
 		subtypeFieldsWrappers.forEach((subtypeFieldsWrapper) => {
 			if (
-				selectedSubtype !== ANY &&
-				selectedSubtype !== SELECT_MORE_THAN_ONE
+				selectedSubtype !== ANY_VALUE &&
+				selectedSubtype !== SELECT_MORE_THAN_ONE_VALUE
 			) {
 				if (orderingPanel) {
 					removeOptionsOrderByFilter();
@@ -170,7 +161,7 @@ export default function ({assetPublisherNamespace, classTypes, namespace}) {
 		const assetOptions = assetMultipleSelector.options;
 		const showOptions =
 			assetSelector.value === `${classNameId}` ||
-			(assetSelector.value === SELECT_MORE_THAN_ONE &&
+			(assetSelector.value === SELECT_MORE_THAN_ONE_VALUE &&
 				assetOptions.length === 1 &&
 				assetOptions[0].value === `${classNameId}`);
 
@@ -217,7 +208,7 @@ export default function ({assetPublisherNamespace, classTypes, namespace}) {
 	classTypes.forEach(({className, classSubtypes}) => {
 		toggleSelectBox(
 			`${namespace}anyClassType${className}`,
-			SELECT_MORE_THAN_ONE,
+			SELECT_MORE_THAN_ONE_VALUE,
 			`${namespace}${className}Boxes`
 		);
 
@@ -416,7 +407,7 @@ export default function ({assetPublisherNamespace, classTypes, namespace}) {
 
 	toggleSelectBox(
 		`${namespace}anyAssetType`,
-		SELECT_MORE_THAN_ONE,
+		SELECT_MORE_THAN_ONE_VALUE,
 		`${namespace}classNamesBoxes`
 	);
 

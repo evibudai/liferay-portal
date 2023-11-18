@@ -1,45 +1,41 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
-	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name",
+				type = "content");
 		}
 	}
 
 	@description = "This is a test for LPS-158527. The guest shouldn't be allowed to preview changes."
-	@priority = "4"
+	@priority = 4
 	test CannotPreviewChangesAsGuest {
 		task ("Given a guest has a content pages with draft changes") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -55,28 +51,23 @@ definition {
 		task ("When the guest access to the content page at preview mode") {
 			User.logoutPG();
 
-			Navigator.openSpecificURL(url = "${previewURL}");
+			Navigator.openSpecificURL(url = ${previewURL});
 		}
 
 		task ("Then the guest should see not found") {
-			AssertTextEquals(
-				locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-				value1 = "Not Found");
+			Alert.viewErrorMessage(errorMessage = "Your request failed to complete.");
 		}
 	}
 
 	@description = "This is a test for LPS-153367. The page creator could preview changes in a new tab."
-	@priority = "5"
+	@priority = 5
 	test PreviewChangesInANewTab {
-		task ("Given a page creator has a Heading fragment on a content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
+		property portal.acceptance = "true";
 
+		task ("Given a page creator has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",

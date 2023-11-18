@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -26,9 +17,12 @@ import {IModalState} from './ListTypeEntriesModal';
 interface IProps {
 	pickListId: number;
 	readOnly: boolean;
+	setValues: (values: Partial<ListTypeDefinition>) => void;
+	values: Partial<ListTypeDefinition>;
 }
 
 interface ItemData {
+	externalReferenceCode: string;
 	id: number;
 	key: string;
 	name: {props: {id: number}};
@@ -41,7 +35,12 @@ interface fdsItem {
 	value: string;
 }
 
-export default function ListTypeTable({pickListId, readOnly}: IProps) {
+export default function ListTypeTable({
+	pickListId,
+	readOnly,
+	setValues,
+	values,
+}: IProps) {
 	const [dataSetProps, setDataSetProps] = useState<IFrontendDataSetProps>();
 
 	useEffect(() => {
@@ -66,12 +65,14 @@ export default function ListTypeTable({pickListId, readOnly}: IProps) {
 
 		Liferay.on('handleAddItems', handleAddItems);
 
-		setDataSetProps(getDataSetProps(fireModal, pickListId!, readOnly));
+		setDataSetProps(
+			getDataSetProps(fireModal, pickListId!, readOnly, setValues, values)
+		);
 
 		return () => {
 			Liferay.detach('handleAddItems');
 		};
-	}, [pickListId, readOnly]);
+	}, [pickListId, readOnly, setValues, values]);
 
 	return dataSetProps && Object.keys(dataSetProps).length ? (
 		<FrontendDataSet {...dataSetProps} />
@@ -81,17 +82,33 @@ export default function ListTypeTable({pickListId, readOnly}: IProps) {
 function getDataSetProps(
 	fireModal: (modalProps: IModalState) => void,
 	pickListId: number,
-	readOnly: boolean
+	readOnly: boolean,
+	setValues: (values: Partial<ListTypeDefinition>) => void,
+	values: Partial<ListTypeDefinition>
 ): IFrontendDataSetProps {
 	const onActionDropdownItemClick = ({action, itemData}: fdsItem) => {
 		if (action.id === 'addListTypeEntry') {
 			fireModal({
 				header: Liferay.Language.get('edit-item'),
+				itemExternalReferenceCode: itemData.externalReferenceCode,
 				itemId: itemData.id,
 				itemKey: itemData.key,
 				modalType: 'edit',
 				name_i18n: itemData.name_i18n,
 				readOnly,
+				system: values.system,
+			});
+		}
+
+		if (action.id === 'deleteListTypeEntry') {
+			const {listTypeEntries} = values;
+			const newListTypeEntries = listTypeEntries?.filter(
+				(listTypeEntry) => listTypeEntry.key !== itemData.key
+			);
+
+			setValues({
+				...values,
+				listTypeEntries: newListTypeEntries as ListTypeEntry[],
 			});
 		}
 	};
@@ -118,7 +135,7 @@ function getDataSetProps(
 		type: 'item',
 	};
 
-	const addItemMenu = readOnly ? [] : [addButton];
+	const addItemMenu = readOnly || values?.system ? [] : [addButton];
 
 	return {
 		actionParameterName: '',
@@ -148,6 +165,7 @@ function getDataSetProps(
 				},
 				href: '/o/headless-admin-list-type/v1.0/list-type-entries/{id}',
 				icon: 'trash',
+				id: 'deleteListTypeEntry',
 				label: 'Delete',
 				target: 'async',
 			},
@@ -201,6 +219,15 @@ function getDataSetProps(
 							expand: false,
 							fieldName: 'key',
 							label: Liferay.Language.get('key'),
+							localizeLabel: true,
+							sortable: false,
+						},
+						{
+							expand: false,
+							fieldName: 'externalReferenceCode',
+							label: Liferay.Language.get(
+								'external-reference-code'
+							),
 							localizeLabel: true,
 							sortable: false,
 						},

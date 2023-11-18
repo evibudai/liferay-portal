@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -19,6 +10,7 @@ import com.liferay.poshi.core.util.RegexUtil;
 import com.liferay.poshi.core.util.StringUtil;
 
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.dom4j.Attribute;
@@ -64,7 +56,17 @@ public class ReturnPoshiElement extends PoshiElement {
 			return;
 		}
 
-		addAttribute("value", getDoubleQuotedContent(poshiScript));
+		Matcher matcher = _returnPattern.matcher(poshiScript.trim());
+
+		matcher.find();
+
+		String value = matcher.group(1);
+
+		if (isQuotedContent(value)) {
+			value = getDoubleQuotedContent(value);
+		}
+
+		addAttribute("value", value);
 	}
 
 	@Override
@@ -73,8 +75,13 @@ public class ReturnPoshiElement extends PoshiElement {
 			return "";
 		}
 
-		return StringUtil.combine(
-			"\n\n", getPad(), "return \"", attributeValue("value"), "\";");
+		String value = attributeValue("value");
+
+		if (!value.matches(_UNQUOTED_VALUE_REGEX)) {
+			value = "\"" + value + "\"";
+		}
+
+		return StringUtil.combine("\n\n", getPad(), "return ", value, ";");
 	}
 
 	@Override
@@ -145,7 +152,10 @@ public class ReturnPoshiElement extends PoshiElement {
 
 	private static final String _ELEMENT_NAME = "return";
 
+	private static final String _UNQUOTED_VALUE_REGEX =
+		"(\\$\\{[\\w_-]+\\}|\\d+)";
+
 	private static final Pattern _returnPattern = Pattern.compile(
-		"^return[\\s]*\"[\\s\\S]*\"[\\s]*;$");
+		"^return[\\s]+(\\$\\{[\\w_-]+\\}|\\d+|\".*\")[\\s]*;$");
 
 }

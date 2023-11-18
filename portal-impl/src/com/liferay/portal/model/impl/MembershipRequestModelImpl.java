@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -237,96 +228,116 @@ public class MembershipRequestModelImpl
 	public Map<String, Function<MembershipRequest, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<MembershipRequest, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<MembershipRequest, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<MembershipRequest, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<MembershipRequest, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<MembershipRequest, Object>>();
-		Map<String, BiConsumer<MembershipRequest, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<MembershipRequest, ?>>();
+		private static final Map<String, Function<MembershipRequest, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", MembershipRequest::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<MembershipRequest, Long>)
-				MembershipRequest::setMvccVersion);
-		attributeGetterFunctions.put(
-			"membershipRequestId", MembershipRequest::getMembershipRequestId);
-		attributeSetterBiConsumers.put(
-			"membershipRequestId",
-			(BiConsumer<MembershipRequest, Long>)
-				MembershipRequest::setMembershipRequestId);
-		attributeGetterFunctions.put("groupId", MembershipRequest::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<MembershipRequest, Long>)MembershipRequest::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", MembershipRequest::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<MembershipRequest, Long>)
-				MembershipRequest::setCompanyId);
-		attributeGetterFunctions.put("userId", MembershipRequest::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<MembershipRequest, Long>)MembershipRequest::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", MembershipRequest::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<MembershipRequest, Date>)
-				MembershipRequest::setCreateDate);
-		attributeGetterFunctions.put(
-			"comments", MembershipRequest::getComments);
-		attributeSetterBiConsumers.put(
-			"comments",
-			(BiConsumer<MembershipRequest, String>)
-				MembershipRequest::setComments);
-		attributeGetterFunctions.put(
-			"replyComments", MembershipRequest::getReplyComments);
-		attributeSetterBiConsumers.put(
-			"replyComments",
-			(BiConsumer<MembershipRequest, String>)
-				MembershipRequest::setReplyComments);
-		attributeGetterFunctions.put(
-			"replyDate", MembershipRequest::getReplyDate);
-		attributeSetterBiConsumers.put(
-			"replyDate",
-			(BiConsumer<MembershipRequest, Date>)
-				MembershipRequest::setReplyDate);
-		attributeGetterFunctions.put(
-			"replierUserId", MembershipRequest::getReplierUserId);
-		attributeSetterBiConsumers.put(
-			"replierUserId",
-			(BiConsumer<MembershipRequest, Long>)
-				MembershipRequest::setReplierUserId);
-		attributeGetterFunctions.put(
-			"statusId", MembershipRequest::getStatusId);
-		attributeSetterBiConsumers.put(
-			"statusId",
-			(BiConsumer<MembershipRequest, Long>)
-				MembershipRequest::setStatusId);
+		static {
+			Map<String, Function<MembershipRequest, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<MembershipRequest, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", MembershipRequest::getMvccVersion);
+			attributeGetterFunctions.put(
+				"membershipRequestId",
+				MembershipRequest::getMembershipRequestId);
+			attributeGetterFunctions.put(
+				"groupId", MembershipRequest::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", MembershipRequest::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", MembershipRequest::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", MembershipRequest::getCreateDate);
+			attributeGetterFunctions.put(
+				"comments", MembershipRequest::getComments);
+			attributeGetterFunctions.put(
+				"replyComments", MembershipRequest::getReplyComments);
+			attributeGetterFunctions.put(
+				"replyDate", MembershipRequest::getReplyDate);
+			attributeGetterFunctions.put(
+				"replierUserId", MembershipRequest::getReplierUserId);
+			attributeGetterFunctions.put(
+				"statusId", MembershipRequest::getStatusId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<MembershipRequest, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<MembershipRequest, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<MembershipRequest, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"membershipRequestId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setMembershipRequestId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<MembershipRequest, Date>)
+					MembershipRequest::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"comments",
+				(BiConsumer<MembershipRequest, String>)
+					MembershipRequest::setComments);
+			attributeSetterBiConsumers.put(
+				"replyComments",
+				(BiConsumer<MembershipRequest, String>)
+					MembershipRequest::setReplyComments);
+			attributeSetterBiConsumers.put(
+				"replyDate",
+				(BiConsumer<MembershipRequest, Date>)
+					MembershipRequest::setReplyDate);
+			attributeSetterBiConsumers.put(
+				"replierUserId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setReplierUserId);
+			attributeSetterBiConsumers.put(
+				"statusId",
+				(BiConsumer<MembershipRequest, Long>)
+					MembershipRequest::setStatusId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -867,7 +878,8 @@ public class MembershipRequestModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<MembershipRequest, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

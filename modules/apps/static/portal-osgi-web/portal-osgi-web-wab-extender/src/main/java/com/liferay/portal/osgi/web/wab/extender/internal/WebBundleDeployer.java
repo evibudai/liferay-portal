@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.wab.extender.internal;
@@ -112,8 +103,6 @@ public class WebBundleDeployer {
 
 		try {
 			wabBundleProcessor.destroy();
-
-			_handleCollidedWABs(bundle);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -132,39 +121,14 @@ public class WebBundleDeployer {
 		return true;
 	}
 
-	private void _handleCollidedWABs(Bundle bundle) {
-		String contextPath = WabUtil.getWebContextPath(bundle);
-
-		for (Bundle curBundle : _bundleContext.getBundles()) {
-			if (bundle.equals(curBundle) || isFragmentBundle(curBundle) ||
-				_wabBundleProcessors.containsKey(curBundle)) {
-
-				continue;
-			}
-
-			String curContextPath = WabUtil.getWebContextPath(curBundle);
-
-			if (contextPath.equals(curContextPath)) {
-				doStart(curBundle);
-
-				break;
-			}
-		}
-	}
-
 	private void _initWabBundle(Bundle bundle) {
 		try {
-			WabBundleProcessor newWabBundleProcessor = new WabBundleProcessor(
+			WabBundleProcessor wabBundleProcessor = new WabBundleProcessor(
 				bundle, _jspServletFactory, _jspTaglibHelper);
 
-			WabBundleProcessor oldWabBundleProcessor =
-				_wabBundleProcessors.putIfAbsent(bundle, newWabBundleProcessor);
+			wabBundleProcessor.init(_properties);
 
-			if (oldWabBundleProcessor != null) {
-				return;
-			}
-
-			newWabBundleProcessor.init(_properties);
+			_wabBundleProcessors.put(bundle, wabBundleProcessor);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

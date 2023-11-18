@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.sidecar;
@@ -37,7 +28,6 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.Elasticsearc
 import com.liferay.portal.search.elasticsearch7.internal.connection.HttpPortRange;
 import com.liferay.portal.search.elasticsearch7.internal.index.constants.SidecarVersionConstants;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
-import com.liferay.portal.search.elasticsearch7.settings.SettingsContributor;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +45,6 @@ import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +68,6 @@ public class Sidecar {
 		ElasticsearchInstancePaths elasticsearchInstancePaths,
 		ProcessExecutor processExecutor,
 		ProcessExecutorPaths processExecutorPaths,
-		Collection<SettingsContributor> settingsContributors,
 		SidecarManager sidecarManager) {
 
 		_clusterExecutor = clusterExecutor;
@@ -87,7 +75,6 @@ public class Sidecar {
 		_elasticsearchInstancePaths = elasticsearchInstancePaths;
 		_processExecutor = processExecutor;
 		_processExecutorPaths = processExecutorPaths;
-		_settingsContributors = settingsContributors;
 		_sidecarManager = sidecarManager;
 
 		_dataHomePath = elasticsearchInstancePaths.getDataPath();
@@ -497,8 +484,6 @@ public class Sidecar {
 			_clusterExecutor::getBindInetAddress
 		).nodeName(
 			_getNodeName()
-		).settingsContributors(
-			_settingsContributors
 		).build();
 	}
 
@@ -559,7 +544,7 @@ public class Sidecar {
 			return _waitForPublishedAddress(noticeableFuture);
 		}
 		catch (IOException ioException) {
-			if (Objects.equals("Stream closed", ioException.getMessage())) {
+			if (Objects.equals(ioException.getMessage(), "Stream closed")) {
 				throw new RuntimeException(
 					StringBundler.concat(
 						"Sidecar JVM did not launch successfully. ",
@@ -611,7 +596,6 @@ public class Sidecar {
 	private final ProcessExecutor _processExecutor;
 	private final ProcessExecutorPaths _processExecutorPaths;
 	private FutureListener<Serializable> _restartFutureListener;
-	private final Collection<SettingsContributor> _settingsContributors;
 	private final Path _sidecarHomePath;
 	private SidecarManager _sidecarManager;
 	private Path _sidecarTempDirPath;

@@ -1,0 +1,53 @@
+definition {
+
+	macro assertMergedSubtasks {
+		for (var subtaskName : list ${listSubtaskName}) {
+			AssertElementPresent(
+				key_subtaskName = ${subtaskName},
+				locator1 = "TestraySubtask#SUBTASK_MERGED");
+		}
+	}
+
+	macro assertNotMergedSubtasks {
+		AssertElementNotPresent(
+			key_subtaskName = ${subtaskName},
+			locator1 = "TestraySubtask#SUBTASK_MERGED");
+	}
+
+	macro mergeSubtasks {
+		for (var subtaskName : list ${listSubtaskName}) {
+			Check.checkToggleSwitch(
+				key_checkboxOption = ${subtaskName},
+				locator1 = "Checkbox#SPECIFIC_CHECKBOX_IN_TABLE");
+		}
+
+		if (isSet(buttonClear)) {
+			Click(
+				key_indexNumber = 2,
+				key_text = "Clear",
+				locator1 = "Button#ANY_N");
+		}
+
+		Button.click(button = "Merge Subtasks");
+	}
+
+	macro verifySubtaskDetails {
+		AssertElementPresent(
+			key_comment = ${comment},
+			key_issues = ${issues},
+			key_score = ${score},
+			key_status = ${status},
+			key_updated = ${updated},
+			key_userName = ${userName},
+			locator1 = "TestraySubtask#SUBTASK_DETAILS");
+	}
+
+	macro viewSubtaskSidebar {
+		for (var subtaskName : list ${listsubtaskName}) {
+			AssertElementPresent(
+				key_subtaskName = ${subtaskName},
+				locator1 = "TestraySubtask#SUBTASK_SIDEBAR");
+		}
+	}
+
+}

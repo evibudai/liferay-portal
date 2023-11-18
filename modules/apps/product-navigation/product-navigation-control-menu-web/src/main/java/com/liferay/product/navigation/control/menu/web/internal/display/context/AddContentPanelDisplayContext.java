@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.control.menu.web.internal.display.context;
@@ -23,8 +14,8 @@ import com.liferay.asset.kernel.model.ClassType;
 import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.util.AssetHelper;
-import com.liferay.asset.util.AssetPublisherAddItemHolder;
 import com.liferay.layout.portlet.category.PortletCategoryManager;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -51,17 +42,14 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceURL;
 
@@ -81,12 +69,12 @@ public class AddContentPanelDisplayContext {
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 
-		_assetHelper = (AssetHelper)_httpServletRequest.getAttribute(
+		_assetHelper = (AssetHelper)httpServletRequest.getAttribute(
 			AssetWebKeys.ASSET_HELPER);
 		_portletCategoryManager =
-			(PortletCategoryManager)_httpServletRequest.getAttribute(
+			(PortletCategoryManager)httpServletRequest.getAttribute(
 				PortletCategoryManager.class.getName());
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -196,9 +184,7 @@ public class AddContentPanelDisplayContext {
 				).put(
 					"title",
 					HtmlUtil.escape(
-						StringUtil.shorten(
-							assetRenderer.getTitle(_themeDisplay.getLocale()),
-							60))
+						assetRenderer.getTitle(_themeDisplay.getLocale()))
 				).put(
 					"type",
 					_getAssetEntryTypeLabel(
@@ -310,16 +296,11 @@ public class AddContentPanelDisplayContext {
 	}
 
 	private List<Map<String, Object>> _getAddContentsURLs() throws Exception {
-		List<AssetPublisherAddItemHolder> assetPublisherAddItemHolders =
+		return TransformUtil.transform(
 			_assetHelper.getAssetPublisherAddItemHolders(
 				_liferayPortletRequest, _liferayPortletResponse,
 				_themeDisplay.getScopeGroupId(), _getClassNameIds(),
-				new long[0], null, null, _getRedirectURL());
-
-		Stream<AssetPublisherAddItemHolder> stream =
-			assetPublisherAddItemHolders.stream();
-
-		return stream.map(
+				new long[0], null, null, _getRedirectURL()),
 			assetPublisherAddItemHolder -> HashMapBuilder.<String, Object>put(
 				"label", assetPublisherAddItemHolder.getModelResource()
 			).put(
@@ -341,10 +322,7 @@ public class AddContentPanelDisplayContext {
 						assetPublisherAddItemHolder.getPortletURL(), false,
 						_themeDisplay.getLayout());
 				}
-			).build()
-		).collect(
-			Collectors.toList()
-		);
+			).build());
 	}
 
 	private String _getAssetEntryTypeLabel(String className, long classTypeId) {
@@ -426,15 +404,18 @@ public class AddContentPanelDisplayContext {
 	}
 
 	private Map<String, String> _getLanguageDirection() {
-		Set<Locale> locales = LanguageUtil.getAvailableLocales(
-			_themeDisplay.getScopeGroupId());
+		Map<String, String> map = new HashMap<>();
 
-		Stream<Locale> stream = locales.stream();
+		for (Locale locale :
+				LanguageUtil.getAvailableLocales(
+					_themeDisplay.getScopeGroupId())) {
 
-		return stream.collect(
-			Collectors.toMap(
-				LocaleUtil::toLanguageId,
-				locale -> LanguageUtil.get(locale, "lang.dir")));
+			map.put(
+				LocaleUtil.toLanguageId(locale),
+				LanguageUtil.get(locale, "lang.dir"));
+		}
+
+		return map;
 	}
 
 	private String _getRedirectURL() throws Exception {

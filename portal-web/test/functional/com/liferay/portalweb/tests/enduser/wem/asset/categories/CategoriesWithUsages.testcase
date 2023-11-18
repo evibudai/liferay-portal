@@ -1,6 +1,7 @@
 @component-name = "portal-categories"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Categories";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +30,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-154273. The site designer can view number of usages on Categories admin."
-	@priority = "4"
+	@priority = 4
 	test ViewUsages {
 		task ("Given a site designer has a web content with a category") {
 			JSONCategory.addVocabulary(
@@ -42,7 +43,7 @@ definition {
 				vocabularyName = "Vocabulary Name");
 
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title");
@@ -56,7 +57,7 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "1");
+				tableEntryInfo = 1);
 		}
 
 		task ("When the site designer moves the web content to recycle bin") {
@@ -74,7 +75,7 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "1");
+				tableEntryInfo = 1);
 		}
 
 		task ("When the site designer delete the web content in recycle bin") {
@@ -91,12 +92,12 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "0");
+				tableEntryInfo = 0);
 		}
 	}
 
 	@description = "This is a test for LPS-154273. The site designer can view number of usages on categories admin in global site."
-	@priority = "4"
+	@priority = 4
 	test ViewUsagesOfGlobalCategory {
 		task ("Given a site designer has a web content with a global category") {
 			var categoryId = JSONCategory.addCategory(
@@ -105,7 +106,7 @@ definition {
 				vocabularyName = "Topic");
 
 			HeadlessBlog.addBlogEntry(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				content = "Blogs Entry Content",
 				groupName = "Test Site Name",
 				title = "Blogs Entry Title");
@@ -119,7 +120,7 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "1");
+				tableEntryInfo = 1);
 		}
 
 		task ("When the site designer moves the blogs entry to recycle bin") {
@@ -136,7 +137,7 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "1");
+				tableEntryInfo = 1);
 		}
 
 		task ("When the site designer delete the blogs entry in recycle bin") {
@@ -153,7 +154,7 @@ definition {
 			LexiconTable.viewTableEntryInfo(
 				columnName = "usages",
 				tableEntry = "Category Name",
-				tableEntryInfo = "0");
+				tableEntryInfo = 0);
 
 			JSONCategory.deleteCategory(
 				categoryName = "Category Name",

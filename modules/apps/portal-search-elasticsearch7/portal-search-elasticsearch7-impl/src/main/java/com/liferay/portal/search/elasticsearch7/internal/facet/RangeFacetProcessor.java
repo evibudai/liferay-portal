@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.facet;
@@ -23,8 +14,6 @@ import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -40,14 +29,17 @@ import org.osgi.service.component.annotations.Component;
  * @author Tibor Lipusz
  */
 @Component(
-	property = "class.name=com.liferay.portal.kernel.search.facet.RangeFacet",
+	property = {
+		"class.name=com.liferay.portal.kernel.search.facet.RangeFacet",
+		"class.name=com.liferay.portal.search.internal.facet.ModifiedFacetImpl"
+	},
 	service = FacetProcessor.class
 )
 public class RangeFacetProcessor
 	implements FacetProcessor<SearchRequestBuilder> {
 
 	@Override
-	public Optional<AggregationBuilder> processFacet(Facet facet) {
+	public AggregationBuilder processFacet(Facet facet) {
 		FacetConfiguration facetConfiguration = facet.getFacetConfiguration();
 
 		RangeAggregationBuilder rangeAggregationBuilder =
@@ -60,10 +52,10 @@ public class RangeFacetProcessor
 		_addCustomRange(facet, rangeAggregationBuilder);
 
 		if (ListUtil.isEmpty(rangeAggregationBuilder.ranges())) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(rangeAggregationBuilder);
+		return rangeAggregationBuilder;
 	}
 
 	private void _addConfigurationRanges(

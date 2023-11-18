@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check.comparator;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -45,11 +37,42 @@ public class PropertyValueComparator extends NaturalOrderStringComparator {
 			}
 		}
 
-		if ((x > 0) && (s1.charAt(x - 1) == CharPool.PERIOD)) {
+		if (x <= 0) {
+			return value;
+		}
+
+		if (s1.charAt(x - 1) == CharPool.PERIOD) {
 			if (Character.isUpperCase(c1) && Character.isLowerCase(c2)) {
 				return -1;
 			}
 			else if (Character.isLowerCase(c1) && Character.isUpperCase(c2)) {
+				return 1;
+			}
+		}
+
+		if (s1.charAt(x - 1) == CharPool.SLASH) {
+			if (c1 == CharPool.STAR) {
+				return -1;
+			}
+
+			if (c2 == CharPool.STAR) {
+				return 1;
+			}
+
+			if ((s1.indexOf(StringPool.PERIOD, x) == -1) ||
+				(s2.indexOf(StringPool.PERIOD, x) == -1)) {
+
+				return value;
+			}
+
+			if ((s1.indexOf(StringPool.SLASH, x) == -1) &&
+				(s2.indexOf(StringPool.SLASH, x) != -1)) {
+
+				return -1;
+			}
+			else if ((s1.indexOf(StringPool.SLASH, x) != -1) &&
+					 (s2.indexOf(StringPool.SLASH, x) == -1)) {
+
 				return 1;
 			}
 		}

@@ -1,26 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action;
 
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.admin.web.internal.handler.LayoutUtilityPageEntryPortalExceptionRequestHandler;
+import com.liferay.layout.admin.web.internal.handler.LayoutUtilityPageEntryPortalExceptionRequestHandlerUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -63,20 +55,9 @@ public class AddLayoutUtilityPageEntryMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		String name = ParamUtil.getString(actionRequest, "name");
-		String type = ParamUtil.getString(actionRequest, "type");
-		long masterLayoutPlid = ParamUtil.getLong(
-			actionRequest, "masterLayoutPlid");
-
 		try {
-			ServiceContext serviceContext = ServiceContextFactory.getInstance(
-				actionRequest);
-
 			LayoutUtilityPageEntry layoutUtilityPageEntry =
-				_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
-					null, serviceContext.getUserId(),
-					serviceContext.getScopeGroupId(), 0, 0, false, name, type,
-					masterLayoutPlid);
+				_addLayoutUtilityPageEntry(actionRequest);
 
 			JSONObject jsonObject = JSONUtil.put(
 				"redirectURL",
@@ -91,10 +72,27 @@ public class AddLayoutUtilityPageEntryMVCActionCommand
 		catch (PortalException portalException) {
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutUtilityPageEntryPortalExceptionRequestHandler.
+			LayoutUtilityPageEntryPortalExceptionRequestHandlerUtil.
 				handlePortalException(
 					actionRequest, actionResponse, portalException);
 		}
+	}
+
+	private LayoutUtilityPageEntry _addLayoutUtilityPageEntry(
+			ActionRequest actionRequest)
+		throws Exception {
+
+		String name = ParamUtil.getString(actionRequest, "name");
+		String type = ParamUtil.getString(actionRequest, "type");
+		long masterLayoutPlid = ParamUtil.getLong(
+			actionRequest, "masterLayoutPlid");
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			actionRequest);
+
+		return _layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
+			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			0, 0, false, name, type, masterLayoutPlid, serviceContext);
 	}
 
 	private String _getRedirectURL(
@@ -108,22 +106,22 @@ public class AddLayoutUtilityPageEntryMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String layoutFullURL = _portal.getLayoutFullURL(
-			draftLayout, themeDisplay);
-
-		layoutFullURL = HttpComponentsUtil.setParameter(
-			layoutFullURL, "p_l_back_url",
+		return HttpComponentsUtil.addParameters(
+			_portal.getLayoutFullURL(draftLayout, themeDisplay), "p_l_back_url",
 			PortletURLBuilder.create(
 				PortletURLFactoryUtil.create(
 					actionRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 					PortletRequest.RENDER_PHASE)
 			).setTabs1(
 				"utility-pages"
-			).buildString());
-
-		return HttpComponentsUtil.setParameter(
-			layoutFullURL, "p_l_mode", Constants.EDIT);
+			).buildString(),
+			"p_l_back_url_title",
+			_language.get(themeDisplay.getLocale(), "pages"), "p_l_mode",
+			Constants.EDIT);
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -131,10 +129,6 @@ public class AddLayoutUtilityPageEntryMVCActionCommand
 	@Reference
 	private LayoutUtilityPageEntryLocalService
 		_layoutUtilityPageEntryLocalService;
-
-	@Reference
-	private LayoutUtilityPageEntryPortalExceptionRequestHandler
-		_layoutUtilityPageEntryPortalExceptionRequestHandler;
 
 	@Reference
 	private Portal _portal;

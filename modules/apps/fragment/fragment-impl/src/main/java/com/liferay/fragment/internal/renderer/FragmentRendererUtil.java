@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.renderer;
 
+import com.liferay.frontend.taglib.clay.servlet.taglib.IconTag;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.petra.string.StringBundler;
@@ -36,6 +28,7 @@ import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.jsp.JspException;
 
 /**
  * @author Eudaldo Alonso
@@ -121,6 +114,41 @@ public class FragmentRendererUtil {
 		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(ioException);
+			}
+		}
+	}
+
+	public static void printRestrictedContentMessage(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
+
+		try {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			printWriter.write(
+				"<div class=\"alert alert-secondary align-items-baseline " +
+					"bg-light d-flex\"><span class=\"alert-indicator " +
+						"flex-shrink-0 mr-2\">");
+
+			IconTag iconTag = new IconTag();
+
+			iconTag.setCssClass("lexicon-icon lexicon-icon-password-policies");
+			iconTag.setSymbol("password-policies");
+
+			printWriter.write(
+				iconTag.doTagAsString(httpServletRequest, httpServletResponse));
+
+			printWriter.write("</span>");
+			printWriter.write(
+				LanguageUtil.get(
+					httpServletRequest,
+					"this-content-cannot-be-displayed-due-to-permission-" +
+						"restrictions"));
+			printWriter.write("</div>");
+		}
+		catch (IOException | JspException exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
 			}
 		}
 	}

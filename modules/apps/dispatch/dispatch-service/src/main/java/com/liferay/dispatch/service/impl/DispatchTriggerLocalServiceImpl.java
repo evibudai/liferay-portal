@@ -1,24 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dispatch.service.impl;
 
+import com.liferay.dispatch.exception.DispatchTriggerDispatchTaskExecutorTypeException;
 import com.liferay.dispatch.exception.DispatchTriggerEndDateException;
 import com.liferay.dispatch.exception.DispatchTriggerNameException;
 import com.liferay.dispatch.exception.DispatchTriggerStartDateException;
 import com.liferay.dispatch.exception.DuplicateDispatchTriggerException;
 import com.liferay.dispatch.executor.DispatchTaskClusterMode;
+import com.liferay.dispatch.executor.DispatchTaskExecutor;
 import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
 import com.liferay.dispatch.internal.helper.DispatchTriggerHelper;
 import com.liferay.dispatch.model.DispatchTrigger;
@@ -34,7 +27,6 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerException;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.Date;
 import java.util.List;
@@ -64,6 +57,7 @@ public class DispatchTriggerLocalServiceImpl
 	@Override
 	public DispatchTrigger addDispatchTrigger(
 			String externalReferenceCode, long userId,
+			DispatchTaskExecutor dispatchTaskExecutor,
 			String dispatchTaskExecutorType,
 			UnicodeProperties dispatchTaskSettingsUnicodeProperties,
 			String name, boolean system)
@@ -71,7 +65,9 @@ public class DispatchTriggerLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
-		_validate(0, user.getCompanyId(), name);
+		_validate(
+			0, user.getCompanyId(), dispatchTaskExecutor,
+			dispatchTaskExecutorType, name);
 
 		DispatchTrigger dispatchTrigger = dispatchTriggerPersistence.create(
 			counterLocalService.increment());
@@ -97,13 +93,26 @@ public class DispatchTriggerLocalServiceImpl
 	}
 
 	@Override
+	public DispatchTrigger addDispatchTrigger(
+			String externalReferenceCode, long userId,
+			String dispatchTaskExecutorType,
+			UnicodeProperties dispatchTaskSettingsUnicodeProperties,
+			String name, boolean system)
+		throws PortalException {
+
+		return addDispatchTrigger(
+			externalReferenceCode, userId, null, dispatchTaskExecutorType,
+			dispatchTaskSettingsUnicodeProperties, name, system);
+	}
+
+	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public DispatchTrigger deleteDispatchTrigger(
 			DispatchTrigger dispatchTrigger)
 		throws PortalException {
 
 		if (dispatchTrigger.isSystem() &&
-			!CompanyThreadLocal.isDeleteInProcess() &&
+			!PortalInstances.isCurrentCompanyInDeletionProcess() &&
 			!PortalRunMode.isTestMode()) {
 
 			return dispatchTrigger;
@@ -305,7 +314,6 @@ public class DispatchTriggerLocalServiceImpl
 					startDateMonth, startDateDay, startDateYear, startDateHour,
 					startDateMinute, DispatchTriggerStartDateException.class),
 				timeZoneId));
-
 		dispatchTrigger.setTimeZoneId(timeZoneId);
 
 		dispatchTrigger = dispatchTriggerPersistence.update(dispatchTrigger);
@@ -332,7 +340,9 @@ public class DispatchTriggerLocalServiceImpl
 		DispatchTrigger dispatchTrigger =
 			dispatchTriggerPersistence.findByPrimaryKey(dispatchTriggerId);
 
-		_validate(dispatchTriggerId, dispatchTrigger.getCompanyId(), name);
+		_validate(
+			dispatchTriggerId, dispatchTrigger.getCompanyId(), null,
+			dispatchTrigger.getDispatchTaskExecutorType(), name);
 
 		dispatchTrigger.setName(name);
 		dispatchTrigger.setDispatchTaskSettingsUnicodeProperties(
@@ -347,7 +357,10 @@ public class DispatchTriggerLocalServiceImpl
 		return new Date(date.getTime() - timeZone.getOffset(date.getTime()));
 	}
 
-	private void _validate(long dispatchTriggerId, long companyId, String name)
+	private void _validate(
+			long dispatchTriggerId, long companyId,
+			DispatchTaskExecutor dispatchTaskExecutor,
+			String dispatchTaskExecutorType, String name)
 		throws PortalException {
 
 		if (Validator.isNull(name)) {
@@ -358,17 +371,27 @@ public class DispatchTriggerLocalServiceImpl
 		DispatchTrigger dispatchTrigger = dispatchTriggerPersistence.fetchByC_N(
 			companyId, name);
 
-		if ((dispatchTrigger == null) ||
-			((dispatchTriggerId > 0) &&
-			 (dispatchTrigger.getDispatchTriggerId() == dispatchTriggerId))) {
+		if ((dispatchTrigger != null) &&
+			(dispatchTrigger.getDispatchTriggerId() != dispatchTriggerId)) {
 
-			return;
+			throw new DuplicateDispatchTriggerException(
+				StringBundler.concat(
+					"Dispatch trigger name \"", name,
+					"\" already exists for company ", companyId));
 		}
 
-		throw new DuplicateDispatchTriggerException(
-			StringBundler.concat(
-				"Dispatch trigger name \"", name,
-				"\" already exists for company ", companyId));
+		if (dispatchTaskExecutor == null) {
+			dispatchTaskExecutor =
+				_dispatchTaskExecutorRegistry.fetchDispatchTaskExecutor(
+					dispatchTaskExecutorType);
+		}
+
+		if (dispatchTaskExecutor == null) {
+			throw new DispatchTriggerDispatchTaskExecutorTypeException(
+				StringBundler.concat(
+					"Unknown dispatch task executor type \"",
+					dispatchTaskExecutorType, "\""));
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

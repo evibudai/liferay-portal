@@ -1,25 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.test.util;
 
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.data.engine.rest.test.util.DataDefinitionTestUtil;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Fields;
@@ -36,15 +32,16 @@ import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalFeedLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.util.JournalConverter;
-import com.liferay.journal.util.JournalHelper;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
-import com.liferay.layout.test.util.LayoutFriendlyURLRandomizerBumper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.portlet.PortletRequestModel;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -52,40 +49,25 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.xml.Attribute;
-import com.liferay.portal.kernel.xml.Document;
-import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.kernel.xml.Node;
-import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
-import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.rss.util.RSSUtil;
-
-import java.lang.reflect.Method;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -461,12 +443,12 @@ public class JournalTestUtil {
 			externalReferenceCode, serviceContext.getUserId(), groupId,
 			folderId, classNameId, 0, articleId, autoArticleId,
 			JournalArticleConstants.VERSION_DEFAULT, titleMap, descriptionMap,
-			friendlyUrlMap, content, ddmStructure.getStructureKey(),
+			friendlyUrlMap, content, ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey(), layoutUuid, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire, 0, 0, 0, 0,
-			0, true, true, false, null, null, null, null, serviceContext);
+			0, true, true, false, 0, 0, null, null, null, null, serviceContext);
 	}
 
 	public static JournalArticle addArticle(
@@ -628,6 +610,11 @@ public class JournalTestUtil {
 			Map<String, byte[]> images, ServiceContext serviceContext)
 		throws Exception {
 
+		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
+			PortalUtil.getSiteGroupId(serviceContext.getScopeGroupId()),
+			PortalUtil.getClassNameId(JournalArticle.class.getName()),
+			ddmStructureKey, true);
+
 		return JournalArticleLocalServiceUtil.addArticle(
 			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
 			folderId, classNameId, classPK, StringPool.BLANK, true, 0,
@@ -638,9 +625,9 @@ public class JournalTestUtil {
 			HashMapBuilder.put(
 				defaultLocale, RandomTestUtil.randomString()
 			).build(),
-			xml, ddmStructureKey, ddmTemplateKey, null, 1, 1, 1965, 0, 0, 0, 0,
-			0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false, null, null, images,
-			null, serviceContext);
+			xml, ddmStructure.getStructureId(), ddmTemplateKey, null, 1, 1,
+			1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false,
+			0, 0, null, null, images, null, serviceContext);
 	}
 
 	public static JournalArticle addArticleWithXMLContent(
@@ -732,19 +719,8 @@ public class JournalTestUtil {
 			ddmStructureKey, ddmTemplateKey, serviceContext);
 	}
 
-	public static Element addDynamicElementElement(
-		Element element, String type, String name) {
-
-		Element dynamicElementElement = element.addElement("dynamic-element");
-
-		dynamicElementElement.addAttribute("name", name);
-		dynamicElementElement.addAttribute("type", type);
-
-		return dynamicElementElement;
-	}
-
 	public static JournalFeed addFeed(
-			long groupId, long plid, String name, String ddmStructureKey,
+			long groupId, long plid, String name, long ddmStructureId,
 			String ddmTemplateKey, String rendererTemplateKey)
 		throws Exception {
 
@@ -768,7 +744,7 @@ public class JournalTestUtil {
 
 		return JournalFeedLocalServiceUtil.addFeed(
 			userId, groupId, feedId, autoFeedId, name, description,
-			ddmStructureKey, ddmTemplateKey, rendererTemplateKey, delta,
+			ddmStructureId, ddmTemplateKey, rendererTemplateKey, delta,
 			orderByCol, orderByType, friendlyURL, targetPortletId, contentField,
 			feedFormat, feedVersion, serviceContext);
 	}
@@ -853,6 +829,7 @@ public class JournalTestUtil {
 	}
 
 	public static JournalArticle addJournalArticle(
+			DataDefinitionResource.Factory dataDefinitionResourceFactory,
 			DDMFormField ddmFormField,
 			DDMFormValuesToFieldsConverter ddmFormValuesToFieldsConverter,
 			String fieldValue, long groupId, JournalConverter journalConverter)
@@ -860,69 +837,42 @@ public class JournalTestUtil {
 
 		Locale locale = PortalUtil.getSiteDefaultLocale(groupId);
 
-		DDMForm ddmForm = _createDDMForm(ddmFormField, locale);
+		String languageId = LocaleUtil.toLanguageId(locale);
 
-		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
-			groupId, JournalArticle.class.getName(), ddmForm, locale);
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				"journal", dataDefinitionResourceFactory, groupId,
+				JSONUtil.put(
+					"availableLanguageIds", JSONUtil.put(languageId)
+				).put(
+					"dataDefinitionFields",
+					JSONUtil.put(
+						_getDataDefinitionFieldJSONObject(
+							ddmFormField, languageId))
+				).put(
+					"defaultLanguageId", languageId
+				).put(
+					"name",
+					JSONUtil.put(languageId, RandomTestUtil.randomString())
+				).toString(),
+				TestPropsValues.getUser());
+
+		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
+			groupId, PortalUtil.getClassNameId(JournalArticle.class.getName()),
+			dataDefinition.getDataDefinitionKey());
 
 		Fields fields = ddmFormValuesToFieldsConverter.convert(
 			ddmStructure,
 			_createDDMFormValues(
-				ddmForm,
+				ddmStructure.getDDMForm(),
 				_getDDMFormFieldValue(ddmFormField, fieldValue, locale),
 				locale));
 
 		String content = journalConverter.getContent(
 			ddmStructure, fields, groupId);
 
-		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
-			groupId, ddmStructure.getStructureId(),
-			PortalUtil.getClassNameId(JournalArticle.class));
-
-		User user = TestPropsValues.getUser();
-
-		Calendar calendar = CalendarFactoryUtil.getCalendar(user.getTimeZone());
-
-		int displayDateDay = calendar.get(Calendar.DATE);
-		int displayDateMonth = calendar.get(Calendar.MONTH);
-		int displayDateYear = calendar.get(Calendar.YEAR);
-		int displayDateHour = calendar.get(Calendar.HOUR_OF_DAY);
-		int displayDateMinute = calendar.get(Calendar.MINUTE);
-
-		return JournalArticleLocalServiceUtil.addArticle(
-			null, TestPropsValues.getUserId(), groupId,
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
-			true, JournalArticleConstants.VERSION_DEFAULT,
-			RandomTestUtil.randomLocaleStringMap(locale),
-			RandomTestUtil.randomLocaleStringMap(locale),
-			HashMapBuilder.put(
-				locale,
-				FriendlyURLNormalizerUtil.normalize(
-					RandomTestUtil.randomString(
-						LayoutFriendlyURLRandomizerBumper.INSTANCE))
-			).build(),
-			content, ddmStructure.getStructureKey(),
-			ddmTemplate.getTemplateKey(), null, displayDateMonth,
-			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
-			0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false, null, null,
-			null, null, ServiceContextTestUtil.getServiceContext(groupId));
-	}
-
-	public static Element addMetadataElement(
-		Element element, String locale, String label) {
-
-		Element metadataElement = element.addElement("meta-data");
-
-		metadataElement.addAttribute("locale", locale);
-
-		Element entryElement = metadataElement.addElement("entry");
-
-		entryElement.addAttribute("name", "label");
-
-		entryElement.addCDATA(label);
-
-		return entryElement;
+		return addArticleWithXMLContent(
+			groupId, content, dataDefinition.getDataDefinitionKey(), null);
 	}
 
 	public static void expireArticle(long groupId, JournalArticle article)
@@ -940,20 +890,6 @@ public class JournalTestUtil {
 		return JournalArticleLocalServiceUtil.expireArticle(
 			article.getUserId(), article.getGroupId(), article.getArticleId(),
 			version, null, ServiceContextTestUtil.getServiceContext(groupId));
-	}
-
-	public static Method getJournalUtilGetTokensMethod() {
-		return ReflectionTestUtil.getMethod(
-			_JOURNAL_UTIL_CLASS, "getTokens", JournalArticle.class,
-			DDMTemplate.class, PortletRequestModel.class, ThemeDisplay.class);
-	}
-
-	public static Method getJournalUtilTransformMethod() {
-		return ReflectionTestUtil.getMethod(
-			_JOURNAL_UTIL_CLASS, "transform", JournalArticle.class,
-			DDMTemplate.class, JournalHelper.class, String.class,
-			LayoutDisplayPageProviderRegistry.class, PortletRequestModel.class,
-			boolean.class, String.class, ThemeDisplay.class, String.class);
 	}
 
 	public static String getSampleTemplateFTL() {
@@ -985,34 +921,6 @@ public class JournalTestUtil {
 		Hits results = getSearchArticles(companyId, groupId);
 
 		return results.getLength();
-	}
-
-	public static Map<String, Map<String, String>> getXsdMap(String xsd)
-		throws Exception {
-
-		Map<String, Map<String, String>> map = new HashMap<>();
-
-		Document document = UnsecureSAXReaderUtil.read(xsd);
-
-		XPath xPathSelector = SAXReaderUtil.createXPath("//dynamic-element");
-
-		List<Node> nodes = xPathSelector.selectNodes(document);
-
-		for (Node node : nodes) {
-			Element dynamicElementElement = (Element)node;
-
-			String type = dynamicElementElement.attributeValue("type");
-
-			if (Objects.equals(type, "selection_break")) {
-				continue;
-			}
-
-			String name = dynamicElementElement.attributeValue("name");
-
-			map.put(name, _getMap(dynamicElementElement));
-		}
-
-		return map;
 	}
 
 	public static JournalArticle updateArticle(JournalArticle article)
@@ -1122,12 +1030,13 @@ public class JournalTestUtil {
 		return JournalArticleLocalServiceUtil.updateArticle(
 			userId, article.getGroupId(), article.getFolderId(),
 			article.getArticleId(), article.getVersion(), titleMap,
-			article.getDescriptionMap(), content, article.getDDMStructureKey(),
+			article.getDescriptionMap(), null, content,
 			article.getDDMTemplateKey(), article.getLayoutUuid(),
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true,
-			article.isIndexable(), article.isSmallImage(),
-			article.getSmallImageURL(), null, null, null, serviceContext);
+			article.isIndexable(), article.isSmallImage(), 0,
+			article.getSmallImageSource(), article.getSmallImageURL(), null,
+			null, null, serviceContext);
 	}
 
 	public static JournalArticle updateArticleWithWorkflow(
@@ -1152,18 +1061,6 @@ public class JournalTestUtil {
 			approved, serviceContext);
 	}
 
-	private static DDMForm _createDDMForm(
-		DDMFormField ddmFormField, Locale locale) {
-
-		DDMForm ddmForm = new DDMForm();
-
-		ddmForm.addAvailableLocale(locale);
-		ddmForm.addDDMFormField(ddmFormField);
-		ddmForm.setDefaultLocale(locale);
-
-		return ddmForm;
-	}
-
 	private static DDMFormValues _createDDMFormValues(
 		DDMForm ddmForm, DDMFormFieldValue ddmFormFieldValue, Locale locale) {
 
@@ -1173,6 +1070,45 @@ public class JournalTestUtil {
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		return ddmFormValues;
+	}
+
+	private static JSONObject _getDataDefinitionFieldJSONObject(
+		DDMFormField ddmFormField, String languageId) {
+
+		return JSONUtil.put(
+			"customProperties",
+			JSONUtil.put(
+				"dataType", ddmFormField.getDataType()
+			).put(
+				"fieldReference", ddmFormField.getFieldReference()
+			).put(
+				"multiple", ddmFormField.isMultiple()
+			).put(
+				"options", _getOptionsJSONObject(ddmFormField, languageId)
+			)
+		).put(
+			"defaultValue", _toI18nJSONObject(ddmFormField.getPredefinedValue())
+		).put(
+			"fieldType", ddmFormField.getType()
+		).put(
+			"indexType", ddmFormField.getIndexType()
+		).put(
+			"label", _toI18nJSONObject(ddmFormField.getLabel())
+		).put(
+			"localizable", ddmFormField.isLocalizable()
+		).put(
+			"name", ddmFormField.getName()
+		).put(
+			"readOnly", ddmFormField.isReadOnly()
+		).put(
+			"repeatable", ddmFormField.isRepeatable()
+		).put(
+			"required", ddmFormField.isRequired()
+		).put(
+			"showLabel", ddmFormField.isShowLabel()
+		).put(
+			"tip", _toI18nJSONObject(ddmFormField.getTip())
+		);
 	}
 
 	private static DDMFormFieldValue _getDDMFormFieldValue(
@@ -1230,45 +1166,46 @@ public class JournalTestUtil {
 		return valuesMap;
 	}
 
-	private static Map<String, String> _getMap(Element dynamicElementElement) {
-		Map<String, String> map = new HashMap<>();
+	private static JSONObject _getOptionsJSONObject(
+		DDMFormField ddmFormField, String languageId) {
 
-		Element parentElement = dynamicElementElement.getParent();
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		String parentType = parentElement.attributeValue("type");
+		DDMFormFieldOptions ddmFormFieldOptions =
+			ddmFormField.getDDMFormFieldOptions();
 
-		// Attributes
+		Map<String, LocalizedValue> options = ddmFormFieldOptions.getOptions();
 
-		for (Attribute attribute : dynamicElementElement.attributes()) {
+		Locale locale = LocaleUtil.fromLanguageId(languageId);
 
-			// Option element should not contain index type atribute
+		for (Map.Entry<String, LocalizedValue> entry : options.entrySet()) {
+			LocalizedValue localizedValue = entry.getValue();
 
-			if ((Objects.equals(parentType, "list") ||
-				 Objects.equals(parentType, "multi-list")) &&
-				Objects.equals(attribute.getName(), "index-type")) {
-
-				continue;
-			}
-
-			map.put(attribute.getName(), attribute.getValue());
+			jsonArray.put(
+				JSONUtil.put(
+					"label", localizedValue.getString(locale)
+				).put(
+					"reference",
+					ddmFormFieldOptions.getOptionReference(entry.getKey())
+				).put(
+					"value", entry.getKey()
+				));
 		}
 
-		// Metadata
+		return JSONUtil.put(languageId, jsonArray);
+	}
 
-		Element metadadataElement = dynamicElementElement.element("meta-data");
+	private static JSONObject _toI18nJSONObject(LocalizedValue localizedValue) {
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		if (metadadataElement == null) {
-			return map;
+		Map<Locale, String> localizedMap = localizedValue.getValues();
+
+		for (Map.Entry<Locale, String> entry : localizedMap.entrySet()) {
+			jsonObject.put(
+				LocaleUtil.toBCP47LanguageId(entry.getKey()), entry.getValue());
 		}
 
-		List<Element> entryElements = metadadataElement.elements("entry");
-
-		for (Element entryElement : entryElements) {
-			map.put(
-				entryElement.attributeValue("name"), entryElement.getText());
-		}
-
-		return map;
+		return jsonObject;
 	}
 
 	private static final Class<?> _JOURNAL_UTIL_CLASS;
@@ -1280,19 +1217,8 @@ public class JournalTestUtil {
 	static {
 		Bundle testBundle = FrameworkUtil.getBundle(JournalTestUtil.class);
 
-		BundleContext bundleContext = testBundle.getBundleContext();
-
-		Bundle journalServiceBundle = null;
-
-		for (Bundle bundle : bundleContext.getBundles()) {
-			String symbolicName = bundle.getSymbolicName();
-
-			if (symbolicName.equals("com.liferay.journal.service")) {
-				journalServiceBundle = bundle;
-
-				break;
-			}
-		}
+		Bundle journalServiceBundle = BundleUtil.getBundle(
+			testBundle.getBundleContext(), "com.liferay.journal.service");
 
 		if (journalServiceBundle == null) {
 			throw new ExceptionInInitializerError(

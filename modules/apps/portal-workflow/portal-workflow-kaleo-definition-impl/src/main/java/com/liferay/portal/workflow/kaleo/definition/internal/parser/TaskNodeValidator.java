@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.definition.internal.parser;
@@ -25,12 +16,8 @@ import com.liferay.portal.workflow.kaleo.definition.Transition;
 import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.definition.parser.NodeValidator;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -67,9 +54,7 @@ public class TaskNodeValidator extends BaseNodeValidator<Task> {
 				task.getDefaultLabel());
 		}
 
-		Set<TaskForm> taskForms = task.getTaskForms();
-
-		for (TaskForm taskForm : taskForms) {
+		for (TaskForm taskForm : task.getTaskForms()) {
 			String formDefinition = taskForm.getFormDefinition();
 
 			TaskFormReference taskFormReference =
@@ -87,18 +72,20 @@ public class TaskNodeValidator extends BaseNodeValidator<Task> {
 		Map<String, Transition> outgoingTransitions =
 			task.getOutgoingTransitions();
 
-		if (outgoingTransitions.size() > 1) {
-			List<Transition> defaultTransitions = Stream.of(
-				outgoingTransitions.values()
-			).flatMap(
-				Collection::stream
-			).filter(
-				Transition::isDefault
-			).collect(
-				Collectors.toList()
-			);
+		if (outgoingTransitions.size() <= 1) {
+			return;
+		}
 
-			if (defaultTransitions.size() > 1) {
+		int defaultTransitionCount = 0;
+
+		for (Transition transition : outgoingTransitions.values()) {
+			if (!transition.isDefault()) {
+				continue;
+			}
+
+			defaultTransitionCount += 1;
+
+			if (defaultTransitionCount > 1) {
 				throw new KaleoDefinitionValidationException.
 					MustNotSetMoreThanOneDefaultTransition(
 						task.getDefaultLabel());

@@ -1,19 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayDatePicker from '@clayui/date-picker';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import moment from 'moment';
+import {format, fromUnixTime, getUnixTime, parse} from 'date-fns';
 import React from 'react';
 
 function DateInput({disabled, name, setFieldTouched, setFieldValue, value}) {
@@ -30,12 +24,15 @@ function DateInput({disabled, name, setFieldTouched, setFieldValue, value}) {
 				disabled={disabled}
 				onKeyDown={_handleKeyDown}
 				onValueChange={(value) => {
-					setFieldValue(name, moment(value, 'MM/DD/YYYY').unix());
+					setFieldValue(
+						name,
+						getUnixTime(parse(value, 'MM/dd/yyyy', new Date()))
+					);
 				}}
 				placeholder="MM/DD/YYYY"
 				readOnly
 				sizing="sm"
-				value={value ? moment.unix(value).format('MM/DD/YYYY') : ''}
+				value={value ? format(fromUnixTime(value), 'MM/dd/yyyy') : ''}
 				years={{
 					end: 2024,
 					start: 1997,

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.internal.info.item.renderer;
@@ -25,9 +16,6 @@ import com.liferay.info.item.renderer.template.InfoItemRendererTemplate;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -126,6 +114,13 @@ public class TemplateInfoItemTemplatedRenderer<T>
 		T t, String templateEntryId, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			return;
+		}
+
 		try {
 			Writer writer = httpServletResponse.getWriter();
 
@@ -153,7 +148,9 @@ public class TemplateInfoItemTemplatedRenderer<T>
 						templateEntry, infoItemFieldValues,
 						_templateNodeFactory);
 
-			writer.write(templateDisplayTemplateTransformer.transform());
+			writer.write(
+				templateDisplayTemplateTransformer.transform(
+					serviceContext.getThemeDisplay()));
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -161,8 +158,7 @@ public class TemplateInfoItemTemplatedRenderer<T>
 	}
 
 	private List<TemplateEntry> _getTemplateEntries(
-			String infoItemClassName, String infoItemFormVariationKey)
-		throws RuntimeException {
+		String infoItemClassName, String infoItemFormVariationKey) {
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
@@ -171,35 +167,14 @@ public class TemplateInfoItemTemplatedRenderer<T>
 			return Collections.emptyList();
 		}
 
-		try {
-			long groupId = serviceContext.getScopeGroupId();
-
-			if (!_stagingGroupHelper.isStagedPortlet(
-					groupId, TemplatePortletKeys.TEMPLATE)) {
-
-				Group liveGroup = _stagingGroupHelper.fetchLiveGroup(groupId);
-
-				if (liveGroup != null) {
-					groupId = liveGroup.getGroupId();
-				}
-			}
-
-			return _templateEntryLocalService.getTemplateEntries(
-				PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId),
-				infoItemClassName, infoItemFormVariationKey, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return Collections.emptyList();
-		}
+		return _templateEntryLocalService.getTemplateEntries(
+			PortalUtil.getCurrentAndAncestorSiteGroupIds(
+				_stagingGroupHelper.getStagedPortletGroupId(
+					serviceContext.getScopeGroupId(),
+					TemplatePortletKeys.TEMPLATE)),
+			infoItemClassName, infoItemFormVariationKey, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		TemplateInfoItemTemplatedRenderer.class);
 
 	private final String _className;
 	private final DDMTemplateLocalService _ddmTemplateLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.model.impl;
@@ -247,95 +238,121 @@ public class RedirectEntryModelImpl
 	public Map<String, Function<RedirectEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<RedirectEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<RedirectEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<RedirectEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<RedirectEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<RedirectEntry, Object>>();
-		Map<String, BiConsumer<RedirectEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<RedirectEntry, ?>>();
+		private static final Map<String, Function<RedirectEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", RedirectEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<RedirectEntry, Long>)RedirectEntry::setMvccVersion);
-		attributeGetterFunctions.put("uuid", RedirectEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<RedirectEntry, String>)RedirectEntry::setUuid);
-		attributeGetterFunctions.put(
-			"redirectEntryId", RedirectEntry::getRedirectEntryId);
-		attributeSetterBiConsumers.put(
-			"redirectEntryId",
-			(BiConsumer<RedirectEntry, Long>)RedirectEntry::setRedirectEntryId);
-		attributeGetterFunctions.put("groupId", RedirectEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<RedirectEntry, Long>)RedirectEntry::setGroupId);
-		attributeGetterFunctions.put("companyId", RedirectEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<RedirectEntry, Long>)RedirectEntry::setCompanyId);
-		attributeGetterFunctions.put("userId", RedirectEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<RedirectEntry, Long>)RedirectEntry::setUserId);
-		attributeGetterFunctions.put("userName", RedirectEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<RedirectEntry, String>)RedirectEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", RedirectEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<RedirectEntry, Date>)RedirectEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", RedirectEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<RedirectEntry, Date>)RedirectEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"destinationURL", RedirectEntry::getDestinationURL);
-		attributeSetterBiConsumers.put(
-			"destinationURL",
-			(BiConsumer<RedirectEntry, String>)
-				RedirectEntry::setDestinationURL);
-		attributeGetterFunctions.put(
-			"expirationDate", RedirectEntry::getExpirationDate);
-		attributeSetterBiConsumers.put(
-			"expirationDate",
-			(BiConsumer<RedirectEntry, Date>)RedirectEntry::setExpirationDate);
-		attributeGetterFunctions.put(
-			"lastOccurrenceDate", RedirectEntry::getLastOccurrenceDate);
-		attributeSetterBiConsumers.put(
-			"lastOccurrenceDate",
-			(BiConsumer<RedirectEntry, Date>)
-				RedirectEntry::setLastOccurrenceDate);
-		attributeGetterFunctions.put("permanent", RedirectEntry::getPermanent);
-		attributeSetterBiConsumers.put(
-			"permanent",
-			(BiConsumer<RedirectEntry, Boolean>)RedirectEntry::setPermanent);
-		attributeGetterFunctions.put("sourceURL", RedirectEntry::getSourceURL);
-		attributeSetterBiConsumers.put(
-			"sourceURL",
-			(BiConsumer<RedirectEntry, String>)RedirectEntry::setSourceURL);
+		static {
+			Map<String, Function<RedirectEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<RedirectEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", RedirectEntry::getMvccVersion);
+			attributeGetterFunctions.put("uuid", RedirectEntry::getUuid);
+			attributeGetterFunctions.put(
+				"redirectEntryId", RedirectEntry::getRedirectEntryId);
+			attributeGetterFunctions.put("groupId", RedirectEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", RedirectEntry::getCompanyId);
+			attributeGetterFunctions.put("userId", RedirectEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", RedirectEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", RedirectEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", RedirectEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"destinationURL", RedirectEntry::getDestinationURL);
+			attributeGetterFunctions.put(
+				"expirationDate", RedirectEntry::getExpirationDate);
+			attributeGetterFunctions.put(
+				"lastOccurrenceDate", RedirectEntry::getLastOccurrenceDate);
+			attributeGetterFunctions.put(
+				"permanent", RedirectEntry::getPermanent);
+			attributeGetterFunctions.put(
+				"sourceURL", RedirectEntry::getSourceURL);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<RedirectEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<RedirectEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<RedirectEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<RedirectEntry, Long>)RedirectEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<RedirectEntry, String>)RedirectEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"redirectEntryId",
+				(BiConsumer<RedirectEntry, Long>)
+					RedirectEntry::setRedirectEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<RedirectEntry, Long>)RedirectEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<RedirectEntry, Long>)RedirectEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<RedirectEntry, Long>)RedirectEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<RedirectEntry, String>)RedirectEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<RedirectEntry, Date>)RedirectEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<RedirectEntry, Date>)
+					RedirectEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"destinationURL",
+				(BiConsumer<RedirectEntry, String>)
+					RedirectEntry::setDestinationURL);
+			attributeSetterBiConsumers.put(
+				"expirationDate",
+				(BiConsumer<RedirectEntry, Date>)
+					RedirectEntry::setExpirationDate);
+			attributeSetterBiConsumers.put(
+				"lastOccurrenceDate",
+				(BiConsumer<RedirectEntry, Date>)
+					RedirectEntry::setLastOccurrenceDate);
+			attributeSetterBiConsumers.put(
+				"permanent",
+				(BiConsumer<RedirectEntry, Boolean>)
+					RedirectEntry::setPermanent);
+			attributeSetterBiConsumers.put(
+				"sourceURL",
+				(BiConsumer<RedirectEntry, String>)RedirectEntry::setSourceURL);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -995,7 +1012,8 @@ public class RedirectEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<RedirectEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

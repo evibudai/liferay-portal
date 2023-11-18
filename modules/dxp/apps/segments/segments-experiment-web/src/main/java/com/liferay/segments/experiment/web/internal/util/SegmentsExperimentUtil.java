@@ -1,26 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.experiment.web.internal.util;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,7 +19,6 @@ import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.model.SegmentsExperimentRel;
 
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * @author David Arques
@@ -38,47 +27,6 @@ public class SegmentsExperimentUtil {
 
 	public static final String ANALYTICS_CLOUD_TRIAL_URL =
 		"https://www.liferay.com/products/analytics-cloud/get-started";
-
-	public static boolean isAnalyticsConnected(long companyId) {
-		if (Validator.isNull(
-				PrefsPropsUtil.getString(
-					companyId, "liferayAnalyticsDataSourceId")) ||
-			Validator.isNull(
-				PrefsPropsUtil.getString(
-					companyId,
-					"liferayAnalyticsFaroBackendSecuritySignature")) ||
-			Validator.isNull(
-				PrefsPropsUtil.getString(
-					companyId, "liferayAnalyticsFaroBackendURL"))) {
-
-			return false;
-		}
-
-		return true;
-	}
-
-	public static boolean isAnalyticsSynced(long companyId, long groupId) {
-		if (!isAnalyticsConnected(companyId)) {
-			return false;
-		}
-
-		if (PrefsPropsUtil.getBoolean(
-				companyId, "liferayAnalyticsEnableAllGroupIds")) {
-
-			return true;
-		}
-
-		String[] liferayAnalyticsGroupIds = PrefsPropsUtil.getStringArray(
-			companyId, "liferayAnalyticsGroupIds", StringPool.COMMA);
-
-		if (ArrayUtil.contains(
-				liferayAnalyticsGroupIds, String.valueOf(groupId))) {
-
-			return true;
-		}
-
-		return false;
-	}
 
 	public static JSONObject toGoalJSONObject(
 		Locale locale, UnicodeProperties typeSettingsUnicodeProperties) {
@@ -99,7 +47,8 @@ public class SegmentsExperimentUtil {
 	}
 
 	public static JSONObject toSegmentsExperimentJSONObject(
-			Locale locale, SegmentsExperiment segmentsExperiment)
+			AnalyticsConfiguration analyticsConfiguration, Locale locale,
+			SegmentsExperiment segmentsExperiment)
 		throws PortalException {
 
 		if (segmentsExperiment == null) {
@@ -112,7 +61,8 @@ public class SegmentsExperimentUtil {
 			"description", segmentsExperiment.getDescription()
 		).put(
 			"detailsURL",
-			_getViewSegmentsExperimentDetailsURL(segmentsExperiment)
+			_getViewSegmentsExperimentDetailsURL(
+				analyticsConfiguration, segmentsExperiment)
 		).put(
 			"editable", _isEditable(segmentsExperiment)
 		).put(
@@ -161,40 +111,34 @@ public class SegmentsExperimentUtil {
 	}
 
 	public static JSONObject toStatusJSONObject(Locale locale, int status) {
-		Optional<SegmentsExperimentConstants.Status> statusObjectOptional =
+		SegmentsExperimentConstants.Status segmentsExperimentConstantsStatus =
 			SegmentsExperimentConstants.Status.parse(status);
 
-		if (!statusObjectOptional.isPresent()) {
+		if (segmentsExperimentConstantsStatus == null) {
 			return null;
 		}
-
-		SegmentsExperimentConstants.Status statusObject =
-			statusObjectOptional.get();
 
 		return JSONUtil.put(
 			"label",
 			LanguageUtil.get(
 				ResourceBundleUtil.getBundle(
 					"content.Language", locale, SegmentsExperimentUtil.class),
-				statusObject.getLabel())
+				segmentsExperimentConstantsStatus.getLabel())
 		).put(
-			"value", statusObject.getValue()
+			"value", segmentsExperimentConstantsStatus.getValue()
 		);
 	}
 
-	private static String _getLiferayAnalyticsURL(long companyId) {
-		return PrefsPropsUtil.getString(companyId, "liferayAnalyticsURL");
-	}
-
 	private static String _getViewSegmentsExperimentDetailsURL(
+		AnalyticsConfiguration analyticsConfiguration,
 		SegmentsExperiment segmentsExperiment) {
 
 		if (segmentsExperiment == null) {
 			return StringPool.BLANK;
 		}
 
-		String liferayAnalyticsURL = _getLiferayAnalyticsURL(
-			segmentsExperiment.getCompanyId());
+		String liferayAnalyticsURL =
+			analyticsConfiguration.liferayAnalyticsURL();
 
 		if (Validator.isNull(liferayAnalyticsURL)) {
 			return StringPool.BLANK;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.util;
@@ -25,15 +16,15 @@ import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portlet.usersadmin.search.GroupSearch;
-import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
+import com.liferay.site.search.GroupSearch;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,19 +46,25 @@ public class GroupSearchProvider {
 			PortletRequest portletRequest, PortletURL portletURL)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		GroupSearch groupSearch = new GroupSearch(portletRequest, portletURL);
 
-		GroupSearchTerms searchTerms =
-			(GroupSearchTerms)groupSearch.getSearchTerms();
+		setResultsAndTotal(groupSearch, portletRequest);
+
+		return groupSearch;
+	}
+
+	public void setResultsAndTotal(
+			GroupSearch groupSearch, PortletRequest portletRequest)
+		throws PortalException {
 
 		long parentGroupId = getParentGroupId(portletRequest);
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		Company company = themeDisplay.getCompany();
 
-		if (!searchTerms.hasSearchTerms() &&
+		if (!_isSearch(portletRequest) &&
 			isFilterManageableGroups(portletRequest) && (parentGroupId <= 0)) {
 
 			groupSearch.setResultsAndTotal(
@@ -75,19 +72,18 @@ public class GroupSearchProvider {
 					getAllGroups(portletRequest),
 					groupSearch.getOrderByComparator()));
 		}
-		else if (searchTerms.hasSearchTerms()) {
+		else if (_isSearch(portletRequest)) {
 			groupSearch.setResultsAndTotal(
 				() -> _groupLocalService.search(
 					company.getCompanyId(), _classNameIds,
-					searchTerms.getKeywords(),
-					getGroupParams(portletRequest, searchTerms, parentGroupId),
+					_getKeywords(portletRequest),
+					getGroupParams(portletRequest, parentGroupId),
 					groupSearch.getStart(), groupSearch.getEnd(),
 					groupSearch.getOrderByComparator()),
 				_groupLocalService.searchCount(
 					company.getCompanyId(), _classNameIds,
-					searchTerms.getKeywords(),
-					getGroupParams(
-						portletRequest, searchTerms, parentGroupId)));
+					_getKeywords(portletRequest),
+					getGroupParams(portletRequest, parentGroupId)));
 		}
 		else {
 			long groupId = ParamUtil.getLong(
@@ -97,18 +93,15 @@ public class GroupSearchProvider {
 			groupSearch.setResultsAndTotal(
 				() -> _groupLocalService.search(
 					company.getCompanyId(), _classNameIds, groupId,
-					searchTerms.getKeywords(),
-					getGroupParams(portletRequest, searchTerms, parentGroupId),
+					_getKeywords(portletRequest),
+					getGroupParams(portletRequest, parentGroupId),
 					groupSearch.getStart(), groupSearch.getEnd(),
 					groupSearch.getOrderByComparator()),
 				_groupLocalService.searchCount(
 					company.getCompanyId(), _classNameIds, groupId,
-					searchTerms.getKeywords(),
-					getGroupParams(
-						portletRequest, searchTerms, parentGroupId)));
+					_getKeywords(portletRequest),
+					getGroupParams(portletRequest, parentGroupId)));
 		}
-
-		return groupSearch;
 	}
 
 	@Activate
@@ -148,8 +141,7 @@ public class GroupSearchProvider {
 	}
 
 	protected LinkedHashMap<String, Object> getGroupParams(
-			PortletRequest portletRequest, GroupSearchTerms searchTerms,
-			long parentGroupId)
+			PortletRequest portletRequest, long parentGroupId)
 		throws PortalException {
 
 		LinkedHashMap<String, Object> groupParams =
@@ -159,7 +151,7 @@ public class GroupSearchProvider {
 				"site", Boolean.TRUE
 			).build();
 
-		if (searchTerms.hasSearchTerms()) {
+		if (_isSearch(portletRequest)) {
 			if (isFilterManageableGroups(portletRequest)) {
 				groupParams.put("groupsTree", getAllGroups(portletRequest));
 			}
@@ -178,7 +170,7 @@ public class GroupSearchProvider {
 				themeDisplay.getPermissionChecker();
 
 			if (!permissionChecker.isCompanyAdmin() &&
-				!_groupPermission.contains(
+				!GroupPermissionUtil.contains(
 					permissionChecker, ActionKeys.VIEW)) {
 
 				User user = themeDisplay.getUser();
@@ -219,7 +211,7 @@ public class GroupSearchProvider {
 			themeDisplay.getPermissionChecker();
 
 		if (permissionChecker.isCompanyAdmin() ||
-			_groupPermission.contains(permissionChecker, ActionKeys.VIEW)) {
+			GroupPermissionUtil.contains(permissionChecker, ActionKeys.VIEW)) {
 
 			return false;
 		}
@@ -227,13 +219,22 @@ public class GroupSearchProvider {
 		return true;
 	}
 
+	private String _getKeywords(PortletRequest portletRequest) {
+		return ParamUtil.getString(portletRequest, "keywords");
+	}
+
+	private boolean _isSearch(PortletRequest portletRequest) {
+		if (Validator.isNotNull(_getKeywords(portletRequest))) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private long[] _classNameIds;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private GroupPermission _groupPermission;
 
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;

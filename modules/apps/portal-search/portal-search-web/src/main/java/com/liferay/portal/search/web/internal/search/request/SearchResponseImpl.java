@@ -1,30 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.request;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.searcher.SearchResponse;
-import com.liferay.portal.search.web.internal.util.SearchStringUtil;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author Rodrigo Paulino
@@ -37,14 +27,13 @@ public class SearchResponseImpl {
 	}
 
 	public SearchResponse getFederatedSearchResponse(
-		Optional<String> federatedSearchKeyOptional) {
+		String federatedSearchKey) {
 
-		return _searchResponse.getFederatedSearchResponse(
-			federatedSearchKeyOptional.orElse(StringPool.BLANK));
+		return _searchResponse.getFederatedSearchResponse(federatedSearchKey);
 	}
 
-	public Optional<String> getKeywordsOptional() {
-		return Optional.ofNullable(_keywords);
+	public String getKeywords() {
+		return _keywords;
 	}
 
 	public int getPaginationDelta() {
@@ -75,8 +64,15 @@ public class SearchResponseImpl {
 		return _searchSettings;
 	}
 
-	public Optional<String> getSpellCheckSuggestionOptional() {
-		return SearchStringUtil.maybe(_hits.getCollatedSpellCheckResult());
+	public String getSpellCheckSuggestion() {
+		String collatedSpellCheckResult = StringUtil.trim(
+			_hits.getCollatedSpellCheckResult());
+
+		if (Validator.isBlank(collatedSpellCheckResult)) {
+			return null;
+		}
+
+		return collatedSpellCheckResult;
 	}
 
 	public int getTotalHits() {

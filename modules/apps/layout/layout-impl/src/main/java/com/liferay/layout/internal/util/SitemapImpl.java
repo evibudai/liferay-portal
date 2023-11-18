@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.util;
 
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
-import com.liferay.layout.admin.kernel.util.Sitemap;
-import com.liferay.layout.admin.kernel.util.SitemapURLProvider;
-import com.liferay.layout.admin.kernel.util.SitemapURLProviderRegistryUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -27,6 +17,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypeController;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -44,16 +35,22 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.site.util.Sitemap;
+import com.liferay.site.util.SitemapURLProvider;
 
 import java.text.DateFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -201,6 +198,23 @@ public class SitemapImpl implements Sitemap {
 		return _getSitemap(layoutUuid, groupId, privateLayout, themeDisplay);
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			_bundleContext, SitemapURLProvider.class, null,
+			(serviceReference, emitter) -> {
+				SitemapURLProvider sitemapURLProvider =
+					_bundleContext.getService(serviceReference);
+
+				emitter.emit(sitemapURLProvider.getClassName());
+			});
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
+	}
+
 	private String _getIndexSitemap(
 			long groupId, boolean privateLayout, ThemeDisplay themeDisplay)
 		throws PortalException {
@@ -251,10 +265,9 @@ public class SitemapImpl implements Sitemap {
 		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 			groupId, privateLayout);
 
-		List<SitemapURLProvider> sitemapURLProviders =
-			SitemapURLProviderRegistryUtil.getSitemapURLProviders();
+		for (SitemapURLProvider sitemapURLProvider :
+				_getSitemapURLProviders()) {
 
-		for (SitemapURLProvider sitemapURLProvider : sitemapURLProviders) {
 			if (Validator.isNull(layoutUuid)) {
 				sitemapURLProvider.visitLayoutSet(
 					rootElement, layoutSet, themeDisplay);
@@ -272,6 +285,19 @@ public class SitemapImpl implements Sitemap {
 		_removeEntriesAndSize(rootElement);
 
 		return document.asXML();
+	}
+
+	private List<SitemapURLProvider> _getSitemapURLProviders() {
+		Set<String> classNames = _serviceTrackerMap.keySet();
+
+		List<SitemapURLProvider> sitemapURLProviders = new ArrayList<>(
+			classNames.size());
+
+		for (String className : classNames) {
+			sitemapURLProviders.add(_serviceTrackerMap.getService(className));
+		}
+
+		return sitemapURLProviders;
 	}
 
 	private int _getSize(Element element) {
@@ -438,6 +464,9 @@ public class SitemapImpl implements Sitemap {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SitemapImpl.class.getName());
 
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+
 	@Reference
 	private Language _language;
 
@@ -452,5 +481,7 @@ public class SitemapImpl implements Sitemap {
 
 	@Reference
 	private SAXReader _saxReader;
+
+	private ServiceTrackerMap<String, SitemapURLProvider> _serviceTrackerMap;
 
 }

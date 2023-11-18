@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -175,7 +166,7 @@ public class ValidatorTest {
 	public void testIsInvalidIPv4Address() throws Exception {
 		testValidIPv4Addresses(
 			new String[] {
-				"392.168.1.102", "255.0.0", "256.257.258.259",
+				null, "", "392.168.1.102", "255.0.0", "256.257.258.259",
 				"128.0000.001.002", "10.10.10.1000", "0192.0168.0001.0001"
 			},
 			false);
@@ -185,8 +176,9 @@ public class ValidatorTest {
 	public void testIsInvalidIPv6Address() throws Exception {
 		testValidIPv6Addresses(
 			new String[] {
-				"", "':10.0.0.1", "02001:0000:1234:0000:0000:C1C0:ABCD:0876",
-				"1.2.3.4", "1.2.3.4", "1.2.3.4:1111:2222:3333:4444::5555",
+				null, "", "':10.0.0.1",
+				"02001:0000:1234:0000:0000:C1C0:ABCD:0876", "1.2.3.4",
+				"1.2.3.4", "1.2.3.4:1111:2222:3333:4444::5555",
 				"1.2.3.4:1111:2222:3333::5555", "1.2.3.4:1111:2222::5555",
 				"1.2.3.4:1111::5555", "1.2.3.4::", "1.2.3.4::5555", "1111",
 				"11112222:3333:4444:5555:6666:1.2.3.4",

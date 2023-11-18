@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -15,6 +15,7 @@ definition {
 		CommerceConfiguration.commerceTearDown();
 	}
 
+	@priority = 5
 	test AssertGuestCartIsTransferredToAccount {
 		property portal.acceptance = "true";
 
@@ -45,6 +46,10 @@ definition {
 			locator1 = "CommerceEntry#FIX_ISSUE_BUTTON");
 
 		Alert.viewSuccessMessage();
+
+		Site.openSiteSettingsAdmin(siteURLKey = "speedwell");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -78,7 +83,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -111,6 +116,7 @@ definition {
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 	}
 
+	@priority = 5
 	test AssertGuestCartItemIsNotTransferredIfSkuIsAlreadyPresent {
 		property portal.acceptance = "true";
 
@@ -142,6 +148,10 @@ definition {
 
 		Alert.viewSuccessMessage();
 
+		Site.openSiteSettingsAdmin(siteURLKey = "speedwell");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
@@ -178,7 +188,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -187,9 +197,9 @@ definition {
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
 			cartItemSkUs = "SPEED55861,",
-			cartSummaryQuantity = "1",
-			cartSummarySubtotal = "24",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 1,
+			cartSummarySubtotal = 24,
+			cartSummaryTotal = ${cartSummarySubtotal});
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 
@@ -201,7 +211,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "5");
+			productQuantity = 5);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -210,9 +220,9 @@ definition {
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "5,",
 			cartItemSkUs = "SPEED55861,",
-			cartSummaryQuantity = "5",
-			cartSummarySubtotal = "120",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 5,
+			cartSummarySubtotal = 120,
+			cartSummaryTotal = ${cartSummarySubtotal});
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 
@@ -230,11 +240,12 @@ definition {
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
 			cartItemSkUs = "SPEED55861,",
-			cartSummaryQuantity = "1",
-			cartSummarySubtotal = "24",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 1,
+			cartSummarySubtotal = 24,
+			cartSummaryTotal = ${cartSummarySubtotal});
 	}
 
+	@priority = 5
 	test AssertGuestCartItemIsTransferredToExistingCart {
 		property portal.acceptance = "true";
 
@@ -266,6 +277,10 @@ definition {
 
 		Alert.viewSuccessMessage();
 
+		Site.openSiteSettingsAdmin(siteURLKey = "speedwell");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
@@ -302,7 +317,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -311,9 +326,9 @@ definition {
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
 			cartItemSkUs = "SPEED55861,",
-			cartSummaryQuantity = "1",
-			cartSummarySubtotal = "24",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 1,
+			cartSummarySubtotal = 24,
+			cartSummaryTotal = ${cartSummarySubtotal});
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 
@@ -325,7 +340,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "5");
+			productQuantity = 5);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -334,9 +349,9 @@ definition {
 			cartItemPriceValues = "15,",
 			cartItemQuantities = "5,",
 			cartItemSkUs = "SPEED55860,",
-			cartSummaryQuantity = "5",
-			cartSummarySubtotal = "75",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 5,
+			cartSummarySubtotal = 75,
+			cartSummaryTotal = ${cartSummarySubtotal});
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 
@@ -354,11 +369,12 @@ definition {
 			cartItemPriceValues = "24,15,",
 			cartItemQuantities = "1,5,",
 			cartItemSkUs = "SPEED55861,SPEED55860,",
-			cartSummaryQuantity = "6",
-			cartSummarySubtotal = "99",
-			cartSummaryTotal = "${cartSummarySubtotal}");
+			cartSummaryQuantity = 6,
+			cartSummarySubtotal = 99,
+			cartSummaryTotal = ${cartSummarySubtotal});
 	}
 
+	@priority = 5
 	test AssertGuestCheckoutAuthenticationPage {
 		property portal.acceptance = "true";
 
@@ -398,7 +414,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -407,6 +423,7 @@ definition {
 		GuestCheckout.assertGuestCheckoutAuthenticationPage();
 	}
 
+	@priority = 5
 	test AssertGuestsWithSameEmailHaveDifferentAccounts {
 		property portal.acceptance = "true";
 
@@ -446,7 +463,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -463,8 +480,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/speedwell");
@@ -473,7 +490,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -490,8 +507,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		Navigator.openURL();
@@ -528,6 +545,7 @@ definition {
 			accountType = "Guest");
 	}
 
+	@priority = 5
 	test AssertNewAccountIsCreatedAfterGuestCheckout {
 		property portal.acceptance = "true";
 
@@ -563,7 +581,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -580,8 +598,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		Navigator.openURL();
@@ -602,10 +620,82 @@ definition {
 			accountType = "Guest");
 
 		TestUtils.assertEquals(
-			actual = "${guestAccountEmail}",
+			actual = ${guestAccountEmail},
 			expected = "buyer@liferay.com");
 	}
 
+	@description = "COMMERCE-11277. As a Guest User, I can create a Quote Request in the Cart Summary by entering a personal message."
+	@priority = 5
+	test CanGuestUserCreateQuoteRequestOnSpeedwell {
+		property custom.properties = "feature.flag.COMMERCE-11028=true";
+		property portal.acceptance = "true";
+
+		task ("Given a Speedwell site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
+		}
+
+		task ("And 'Allow Request a Quote on a Fully Priced Cart' and 'Guest Checkout' are enabled for the site") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Speedwell Portal");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Guest Checkout",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Request a Quote",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("And the Guest User clicks the 'Request a Quote' button in the Mini Cart") {
+			User.logoutPG();
+
+			Navigator.openSiteURL(siteName = "Speedwell");
+
+			CommerceNavigator.gotoSpeedwellTopbarItem(menuItem = "Catalog");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			CommerceNavigator.gotoMiniCart();
+
+			Button.click(button = "Request a Quote");
+		}
+
+		task ("When the Guest clicks again the 'Request a Quote' button in the Cart Summary") {
+			Click(
+				buttonId = "requestQuote",
+				locator1 = "Button#BUTTON_ID");
+		}
+
+		task ("Then the a modal named Request a Quote is shown") {
+			AssertElementPresent(
+				key_title = "Request a Quote",
+				locator1 = "CommerceFrontStore#MODAL_TITLE");
+		}
+
+		task ("When the Guest submits the request after writing a message in the note area") {
+			CommerceOrders.createQuoteRequest(quoteRequestValue = "I kindly request a quote for this product.");
+		}
+
+		task ("Then the quote request is placed with the status 'Quote Requested' in the Orders Page") {
+			User.loginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+
+			CommerceOrders.openOrdersAdmin();
+
+			AssertElementPresent(
+				key_orderStatus = "Quote Requested",
+				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
+		}
+	}
+
+	@priority = 5
 	test GuestAccountIsNotCombinedWithExistingUserAccount {
 		property portal.acceptance = "true";
 
@@ -636,6 +726,10 @@ definition {
 			locator1 = "CommerceEntry#FIX_ISSUE_BUTTON");
 
 		Alert.viewSuccessMessage();
+
+		Site.openSiteSettingsAdmin(siteURLKey = "speedwell");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -673,7 +767,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -687,8 +781,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -699,7 +793,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -716,8 +810,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		CommerceLogin.speedwellLogin(
@@ -771,6 +865,7 @@ definition {
 			accountType = "Guest");
 	}
 
+	@priority = 5
 	test GuestCheckoutDisabled {
 		property portal.acceptance = "true";
 
@@ -797,6 +892,7 @@ definition {
 		CommerceAcceleratorsInitializer.viewEnabledAddToCartButton(productName = "U-Joint");
 	}
 
+	@priority = 5
 	test GuestCheckoutEnabled {
 		property portal.acceptance = "true";
 
@@ -836,7 +932,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -853,8 +949,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		AssertTextEquals(
@@ -862,6 +958,7 @@ definition {
 			value1 = "Your order has been processed but not completed yet.");
 	}
 
+	@priority = 5
 	test GuestCheckoutEnabledWithoutAuthenticationPage {
 		property portal.acceptance = "true";
 
@@ -891,7 +988,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -905,13 +1002,14 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 	}
 
+	@priority = 5
 	test GuestCheckoutWithNoShippableProduct {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -961,7 +1059,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -982,10 +1080,11 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24");
+			productQuantity = 1,
+			productUnitPrice = 24);
 	}
 
+	@priority = 5
 	test GuestCheckoutWithShippableProduct {
 		property portal.acceptance = "true";
 
@@ -1021,7 +1120,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -1040,14 +1139,16 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 	}
 
+	@priority = 5
 	test UserAccountIsNotCombinedWithExistingGuestAccount {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "GuestCheckout#UserAccountIsNotCombinedWithExistingGuestAccount";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -1101,7 +1202,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -1118,8 +1219,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/speedwell");
@@ -1128,7 +1229,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -1161,8 +1262,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		CommerceNavigator.gotoSpeedwellTopbarItem(menuItem = "My Account");

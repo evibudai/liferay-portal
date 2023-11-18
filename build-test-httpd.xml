@@ -3,31 +3,47 @@
 <project basedir="." name="portal-test-httpd" xmlns:antelope="antlib:ise.antelope.tasks">
 	<import file="build-test.xml" />
 
-	<target name="configure-httpd-server">
-		<get-test-url />
-
-		<propertyregex
-			input="${test.url}"
-			property="hostname"
-			regexp="(http:\/\/)(.*)(:[0-9][0-9])"
-			select="\2"
+	<target name="clean-up-httpd-server">
+		<replaceregexp
+			file="${apache.http.conf.file}"
+			flags="s"
+			match="(IncludeOptional.*conf)(.*)"
+			replace="\1"
 		/>
+
+		<print-file file.name="${apache.http.conf.file}" />
+	</target>
+
+	<target name="configure-httpd-server">
+		<if>
+			<not>
+				<resourcecontains
+					resource="${apache.http.conf.file}"
+					substring="Listen 88"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${apache.http.conf.file}"><![CDATA[
+
+Listen 88]]></echo>
+			</then>
+		</if>
 
 		<if>
 			<not>
 				<resourcecontains
-					resource="${apache.http.dir}/conf/httpd.conf"
-					substring="VirtualHost *:80"
+					resource="${apache.http.conf.file}"
+					substring="VirtualHost *:88"
 				/>
 			</not>
 			<then>
-				<echo append="true" file="${apache.http.dir}/conf/httpd.conf"><![CDATA[
+				<echo append="true" file="${apache.http.conf.file}"><![CDATA[
 
-<VirtualHost *:80>
-	ServerName ${hostname}
+<VirtualHost *:88>
+	ServerName localhost
 	ProxyPreserveHost On
-	ProxyPass /liferay http://${hostname}:8080
-	ProxyPassReverse /liferay http://${hostname}:8080
+	ProxyPass /${portal.proxy.path} http://localhost:8080
+	ProxyPassReverse /${portal.proxy.path} http://localhost:8080
 </VirtualHost>]]></echo>
 			</then>
 		</if>
@@ -47,32 +63,32 @@
 					<if>
 						<not>
 							<resourcecontains
-								resource="${apache.http.dir}/conf/httpd.conf"
-								substring="Listen ${test.app.server.leading.port.number}0"
+								resource="${apache.http.conf.file}"
+								substring="Listen ${test.app.server.leading.port.number}8"
 							/>
 						</not>
 						<then>
-							<echo append="true" file="${apache.http.dir}/conf/httpd.conf"><![CDATA[
+							<echo append="true" file="${apache.http.conf.file}"><![CDATA[
 
-Listen ${test.app.server.leading.port.number}0]]></echo>
+Listen ${test.app.server.leading.port.number}8]]></echo>
 						</then>
 					</if>
 
 					<if>
 						<not>
 							<resourcecontains
-								resource="${apache.http.dir}/conf/httpd.conf"
+								resource="${apache.http.conf.file}"
 								substring="VirtualHost *:${test.app.server.leading.port.number}0"
 							/>
 						</not>
 						<then>
-							<echo append="true" file="${apache.http.dir}/conf/httpd.conf"><![CDATA[
+							<echo append="true" file="${apache.http.conf.file}"><![CDATA[
 
-<VirtualHost *:${test.app.server.leading.port.number}0>
-	ServerName ${hostname}
+<VirtualHost *:${test.app.server.leading.port.number}8>
+	ServerName localhost
 	ProxyPreserveHost On
-	ProxyPass /liferay http://${hostname}:${test.app.server.leading.port.number}080
-	ProxyPassReverse /liferay http://${hostname}:${test.app.server.leading.port.number}080
+	ProxyPass /${portal.proxy.path} http://localhost:${test.app.server.leading.port.number}080
+	ProxyPassReverse /${portal.proxy.path} http://localhost:${test.app.server.leading.port.number}080
 </VirtualHost>]]></echo>
 						</then>
 					</if>
@@ -90,7 +106,7 @@ Listen ${test.app.server.leading.port.number}0]]></echo>
 			</then>
 		</if>
 
-		<print-file file.name="${apache.http.dir}/conf/httpd.conf" />
+		<print-file file.name="${apache.http.conf.file}" />
 	</target>
 
 	<target name="start-httpd-server">

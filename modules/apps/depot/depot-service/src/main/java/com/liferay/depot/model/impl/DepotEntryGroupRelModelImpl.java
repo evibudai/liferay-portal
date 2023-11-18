@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.depot.model.impl;
@@ -260,117 +251,134 @@ public class DepotEntryGroupRelModelImpl
 	public Map<String, Function<DepotEntryGroupRel, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<DepotEntryGroupRel, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<DepotEntryGroupRel, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<DepotEntryGroupRel, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<DepotEntryGroupRel, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<DepotEntryGroupRel, Object>>();
-		Map<String, BiConsumer<DepotEntryGroupRel, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<DepotEntryGroupRel, ?>>();
+		private static final Map<String, Function<DepotEntryGroupRel, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", DepotEntryGroupRel::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setMvccVersion);
-		attributeGetterFunctions.put("uuid", DepotEntryGroupRel::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<DepotEntryGroupRel, String>)
-				DepotEntryGroupRel::setUuid);
-		attributeGetterFunctions.put(
-			"depotEntryGroupRelId",
-			DepotEntryGroupRel::getDepotEntryGroupRelId);
-		attributeSetterBiConsumers.put(
-			"depotEntryGroupRelId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setDepotEntryGroupRelId);
-		attributeGetterFunctions.put("groupId", DepotEntryGroupRel::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", DepotEntryGroupRel::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setCompanyId);
-		attributeGetterFunctions.put("userId", DepotEntryGroupRel::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setUserId);
-		attributeGetterFunctions.put(
-			"userName", DepotEntryGroupRel::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<DepotEntryGroupRel, String>)
-				DepotEntryGroupRel::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", DepotEntryGroupRel::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<DepotEntryGroupRel, Date>)
-				DepotEntryGroupRel::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", DepotEntryGroupRel::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<DepotEntryGroupRel, Date>)
-				DepotEntryGroupRel::setModifiedDate);
-		attributeGetterFunctions.put(
-			"ddmStructuresAvailable",
-			DepotEntryGroupRel::getDdmStructuresAvailable);
-		attributeSetterBiConsumers.put(
-			"ddmStructuresAvailable",
-			(BiConsumer<DepotEntryGroupRel, Boolean>)
-				DepotEntryGroupRel::setDdmStructuresAvailable);
-		attributeGetterFunctions.put(
-			"depotEntryId", DepotEntryGroupRel::getDepotEntryId);
-		attributeSetterBiConsumers.put(
-			"depotEntryId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setDepotEntryId);
-		attributeGetterFunctions.put(
-			"searchable", DepotEntryGroupRel::getSearchable);
-		attributeSetterBiConsumers.put(
-			"searchable",
-			(BiConsumer<DepotEntryGroupRel, Boolean>)
-				DepotEntryGroupRel::setSearchable);
-		attributeGetterFunctions.put(
-			"toGroupId", DepotEntryGroupRel::getToGroupId);
-		attributeSetterBiConsumers.put(
-			"toGroupId",
-			(BiConsumer<DepotEntryGroupRel, Long>)
-				DepotEntryGroupRel::setToGroupId);
-		attributeGetterFunctions.put(
-			"lastPublishDate", DepotEntryGroupRel::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<DepotEntryGroupRel, Date>)
-				DepotEntryGroupRel::setLastPublishDate);
+		static {
+			Map<String, Function<DepotEntryGroupRel, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<DepotEntryGroupRel, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", DepotEntryGroupRel::getMvccVersion);
+			attributeGetterFunctions.put("uuid", DepotEntryGroupRel::getUuid);
+			attributeGetterFunctions.put(
+				"depotEntryGroupRelId",
+				DepotEntryGroupRel::getDepotEntryGroupRelId);
+			attributeGetterFunctions.put(
+				"groupId", DepotEntryGroupRel::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", DepotEntryGroupRel::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", DepotEntryGroupRel::getUserId);
+			attributeGetterFunctions.put(
+				"userName", DepotEntryGroupRel::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", DepotEntryGroupRel::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", DepotEntryGroupRel::getModifiedDate);
+			attributeGetterFunctions.put(
+				"ddmStructuresAvailable",
+				DepotEntryGroupRel::getDdmStructuresAvailable);
+			attributeGetterFunctions.put(
+				"depotEntryId", DepotEntryGroupRel::getDepotEntryId);
+			attributeGetterFunctions.put(
+				"searchable", DepotEntryGroupRel::getSearchable);
+			attributeGetterFunctions.put(
+				"toGroupId", DepotEntryGroupRel::getToGroupId);
+			attributeGetterFunctions.put(
+				"lastPublishDate", DepotEntryGroupRel::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<DepotEntryGroupRel, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<DepotEntryGroupRel, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<DepotEntryGroupRel, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<DepotEntryGroupRel, String>)
+					DepotEntryGroupRel::setUuid);
+			attributeSetterBiConsumers.put(
+				"depotEntryGroupRelId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setDepotEntryGroupRelId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<DepotEntryGroupRel, String>)
+					DepotEntryGroupRel::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<DepotEntryGroupRel, Date>)
+					DepotEntryGroupRel::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<DepotEntryGroupRel, Date>)
+					DepotEntryGroupRel::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"ddmStructuresAvailable",
+				(BiConsumer<DepotEntryGroupRel, Boolean>)
+					DepotEntryGroupRel::setDdmStructuresAvailable);
+			attributeSetterBiConsumers.put(
+				"depotEntryId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setDepotEntryId);
+			attributeSetterBiConsumers.put(
+				"searchable",
+				(BiConsumer<DepotEntryGroupRel, Boolean>)
+					DepotEntryGroupRel::setSearchable);
+			attributeSetterBiConsumers.put(
+				"toGroupId",
+				(BiConsumer<DepotEntryGroupRel, Long>)
+					DepotEntryGroupRel::setToGroupId);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<DepotEntryGroupRel, Date>)
+					DepotEntryGroupRel::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1038,7 +1046,8 @@ public class DepotEntryGroupRelModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<DepotEntryGroupRel, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

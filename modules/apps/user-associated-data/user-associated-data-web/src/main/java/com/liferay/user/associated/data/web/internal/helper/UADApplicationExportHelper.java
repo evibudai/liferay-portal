@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.helper;
@@ -28,11 +19,7 @@ import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,18 +48,14 @@ public class UADApplicationExportHelper {
 	public UADApplicationExportDisplay getUADApplicationExportDisplay(
 		String applicationKey, long groupId, long userId) {
 
-		Stream<UADDisplay<?>> uadDisplayStream =
-			_uadRegistry.getApplicationUADDisplayStream(applicationKey);
+		List<UADExporter<?>> uadExporters = new ArrayList<>();
 
-		List<UADExporter<?>> uadExporters = uadDisplayStream.map(
-			UADDisplay::getTypeClass
-		).map(
-			Class::getName
-		).map(
-			key -> _uadRegistry.getUADExporter(key)
-		).collect(
-			Collectors.toList()
-		);
+		for (UADDisplay<?> uadDisplay :
+				_uadRegistry.getApplicationUADDisplays(applicationKey)) {
+
+			uadExporters.add(
+				_uadRegistry.getUADExporter(uadDisplay.getTypeKey()));
+		}
 
 		int applicationDataCount = 0;
 
@@ -93,30 +76,22 @@ public class UADApplicationExportHelper {
 	public List<UADApplicationExportDisplay> getUADApplicationExportDisplays(
 		long groupId, long userId) {
 
-		Set<String> applicationUADDisplaysKeySet =
-			_uadRegistry.getApplicationUADDisplaysKeySet();
-
-		Iterator<String> iterator = applicationUADDisplaysKeySet.iterator();
-
 		List<UADApplicationExportDisplay> uadApplicationExportDisplays =
 			new ArrayList<>();
 
-		while (iterator.hasNext()) {
-			String applicationKey = iterator.next();
+		for (String applicationKey :
+				_uadRegistry.getApplicationUADDisplaysKeySet()) {
 
 			uadApplicationExportDisplays.add(
 				getUADApplicationExportDisplay(
 					applicationKey, groupId, userId));
 		}
 
-		Stream<UADApplicationExportDisplay> uadApplicationExportDisplaysStream =
-			uadApplicationExportDisplays.stream();
+		uadApplicationExportDisplays.sort(
+			Comparator.comparing(
+				UADApplicationExportDisplay::getApplicationKey));
 
-		return uadApplicationExportDisplaysStream.sorted(
-			Comparator.comparing(UADApplicationExportDisplay::getApplicationKey)
-		).collect(
-			Collectors.toList()
-		);
+		return uadApplicationExportDisplays;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

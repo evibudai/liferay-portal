@@ -107,7 +107,7 @@
 </tr>
 <tr>
 	<td>DISPLAY_TEMPLATE</td>
-	<td>//div[label[contains(.,'Display Template')]]/select</td>
+	<td>//button[contains(@class,'display-template-selector')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -273,6 +273,11 @@
 <tr>
 	<td>TYPE_SELECTED</td>
 	<td>//div[label[contains(.,'Type')]]//option[contains(.,'${key_typeName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_AGENT</td>
+	<td>//select[contains(@name,'userAgent_${key_index}')]</td>
 	<td></td>
 </tr>
 <tr>

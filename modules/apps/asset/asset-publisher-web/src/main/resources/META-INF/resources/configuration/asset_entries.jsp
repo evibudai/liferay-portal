@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -50,17 +41,19 @@ List<AssetEntry> assetEntries = assetPublisherHelper.getAssetEntries(renderReque
 			name="title"
 			truncate="<%= true %>"
 		>
-			<%= HtmlUtil.escape(assetRenderer.getTitle(locale)) %>
+			<div class="d-flex">
+				<%= HtmlUtil.escape(assetRenderer.getTitle(locale)) %>
 
-			<c:if test="<%= !assetEntry.isVisible() %>">
-				(<aui:workflow-status
-					markupView="lexicon"
-					showIcon="<%= false %>"
-					showLabel="<%= false %>"
-					status="<%= assetRenderer.getStatus() %>"
-					statusMessage='<%= (assetRenderer.getStatus() == 0) ? "not-visible" : WorkflowConstants.getStatusLabel(assetRenderer.getStatus()) %>'
-				/>)
-			</c:if>
+				<c:if test="<%= !assetEntry.isVisible() %>">
+					(<div class="ml-1">
+						<liferay-portal-workflow:status
+							showStatusLabel="<%= false %>"
+							status="<%= assetRenderer.getStatus() %>"
+							statusMessage='<%= (assetRenderer.getStatus() == 0) ? "not-visible" : WorkflowConstants.getStatusLabel(assetRenderer.getStatus()) %>'
+						/>
+					</div>)
+				</c:if>
+			</div>
 		</liferay-ui:search-container-column-text>
 
 		<liferay-ui:search-container-column-text
@@ -90,9 +83,10 @@ List<AssetEntry> assetEntries = assetPublisherHelper.getAssetEntries(renderReque
 </liferay-ui:search-container>
 
 <c:if test='<%= SessionMessages.contains(renderRequest, "deletedMissingAssetEntries") %>'>
-	<div class="alert alert-info">
-		<liferay-ui:message key="the-selected-assets-have-been-removed-from-the-list-because-they-do-not-belong-in-the-scope-of-this-widget" />
-	</div>
+	<clay:alert
+		displayType="info"
+		message="the-selected-assets-have-been-removed-from-the-list-because-they-do-not-belong-in-the-scope-of-this-widget"
+	/>
 </c:if>
 
 <%
@@ -112,7 +106,7 @@ long[] groupIds = assetPublisherDisplayContext.getGroupIds();
 				<clay:dropdown-menu
 					additionalProps='<%=
 						HashMapBuilder.<String, Object>put(
-							"currentURL", currentURL
+							"currentURL", configurationRenderURL.toString()
 						).build()
 					%>'
 					aria-label="<%= title %>"

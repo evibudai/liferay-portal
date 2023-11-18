@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.connection;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.ccr.CrossClusterReplicationConfigurationHelper;
@@ -42,9 +34,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -139,9 +128,17 @@ public class ElasticsearchConnectionManager
 	public String getLocalClusterConnectionId() {
 		ClusterNode localClusterNode = _clusterExecutor.getLocalClusterNode();
 
+		CrossClusterReplicationConfigurationHelper
+			currentCrossClusterReplicationConfigurationHelper =
+				_crossClusterReplicationConfigurationHelperSnapshot.get();
+
 		if (localClusterNode == null) {
+			if (currentCrossClusterReplicationConfigurationHelper == null) {
+				return null;
+			}
+
 			List<String> localClusterConnectionIds =
-				crossClusterReplicationConfigurationHelper.
+				currentCrossClusterReplicationConfigurationHelper.
 					getLocalClusterConnectionIds();
 
 			return localClusterConnectionIds.get(0);
@@ -149,17 +146,19 @@ public class ElasticsearchConnectionManager
 
 		InetAddress portalInetAddress = localClusterNode.getPortalInetAddress();
 
-		if (portalInetAddress == null) {
+		if ((portalInetAddress == null) ||
+			(currentCrossClusterReplicationConfigurationHelper == null)) {
+
 			return null;
 		}
+
+		Map<String, String> localClusterConnectionConfigurations =
+			currentCrossClusterReplicationConfigurationHelper.
+				getLocalClusterConnectionIdsMap();
 
 		String localClusterNodeHostName =
 			portalInetAddress.getHostName() + StringPool.COLON +
 				localClusterNode.getPortalPort();
-
-		Map<String, String> localClusterConnectionConfigurations =
-			crossClusterReplicationConfigurationHelper.
-				getLocalClusterConnectionIdsMap();
 
 		return localClusterConnectionConfigurations.get(
 			localClusterNodeHostName);
@@ -211,7 +210,7 @@ public class ElasticsearchConnectionManager
 	public boolean isCrossClusterReplicationEnabled() {
 		CrossClusterReplicationConfigurationHelper
 			currentCrossClusterReplicationConfigurationHelper =
-				crossClusterReplicationConfigurationHelper;
+				_crossClusterReplicationConfigurationHelperSnapshot.get();
 
 		if (currentCrossClusterReplicationConfigurationHelper == null) {
 			return false;
@@ -356,14 +355,6 @@ public class ElasticsearchConnectionManager
 		return getElasticsearchConnection(remoteClusterConnectionId);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile CrossClusterReplicationConfigurationHelper
-		crossClusterReplicationConfigurationHelper;
-
 	@Reference
 	protected volatile ElasticsearchConfigurationWrapper
 		elasticsearchConfigurationWrapper;
@@ -386,6 +377,10 @@ public class ElasticsearchConnectionManager
 			ConnectionConstants.REMOTE_CONNECTION_ID
 		).httpSSLEnabled(
 			elasticsearchConfigurationWrapper.httpSSLEnabled()
+		).maxConnections(
+			elasticsearchConfigurationWrapper.maxConnections()
+		).maxConnectionsPerRoute(
+			elasticsearchConfigurationWrapper.maxConnectionsPerRoute()
 		).networkHostAddresses(
 			elasticsearchConfigurationWrapper.networkHostAddresses()
 		).password(
@@ -419,6 +414,11 @@ public class ElasticsearchConnectionManager
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchConnectionManager.class);
+
+	private static final Snapshot<CrossClusterReplicationConfigurationHelper>
+		_crossClusterReplicationConfigurationHelperSnapshot = new Snapshot<>(
+			ElasticsearchConnectionManager.class,
+			CrossClusterReplicationConfigurationHelper.class, null, true);
 
 	@Reference
 	private ClusterExecutor _clusterExecutor;

@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property osgi.module.configuration.file.names = "com.liferay.commerce.configuration.CommerceOrderImporterTypeConfiguration.config";
 	property osgi.module.configurations = "enabled=\"true\"";
 	property portal.release = "true";
@@ -33,7 +33,7 @@ definition {
 	}
 
 	@description = "COMMERCE-8164 | A discontinued product cannot be replaced by another discontinued product"
-	@priority = "3"
+	@priority = 5
 	test CannotReplaceDiscontinuedProductWithDiscontinuedProduct {
 		property portal.acceptance = "true";
 
@@ -108,8 +108,138 @@ definition {
 		}
 	}
 
+	@description = "COMMERCE-12548. As a buyer, I want to be able to see a SKU/UOM replace a discounted SKU"
+	@priority = 5
+	test CanSkuWithUOMReplaceDiscontinuedSku {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
+
+		task ("Given 2 UOMs are created to MIN93015(base price: $20, incremental: 0.6 for UOM1; base price: $30, incremental: 1.5 for UOM2)") {
+			CommerceJSONSKUsAPI._addCommerceUOM(
+				basePrice = 20,
+				incrementalOrderQuantity = "0.6",
+				priority = 4,
+				productSKU = "MIN93015",
+				uomKey = "UOM1KEY",
+				uomName = "UOM1");
+
+			CommerceJSONSKUsAPI._addCommerceUOM(
+				basePrice = 30,
+				incrementalOrderQuantity = "1.5",
+				priority = 1,
+				productSKU = "MIN93015",
+				uomKey = "UOM2KEY",
+				uomName = "UOM2");
+		}
+
+		task ("And minimum and multiple order quantities are set to '0.1' for ABS Sensor") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				minOrderQuantity = "0.1",
+				multipleOrderQuantity = "0.1",
+				productName = "ABS Sensor");
+		}
+
+		task ("And the available quantity is set to 0 for U-Joint(sku MIN55861)") {
+			var warehouseList = "0:Italy,0:United States - Southwest,0:United States - Northeast";
+
+			for (var warehouse : list ${warehouseList}) {
+				var warehouseName = StringUtil.extractLast(${warehouse}, ":");
+				var warehouseQuantity = StringUtil.extractFirst(${warehouse}, ":");
+
+				CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+					productSku = "MIN55861",
+					quantity = ${warehouseQuantity},
+					warehouseName = ${warehouseName});
+			}
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued' and a replacement SKU MIN93015 is set") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861",
+				replacementSku = "MIN93015");
+		}
+
+		task ("And Allow Back Orders is set to false for U-Joint") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				allowBackOrder = "false",
+				productName = "U-Joint");
+		}
+
+		task ("When the buyer navigates to U-Joint's detail page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/u-joint");
+		}
+
+		task ("Then assert that the U-Joint's add to cart button and quantity selector are disabled") {
+			AssertElementPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_DISABLED");
+
+			AssertElementPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_QUANTITY_SELECTOR_INPUT_FIELD_PRODUCT_DETAILS_PAGE_DISABLED");
+		}
+
+		task ("And assert that the 'Replacement Product' button redirects to ABS Sensor and that the UOM with highest priority is pre-selected(UOM2)") {
+			AssertElementPresent(
+				key_text = "Replacement Product",
+				locator1 = "Link#ANY");
+
+			Click(
+				key_text = "Replacement Product",
+				locator1 = "Link#ANY");
+
+			AssertLocation.assertPartialLocation(value1 = "web/minium/p/abs-sensor");
+
+			AssertSelectedLabel(
+				locator1 = "CommerceFrontStore#FS_PRODUCT_UOM_SELECT",
+				value1 = "UOM2");
+
+			AssertTextEquals(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceFrontStore#PRODUCT_DETAILS_QUANTITY_SELECTOR",
+				value1 = "1.5");
+		}
+
+		task ("When the buyer uses quick add to cart to add U-Joint to the cart") {
+			CommerceNavigator.gotoMiniCart();
+
+			FrontStore.quickAddToCartSearchAndSelectItem(orderItemSku = "MIN55861");
+
+			Click(locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_BUTTON");
+		}
+
+		task ("Then assert that the replacement sku/uom with the highest priority is added instead(UOM2, quantity: 1.5, price $30)") {
+			FrontStore.viewMiniCartItem(
+				cartItemName = "ABS Sensor",
+				cartItemPriceValue = "30.00",
+				cartItemQuantity = "1.5",
+				cartItemSku = "MIN93015",
+				cartItemUOMKey = "UOM2KEY");
+		}
+
+		task ("And the info message 'There are replacement products in your cart' is shown in the mini-cart") {
+			AssertElementPresent(
+				key_text = "There are replacement products in your cart.",
+				locator1 = "CommerceDiagrams#DIAGRAM_PRODUCT_TOOLTIP_REPLACEMENT_ALERT");
+		}
+
+		task ("And the cart item has the replacement label") {
+			AssertElementPresent(
+				key_status = "Replacement",
+				locator1 = "ImportExport#IMPORT_EXPORT_STATUS");
+		}
+	}
+
 	@description = "COMMERCE-9352 | Verify if discontinued products are replaced by the replacement product when adding a discontinued product to an order"
-	@priority = "3"
+	@priority = 5
 	test DiscontinuedProductIsReplacedWhenImportedFromOrders {
 		property portal.acceptance = "true";
 
@@ -125,7 +255,7 @@ definition {
 		task ("Given a complete order with a discontinued product") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			var currentOrderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -138,8 +268,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -151,11 +281,11 @@ definition {
 			CommerceProducts.openProductsAdmin();
 
 			CommerceEntry.editWarehousesQuantity(
-				italyQuantity = "0",
-				northeastQuantity = "0",
+				italyQuantity = 0,
+				northeastQuantity = 0,
 				productName = "U-Joint",
 				productSku = "MIN55861",
-				southwestQuantity = "0");
+				southwestQuantity = 0);
 
 			CommerceProducts.discontinueSKU();
 
@@ -180,7 +310,7 @@ definition {
 
 			IFrame.selectModalFrame();
 
-			CommerceNavigator.gotoTableListEntry(entryName = "${currentOrderId}");
+			CommerceNavigator.gotoTableListEntry(entryName = ${currentOrderId});
 
 			SelectFrameTop();
 
@@ -191,7 +321,7 @@ definition {
 			CommerceOrders.assertOrderImportPreviewEntry(
 				importStatus = "OK",
 				productName = "ABS Sensor",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN93015",
 				totalPrice = "50.00",
 				unitPrice = "50.00");
@@ -205,14 +335,14 @@ definition {
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN93015",
 				productTotalPrice = "50.00");
 		}
 	}
 
 	@description = "COMMERCE-9348 | Replacement product's button redirects to the right product's product details page"
-	@priority = "3"
+	@priority = 5
 	test ReplacementProductButtonRedirectsToRightProductDetailsPage {
 		property portal.acceptance = "true";
 
@@ -270,14 +400,14 @@ definition {
 	}
 
 	@description = "COMMERCE-9347 | Replacement product's information is shown in product details"
-	@priority = "3"
+	@priority = 5
 	test ReplacementProductInformationIsDisplayedInProductDetails {
 		property portal.acceptance = "true";
 
 		task ("Given a simple product with a SKU") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
-				discontinued = "True",
+				discontinued = "true",
 				productName = "Test Simple Product Replacement",
 				productType = "Simple",
 				sku = "SKU1001");
@@ -286,7 +416,7 @@ definition {
 		task ("And given a simple product with a SKU marked as discontinued with a replacement product set") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
-				discontinued = "True",
+				discontinued = "true",
 				productName = "Test Simple Product",
 				productType = "Simple",
 				replacementSKU = "SKU1001",
@@ -307,10 +437,10 @@ definition {
 		}
 
 		task ("Then all the warnings about the discontinued product are shown") {
-			var endOfLifeDate = DateUtil.getFormattedCurrentDate("MM/dd/yy", "UTC");
+			var productEndOfLifeDate = DateUtil.getFormattedCurrentDate("MM/dd/yy", "UTC");
 
 			FrontStore.assertProductDetails(
-				endOfLifeDate = "${endOfLifeDate}",
+				endOfLifeDate = ${productEndOfLifeDate},
 				productAvailability = "Discontinued");
 		}
 

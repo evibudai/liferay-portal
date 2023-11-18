@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.portlet;
@@ -38,6 +29,7 @@ import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.term.service.CommerceTermEntryService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -86,7 +78,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.security-role-ref=power-user,user",
 		"javax.portlet.version=3.0"
 	},
-	service = {CommerceOpenOrderContentPortlet.class, Portlet.class}
+	service = Portlet.class
 )
 public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 
@@ -107,7 +99,7 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 						_commerceOrderStatusRegistry, _commerceOrderTypeService,
 						_commercePaymentMethodGroupRelLocalService,
 						_commercePaymentMethodRegistry,
-						_commerceShipmentItemService, _commerceTermEntryService,
+						_commerceTermEntryService, _configurationProvider,
 						_dlAppLocalService,
 						_portal.getHttpServletRequest(renderRequest),
 						_itemSelector, _modelResourcePermission,
@@ -146,24 +138,31 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest)
-		throws PortalException {
-
+	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest) {
 		String commerceOrderUuid = ParamUtil.getString(
 			portletRequest, "commerceOrderUuid");
 
-		if (Validator.isNotNull(commerceOrderUuid)) {
-			long groupId =
-				_commerceChannelLocalService.
-					getCommerceChannelGroupIdBySiteGroupId(
-						_portal.getScopeGroupId(portletRequest));
+		try {
+			if (Validator.isNotNull(commerceOrderUuid)) {
+				long groupId =
+					_commerceChannelLocalService.
+						getCommerceChannelGroupIdBySiteGroupId(
+							_portal.getScopeGroupId(portletRequest));
 
-			return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+				return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
+					commerceOrderUuid, groupId);
+			}
+
+			return _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_portal.getHttpServletRequest(portletRequest));
 		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
 
-		return _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_portal.getHttpServletRequest(portletRequest));
+			return null;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -215,6 +214,9 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 
 	@Reference
 	private CommerceTermEntryService _commerceTermEntryService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

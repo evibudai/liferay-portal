@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.internal.search;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -24,10 +16,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
-import com.liferay.portal.kernel.search.BaseRelatedEntryIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -36,7 +26,7 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.RelatedEntryIndexer;
+import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
@@ -52,6 +42,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.localization.SearchLocalizationHelper;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.wiki.model.WikiNode;
@@ -62,16 +53,15 @@ import com.liferay.wiki.service.WikiPageLocalService;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Brian Wing Shun Chan
@@ -79,12 +69,8 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Bruno Farache
  * @author Raymond Augé
  */
-@Component(
-	property = "related.entry.indexer.class.name=com.liferay.wiki.model.WikiPage",
-	service = {Indexer.class, RelatedEntryIndexer.class}
-)
-public class WikiPageIndexer
-	extends BaseIndexer<WikiPage> implements RelatedEntryIndexer {
+@Component(service = Indexer.class)
+public class WikiPageIndexer extends BaseIndexer<WikiPage> {
 
 	public static final String CLASS_NAME = WikiPage.class.getName();
 
@@ -96,51 +82,6 @@ public class WikiPageIndexer
 		setDefaultSelectedLocalizedFieldNames(Field.CONTENT, Field.TITLE);
 		setFilterSearch(true);
 		setPermissionAware(true);
-	}
-
-	@Override
-	public void addRelatedClassNames(
-			BooleanFilter contextBooleanFilter, SearchContext searchContext)
-		throws Exception {
-
-		_relatedEntryIndexer.addRelatedClassNames(
-			contextBooleanFilter, searchContext);
-	}
-
-	@Override
-	public void addRelatedEntryFields(Document document, Object object)
-		throws Exception {
-
-		long classPK = 0;
-
-		if (object instanceof Comment) {
-			Comment comment = (Comment)object;
-
-			classPK = comment.getClassPK();
-		}
-		else if (object instanceof FileEntry) {
-			FileEntry fileEntry = (FileEntry)object;
-
-			RelatedModelCapability relatedModelCapability =
-				fileEntry.getRepositoryCapability(RelatedModelCapability.class);
-
-			classPK = relatedModelCapability.getClassPK(fileEntry);
-		}
-
-		WikiPage page = null;
-
-		try {
-			page = _wikiPageLocalService.getPage(classPK);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return;
-		}
-
-		document.addKeyword(Field.NODE_ID, page.getNodeId());
 	}
 
 	@Override
@@ -164,11 +105,6 @@ public class WikiPageIndexer
 		WikiPage page = _wikiPageLocalService.getPage(classPK);
 
 		return isVisible(page.getStatus(), status);
-	}
-
-	@Override
-	public boolean isVisibleRelatedEntry(long classPK, int status) {
-		return true;
 	}
 
 	@Override
@@ -215,6 +151,12 @@ public class WikiPageIndexer
 		addSearchLocalizedTerm(
 			searchQuery, searchContext, Field.CONTENT, false);
 		addSearchLocalizedTerm(searchQuery, searchContext, Field.TITLE, false);
+
+		QueryConfig queryConfig = searchContext.getQueryConfig();
+
+		queryConfig.addHighlightFieldNames(
+			_searchLocalizationHelper.getLocalizedFieldNames(
+				new String[] {Field.CONTENT, Field.TITLE}, searchContext));
 	}
 
 	@Override
@@ -230,21 +172,18 @@ public class WikiPageIndexer
 		return hits;
 	}
 
-	@Override
-	public void updateFullQuery(SearchContext searchContext) {
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext,
+			(Class<ModelDocumentContributor<WikiPage>>)
+				(Class<?>)ModelDocumentContributor.class,
+			"(indexer.class.name=com.liferay.wiki.model.WikiPage)");
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		service = ModelDocumentContributor.class,
-		target = "(indexer.class.name=com.liferay.wiki.model.WikiPage)"
-	)
-	protected void addModelDocumentContributor(
-		ModelDocumentContributor<WikiPage> modelDocumentContributor) {
-
-		_modelDocumentContributors.add(modelDocumentContributor);
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerList.close();
 	}
 
 	@Override
@@ -257,7 +196,7 @@ public class WikiPageIndexer
 	protected Document doGetDocument(WikiPage wikiPage) throws Exception {
 		Document document = getBaseModelDocument(CLASS_NAME, wikiPage);
 
-		_modelDocumentContributors.forEach(
+		_serviceTrackerList.forEach(
 			modelDocumentContributor -> modelDocumentContributor.contribute(
 				document, wikiPage));
 
@@ -321,12 +260,6 @@ public class WikiPageIndexer
 			wikiPage.getCompanyId(), getDocument(wikiPage));
 
 		_reindexAttachments(wikiPage);
-	}
-
-	protected void removeModelDocumentContributor(
-		ModelDocumentContributor<WikiPage> modelDocumentContributor) {
-
-		_modelDocumentContributors.remove(modelDocumentContributor);
 	}
 
 	@Reference
@@ -435,10 +368,11 @@ public class WikiPageIndexer
 	@Reference
 	private Localization _localization;
 
-	private final List<ModelDocumentContributor<WikiPage>>
-		_modelDocumentContributors = new CopyOnWriteArrayList<>();
-	private final RelatedEntryIndexer _relatedEntryIndexer =
-		new BaseRelatedEntryIndexer();
+	@Reference
+	private SearchLocalizationHelper _searchLocalizationHelper;
+
+	private ServiceTrackerList<ModelDocumentContributor<WikiPage>>
+		_serviceTrackerList;
 
 	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;

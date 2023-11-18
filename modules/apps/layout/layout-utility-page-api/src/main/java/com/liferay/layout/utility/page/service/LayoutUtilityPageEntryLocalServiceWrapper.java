@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.service;
@@ -17,6 +8,7 @@ package com.liferay.layout.utility.page.service;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -63,22 +55,24 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 	public LayoutUtilityPageEntry addLayoutUtilityPageEntry(
 			String externalReferenceCode, long userId, long groupId, long plid,
 			long previewFileEntryId, boolean defaultLayoutUtilityPageEntry,
-			String name, String type, long masterLayoutPlid)
+			String name, String type, long masterLayoutPlid,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 			externalReferenceCode, userId, groupId, plid, previewFileEntryId,
-			defaultLayoutUtilityPageEntry, name, type, masterLayoutPlid);
+			defaultLayoutUtilityPageEntry, name, type, masterLayoutPlid,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutUtilityPageEntry copyLayoutUtilityPageEntry(
-			long userId, long groupId, long layoutUtilityPageEntryId,
+			long userId, long groupId, long sourceLayoutUtilityPageEntryId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws Exception {
 
 		return _layoutUtilityPageEntryLocalService.copyLayoutUtilityPageEntry(
-			userId, groupId, layoutUtilityPageEntryId, serviceContext);
+			userId, groupId, sourceLayoutUtilityPageEntryId, serviceContext);
 	}
 
 	/**
@@ -280,6 +274,14 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 	}
 
 	@Override
+	public LayoutUtilityPageEntry fetchLayoutUtilityPageEntry(
+		long groupId, String name, String type) {
+
+		return _layoutUtilityPageEntryLocalService.fetchLayoutUtilityPageEntry(
+			groupId, name, type);
+	}
+
+	@Override
 	public LayoutUtilityPageEntry
 		fetchLayoutUtilityPageEntryByExternalReferenceCode(
 			String externalReferenceCode, long groupId) {
@@ -287,6 +289,12 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 		return _layoutUtilityPageEntryLocalService.
 			fetchLayoutUtilityPageEntryByExternalReferenceCode(
 				externalReferenceCode, groupId);
+	}
+
+	@Override
+	public LayoutUtilityPageEntry fetchLayoutUtilityPageEntryByPlid(long plid) {
+		return _layoutUtilityPageEntryLocalService.
+			fetchLayoutUtilityPageEntryByPlid(plid);
 	}
 
 	/**
@@ -548,6 +556,11 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 
 		return _layoutUtilityPageEntryLocalService.updateLayoutUtilityPageEntry(
 			layoutUtilityPageEntryId, name);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _layoutUtilityPageEntryLocalService.getBasePersistence();
 	}
 
 	@Override

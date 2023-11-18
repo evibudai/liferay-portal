@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.renderer.menu.display.internal;
@@ -49,7 +40,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.servlet.ServletContext;
@@ -103,10 +93,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public String getLabel(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", getClass());
-
-		return _language.get(resourceBundle, "menu-display");
+		return _language.get(locale, "menu-display");
 	}
 
 	@Override
@@ -277,20 +264,26 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 			).put(
 				"hoveredItemColor",
 				() -> {
-					Optional<String> hoveredItemColorOptional =
-						menuDisplayFragmentConfiguration.
-							getHoveredItemColorOptional();
+					String hoveredItemColor =
+						menuDisplayFragmentConfiguration.getHoveredItemColor();
 
-					return hoveredItemColorOptional.orElse("inherit");
+					if (hoveredItemColor != null) {
+						return hoveredItemColor;
+					}
+
+					return "inherit";
 				}
 			).put(
 				"selectedItemColor",
 				() -> {
-					Optional<String> selectedItemColorOptional =
-						menuDisplayFragmentConfiguration.
-							getSelectedItemColorOptional();
+					String selectedItemColor =
+						menuDisplayFragmentConfiguration.getSelectedItemColor();
 
-					return selectedItemColorOptional.orElse("inherit");
+					if (selectedItemColor != null) {
+						return selectedItemColor;
+					}
+
+					return "inherit";
 				}
 			).build());
 

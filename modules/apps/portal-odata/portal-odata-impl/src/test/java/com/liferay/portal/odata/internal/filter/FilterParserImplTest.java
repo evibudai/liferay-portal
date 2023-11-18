@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.odata.internal.filter;
 
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.odata.entity.BooleanEntityField;
 import com.liferay.portal.odata.entity.CollectionEntityField;
 import com.liferay.portal.odata.entity.ComplexEntityField;
@@ -34,15 +27,14 @@ import com.liferay.portal.odata.filter.expression.ListExpression;
 import com.liferay.portal.odata.filter.expression.LiteralExpression;
 import com.liferay.portal.odata.filter.expression.MemberExpression;
 import com.liferay.portal.odata.filter.expression.MethodExpression;
+import com.liferay.portal.odata.filter.expression.NavigationPropertyExpression;
 import com.liferay.portal.odata.filter.expression.PrimitivePropertyExpression;
 import com.liferay.portal.odata.filter.expression.UnaryExpression;
+import com.liferay.portal.odata.internal.filter.expression.factory.ExpressionFactoryImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.Assertions;
@@ -301,6 +293,38 @@ public class FilterParserImplTest {
 	}
 
 	@Test
+	public void testParseWithEqBinaryExpressionWithDateTimeOffsetAndNowMethod()
+		throws ExpressionVisitException {
+
+		Expression expression = _filterParserImpl.parse(
+			"dateTimeExternal ge now()");
+
+		BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+		Assert.assertEquals(
+			BinaryExpression.Operation.GE, binaryExpression.getOperation());
+
+		MemberExpression memberExpression =
+			(MemberExpression)binaryExpression.getLeftOperationExpression();
+
+		PrimitivePropertyExpression primitivePropertyExpression =
+			(PrimitivePropertyExpression)memberExpression.getExpression();
+
+		Assert.assertEquals(
+			"dateTimeExternal", primitivePropertyExpression.getName());
+
+		MethodExpression methodExpression =
+			(MethodExpression)binaryExpression.getRightOperationExpression();
+
+		Assert.assertEquals(
+			MethodExpression.Type.NOW, methodExpression.getType());
+
+		List<Expression> expressions = methodExpression.getExpressions();
+
+		Assert.assertTrue(expressions.isEmpty());
+	}
+
+	@Test
 	public void testParseWithEqBinaryExpressionWithDateTimeWithInvalidType() {
 		AbstractThrowableAssert exception = Assertions.assertThatThrownBy(
 			() -> _filterParserImpl.parse("dateTimeExternal ge 2012-05-29")
@@ -464,6 +488,35 @@ public class FilterParserImplTest {
 		Assert.assertEquals("'value'", literalExpression.getText());
 		Assert.assertEquals(
 			LiteralExpression.Type.STRING, literalExpression.getType());
+	}
+
+	@Test
+	public void testParseWithGtBinaryExpressionOnCount()
+		throws ExpressionVisitException {
+
+		BinaryExpression binaryExpression =
+			(BinaryExpression)_filterParserImpl.parse(
+				"EntityModelName/$count gt 2");
+
+		Assert.assertEquals(
+			BinaryExpression.Operation.GT, binaryExpression.getOperation());
+
+		MemberExpression memberExpression =
+			(MemberExpression)binaryExpression.getLeftOperationExpression();
+
+		NavigationPropertyExpression navigationPropertyExpression =
+			(NavigationPropertyExpression)memberExpression.getExpression();
+
+		Assert.assertEquals(
+			NavigationPropertyExpression.Type.COUNT,
+			navigationPropertyExpression.getType());
+		Assert.assertEquals(
+			"EntityModelName", navigationPropertyExpression.getName());
+
+		LiteralExpression literalExpression =
+			(LiteralExpression)binaryExpression.getRightOperationExpression();
+
+		Assert.assertEquals(String.valueOf(2), literalExpression.getText());
 	}
 
 	@Test
@@ -748,40 +801,59 @@ public class FilterParserImplTest {
 
 				@Override
 				public Map<String, EntityField> getEntityFieldsMap() {
-					return Stream.of(
-						new BooleanEntityField(
-							"booleanExternal", locale -> "booleanInternal"),
+					return HashMapBuilder.put(
+						"booleanExternal",
+						(EntityField)new BooleanEntityField(
+							"booleanExternal", locale -> "booleanInternal")
+					).put(
+						"collectionFieldExternal",
 						new CollectionEntityField(
 							new StringEntityField(
 								"collectionFieldExternal",
-								locale -> "collectionFieldInternal")),
+								locale -> "collectionFieldInternal"))
+					).put(
+						"complexField",
 						new ComplexEntityField(
 							"complexField",
-							Stream.of(
+							ListUtil.fromArray(
 								new CollectionEntityField(
 									new StringEntityField(
 										"collectionField",
 										locale -> "collectionFieldInternal")),
 								new StringEntityField(
 									"primitiveField",
-									locale -> "primitiveFieldInternal")
-							).collect(
-								Collectors.toList()
-							)),
+									locale -> "primitiveFieldInternal")))
+					).put(
+						"dateExternal",
 						new DateEntityField(
 							"dateExternal", locale -> "dateInternal",
-							locale -> "dateInternal"),
+							locale -> "dateInternal")
+					).put(
+						"dateTimeExternal",
 						new DateTimeEntityField(
 							"dateTimeExternal", locale -> "dateTimeInternal",
-							locale -> "dateTimeInternal"),
+							locale -> "dateTimeInternal")
+					).put(
+						"doubleExternal",
 						new DoubleEntityField(
-							"doubleExternal", locale -> "doubleInternal"),
+							"doubleExternal", locale -> "doubleInternal")
+					).put(
+						"fieldExternal",
 						new StringEntityField(
 							"fieldExternal", locale -> "fieldInternal")
-					).collect(
-						Collectors.toMap(
-							EntityField::getName, Function.identity())
-					);
+					).build();
+				}
+
+				@Override
+				public Map<String, EntityRelationship>
+					getEntityRelationshipsMap() {
+
+					return HashMapBuilder.put(
+						"EntityModelName",
+						new EntityRelationship(
+							this, "EntityModelName",
+							EntityRelationship.Type.COLLECTION)
+					).build();
 				}
 
 				@Override
@@ -789,6 +861,7 @@ public class FilterParserImplTest {
 					return "SomeEntityName";
 				}
 
-			});
+			},
+			new ExpressionFactoryImpl());
 
 }

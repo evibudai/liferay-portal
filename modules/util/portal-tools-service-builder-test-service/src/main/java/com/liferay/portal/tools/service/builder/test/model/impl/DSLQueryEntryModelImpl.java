@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -200,39 +191,58 @@ public class DSLQueryEntryModelImpl
 	public Map<String, Function<DSLQueryEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<DSLQueryEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<DSLQueryEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<DSLQueryEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<DSLQueryEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<DSLQueryEntry, Object>>();
-		Map<String, BiConsumer<DSLQueryEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<DSLQueryEntry, ?>>();
+		private static final Map<String, Function<DSLQueryEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"dslQueryEntryId", DSLQueryEntry::getDslQueryEntryId);
-		attributeSetterBiConsumers.put(
-			"dslQueryEntryId",
-			(BiConsumer<DSLQueryEntry, Long>)DSLQueryEntry::setDslQueryEntryId);
-		attributeGetterFunctions.put("name", DSLQueryEntry::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<DSLQueryEntry, String>)DSLQueryEntry::setName);
+		static {
+			Map<String, Function<DSLQueryEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<DSLQueryEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"dslQueryEntryId", DSLQueryEntry::getDslQueryEntryId);
+			attributeGetterFunctions.put("name", DSLQueryEntry::getName);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<DSLQueryEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<DSLQueryEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<DSLQueryEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"dslQueryEntryId",
+				(BiConsumer<DSLQueryEntry, Long>)
+					DSLQueryEntry::setDslQueryEntryId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<DSLQueryEntry, String>)DSLQueryEntry::setName);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -491,7 +501,8 @@ public class DSLQueryEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<DSLQueryEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

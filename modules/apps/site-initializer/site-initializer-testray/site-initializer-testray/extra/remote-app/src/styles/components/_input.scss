@@ -5,6 +5,10 @@ label {
 	gap: 0.75rem;
 	margin-right: -5px;
 
+	&.disabled {
+		color: #ccc;
+	}
+
 	&.required::after {
 		color: red;
 		content: '*';
@@ -24,6 +28,7 @@ label {
 	height: 35px;
 	padding: 4px;
 	text-transform: none;
+
 	.text-paragraph {
 		font-size: 16px;
 	}
@@ -39,4 +44,20 @@ label {
 	margin: auto;
 	padding: 50px !important;
 	width: 760px;
+}
+
+.form-control:disabled,
+.form-control.disabled {
+	background-color: #f9f9f9;
+	border: solid 1px #fbfbfb;
+}
+
+.clear-button {
+	position: absolute;
+	right: 16px;
+	top: 42px;
+}
+
+.search-filter {
+	padding-right: 45px;
 }

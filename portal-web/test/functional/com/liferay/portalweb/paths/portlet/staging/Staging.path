@@ -194,32 +194,32 @@
 </tr>
 <tr>
 	<td>PAGE_VARIATION</td>
-	<td>//a[contains(.,'${key_pageVariationName}')]</td>
+	<td>//button[contains(.,'${key_pageVariationName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SITE_PAGES_VARIATION</td>
-	<td>//a[contains(@class,'layout-set-branch-selector')]</td>
+	<td>//button[contains(@class,'layout-set-branch-selector')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SITE_PAGES_VARIATION_DROPDOWN</td>
-	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_sitePagesVariationName}')]</td>
+	<td>//button[contains(@class,'staging-variation-selector') and contains(.,'${key_sitePagesVariationName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PAGE_VARIATION_DROPDOWN</td>
-	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_pageVariationName}')]</td>
+	<td>//button[contains(@class,'staging-variation-selector') and contains(.,'${key_pageVariationName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>MANAGE_VARIATIONS</td>
-	<td>//a[contains(@id,'manageLayoutSetRevisions')]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@data-action,'viewLayoutSetBranches')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>HISTORY_BUTTON</td>
-	<td>//a[contains(@id,'viewHistoryLink')]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@data-action,'viewHistory')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -361,23 +361,23 @@
 	<td></td>
 </tr>
 <tr>
-	<td>STAGING_MENU_SUBMIT_FOR_PUBLICATION</td>
-	<td>//a[contains(@id,'submitLink') and contains(.,'Submit for Publication')]</td>
+	<td>STAGING_MENU_SUBMIT_FOR_WORKFLOW</td>
+	<td>//button[contains(.,'Submit for Workflow')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>STAGING_MENU_MANAGE_PAGE_VARIATION</td>
-	<td>//a[contains(@id,'manageLayoutRevisions')]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@data-action,'viewLayoutBranches')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>STAGING_MENU_REDO_BUTTON</td>
-	<td>//a[contains(@id,'redoLink')]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@data-action,'redo')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>STAGING_MENU_UNDO_BUTTON</td>
-	<td>//a[contains(@id,'undoLink')]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@data-action,'undo')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -387,7 +387,7 @@
 </tr>
 <tr>
 	<td>STAGING_MENU_ENABLE_PAGE_BUTTON</td>
-	<td>//a[contains(@id,'submitLink')]</td>
+	<td>//button[contains(@id,'submitLink')]</td>
 	<td></td>
 </tr>
 </tbody>

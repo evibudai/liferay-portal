@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.internal.search;
 
+import com.liferay.asset.kernel.configuration.provider.AssetCategoryConfigurationProviderUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.commerce.product.catalog.CPQuery;
@@ -27,10 +19,10 @@ import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.util.AssetUtil;
 
 import java.util.ArrayList;
@@ -50,14 +42,17 @@ public class CPDefinitionSearcher extends BaseSearcher {
 			CPField.DEFAULT_IMAGE_FILE_URL, CPField.DEFAULT_IMAGE_FILE_URL,
 			CPField.DEPTH, CPField.HEIGHT, CPField.IS_IGNORE_SKU_COMBINATIONS,
 			CPField.PRODUCT_TYPE_NAME, CPField.SHORT_DESCRIPTION,
-			Field.DESCRIPTION, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK,
-			Field.GROUP_ID, Field.NAME, Field.UID, Field.URL);
-		setDefaultSelectedLocalizedFieldNames(Field.NAME);
+			Field.COMPANY_ID, Field.DESCRIPTION, Field.ENTRY_CLASS_NAME,
+			Field.ENTRY_CLASS_PK, Field.GROUP_ID, Field.MODIFIED_DATE,
+			Field.NAME, Field.SCOPE_GROUP_ID, Field.UID, Field.URL);
+
+		setDefaultSelectedLocalizedFieldNames(
+			CPField.SHORT_DESCRIPTION, Field.DESCRIPTION, Field.NAME);
 	}
 
 	@Override
-	public String[] getSearchClassNames() {
-		return new String[] {CPDefinition.class.getName()};
+	public String getClassName() {
+		return _CLASS_NAME;
 	}
 
 	@Override
@@ -156,7 +151,9 @@ public class CPDefinitionSearcher extends BaseSearcher {
 
 			List<Long> categoryIds = new ArrayList<>();
 
-			if (PropsValues.ASSET_CATEGORIES_SEARCH_HIERARCHICAL) {
+			if (AssetCategoryConfigurationProviderUtil.isSearchHierarchical(
+					CompanyThreadLocal.getCompanyId())) {
+
 				categoryIds.addAll(
 					AssetCategoryLocalServiceUtil.getSubcategoryIds(
 						allCategoryId));
@@ -240,7 +237,9 @@ public class CPDefinitionSearcher extends BaseSearcher {
 
 			List<Long> categoryIds = new ArrayList<>();
 
-			if (PropsValues.ASSET_CATEGORIES_SEARCH_HIERARCHICAL) {
+			if (AssetCategoryConfigurationProviderUtil.isSearchHierarchical(
+					CompanyThreadLocal.getCompanyId())) {
+
 				categoryIds.addAll(
 					AssetCategoryLocalServiceUtil.getSubcategoryIds(
 						anyCategoryId));
@@ -295,7 +294,9 @@ public class CPDefinitionSearcher extends BaseSearcher {
 
 			List<Long> categoryIds = new ArrayList<>();
 
-			if (PropsValues.ASSET_CATEGORIES_SEARCH_HIERARCHICAL) {
+			if (AssetCategoryConfigurationProviderUtil.isSearchHierarchical(
+					CompanyThreadLocal.getCompanyId())) {
+
 				categoryIds.addAll(
 					AssetCategoryLocalServiceUtil.getSubcategoryIds(
 						notAllCategoryId));
@@ -371,7 +372,9 @@ public class CPDefinitionSearcher extends BaseSearcher {
 
 			List<Long> categoryIds = new ArrayList<>();
 
-			if (PropsValues.ASSET_CATEGORIES_SEARCH_HIERARCHICAL) {
+			if (AssetCategoryConfigurationProviderUtil.isSearchHierarchical(
+					CompanyThreadLocal.getCompanyId())) {
+
 				categoryIds.addAll(
 					AssetCategoryLocalServiceUtil.getSubcategoryIds(
 						notAnyCategoryId));
@@ -404,6 +407,8 @@ public class CPDefinitionSearcher extends BaseSearcher {
 
 		queryBooleanFilter.add(tagIgsTermsFilter, BooleanClauseOccur.MUST_NOT);
 	}
+
+	private static final String _CLASS_NAME = CPDefinition.class.getName();
 
 	private final CPQuery _cpQuery;
 

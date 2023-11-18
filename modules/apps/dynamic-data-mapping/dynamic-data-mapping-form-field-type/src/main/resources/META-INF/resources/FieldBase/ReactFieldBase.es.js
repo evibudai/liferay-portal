@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -22,7 +13,7 @@ import {
 	EVENT_TYPES as CORE_EVENT_TYPES,
 	FieldFeedback,
 	Layout,
-	getRepeatedIndex,
+	PagesVisitor,
 	useForm,
 	useFormState,
 } from 'data-engine-js-components-web';
@@ -95,7 +86,7 @@ const getFieldDetails = ({
 		}
 	}
 
-	return fieldDetails.join('<br>');
+	return fieldDetails.length ? fieldDetails.join('<br>') : false;
 };
 
 const HideFieldProperty = () => {
@@ -172,6 +163,7 @@ export function FieldBase({
 	displayErrors,
 	errorMessage,
 	fieldName,
+	fieldReference,
 	hideField,
 	hideEditedFlag,
 	id,
@@ -182,6 +174,7 @@ export function FieldBase({
 	nestedFields,
 	onClick,
 	overMaximumRepetitionsLimit,
+	parentInstanceId,
 	readOnly,
 	repeatable,
 	required,
@@ -195,7 +188,7 @@ export function FieldBase({
 	visible,
 	warningMessage,
 }) {
-	const {editingLanguageId} = useFormState();
+	const {editingLanguageId, pages} = useFormState();
 	const dispatch = useForm();
 
 	const hasError = displayErrors && errorMessage && !valid;
@@ -235,7 +228,6 @@ export function FieldBase({
 
 	const renderLabel =
 		(label && showLabel) || hideField || repeatable || required || tooltip;
-	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
 	const showLegend =
 		type === 'checkbox_multiple' ||
 		type === 'grid' ||
@@ -246,34 +238,66 @@ export function FieldBase({
 		type === 'text' ||
 		type === 'numeric' ||
 		type === 'image' ||
+		type === 'rich_text' ||
 		type === 'search_location' ||
 		type === 'select';
+	const readFieldDetails = !showFor || type === 'select';
+	const hasFieldDetails = accessible && fieldDetails && readFieldDetails;
 
-	const accessibleProps = {
-		...(accessible && fieldDetails && {'aria-labelledby': fieldDetailsId}),
-		...(showFor ? {htmlFor: id ?? name} : {tabIndex: 0}),
+	const accessiblePropsGroup = {
+		...(!renderLabel && {'aria-labelledby': fieldDetailsId}),
+		...(type === 'fieldset' && {role: 'group'}),
+	};
+
+	const accessiblePropsFields = {
+		...(hasFieldDetails && {'aria-labelledby': fieldDetailsId}),
+		...(showFor && {htmlFor: id ?? name}),
+		...(readFieldDetails && {tabIndex: 0}),
 	};
 
 	const defaultRows = nestedFields?.map((field) => ({
 		columns: [{fields: [field], size: 12}],
 	}));
 
+	const checkRepetitions = () => {
+		let repetitionsCounter = 0;
+
+		const visitor = new PagesVisitor(pages);
+
+		const newParentInstanceId = parentInstanceId;
+
+		visitor.mapFields(
+			(field) => {
+				if (
+					fieldReference === field.fieldReference &&
+					newParentInstanceId === field.parentInstanceId
+				) {
+					repetitionsCounter++;
+				}
+			},
+			true,
+			true
+		);
+
+		return repetitionsCounter;
+	};
+
 	return (
 		<ClayForm.Group
-			aria-labelledby={!renderLabel ? fieldDetailsId : null}
+			{...accessiblePropsGroup}
 			className={classNames({
 				'has-error': hasError,
 				'has-warning': warningMessage && !hasError,
 				'hide': !visible,
 			})}
 			data-field-name={name}
+			data-field-reference={fieldReference}
 			onClick={onClick}
 			style={style}
-			tabIndex={!renderLabel ? 0 : undefined}
 		>
 			{repeatable && (
 				<div className="lfr-ddm-form-field-repeatable-toolbar">
-					{repeatedIndex > 0 && (
+					{checkRepetitions() > 1 && (
 						<ClayButton
 							aria-label={sub(
 								Liferay.Language.get('remove-duplicate-field'),
@@ -327,7 +351,7 @@ export function FieldBase({
 					{showLegend ? (
 						<fieldset>
 							<legend
-								{...accessibleProps}
+								{...accessiblePropsFields}
 								className="lfr-ddm-legend"
 							>
 								{showLabel && label}
@@ -347,7 +371,7 @@ export function FieldBase({
 					) : (
 						<>
 							<label
-								{...accessibleProps}
+								{...accessiblePropsFields}
 								className={classNames({
 									'ddm-empty': !showLabel && !required,
 									'ddm-label': showLabel || required,
@@ -399,13 +423,14 @@ export function FieldBase({
 			)}
 
 			<FieldFeedback
-				aria-hidden
+				aria-hidden={readFieldDetails}
 				errorMessage={hasError ? errorMessage : undefined}
 				helpMessage={typeof tip === 'string' ? tip : undefined}
+				name={id ?? name}
 				warningMessage={warningMessage}
 			/>
 
-			{accessible && fieldDetails && (
+			{hasFieldDetails && (
 				<span
 					className="sr-only"
 					dangerouslySetInnerHTML={{

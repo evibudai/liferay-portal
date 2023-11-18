@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service.persistence;
@@ -325,6 +316,160 @@ public interface CTProcessPersistence extends BasePersistence<CTProcess> {
 	 * @return the number of matching ct processes
 	 */
 	public int countByCtCollectionId(long ctCollectionId);
+
+	/**
+	 * Returns all the ct processes where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @return the matching ct processes
+	 */
+	public java.util.List<CTProcess> findByC_T(long ctCollectionId, int type);
+
+	/**
+	 * Returns a range of all the ct processes where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTProcessModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param start the lower bound of the range of ct processes
+	 * @param end the upper bound of the range of ct processes (not inclusive)
+	 * @return the range of matching ct processes
+	 */
+	public java.util.List<CTProcess> findByC_T(
+		long ctCollectionId, int type, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the ct processes where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTProcessModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param start the lower bound of the range of ct processes
+	 * @param end the upper bound of the range of ct processes (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching ct processes
+	 */
+	public java.util.List<CTProcess> findByC_T(
+		long ctCollectionId, int type, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the ct processes where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTProcessModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param start the lower bound of the range of ct processes
+	 * @param end the upper bound of the range of ct processes (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching ct processes
+	 */
+	public java.util.List<CTProcess> findByC_T(
+		long ctCollectionId, int type, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first ct process in the ordered set where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching ct process
+	 * @throws NoSuchProcessException if a matching ct process could not be found
+	 */
+	public CTProcess findByC_T_First(
+			long ctCollectionId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+				orderByComparator)
+		throws NoSuchProcessException;
+
+	/**
+	 * Returns the first ct process in the ordered set where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching ct process, or <code>null</code> if a matching ct process could not be found
+	 */
+	public CTProcess fetchByC_T_First(
+		long ctCollectionId, int type,
+		com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+			orderByComparator);
+
+	/**
+	 * Returns the last ct process in the ordered set where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching ct process
+	 * @throws NoSuchProcessException if a matching ct process could not be found
+	 */
+	public CTProcess findByC_T_Last(
+			long ctCollectionId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+				orderByComparator)
+		throws NoSuchProcessException;
+
+	/**
+	 * Returns the last ct process in the ordered set where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching ct process, or <code>null</code> if a matching ct process could not be found
+	 */
+	public CTProcess fetchByC_T_Last(
+		long ctCollectionId, int type,
+		com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+			orderByComparator);
+
+	/**
+	 * Returns the ct processes before and after the current ct process in the ordered set where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctProcessId the primary key of the current ct process
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next ct process
+	 * @throws NoSuchProcessException if a ct process with the primary key could not be found
+	 */
+	public CTProcess[] findByC_T_PrevAndNext(
+			long ctProcessId, long ctCollectionId, int type,
+			com.liferay.portal.kernel.util.OrderByComparator<CTProcess>
+				orderByComparator)
+		throws NoSuchProcessException;
+
+	/**
+	 * Removes all the ct processes where ctCollectionId = &#63; and type = &#63; from the database.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 */
+	public void removeByC_T(long ctCollectionId, int type);
+
+	/**
+	 * Returns the number of ct processes where ctCollectionId = &#63; and type = &#63;.
+	 *
+	 * @param ctCollectionId the ct collection ID
+	 * @param type the type
+	 * @return the number of matching ct processes
+	 */
+	public int countByC_T(long ctCollectionId, int type);
 
 	/**
 	 * Caches the ct process in the entity cache if it is enabled.

@@ -6,6 +6,7 @@
 		<suppress checks="CamelCaseNameCheck" files="jenkins-results-parser/src/test/java/com/liferay/jenkins/results/parser/.*" />
 		<suppress checks="ConstantNameCheck" files="jenkins-results-parser/src/main/java/com/liferay/jenkins/results/parser/AxisBuild\.java" />
 		<suppress checks="ParsePrimitiveTypeCheck" files="arquillian-extension-junit-bridge/src/main/java/com/liferay/arquillian/extension/junit/bridge/server/TestBundleActivator\.java" />
+		<suppress checks="ReferenceAnnotationCheck" files="scr-reference-dynamic-greedy-test-impl/src/main/java/com/liferay/scr/reference/dynamic/greedy/test/internal/DynamicGreedyOptionalComponent\.java" />
 	</checkstyle>
 	<source-check>
 		<suppress checks="BNDIncludeResourceCheck" files="external-data-source-test/bnd.bnd" />
@@ -14,6 +15,7 @@
 		<suppress checks="JavaModuleTestCheck" files="arquillian-extension-junit-bridge-test/src/testIntegration/java/com/liferay/arquillian/extension/junit/bridge/junit/test/item/.*" />
 		<suppress checks="JavaModuleTestCheck" files="jenkins-results-parser/src/test/java/com/liferay/jenkins/results/parser/Test\.java" />
 		<suppress checks="StringMethodsCheck" />
+		<suppress checks="XMLEmptyLinesCheck" files="jenkins-plugin-events/src/main/resources/com/liferay/jenkins/plugin/events/JenkinsEventsManagementLink/index\.jelly" />
 		<suppress checks="XMLServiceFileCheck" files="external-data-source-test-service/service\.xml" />
 	</source-check>
 </suppressions>

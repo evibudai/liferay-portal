@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.display.context;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -31,10 +24,6 @@ import com.liferay.segments.odata.retriever.ODataRetriever;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.constants.SegmentsWebKeys;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import javax.portlet.PortletSession;
 import javax.portlet.PortletURL;
@@ -64,7 +53,7 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 		_userODataRetriever = userODataRetriever;
 		_userLocalService = userLocalService;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -75,7 +64,9 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 
 		SearchContainer<User> userSearchContainer = new SearchContainer(
 			_renderRequest, _getPortletURL(), null,
-			"no-users-have-been-assigned-to-this-segment");
+			LanguageUtil.get(
+				_httpServletRequest,
+				"no-users-have-been-assigned-to-this-segment"));
 
 		userSearchContainer.setId("segmentsEntryUsers");
 
@@ -106,22 +97,12 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 			}
 			else if ((criteria == null) && (segmentsEntry != null)) {
 				userSearchContainer.setResultsAndTotal(
-					() -> {
-						LongStream segmentsEntryClassPKsLongStream =
-							Arrays.stream(
-								_segmentsEntryProviderRegistry.
-									getSegmentsEntryClassPKs(
-										segmentsEntry.getSegmentsEntryId(),
-										userSearchContainer.getStart(),
-										userSearchContainer.getEnd()));
-
-						return segmentsEntryClassPKsLongStream.boxed(
-						).map(
-							userId -> _userLocalService.fetchUser(userId)
-						).collect(
-							Collectors.toList()
-						);
-					},
+					() -> TransformUtil.transformToList(
+						_segmentsEntryProviderRegistry.getSegmentsEntryClassPKs(
+							segmentsEntry.getSegmentsEntryId(),
+							userSearchContainer.getStart(),
+							userSearchContainer.getEnd()),
+						_userLocalService::fetchUser),
 					_segmentsEntryProviderRegistry.
 						getSegmentsEntryClassPKsCount(
 							segmentsEntry.getSegmentsEntryId()));

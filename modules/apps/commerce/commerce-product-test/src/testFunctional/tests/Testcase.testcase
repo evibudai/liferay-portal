@@ -16,9 +16,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AssertOnlyNonSubscriptionProductsAreImportedWhenTheSubscriptionProductIsNotTheFirstOnTheListWhenImporting {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7791 AssertOnlyNonSubscriptionProductsAreImportedWhenTheSubscriptionProductIsNotTheFirstOnTheListWhenImporting pending implementation
 
@@ -26,9 +25,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AssertOnlyOneWishlistCanBeChosenForTheImport {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7715 AssertOnlyOneWishlistCanBeChosenForTheImport pending implementation
 
@@ -36,9 +34,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AssertOnlyTheFirstSubscriptionProductInTheWishListIsImportedWhenTheOrderIsEmpty {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7790 AssertOnlyTheFirstSubscriptionProductInTheWishListIsImportedWhenTheOrderIsEmpty pending implementation
 
@@ -46,9 +43,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AssertProductsCannotBeImportedIfASubscriptionProductIsInTheOrder {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7792 AssertProductsCannotBeImportedIfASubscriptionProductIsInTheOrder pending implementation
 
@@ -56,9 +52,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AssertSubscriptionProductCannotBeImportedIfThereAreNonSubscriptionProductsInTheOrder {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7793 AssertSubscriptionProductCannotBeImportedIfThereAreNonSubscriptionProductsInTheOrder pending implementation
 
@@ -66,9 +61,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CheckoutAfterImportFromWishList {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7885 CheckoutAfterImportFromWishList pending implementation
 
@@ -76,9 +70,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test DownloadCSVTemplate {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7697 DownloadCSVTemplate pending implementation
 
@@ -86,9 +79,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ImportProductsFromWishlist {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7714 ImportProductsFromWishlist pending implementation
 
@@ -96,9 +88,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ImportProductsFromWishlistWithPriceVariations {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7721 ImportProductsFromWishlistWithPriceVariations pending implementation
 
@@ -106,9 +97,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadNonCSVOrderFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7707 UploadNonCSVOrderFile pending implementation
 
@@ -116,9 +106,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadNotValidCSVOrderFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7706 UploadNotValidCSVOrderFile pending implementation
 
@@ -126,9 +115,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadNotValidERCCSVFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7704 UploadNotValidERCCSVFile pending implementation
 
@@ -136,9 +124,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadNotValidQuantityCSVOrderFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7705 UploadNotValidQuantityCSVOrderFile pending implementation
 
@@ -146,9 +133,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadNotValidSkuIDCSVFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7702 UploadNotValidSkuIDCSVFile pending implementation
 
@@ -156,9 +142,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test UploadValidCSVOrderFile {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7699 UploadValidCSVOrderFile pending implementation
 
@@ -166,9 +151,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ViewImportedWishlistItemsPreview {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7716 ViewImportedWishlistItemsPreview pending implementation
 
@@ -176,9 +160,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ViewPaginationOnImportFromWishlist {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7718 ViewPaginationOnImportFromWishlist pending implementation
 

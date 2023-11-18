@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.base;
@@ -45,7 +36,6 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
@@ -59,8 +49,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -506,29 +494,29 @@ public abstract class RoleLocalServiceBaseImpl
 	/**
 	 */
 	@Override
-	public void addGroupRole(long groupId, long roleId) {
-		groupPersistence.addRole(groupId, roleId);
+	public boolean addGroupRole(long groupId, long roleId) {
+		return groupPersistence.addRole(groupId, roleId);
 	}
 
 	/**
 	 */
 	@Override
-	public void addGroupRole(long groupId, Role role) {
-		groupPersistence.addRole(groupId, role);
+	public boolean addGroupRole(long groupId, Role role) {
+		return groupPersistence.addRole(groupId, role);
 	}
 
 	/**
 	 */
 	@Override
-	public void addGroupRoles(long groupId, long[] roleIds) {
-		groupPersistence.addRoles(groupId, roleIds);
+	public boolean addGroupRoles(long groupId, long[] roleIds) {
+		return groupPersistence.addRoles(groupId, roleIds);
 	}
 
 	/**
 	 */
 	@Override
-	public void addGroupRoles(long groupId, List<Role> roles) {
-		groupPersistence.addRoles(groupId, roles);
+	public boolean addGroupRoles(long groupId, List<Role> roles) {
+		return groupPersistence.addRoles(groupId, roles);
 	}
 
 	/**
@@ -634,36 +622,38 @@ public abstract class RoleLocalServiceBaseImpl
 	 * @throws PortalException
 	 */
 	@Override
-	public void addUserRole(long userId, long roleId) throws PortalException {
-		userPersistence.addRole(userId, roleId);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	@Override
-	public void addUserRole(long userId, Role role) throws PortalException {
-		userPersistence.addRole(userId, role);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	@Override
-	public void addUserRoles(long userId, long[] roleIds)
+	public boolean addUserRole(long userId, long roleId)
 		throws PortalException {
 
-		userPersistence.addRoles(userId, roleIds);
+		return userPersistence.addRole(userId, roleId);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
 	@Override
-	public void addUserRoles(long userId, List<Role> roles)
+	public boolean addUserRole(long userId, Role role) throws PortalException {
+		return userPersistence.addRole(userId, role);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public boolean addUserRoles(long userId, long[] roleIds)
 		throws PortalException {
 
-		userPersistence.addRoles(userId, roles);
+		return userPersistence.addRoles(userId, roleIds);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public boolean addUserRoles(long userId, List<Role> roles)
+		throws PortalException {
+
+		return userPersistence.addRoles(userId, roles);
 	}
 
 	/**
@@ -856,17 +846,11 @@ public abstract class RoleLocalServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.portal.kernel.model.Role", roleLocalService);
-
-		_setLocalServiceUtilService(roleLocalService);
+		RoleLocalServiceUtil.setService(roleLocalService);
 	}
 
 	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.portal.kernel.model.Role");
-
-		_setLocalServiceUtilService(null);
+		RoleLocalServiceUtil.setService(null);
 	}
 
 	/**
@@ -925,22 +909,6 @@ public abstract class RoleLocalServiceBaseImpl
 		}
 	}
 
-	private void _setLocalServiceUtilService(
-		RoleLocalService roleLocalService) {
-
-		try {
-			Field field = RoleLocalServiceUtil.class.getDeclaredField(
-				"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, roleLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
-	}
-
 	@BeanReference(type = RoleLocalService.class)
 	protected RoleLocalService roleLocalService;
 
@@ -964,9 +932,5 @@ public abstract class RoleLocalServiceBaseImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RoleLocalServiceBaseImpl.class);
-
-	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.conflict;
 
+import com.liferay.change.tracking.conflict.CTEntryConflictHelper;
 import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.internal.CTRowUtil;
@@ -83,6 +75,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 			constraintResolverServiceTrackerMap,
 		ServiceTrackerMap<String, CTDisplayRenderer<?>>
 			ctDisplayRendererServiceTrackerMap,
+		ServiceTrackerMap<String, CTEntryConflictHelper>
+			ctEntryConflictHelperServiceTrackerMap,
 		CTEntryLocalService ctEntryLocalService, CTService<T> ctService,
 		long modelClassNameId, long sourceCTCollectionId,
 		TableReferenceDefinitionManager tableReferenceDefinitionManager,
@@ -93,6 +87,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 			constraintResolverServiceTrackerMap;
 		_ctDisplayRendererServiceTrackerMap =
 			ctDisplayRendererServiceTrackerMap;
+		_ctEntryConflictHelperServiceTrackerMap =
+			ctEntryConflictHelperServiceTrackerMap;
 		_ctEntryLocalService = ctEntryLocalService;
 		_ctService = ctService;
 		_modelClassNameId = modelClassNameId;
@@ -111,6 +107,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 			_modificationCTEntries.put(ctEntry.getModelClassPK(), ctEntry);
 		}
+
+		_ctEntries.add(ctEntry);
 	}
 
 	public List<ConflictInfo> check() throws PortalException {
@@ -162,6 +160,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		}
 
 		_checkMissingRequirements(connection, ctPersistence, conflictInfos);
+
+		_checkCTEntries(ctPersistence, conflictInfos);
 
 		return conflictInfos;
 	}
@@ -295,6 +295,37 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		}
 	}
 
+	private void _checkCTEntries(
+		CTPersistence<T> ctPersistence, List<ConflictInfo> conflictInfos) {
+
+		Class<?> clazz = ctPersistence.getModelClass();
+
+		CTEntryConflictHelper ctEntryConflictHelper =
+			_ctEntryConflictHelperServiceTrackerMap.getService(clazz.getName());
+
+		if (ctEntryConflictHelper == null) {
+			return;
+		}
+
+		for (CTEntry ctEntry : _ctEntries) {
+			if (ctEntryConflictHelper.hasModificationConflict(
+					ctEntry, _targetCTCollectionId)) {
+
+				conflictInfos.add(
+					new ModificationConflictInfo(
+						ctEntry.getModelClassPK(), false));
+			}
+
+			if (ctEntryConflictHelper.hasDeletionModificationConflict(
+					ctEntry, _targetCTCollectionId)) {
+
+				conflictInfos.add(
+					new DeletionModificationConflictInfo(
+						ctEntry.getModelClassPK()));
+			}
+		}
+	}
+
 	private void _checkDeletions(
 		Connection connection, CTPersistence<T> ctPersistence,
 		List<ConflictInfo> conflictInfos, String primaryKeyName) {
@@ -309,8 +340,10 @@ public class CTConflictChecker<T extends CTModel<T>> {
 					" and CTEntry.modelClassNameId = ", _modelClassNameId,
 					" and CTEntry.changeType = ",
 					CTConstants.CT_CHANGE_TYPE_DELETION,
-					" and publication.ctCollectionId = ", _targetCTCollectionId,
-					" and CTEntry.modelMvccVersion != ",
+					" and (publication.ctCollectionId = ",
+					_targetCTCollectionId, " or publication.ctCollectionId = ",
+					CTConstants.CT_COLLECTION_ID_PRODUCTION,
+					") and CTEntry.modelMvccVersion != ",
 					"publication.mvccVersion"));
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
@@ -512,11 +545,13 @@ public class CTConflictChecker<T extends CTModel<T>> {
 				StringBundler.concat(
 					"select CTEntry.modelClassPK from CTEntry left join ",
 					ctPersistence.getTableName(), " publication on ",
-					"publication.", primaryKeyName,
-					" = CTEntry.modelClassPK and publication.ctCollectionId = ",
-					_targetCTCollectionId, " where CTEntry.ctCollectionId = ",
-					_sourceCTCollectionId, " and CTEntry.modelClassNameId = ",
-					_modelClassNameId, " and CTEntry.changeType = ",
+					"publication.", primaryKeyName, " = CTEntry.modelClassPK ",
+					"and (publication.ctCollectionId = ", _targetCTCollectionId,
+					" or publication.ctCollectionId = ",
+					CTConstants.CT_COLLECTION_ID_PRODUCTION,
+					") where CTEntry.ctCollectionId = ", _sourceCTCollectionId,
+					" and CTEntry.modelClassNameId = ", _modelClassNameId,
+					" and CTEntry.changeType = ",
 					CTConstants.CT_CHANGE_TYPE_MODIFICATION, " and ",
 					"publication.", primaryKeyName, " is null"));
 			ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -566,9 +601,19 @@ public class CTConflictChecker<T extends CTModel<T>> {
 						"ctCollectionId", Long.class);
 
 					if (ctCollectionIdColumn != null) {
+						if (_targetCTCollectionId ==
+								CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+
+							return ctCollectionIdColumn.in(
+								new Long[] {
+									_sourceCTCollectionId, _targetCTCollectionId
+								});
+						}
+
 						return ctCollectionIdColumn.in(
 							new Long[] {
-								_sourceCTCollectionId, _targetCTCollectionId
+								_sourceCTCollectionId, _targetCTCollectionId,
+								CTConstants.CT_COLLECTION_ID_PRODUCTION
 							});
 					}
 
@@ -915,14 +960,17 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 			while (resultSet.next()) {
 				long pk = resultSet.getLong(1);
-				long mvccVersion = resultSet.getLong(2);
 
 				CTEntry ctEntry = _modificationCTEntries.get(pk);
 
-				ctEntry.setModifiedDate(ctEntry.getModifiedDate());
-				ctEntry.setModelMvccVersion(mvccVersion);
+				if (ctEntry != null) {
+					long mvccVersion = resultSet.getLong(2);
 
-				_ctEntryLocalService.updateCTEntry(ctEntry);
+					ctEntry.setModifiedDate(ctEntry.getModifiedDate());
+					ctEntry.setModelMvccVersion(mvccVersion);
+
+					_ctEntryLocalService.updateCTEntry(ctEntry);
+				}
 			}
 		}
 		catch (SQLException sqlException) {
@@ -936,6 +984,9 @@ public class CTConflictChecker<T extends CTModel<T>> {
 			_constraintResolverServiceTrackerMap;
 	private final ServiceTrackerMap<String, CTDisplayRenderer<?>>
 		_ctDisplayRendererServiceTrackerMap;
+	private final Set<CTEntry> _ctEntries = new HashSet<>();
+	private final ServiceTrackerMap<String, CTEntryConflictHelper>
+		_ctEntryConflictHelperServiceTrackerMap;
 	private final CTEntryLocalService _ctEntryLocalService;
 	private final CTService<T> _ctService;
 	private final long _modelClassNameId;

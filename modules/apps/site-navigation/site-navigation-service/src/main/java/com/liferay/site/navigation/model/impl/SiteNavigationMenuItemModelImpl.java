@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.model.impl;
@@ -75,10 +66,11 @@ public class SiteNavigationMenuItemModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
-		{"uuid_", Types.VARCHAR}, {"siteNavigationMenuItemId", Types.BIGINT},
-		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
+		{"siteNavigationMenuItemId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP},
 		{"siteNavigationMenuId", Types.BIGINT},
 		{"parentSiteNavigationMenuItemId", Types.BIGINT},
 		{"name", Types.VARCHAR}, {"type_", Types.VARCHAR},
@@ -93,6 +85,7 @@ public class SiteNavigationMenuItemModelImpl
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("siteNavigationMenuItemId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -110,7 +103,7 @@ public class SiteNavigationMenuItemModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table SiteNavigationMenuItem (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,siteNavigationMenuItemId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,siteNavigationMenuId LONG,parentSiteNavigationMenuItemId LONG,name VARCHAR(255) null,type_ VARCHAR(75) null,typeSettings TEXT null,order_ INTEGER,lastPublishDate DATE null,primary key (siteNavigationMenuItemId, ctCollectionId))";
+		"create table SiteNavigationMenuItem (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,siteNavigationMenuItemId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,siteNavigationMenuId LONG,parentSiteNavigationMenuItemId LONG,name VARCHAR(255) null,type_ VARCHAR(75) null,typeSettings TEXT null,order_ INTEGER,lastPublishDate DATE null,primary key (siteNavigationMenuItemId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table SiteNavigationMenuItem";
@@ -137,38 +130,45 @@ public class SiteNavigationMenuItemModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long GROUPID_COLUMN_BITMASK = 2L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long NAME_COLUMN_BITMASK = 4L;
+	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long PARENTSITENAVIGATIONMENUITEMID_COLUMN_BITMASK = 8L;
+	public static final long NAME_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long SITENAVIGATIONMENUID_COLUMN_BITMASK = 16L;
+	public static final long PARENTSITENAVIGATIONMENUITEMID_COLUMN_BITMASK =
+		16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 32L;
+	public static final long SITENAVIGATIONMENUID_COLUMN_BITMASK = 32L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long SITENAVIGATIONMENUITEMID_COLUMN_BITMASK = 64L;
+	public static final long SITENAVIGATIONMENUITEMID_COLUMN_BITMASK = 128L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -261,136 +261,163 @@ public class SiteNavigationMenuItemModelImpl
 	public Map<String, Function<SiteNavigationMenuItem, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<SiteNavigationMenuItem, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<SiteNavigationMenuItem, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<SiteNavigationMenuItem, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<SiteNavigationMenuItem, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<SiteNavigationMenuItem, Object>>();
-		Map<String, BiConsumer<SiteNavigationMenuItem, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<SiteNavigationMenuItem, ?>>();
+		private static final Map
+			<String, Function<SiteNavigationMenuItem, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", SiteNavigationMenuItem::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", SiteNavigationMenuItem::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", SiteNavigationMenuItem::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<SiteNavigationMenuItem, String>)
-				SiteNavigationMenuItem::setUuid);
-		attributeGetterFunctions.put(
-			"siteNavigationMenuItemId",
-			SiteNavigationMenuItem::getSiteNavigationMenuItemId);
-		attributeSetterBiConsumers.put(
-			"siteNavigationMenuItemId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setSiteNavigationMenuItemId);
-		attributeGetterFunctions.put(
-			"groupId", SiteNavigationMenuItem::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", SiteNavigationMenuItem::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", SiteNavigationMenuItem::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setUserId);
-		attributeGetterFunctions.put(
-			"userName", SiteNavigationMenuItem::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<SiteNavigationMenuItem, String>)
-				SiteNavigationMenuItem::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", SiteNavigationMenuItem::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<SiteNavigationMenuItem, Date>)
-				SiteNavigationMenuItem::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", SiteNavigationMenuItem::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<SiteNavigationMenuItem, Date>)
-				SiteNavigationMenuItem::setModifiedDate);
-		attributeGetterFunctions.put(
-			"siteNavigationMenuId",
-			SiteNavigationMenuItem::getSiteNavigationMenuId);
-		attributeSetterBiConsumers.put(
-			"siteNavigationMenuId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setSiteNavigationMenuId);
-		attributeGetterFunctions.put(
-			"parentSiteNavigationMenuItemId",
-			SiteNavigationMenuItem::getParentSiteNavigationMenuItemId);
-		attributeSetterBiConsumers.put(
-			"parentSiteNavigationMenuItemId",
-			(BiConsumer<SiteNavigationMenuItem, Long>)
-				SiteNavigationMenuItem::setParentSiteNavigationMenuItemId);
-		attributeGetterFunctions.put("name", SiteNavigationMenuItem::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<SiteNavigationMenuItem, String>)
-				SiteNavigationMenuItem::setName);
-		attributeGetterFunctions.put("type", SiteNavigationMenuItem::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<SiteNavigationMenuItem, String>)
-				SiteNavigationMenuItem::setType);
-		attributeGetterFunctions.put(
-			"typeSettings", SiteNavigationMenuItem::getTypeSettings);
-		attributeSetterBiConsumers.put(
-			"typeSettings",
-			(BiConsumer<SiteNavigationMenuItem, String>)
-				SiteNavigationMenuItem::setTypeSettings);
-		attributeGetterFunctions.put("order", SiteNavigationMenuItem::getOrder);
-		attributeSetterBiConsumers.put(
-			"order",
-			(BiConsumer<SiteNavigationMenuItem, Integer>)
-				SiteNavigationMenuItem::setOrder);
-		attributeGetterFunctions.put(
-			"lastPublishDate", SiteNavigationMenuItem::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<SiteNavigationMenuItem, Date>)
-				SiteNavigationMenuItem::setLastPublishDate);
+		static {
+			Map<String, Function<SiteNavigationMenuItem, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<SiteNavigationMenuItem, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", SiteNavigationMenuItem::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", SiteNavigationMenuItem::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", SiteNavigationMenuItem::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				SiteNavigationMenuItem::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"siteNavigationMenuItemId",
+				SiteNavigationMenuItem::getSiteNavigationMenuItemId);
+			attributeGetterFunctions.put(
+				"groupId", SiteNavigationMenuItem::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", SiteNavigationMenuItem::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", SiteNavigationMenuItem::getUserId);
+			attributeGetterFunctions.put(
+				"userName", SiteNavigationMenuItem::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", SiteNavigationMenuItem::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", SiteNavigationMenuItem::getModifiedDate);
+			attributeGetterFunctions.put(
+				"siteNavigationMenuId",
+				SiteNavigationMenuItem::getSiteNavigationMenuId);
+			attributeGetterFunctions.put(
+				"parentSiteNavigationMenuItemId",
+				SiteNavigationMenuItem::getParentSiteNavigationMenuItemId);
+			attributeGetterFunctions.put(
+				"name", SiteNavigationMenuItem::getName);
+			attributeGetterFunctions.put(
+				"type", SiteNavigationMenuItem::getType);
+			attributeGetterFunctions.put(
+				"typeSettings", SiteNavigationMenuItem::getTypeSettings);
+			attributeGetterFunctions.put(
+				"order", SiteNavigationMenuItem::getOrder);
+			attributeGetterFunctions.put(
+				"lastPublishDate", SiteNavigationMenuItem::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<SiteNavigationMenuItem, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<SiteNavigationMenuItem, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<SiteNavigationMenuItem, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"siteNavigationMenuItemId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setSiteNavigationMenuItemId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<SiteNavigationMenuItem, Date>)
+					SiteNavigationMenuItem::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<SiteNavigationMenuItem, Date>)
+					SiteNavigationMenuItem::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"siteNavigationMenuId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setSiteNavigationMenuId);
+			attributeSetterBiConsumers.put(
+				"parentSiteNavigationMenuItemId",
+				(BiConsumer<SiteNavigationMenuItem, Long>)
+					SiteNavigationMenuItem::setParentSiteNavigationMenuItemId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setName);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setType);
+			attributeSetterBiConsumers.put(
+				"typeSettings",
+				(BiConsumer<SiteNavigationMenuItem, String>)
+					SiteNavigationMenuItem::setTypeSettings);
+			attributeSetterBiConsumers.put(
+				"order",
+				(BiConsumer<SiteNavigationMenuItem, Integer>)
+					SiteNavigationMenuItem::setOrder);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<SiteNavigationMenuItem, Date>)
+					SiteNavigationMenuItem::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -450,6 +477,35 @@ public class SiteNavigationMenuItemModelImpl
 	@Deprecated
 	public String getOriginalUuid() {
 		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -822,6 +878,8 @@ public class SiteNavigationMenuItemModelImpl
 		siteNavigationMenuItemImpl.setMvccVersion(getMvccVersion());
 		siteNavigationMenuItemImpl.setCtCollectionId(getCtCollectionId());
 		siteNavigationMenuItemImpl.setUuid(getUuid());
+		siteNavigationMenuItemImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		siteNavigationMenuItemImpl.setSiteNavigationMenuItemId(
 			getSiteNavigationMenuItemId());
 		siteNavigationMenuItemImpl.setGroupId(getGroupId());
@@ -856,6 +914,8 @@ public class SiteNavigationMenuItemModelImpl
 			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		siteNavigationMenuItemImpl.setUuid(
 			this.<String>getColumnOriginalValue("uuid_"));
+		siteNavigationMenuItemImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		siteNavigationMenuItemImpl.setSiteNavigationMenuItemId(
 			this.<Long>getColumnOriginalValue("siteNavigationMenuItemId"));
 		siteNavigationMenuItemImpl.setGroupId(
@@ -974,6 +1034,18 @@ public class SiteNavigationMenuItemModelImpl
 
 		if ((uuid != null) && (uuid.length() == 0)) {
 			siteNavigationMenuItemCacheModel.uuid = null;
+		}
+
+		siteNavigationMenuItemCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			siteNavigationMenuItemCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			siteNavigationMenuItemCacheModel.externalReferenceCode = null;
 		}
 
 		siteNavigationMenuItemCacheModel.siteNavigationMenuItemId =
@@ -1119,6 +1191,7 @@ public class SiteNavigationMenuItemModelImpl
 	private long _mvccVersion;
 	private long _ctCollectionId;
 	private String _uuid;
+	private String _externalReferenceCode;
 	private long _siteNavigationMenuItemId;
 	private long _groupId;
 	private long _companyId;
@@ -1139,7 +1212,8 @@ public class SiteNavigationMenuItemModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<SiteNavigationMenuItem, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1167,6 +1241,8 @@ public class SiteNavigationMenuItemModelImpl
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
 		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put(
 			"siteNavigationMenuItemId", _siteNavigationMenuItemId);
 		_columnOriginalValues.put("groupId", _groupId);
@@ -1215,33 +1291,35 @@ public class SiteNavigationMenuItemModelImpl
 
 		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("siteNavigationMenuItemId", 8L);
+		columnBitmasks.put("externalReferenceCode", 8L);
 
-		columnBitmasks.put("groupId", 16L);
+		columnBitmasks.put("siteNavigationMenuItemId", 16L);
 
-		columnBitmasks.put("companyId", 32L);
+		columnBitmasks.put("groupId", 32L);
 
-		columnBitmasks.put("userId", 64L);
+		columnBitmasks.put("companyId", 64L);
 
-		columnBitmasks.put("userName", 128L);
+		columnBitmasks.put("userId", 128L);
 
-		columnBitmasks.put("createDate", 256L);
+		columnBitmasks.put("userName", 256L);
 
-		columnBitmasks.put("modifiedDate", 512L);
+		columnBitmasks.put("createDate", 512L);
 
-		columnBitmasks.put("siteNavigationMenuId", 1024L);
+		columnBitmasks.put("modifiedDate", 1024L);
 
-		columnBitmasks.put("parentSiteNavigationMenuItemId", 2048L);
+		columnBitmasks.put("siteNavigationMenuId", 2048L);
 
-		columnBitmasks.put("name", 4096L);
+		columnBitmasks.put("parentSiteNavigationMenuItemId", 4096L);
 
-		columnBitmasks.put("type_", 8192L);
+		columnBitmasks.put("name", 8192L);
 
-		columnBitmasks.put("typeSettings", 16384L);
+		columnBitmasks.put("type_", 16384L);
 
-		columnBitmasks.put("order_", 32768L);
+		columnBitmasks.put("typeSettings", 32768L);
 
-		columnBitmasks.put("lastPublishDate", 65536L);
+		columnBitmasks.put("order_", 65536L);
+
+		columnBitmasks.put("lastPublishDate", 131072L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

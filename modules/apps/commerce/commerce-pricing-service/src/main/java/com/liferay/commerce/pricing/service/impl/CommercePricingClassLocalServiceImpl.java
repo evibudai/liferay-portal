@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.service.impl;
@@ -21,6 +12,7 @@ import com.liferay.commerce.pricing.model.CommercePricingClassCPDefinitionRel;
 import com.liferay.commerce.pricing.service.CommercePricingClassCPDefinitionRelLocalService;
 import com.liferay.commerce.pricing.service.base.CommercePricingClassLocalServiceBaseImpl;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -59,8 +51,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -240,18 +230,10 @@ public class CommercePricingClassLocalServiceImpl
 
 	@Override
 	public long[] getCommercePricingClassByCPDefinition(long cpDefinitionId) {
-		List<CommercePricingClassCPDefinitionRel>
-			commercePricingClassCPDefinitionRels =
-				_commercePricingClassCPDefinitionRelLocalService.
-					getCommercePricingClassByCPDefinitionId(cpDefinitionId);
-
-		Stream<CommercePricingClassCPDefinitionRel> stream =
-			commercePricingClassCPDefinitionRels.stream();
-
-		LongStream longStream = stream.mapToLong(
+		return TransformUtil.transformToLongArray(
+			_commercePricingClassCPDefinitionRelLocalService.
+				getCommercePricingClassByCPDefinitionId(cpDefinitionId),
 			CommercePricingClassCPDefinitionRel::getCommercePricingClassId);
-
-		return longStream.toArray();
 	}
 
 	@Override

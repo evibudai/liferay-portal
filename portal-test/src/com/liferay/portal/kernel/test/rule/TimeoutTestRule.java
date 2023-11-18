@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.test.rule;
@@ -31,14 +22,9 @@ import org.junit.runners.model.Statement;
  */
 public class TimeoutTestRule implements TestRule {
 
-	public static final TimeoutTestRule INSTANCE = new TimeoutTestRule(
-		TestPropsValues.CI_TEST_TIMEOUT_TIME);
+	public static final TimeoutTestRule INSTANCE = new TimeoutTestRule();
 
 	public static final int TIMEOUT_EXIT_CODE = 200;
-
-	public TimeoutTestRule(long timeout) {
-		_timeout = timeout;
-	}
 
 	@Override
 	public Statement apply(Statement statement, Description description) {
@@ -59,12 +45,13 @@ public class TimeoutTestRule implements TestRule {
 
 						@Override
 						public Void call() throws InterruptedException {
-							Thread.sleep(_timeout);
+							Thread.sleep(TestPropsValues.CI_TEST_TIMEOUT_TIME);
 
 							System.out.println(
 								StringBundler.concat(
-									"Thread dump for ", description.toString(),
-									" timeout after waited ", _timeout, "ms:",
+									"Thread dump for ", description,
+									" timeout after waited ",
+									TestPropsValues.CI_TEST_TIMEOUT_TIME, "ms:",
 									ThreadUtil.threadDump()));
 
 							System.exit(TIMEOUT_EXIT_CODE);
@@ -92,7 +79,5 @@ public class TimeoutTestRule implements TestRule {
 
 		};
 	}
-
-	private final long _timeout;
 
 }

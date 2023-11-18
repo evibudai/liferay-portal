@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.info.item;
@@ -54,8 +45,8 @@ public class ObjectEntryInfoItemFields {
 			InfoLocalizedValue.localize(
 				"com.liferay.asset.info.display.impl", "display-page-url")
 		).build();
-	public static final InfoField externalReferenceCodeInfoField =
-		BuilderHolder._builder.infoFieldType(
+	public static final InfoField<TextInfoFieldType>
+		externalReferenceCodeInfoField = BuilderHolder._builder.infoFieldType(
 			TextInfoFieldType.INSTANCE
 		).name(
 			"externalReferenceCode"
@@ -72,7 +63,7 @@ public class ObjectEntryInfoItemFields {
 			InfoLocalizedValue.localize(
 				ObjectEntryInfoItemFields.class, "modified-date")
 		).build();
-	public static final InfoField objectEntryIdInfoField =
+	public static final InfoField<TextInfoFieldType> objectEntryIdInfoField =
 		BuilderHolder._builder.infoFieldType(
 			TextInfoFieldType.INSTANCE
 		).name(
@@ -89,7 +80,7 @@ public class ObjectEntryInfoItemFields {
 			InfoLocalizedValue.localize(
 				ObjectEntryInfoItemFields.class, "publish-date")
 		).build();
-	public static final InfoField statusInfoField =
+	public static final InfoField<TextInfoFieldType> statusInfoField =
 		BuilderHolder._builder.infoFieldType(
 			TextInfoFieldType.INSTANCE
 		).name(
@@ -98,8 +89,8 @@ public class ObjectEntryInfoItemFields {
 			InfoLocalizedValue.localize(
 				ObjectEntryInfoItemFields.class, "status")
 		).build();
-	public static final InfoField userProfileImageInfoField =
-		BuilderHolder._builder.infoFieldType(
+	public static final InfoField<ImageInfoFieldType>
+		userProfileImageInfoField = BuilderHolder._builder.infoFieldType(
 			ImageInfoFieldType.INSTANCE
 		).name(
 			"userProfileImage"

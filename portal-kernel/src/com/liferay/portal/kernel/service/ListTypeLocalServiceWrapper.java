@@ -1,18 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
+
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link ListTypeLocalService}.
@@ -53,9 +46,9 @@ public class ListTypeLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.ListType addListType(
-		java.lang.String name, java.lang.String type) {
+		long companyId, String name, String type) {
 
-		return _listTypeLocalService.addListType(name, type);
+		return _listTypeLocalService.addListType(companyId, name, type);
 	}
 
 	/**
@@ -116,6 +109,11 @@ public class ListTypeLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _listTypeLocalService.deleteListType(listTypeId);
+	}
+
+	@Override
+	public void deleteListTypes(long companyId) {
+		_listTypeLocalService.deleteListTypes(companyId);
 	}
 
 	/**
@@ -268,9 +266,14 @@ public class ListTypeLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.ListType getListType(
-		java.lang.String name, java.lang.String type) {
+		long companyId, String name, String type) {
 
-		return _listTypeLocalService.getListType(name, type);
+		return _listTypeLocalService.getListType(companyId, name, type);
+	}
+
+	@Override
+	public long getListTypeId(long companyId, String name, String type) {
+		return _listTypeLocalService.getListTypeId(companyId, name, type);
 	}
 
 	/**
@@ -293,9 +296,9 @@ public class ListTypeLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.portal.kernel.model.ListType>
-		getListTypes(java.lang.String type) {
+		getListTypes(long companyId, String type) {
 
-		return _listTypeLocalService.getListTypes(type);
+		return _listTypeLocalService.getListTypes(companyId, type);
 	}
 
 	/**
@@ -314,7 +317,7 @@ public class ListTypeLocalServiceWrapper
 	 * @return the OSGi service identifier
 	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _listTypeLocalService.getOSGiServiceIdentifier();
 	}
 
@@ -347,18 +350,22 @@ public class ListTypeLocalServiceWrapper
 	}
 
 	@Override
-	public void validate(
-			long listTypeId, long classNameId, java.lang.String type)
+	public void validate(long listTypeId, long classNameId, String type)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_listTypeLocalService.validate(listTypeId, classNameId, type);
 	}
 
 	@Override
-	public void validate(long listTypeId, java.lang.String type)
+	public void validate(long listTypeId, String type)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_listTypeLocalService.validate(listTypeId, type);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _listTypeLocalService.getBasePersistence();
 	}
 
 	@Override

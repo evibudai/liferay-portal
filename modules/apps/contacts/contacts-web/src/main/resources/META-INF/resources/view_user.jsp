@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -144,16 +135,22 @@ request.setAttribute("view_user.jsp-user", user2);
 				</clay:col>
 			</clay:row>
 
-			<div class="lfr-detail-info lfr-field-group" data-title="<%= LanguageUtil.get(request, "details") %>">
+			<div class="d-flex lfr-detail-info lfr-field-group" data-title="<%= LanguageUtil.get(request, "details") %>">
 
 				<%
 				PortletURL editDetailsURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
 				%>
 
-				<liferay-ui:icon
+				<clay:link
+					borderless="<%= true %>"
+					cssClass="edit-button lfr-portal-tooltip"
+					displayType="secondary"
+					href="<%= editDetailsURL.toString() %>"
 					icon="pencil"
-					markupView="lexicon"
-					url="<%= editDetailsURL.toString() %>"
+					monospaced="<%= true %>"
+					small="<%= true %>"
+					title='<%= LanguageUtil.format(request, "edit-x", LanguageUtil.get(request, "information"), false) %>'
+					type="button"
 				/>
 
 				<c:if test="<%= showIcon %>">
@@ -164,16 +161,18 @@ request.setAttribute("view_user.jsp-user", user2);
 
 				<div class="<%= showIcon ? StringPool.BLANK : "no-icon" %> lfr-contact-info">
 					<div class="lfr-contact-name">
-						<a href="<%= user2.getDisplayURL(themeDisplay) %>"><%= user2.getFullName() %></a>
+						<a class="text-decoration-underline" href="<%= user2.getDisplayURL(themeDisplay) %>"><%= user2.getFullName() %></a>
 					</div>
 
 					<div class="lfr-contact-job-title">
 						<%= user2.getJobTitle() %>
 					</div>
 
-					<div class="lfr-contact-extra">
-						<a href="mailto:<%= user2.getEmailAddress() %>"><%= user2.getEmailAddress() %></a>
-					</div>
+					<c:if test="<%= showEmailAddress %>">
+						<div class="lfr-contact-extra">
+							<a class="text-decoration-underline" href="mailto:<%= user2.getEmailAddress() %>"><%= user2.getEmailAddress() %></a>
+						</div>
+					</c:if>
 				</div>
 
 				<div class="clear"><!-- --></div>
@@ -272,7 +271,7 @@ request.setAttribute("view_user.jsp-user", user2);
 												for (Group curGroup : results) {
 												%>
 
-													<li class="user-information-sites"><a href="<%= curGroup.getDisplayURL(themeDisplay, !curGroup.hasPublicLayouts()) %>"><%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %></a></li>
+													<li class="user-information-sites"><a class="text-decoration-underline" href="<%= curGroup.getDisplayURL(themeDisplay, !curGroup.hasPublicLayouts()) %>"><%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %></a></li>
 
 												<%
 												}
@@ -305,10 +304,16 @@ request.setAttribute("view_user.jsp-user", user2);
 												PortletURL editCategorizationURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
 												%>
 
-												<liferay-ui:icon
+												<clay:link
+													borderless="<%= true %>"
+													cssClass="edit-button lfr-portal-tooltip"
+													displayType="secondary"
+													href="<%= editCategorizationURL.toString() %>"
 													icon="pencil"
-													markupView="lexicon"
-													url="<%= editCategorizationURL.toString() %>"
+													monospaced="<%= true %>"
+													small="<%= true %>"
+													title='<%= LanguageUtil.format(request, "edit-x", LanguageUtil.get(request, "information"), false) %>'
+													type="button"
 												/>
 
 												<ul class="user-tags">
@@ -331,7 +336,7 @@ request.setAttribute("view_user.jsp-user", user2);
 															WindowState.MAXIMIZED
 														).buildPortletURL();
 
-														sb.append("<li><a href=\"");
+														sb.append("<li><a class=\"text-decoration-underline\" href=\"");
 														sb.append(searchURL);
 														sb.append("\">");
 														sb.append(assetTag.getName());

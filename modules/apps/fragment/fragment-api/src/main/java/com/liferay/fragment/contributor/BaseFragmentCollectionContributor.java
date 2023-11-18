@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.contributor;
@@ -50,11 +41,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.ServletContext;
 
@@ -109,6 +97,25 @@ public abstract class BaseFragmentCollectionContributor
 	}
 
 	@Override
+	public List<FragmentEntry> getFragmentEntries(int[] types) {
+		_initialize();
+
+		List<FragmentEntry> fragmentEntries = new ArrayList<>();
+
+		for (int type : types) {
+			fragmentEntries.addAll(
+				_fragmentEntries.getOrDefault(type, Collections.emptyList()));
+		}
+
+		return fragmentEntries;
+	}
+
+	@Override
+	public List<FragmentEntry> getFragmentEntries(int[] types, Locale locale) {
+		return _getFragmentEntries(getFragmentEntries(types), locale);
+	}
+
+	@Override
 	public List<FragmentEntry> getFragmentEntries(Locale locale) {
 		return _getFragmentEntries(getFragmentEntries(), locale);
 	}
@@ -154,13 +161,16 @@ public abstract class BaseFragmentCollectionContributor
 	public ResourceBundleLoader getResourceBundleLoader() {
 		ServletContext servletContext = getServletContext();
 
-		return Optional.ofNullable(
+		ResourceBundleLoader resourceBundleLoader =
 			ResourceBundleLoaderUtil.
 				getResourceBundleLoaderByServletContextName(
-					servletContext.getServletContextName())
-		).orElse(
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader()
-		);
+					servletContext.getServletContextName());
+
+		if (resourceBundleLoader != null) {
+			return resourceBundleLoader;
+		}
+
+		return ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 	}
 
 	public abstract ServletContext getServletContext();
@@ -295,7 +305,6 @@ public abstract class BaseFragmentCollectionContributor
 			fragmentCompositionLocalService.createFragmentComposition(0L);
 
 		fragmentComposition.setFragmentCompositionKey(fragmentCompositionKey);
-
 		fragmentComposition.setName(name);
 		fragmentComposition.setData(definition);
 		fragmentComposition.setIcon(
@@ -308,52 +317,38 @@ public abstract class BaseFragmentCollectionContributor
 	private List<FragmentComposition> _getFragmentCompositions(
 		List<FragmentComposition> fragmentCompositions, Locale locale) {
 
-		Stream<FragmentComposition> stream = fragmentCompositions.stream();
+		for (FragmentComposition fragmentComposition : fragmentCompositions) {
+			Map<Locale, String> names = _fragmentCompositionNames.getOrDefault(
+				fragmentComposition.getFragmentCompositionKey(),
+				Collections.emptyMap());
 
-		return stream.map(
-			fragmentComposition -> {
-				Map<Locale, String> names =
-					_fragmentCompositionNames.getOrDefault(
-						fragmentComposition.getFragmentCompositionKey(),
-						Collections.emptyMap());
-
-				fragmentComposition.setName(
+			fragmentComposition.setName(
+				names.getOrDefault(
+					locale,
 					names.getOrDefault(
-						locale,
-						names.getOrDefault(
-							LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
-							fragmentComposition.getName())));
+						LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
+						fragmentComposition.getName())));
+		}
 
-				return fragmentComposition;
-			}
-		).collect(
-			Collectors.toList()
-		);
+		return fragmentCompositions;
 	}
 
 	private List<FragmentEntry> _getFragmentEntries(
 		List<FragmentEntry> fragmentEntries, Locale locale) {
 
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
+		for (FragmentEntry fragmentEntry : fragmentEntries) {
+			Map<Locale, String> names = _fragmentEntryNames.getOrDefault(
+				fragmentEntry.getFragmentEntryKey(), Collections.emptyMap());
 
-		return stream.map(
-			fragmentEntry -> {
-				Map<Locale, String> names = _fragmentEntryNames.getOrDefault(
-					fragmentEntry.getFragmentEntryKey(),
-					Collections.emptyMap());
-
-				fragmentEntry.setName(
+			fragmentEntry.setName(
+				names.getOrDefault(
+					locale,
 					names.getOrDefault(
-						locale,
-						names.getOrDefault(
-							LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
-							fragmentEntry.getName())));
+						LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
+						fragmentEntry.getName())));
+		}
 
-				return fragmentEntry;
-			}
-		).collect(
-			Collectors.toList()
-		);
+		return fragmentEntries;
 	}
 
 	private FragmentEntry _getFragmentEntry(URL url) throws Exception {

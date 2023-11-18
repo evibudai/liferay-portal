@@ -17,38 +17,27 @@ html#{$cadmin-selector} {
 				border-radius: 0;
 				box-shadow: none;
 			}
+		}
 
-			.modal-body {
-				padding: 0;
+		.applications-menu-header {
+			flex-shrink: 0;
+
+			.nav-tabs {
+				background-color: $cadmin-white;
+				border-width: 0;
+				margin-top: 8px;
+				padding-left: 4px;
+				padding-right: 4px;
 			}
 
-			.tab-pane {
-				$footerHeight: 65px;
-				$headerHeight: 60px;
-
-				@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
-					max-height: calc(100vh - #{$footerHeight + $headerHeight});
-					overflow-y: auto;
-				}
+			.nav-link {
+				padding-bottom: 6px;
+				padding-top: 6px;
 			}
 		}
 
-		.applications-menu-header .nav-link {
-			color: $cadmin-secondary;
-			padding-bottom: 16px;
-			padding-top: 16px;
-
-			&.active {
-				color: $cadmin-dark;
-			}
-		}
-
-		.applications-menu-wrapper {
-			display: flex;
-			flex-direction: column;
-			height: -moz-available;
-			height: stretch;
-			max-height: 100vh;
+		.applications-menu-footer {
+			flex-shrink: 0;
 		}
 
 		.applications-menu-bg {
@@ -68,7 +57,7 @@ html#{$cadmin-selector} {
 		}
 
 		.applications-menu-border-top {
-			border-top: 1px solid $cadmin-light;
+			border-top: 1px solid $cadmin-gray-400;
 		}
 
 		.applications-menu-content {
@@ -87,10 +76,6 @@ html#{$cadmin-selector} {
 			}
 
 			@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
-				column-count: 3;
-			}
-
-			@include media-breakpoint-up(lg, $cadmin-grid-breakpoints) {
 				column-count: 4;
 			}
 
@@ -103,7 +88,6 @@ html#{$cadmin-selector} {
 		.applications-menu-nav-header {
 			color: $cadmin-secondary;
 			font-size: 14px;
-			font-weight: 700;
 			text-transform: uppercase;
 		}
 
@@ -130,12 +114,15 @@ html#{$cadmin-selector} {
 			color: $cadmin-secondary;
 			font-size: 14px;
 			font-weight: 600;
-			margin-bottom: 0;
 
 			@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
+				border: 1px solid $cadmin-gray-400;
+				border-bottom-width: 0;
+				border-top-left-radius: $cadmin-rounded-border-radius;
+				border-top-right-radius: $cadmin-rounded-border-radius;
 				bottom: 100%;
-				left: 8px;
-				padding: 22px 24px;
+				left: 0;
+				padding: 10px 16px;
 				position: absolute;
 			}
 		}
@@ -160,7 +147,6 @@ html#{$cadmin-selector} {
 		.applications-menu-btn {
 			font-size: 14px;
 			font-weight: 600;
-			text-decoration: none;
 		}
 
 		.applications-menu-nav-divider {
@@ -169,22 +155,7 @@ html#{$cadmin-selector} {
 		}
 
 		.applications-menu-company {
-			font-size: 16px;
 			font-weight: 600;
-		}
-
-		.applications-menu-powered {
-			color: $cadmin-secondary;
-			font-size: 10px;
-			text-align: right;
-			text-transform: uppercase;
-		}
-
-		.applications-menu-copyright {
-			color: $cadmin-secondary;
-			font-size: 14px;
-			font-weight: 600;
-			text-align: right;
 		}
 	}
 }

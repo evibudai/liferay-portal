@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.runtime.configuration;
@@ -18,6 +9,8 @@ import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.saml.constants.SamlProviderConfigurationKeys;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Mika Koivisto
@@ -29,6 +22,7 @@ import com.liferay.saml.constants.SamlProviderConfigurationKeys;
 	id = "com.liferay.saml.runtime.configuration.SamlProviderConfiguration",
 	localization = "content/Language", name = "saml-provider-configuration-name"
 )
+@ProviderType
 public interface SamlProviderConfiguration {
 
 	@Meta.AD(deflt = "0", name = "company-id", required = false)
@@ -64,6 +58,15 @@ public interface SamlProviderConfiguration {
 		name = "saml-idp-authn-request-signature-required", required = false
 	)
 	public boolean authnRequestSignatureRequired();
+
+	@Meta.AD(
+		deflt = "true",
+		description = "saml-idp-authn-request-signing-allows-dynamic-acs-url-description",
+		id = "saml.idp.authn.request.signing.allows.dynamic.acs.url",
+		name = "saml-idp-authn-request-signing-allows-dynamic-acs-url",
+		required = false
+	)
+	public boolean authnRequestSigningAllowsDynamicACSURL();
 
 	@Meta.AD(
 		deflt = "3000", description = "saml-sp-clock-skew-description",

@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bulk.rest.internal.resource.v1_0;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
-import com.liferay.asset.kernel.model.AssetCategoryModel;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
@@ -27,25 +17,23 @@ import com.liferay.bulk.rest.dto.v1_0.TaxonomyVocabulary;
 import com.liferay.bulk.rest.internal.selection.v1_0.DocumentBulkSelectionFactory;
 import com.liferay.bulk.rest.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.bulk.selection.BulkSelection;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.BaseModelPermissionCheckerUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.pagination.Page;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,30 +65,7 @@ public class TaxonomyVocabularyResourceImpl
 					entry.getValue(), entry.getKey())));
 	}
 
-	private Map<AssetVocabulary, List<AssetCategory>> _getAssetCategoriesMap(
-			Long siteId, DocumentBulkSelection documentBulkSelection)
-		throws Exception {
-
-		Stream<AssetVocabulary> assetVocabulariesStream =
-			_getAssetVocabulariesStream(siteId);
-
-		Stream<AssetCategory> assetCategoriesStream = _getAssetCategoriesStream(
-			documentBulkSelection,
-			PermissionCheckerFactoryUtil.create(contextUser));
-
-		Map<Long, List<AssetCategory>> assetCategoriesMap =
-			assetCategoriesStream.collect(
-				Collectors.groupingBy(AssetCategoryModel::getVocabularyId));
-
-		return assetVocabulariesStream.collect(
-			Collectors.toMap(
-				Function.identity(),
-				assetVocabulary -> assetCategoriesMap.computeIfAbsent(
-					assetVocabulary.getVocabularyId(),
-					key -> new ArrayList<>())));
-	}
-
-	private Stream<AssetCategory> _getAssetCategoriesStream(
+	private Set<AssetCategory> _getAssetCategories(
 			DocumentBulkSelection documentBulkSelection,
 			PermissionChecker permissionChecker)
 		throws Exception {
@@ -117,7 +82,7 @@ public class TaxonomyVocabularyResourceImpl
 
 		assetEntryBulkSelection.forEach(
 			assetEntry -> {
-				if (BaseModelPermissionCheckerUtil.containsBaseModelPermission(
+				if (ModelResourcePermissionUtil.contains(
 						permissionChecker, assetEntry.getGroupId(),
 						assetEntry.getClassName(), assetEntry.getClassPK(),
 						ActionKeys.UPDATE)) {
@@ -137,34 +102,65 @@ public class TaxonomyVocabularyResourceImpl
 				}
 			});
 
-		return assetCategories.stream();
+		return assetCategories;
 	}
 
-	private Stream<AssetVocabulary> _getAssetVocabulariesStream(Long siteId)
+	private Map<AssetVocabulary, List<AssetCategory>> _getAssetCategoriesMap(
+			Long siteId, DocumentBulkSelection documentBulkSelection)
 		throws Exception {
 
-		List<AssetVocabulary> assetVocabularies =
-			_assetVocabularyLocalService.getGroupVocabularies(
-				_portal.getCurrentAndAncestorSiteGroupIds(siteId));
+		Map<AssetVocabulary, List<AssetCategory>> assetCategoriesMap =
+			new HashMap<>();
 
-		Stream<AssetVocabulary> stream = assetVocabularies.stream();
+		Map<Long, List<AssetCategory>> assetVocabularyIdAssetCategoriesMap =
+			new HashMap<>();
 
-		List<AssetVocabulary> filteredAssetVocabularies = stream.filter(
-			assetVocabulary -> assetVocabulary.isAssociatedToClassNameId(
-				_getClassNameId())
-		).filter(
-			assetVocabulary -> {
-				int count =
-					_assetCategoryLocalService.getVocabularyCategoriesCount(
-						assetVocabulary.getVocabularyId());
+		for (AssetCategory assetCategory :
+				_getAssetCategories(
+					documentBulkSelection,
+					PermissionCheckerFactoryUtil.create(contextUser))) {
 
-				return count > 0;
+			List<AssetCategory> assetCategories =
+				assetVocabularyIdAssetCategoriesMap.computeIfAbsent(
+					assetCategory.getVocabularyId(), key -> new ArrayList<>());
+
+			assetCategories.add(assetCategory);
+		}
+
+		for (AssetVocabulary assetVocabulary : _getAssetVocabularies(siteId)) {
+			assetCategoriesMap.put(
+				assetVocabulary,
+				assetVocabularyIdAssetCategoriesMap.computeIfAbsent(
+					assetVocabulary.getVocabularyId(),
+					key -> new ArrayList<>()));
+		}
+
+		return assetCategoriesMap;
+	}
+
+	private List<AssetVocabulary> _getAssetVocabularies(Long siteId)
+		throws Exception {
+
+		List<AssetVocabulary> assetVocabularies = new ArrayList<>();
+
+		for (AssetVocabulary assetVocabulary :
+				_assetVocabularyLocalService.getGroupVocabularies(
+					_siteConnectedGroupGroupProvider.
+						getCurrentAndAncestorSiteAndDepotGroupIds(siteId))) {
+
+			if (!assetVocabulary.isAssociatedToClassNameId(_getClassNameId())) {
+				continue;
 			}
-		).collect(
-			Collectors.toList()
-		);
 
-		return filteredAssetVocabularies.stream();
+			int count = _assetCategoryLocalService.getVocabularyCategoriesCount(
+				assetVocabulary.getVocabularyId());
+
+			if (count > 0) {
+				assetVocabularies.add(assetVocabulary);
+			}
+		}
+
+		return assetVocabularies;
 	}
 
 	private long _getClassNameId() {
@@ -209,6 +205,6 @@ public class TaxonomyVocabularyResourceImpl
 	private DocumentBulkSelectionFactory _documentBulkSelectionFactory;
 
 	@Reference
-	private Portal _portal;
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.data.provider;
@@ -22,14 +13,13 @@ import com.liferay.analytics.reports.web.internal.model.ReferringURL;
 import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
 import com.liferay.analytics.reports.web.internal.model.TrafficChannel;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.PrefsProps;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
@@ -46,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,17 +52,11 @@ public class AnalyticsReportsDataProviderTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@BeforeClass
-	public static void setUpClass() {
-		ReflectionTestUtil.setFieldValue(
-			PrefsPropsUtil.class, "_prefsProps",
-			Mockito.mock(PrefsProps.class));
-	}
-
 	@Test
 	public void testGetAcquisitionChannels() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					Collections.singletonMap(
 						"/acquisition-channels",
@@ -121,6 +104,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetDomainReferringURLs() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					Collections.singletonMap(
 						"/page-referrer-hosts",
@@ -159,6 +143,7 @@ public class AnalyticsReportsDataProviderTest {
 
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					Collections.singletonMap(
 						"/read-counts",
@@ -207,6 +192,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetPageReferringURLs() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					Collections.singletonMap(
 						"/page-referrers",
@@ -252,6 +238,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetReferringSocialMediaList() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					Collections.singletonMap(
 						"/social-page-referrers",
@@ -290,6 +277,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetTotalReads() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					HashMapBuilder.put(
 						"/read-count", "12345"
@@ -323,7 +311,8 @@ public class AnalyticsReportsDataProviderTest {
 	@Test(expected = PortalException.class)
 	public void testGetTotalReadsWithAsahFaroBackendError() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
-			new AnalyticsReportsDataProvider(_getHttp(new IOException()));
+			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(), _getHttp(new IOException()));
 
 		analyticsReportsDataProvider.getTotalReads(
 			RandomTestUtil.randomLong(), RandomTestUtil.randomString());
@@ -333,6 +322,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetTotalViews() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					HashMapBuilder.put(
 						"/view-count", "12345"
@@ -366,7 +356,8 @@ public class AnalyticsReportsDataProviderTest {
 	@Test(expected = PortalException.class)
 	public void testGetTotalViewsWithAsahFaroBackendError() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
-			new AnalyticsReportsDataProvider(_getHttp(new IOException()));
+			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(), _getHttp(new IOException()));
 
 		analyticsReportsDataProvider.getTotalViews(
 			RandomTestUtil.randomLong(), RandomTestUtil.randomString());
@@ -376,6 +367,7 @@ public class AnalyticsReportsDataProviderTest {
 	public void testGetTrafficChannels() throws Exception {
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(),
 				_getHttp(
 					HashMapBuilder.put(
 						"/acquisition-channels",
@@ -421,7 +413,8 @@ public class AnalyticsReportsDataProviderTest {
 		throws Exception {
 
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
-			new AnalyticsReportsDataProvider(_getHttp(new IOException()));
+			new AnalyticsReportsDataProvider(
+				_getAnalyticsSettingsManager(), _getHttp(new IOException()));
 
 		TimeSpan timeSpan = TimeSpan.of("last-7-days");
 
@@ -433,8 +426,26 @@ public class AnalyticsReportsDataProviderTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testNewAnalyticsReportsDataProviderWithNullHttp() {
-		new AnalyticsReportsDataProvider(null);
+	public void testNewAnalyticsReportsDataProviderWithNullHttp()
+		throws Exception {
+
+		new AnalyticsReportsDataProvider(_getAnalyticsSettingsManager(), null);
+	}
+
+	private AnalyticsSettingsManager _getAnalyticsSettingsManager()
+		throws Exception {
+
+		AnalyticsSettingsManager analyticsSettingsManager = Mockito.mock(
+			AnalyticsSettingsManager.class);
+
+		Mockito.when(
+			analyticsSettingsManager.getAnalyticsConfiguration(
+				Mockito.anyLong())
+		).thenReturn(
+			Mockito.mock(AnalyticsConfiguration.class)
+		);
+
+		return analyticsSettingsManager;
 	}
 
 	private Http _getHttp(Exception exception) throws Exception {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.reports.web.internal.model;
@@ -31,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 /**
  * @author Cristina González
@@ -52,11 +42,13 @@ public class LayoutReportsIssue {
 
 		_key = key;
 
-		Stream<Detail> stream = _details.stream();
+		long total = 0;
 
-		_total = stream.mapToLong(
-			Detail::getTotal
-		).sum();
+		for (LayoutReportsIssue.Detail detail : _details) {
+			total += detail.getTotal();
+		}
+
+		_total = total;
 	}
 
 	@Override
@@ -93,21 +85,23 @@ public class LayoutReportsIssue {
 	}
 
 	public JSONObject toJSONObject(
-		String configureLayoutSeoURL, String configurePagesSeoURL,
-		ResourceBundle resourceBundle) {
-
-		Stream<Detail> stream = _details.stream();
+			String configureLayoutSeoURL, String configurePagesSeoURL,
+			ResourceBundle resourceBundle)
+		throws Exception {
 
 		return JSONUtil.put(
 			"details",
-			JSONUtil.putAll(
-				stream.filter(
-					detail -> detail.getTotal() > 0
-				).map(
-					detail -> detail.toJSONObject(
+			JSONUtil.toJSONArray(
+				_details,
+				detail -> {
+					if (detail.getTotal() <= 0) {
+						return null;
+					}
+
+					return detail.toJSONObject(
 						configureLayoutSeoURL, configurePagesSeoURL,
-						resourceBundle)
-				).toArray())
+						resourceBundle);
+				})
 		).put(
 			"key", _key.toString()
 		).put(

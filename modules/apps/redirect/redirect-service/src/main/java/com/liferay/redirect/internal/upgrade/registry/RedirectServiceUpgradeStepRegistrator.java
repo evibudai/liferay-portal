@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.internal.upgrade.registry;
 
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.redirect.internal.upgrade.v3_0_2.RedirectEntrySourceURLUpgradeProcess;
+import com.liferay.redirect.internal.upgrade.v3_0_3.RedirectPatternConfigurationUpgradeProcess;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -46,15 +40,25 @@ public class RedirectServiceUpgradeStepRegistrator
 			"2.0.1", "3.0.0",
 			UpgradeProcessFactory.dropColumns("RedirectNotFoundEntry", "hits"));
 
+		registry.register("3.0.0", "3.0.1", new DummyUpgradeProcess());
+
 		registry.register(
-			"3.0.0", "3.0.1",
+			"3.0.1", "3.0.2", new RedirectEntrySourceURLUpgradeProcess());
+
+		registry.register(
+			"3.0.2", "3.0.3",
 			new com.liferay.redirect.internal.upgrade.v3_0_1.
 				RedirectURLConfigurationUpgradeProcess(
 					_prefsPropsToConfigurationUpgradeHelper));
 
 		registry.register(
-			"3.0.1", "3.0.2", new RedirectEntrySourceURLUpgradeProcess());
+			"3.0.3", "3.0.4",
+			new RedirectPatternConfigurationUpgradeProcess(
+				_configurationAdmin));
 	}
+
+	@Reference
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
 	private PrefsPropsToConfigurationUpgradeHelper

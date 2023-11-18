@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.field.filter.parser;
 
 import com.liferay.frontend.data.set.filter.FDSFilter;
+import com.liferay.frontend.data.set.filter.SelectionFDSFilterItem;
 import com.liferay.object.exception.ObjectViewFilterColumnException;
 import com.liferay.object.field.frontend.data.set.filter.ObjectEntryStatusSelectionFDSFilter;
 import com.liferay.object.model.ObjectViewFilterColumn;
@@ -52,25 +44,34 @@ public class StatusSystemObjectFieldFilterStrategy
 	}
 
 	@Override
-	public List<Integer> getItemsValues() throws JSONException {
+	public List<SelectionFDSFilterItem> getSelectionFDSFilterItems()
+		throws JSONException {
+
+		List<SelectionFDSFilterItem> selectionFDSFilterItems =
+			new ArrayList<>();
+
 		JSONArray jsonArray = getJSONArray();
 
-		List<Integer> statuses = new ArrayList<>();
-
 		for (int i = 0; i < jsonArray.length(); i++) {
-			statuses.add((Integer)jsonArray.get(i));
+			Integer status = (Integer)jsonArray.get(i);
+
+			selectionFDSFilterItems.add(
+				new SelectionFDSFilterItem(
+					_language.get(
+						locale, WorkflowConstants.getStatusLabel(status)),
+					status));
 		}
 
-		return statuses;
+		return selectionFDSFilterItems;
 	}
 
 	@Override
 	public String toValueSummary() throws PortalException {
 		return StringUtil.merge(
 			ListUtil.toList(
-				getItemsValues(),
-				itemValue -> _language.get(
-					locale, WorkflowConstants.getStatusLabel(itemValue))),
+				getSelectionFDSFilterItems(),
+				getSelectionFDSFilterItem ->
+					getSelectionFDSFilterItem.getLabel()),
 			StringPool.COMMA_AND_SPACE);
 	}
 
@@ -79,7 +80,7 @@ public class StatusSystemObjectFieldFilterStrategy
 		super.validate();
 
 		try {
-			getItemsValues();
+			getSelectionFDSFilterItems();
 		}
 		catch (Exception exception) {
 			throw new ObjectViewFilterColumnException(

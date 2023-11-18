@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bulk.rest.internal.resource.v1_0.factory;
@@ -52,6 +43,8 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.UriInfo;
+
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -78,11 +71,16 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 					throw new IllegalArgumentException("User is not set");
 				}
 
-				return _statusResourceProxyProviderFunction.apply(
+				Function<InvocationHandler, StatusResource>
+					statusResourceProxyProviderFunction =
+						ResourceProxyProviderFunctionHolder.
+							_statusResourceProxyProviderFunction;
+
+				return statusResourceProxyProviderFunction.apply(
 					(proxy, method, arguments) -> _invoke(
 						method, arguments, _checkPermissions,
 						_httpServletRequest, _httpServletResponse,
-						_preferredLocale, _user));
+						_preferredLocale, _uriInfo, _user));
 			}
 
 			@Override
@@ -122,6 +120,13 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 			}
 
 			@Override
+			public StatusResource.Builder uriInfo(UriInfo uriInfo) {
+				_uriInfo = uriInfo;
+
+				return this;
+			}
+
+			@Override
 			public StatusResource.Builder user(User user) {
 				_user = user;
 
@@ -132,6 +137,7 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 			private HttpServletRequest _httpServletRequest;
 			private HttpServletResponse _httpServletResponse;
 			private Locale _preferredLocale;
+			private UriInfo _uriInfo;
 			private User _user;
 
 		};
@@ -168,7 +174,7 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 			Method method, Object[] arguments, boolean checkPermissions,
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, Locale preferredLocale,
-			User user)
+			UriInfo uriInfo, User user)
 		throws Throwable {
 
 		String name = PrincipalThreadLocal.getName();
@@ -198,6 +204,7 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 
 		statusResource.setContextHttpServletRequest(httpServletRequest);
 		statusResource.setContextHttpServletResponse(httpServletResponse);
+		statusResource.setContextUriInfo(uriInfo);
 		statusResource.setContextUser(user);
 		statusResource.setExpressionConvert(_expressionConvert);
 		statusResource.setFilterParserProvider(_filterParserProvider);
@@ -223,9 +230,6 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 			PermissionThreadLocal.setPermissionChecker(permissionChecker);
 		}
 	}
-
-	private static final Function<InvocationHandler, StatusResource>
-		_statusResourceProxyProviderFunction = _getProxyProviderFunction();
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
@@ -261,6 +265,13 @@ public class StatusResourceFactoryImpl implements StatusResource.Factory {
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	private static class ResourceProxyProviderFunctionHolder {
+
+		private static final Function<InvocationHandler, StatusResource>
+			_statusResourceProxyProviderFunction = _getProxyProviderFunction();
+
+	}
 
 	private class AcceptLanguageImpl implements AcceptLanguage {
 

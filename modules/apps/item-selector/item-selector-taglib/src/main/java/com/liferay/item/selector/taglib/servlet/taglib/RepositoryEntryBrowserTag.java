@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.item.selector.taglib.servlet.taglib;
@@ -24,7 +15,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.repository.model.RepositoryEntry;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -66,6 +57,10 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 
 	public List<String> getExtensions() {
 		return _extensions;
+	}
+
+	public long getFolderId() {
+		return _folderId;
 	}
 
 	public String getItemSelectedEventName() {
@@ -160,6 +155,10 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		_extensions = extensions;
 	}
 
+	public void setFolderId(long folderId) {
+		_folderId = folderId;
+	}
+
 	public void setItemSelectedEventName(String itemSelectedEventName) {
 		_itemSelectedEventName = itemSelectedEventName;
 	}
@@ -228,9 +227,11 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		_editImageURL = null;
 		_emptyResultsMessage = null;
 		_extensions = new ArrayList<>();
+		_folderId = 0;
 		_itemSelectedEventName = null;
 		_itemSelectorReturnTypeResolver = null;
-		_maxFileSize = UploadServletRequestConfigurationHelperUtil.getMaxSize();
+		_maxFileSize =
+			UploadServletRequestConfigurationProviderUtil.getMaxSize();
 		_mimeTypeRestriction = null;
 		_portletURL = null;
 		_repositoryEntries = new ArrayList<>();
@@ -326,6 +327,9 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		}
 
 		httpServletRequest.setAttribute(
+			"liferay-item-selector:repository-entry-browser:folderId",
+			_folderId);
+		httpServletRequest.setAttribute(
 			"liferay-item-selector:repository-entry-browser:" +
 				"itemSelectedEventName",
 			_itemSelectedEventName);
@@ -388,11 +392,12 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 	private PortletURL _editImageURL;
 	private String _emptyResultsMessage;
 	private List<String> _extensions = new ArrayList<>();
+	private long _folderId;
 	private String _itemSelectedEventName;
 	private ItemSelectorReturnTypeResolver<?, ?>
 		_itemSelectorReturnTypeResolver;
 	private long _maxFileSize =
-		UploadServletRequestConfigurationHelperUtil.getMaxSize();
+		UploadServletRequestConfigurationProviderUtil.getMaxSize();
 	private String _mimeTypeRestriction;
 	private PortletURL _portletURL;
 	private List<RepositoryEntry> _repositoryEntries = new ArrayList<>();

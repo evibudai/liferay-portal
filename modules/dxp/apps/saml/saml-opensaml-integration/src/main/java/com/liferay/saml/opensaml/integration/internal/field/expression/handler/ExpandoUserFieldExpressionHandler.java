@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.field.expression.handler;
@@ -32,6 +23,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.ldap.LDAPSettings;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -56,7 +48,6 @@ import com.liferay.saml.opensaml.integration.processor.context.ProcessorContext;
 import com.liferay.saml.opensaml.integration.processor.context.UserProcessorContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,7 +57,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.naming.Binding;
 import javax.naming.NamingEnumeration;
@@ -223,16 +213,16 @@ public class ExpandoUserFieldExpressionHandler
 					"\" must match only 1 user, but it matched ", userIds));
 		}
 
-		Stream<ExpandoValue> stream = expandoValues.stream();
+		for (ExpandoValue expandoValue : expandoValues) {
+			User user = _userLocalService.fetchUserById(
+				expandoValue.getClassPK());
 
-		return stream.map(
-			ExpandoValue::getClassPK
-		).map(
-			_userLocalService::fetchUserById
-		).findFirst(
-		).orElse(
-			null
-		);
+			if (user != null) {
+				return user;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -272,17 +262,6 @@ public class ExpandoUserFieldExpressionHandler
 			properties.get("processing.index"));
 	}
 
-	@Reference(
-		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)",
-		unbind = "-"
-	)
-	protected void setLDAPServerConfigurationProvider(
-		ConfigurationProvider<LDAPServerConfiguration>
-			ldapServerConfigurationProvider) {
-
-		_ldapServerConfigurationProvider = ldapServerConfigurationProvider;
-	}
-
 	private static <V> ValueConsumer<String[]> _getValueConsumer(
 		Function<String[], V> function, ValueConsumer<V> valueConsumer) {
 
@@ -311,19 +290,21 @@ public class ExpandoUserFieldExpressionHandler
 		}
 
 		if (expandoValue == null) {
+			ExpandoColumn column = null;
+
 			ExpandoTable table = null;
 
 			try {
 				table = _expandoTableLocalService.getTable(
 					user.getCompanyId(), User.class.getName(),
 					ExpandoTableConstants.DEFAULT_TABLE_NAME);
+
+				column = _expandoColumnLocalService.getColumn(
+					table.getTableId(), validUserFieldExpression);
 			}
 			catch (PortalException portalException) {
 				throw new SystemException(portalException);
 			}
-
-			ExpandoColumn column = _expandoColumnLocalService.getColumn(
-				table.getTableId(), validUserFieldExpression);
 
 			expandoValue = _expandoValueLocalService.createExpandoValue(0);
 
@@ -470,7 +451,8 @@ public class ExpandoUserFieldExpressionHandler
 			_expandoValueLocalService.createExpandoValue(0);
 
 		ExpandoColumn expandoColumn = _expandoColumnLocalService.getColumn(
-			companyId, User.class.getName(),
+			companyId,
+			_classNameLocalService.getClassNameId(User.class.getName()),
 			ExpandoTableConstants.DEFAULT_TABLE_NAME, columnName);
 
 		expandoValue.setColumnId(expandoColumn.getColumnId());
@@ -560,11 +542,14 @@ public class ExpandoUserFieldExpressionHandler
 						return null;
 					}
 
-					Stream<String> stream = Arrays.stream(values);
+					int[] valuesIntArray = new int[values.length];
 
-					return stream.mapToInt(
-						GetterUtil::getIntegerStrict
-					).toArray();
+					for (int i = 0; i < valuesIntArray.length; i++) {
+						valuesIntArray[i] = GetterUtil.getIntegerStrict(
+							values[i]);
+					}
+
+					return valuesIntArray;
 				},
 				ExpandoValue::setIntegerArray)
 		).put(
@@ -580,11 +565,14 @@ public class ExpandoUserFieldExpressionHandler
 						return null;
 					}
 
-					Stream<String> stream = Arrays.stream(values);
+					long[] valuesLongArray = new long[values.length];
 
-					return stream.mapToLong(
-						GetterUtil::getLongStrict
-					).toArray();
+					for (int i = 0; i < valuesLongArray.length; i++) {
+						valuesLongArray[i] = GetterUtil.getLongStrict(
+							values[i]);
+					}
+
+					return valuesLongArray;
 				},
 				ExpandoValue::setLongArray)
 		).put(
@@ -629,6 +617,9 @@ public class ExpandoUserFieldExpressionHandler
 		).build();
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
 
 	@Reference
@@ -640,6 +631,9 @@ public class ExpandoUserFieldExpressionHandler
 	@Reference
 	private LDAPFilterValidator _ldapFilterValidator;
 
+	@Reference(
+		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)"
+	)
 	private ConfigurationProvider<LDAPServerConfiguration>
 		_ldapServerConfigurationProvider;
 

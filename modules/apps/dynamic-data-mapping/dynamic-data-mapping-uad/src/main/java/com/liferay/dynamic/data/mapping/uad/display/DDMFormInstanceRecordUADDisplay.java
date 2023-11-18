@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.uad.display;
@@ -30,6 +21,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -46,8 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -57,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Brian Wing Shun Chan
  */
-@Component(service = {DDMFormInstanceRecordUADDisplay.class, UADDisplay.class})
+@Component(service = UADDisplay.class)
 public class DDMFormInstanceRecordUADDisplay
 	extends BaseDDMFormInstanceRecordUADDisplay {
 
@@ -194,24 +184,17 @@ public class DDMFormInstanceRecordUADDisplay
 			return ddmFormInstanceRecords;
 		}
 
-		Stream<DDMFormInstanceRecord> ddmFormInstanceRecordsStream =
-			ddmFormInstanceRecords.stream();
-
-		return ddmFormInstanceRecordsStream.filter(
+		return ListUtil.filter(
+			ddmFormInstanceRecords,
 			ddmFormInstanceRecord -> {
-				String formattedName = getName(
-					ddmFormInstanceRecord,
-					LocaleThreadLocal.getThemeDisplayLocale());
-
 				String lowerCaseFormattedName = StringUtil.toLowerCase(
-					formattedName);
+					getName(
+						ddmFormInstanceRecord,
+						LocaleThreadLocal.getThemeDisplayLocale()));
 
 				return lowerCaseFormattedName.contains(
 					StringUtil.toLowerCase(keywords));
-			}
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private List<DDMFormInstanceRecord> _getDDMFormInstanceRecords(
@@ -263,8 +246,10 @@ public class DDMFormInstanceRecordUADDisplay
 	private final Map<Long, DDMFormInstanceRecordUADUserCache>
 		_ddmFormInstanceRecordUADUserCacheMap = new HashMap<>();
 
-	@Reference
-	private DDMFormInstanceUADDisplay _ddmFormInstanceUADDisplay;
+	@Reference(
+		target = "(component.name=com.liferay.dynamic.data.mapping.uad.display.DDMFormInstanceUADDisplay)"
+	)
+	private UADDisplay<?> _ddmFormInstanceUADDisplay;
 
 	@Reference
 	private Language _language;
@@ -289,19 +274,14 @@ public class DDMFormInstanceRecordUADDisplay
 		}
 
 		public void putDDMFormInstanceRecords(long userId) {
-			List<DDMFormInstanceRecord> ddmFormInstanceRecords =
-				new ArrayList<>();
-
-			ddmFormInstanceRecords.addAll(
-				ddmFormInstanceRecordLocalService.getFormInstanceRecords(
-					_formInstanceId, userId, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null));
-
-			ddmFormInstanceRecords.sort(
-				Comparator.comparing(DDMFormInstanceRecord::getCreateDate));
-
 			_ddmFormInstanceRecordUADUserMap.put(
-				userId, ddmFormInstanceRecords);
+				userId,
+				ListUtil.sort(
+					ddmFormInstanceRecordLocalService.getFormInstanceRecords(
+						_formInstanceId, userId, QueryUtil.ALL_POS,
+						QueryUtil.ALL_POS, null),
+					Comparator.comparing(
+						DDMFormInstanceRecord::getCreateDate)));
 		}
 
 		private final Map<Long, List<DDMFormInstanceRecord>>

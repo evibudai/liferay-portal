@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal;
 
 import com.liferay.adaptive.media.content.transformer.constants.ContentTransformerContentTypes;
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
+import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -25,6 +17,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
@@ -54,15 +47,23 @@ public class AMBackwardsCompatibilityHtmlContentTransformerTest {
 			"[REPLACED]"
 		);
 
-		ReflectionTestUtil.setFieldValue(
-			_contentTransformer, "_amImageHTMLTagFactory",
-			_amImageHTMLTagFactory);
+		Mockito.when(
+			_amImageMimeTypeProvider.isMimeTypeSupported(Mockito.anyString())
+		).thenReturn(
+			true
+		);
 
 		Mockito.when(
 			_dlAppLocalService.getFileEntryByUuidAndGroupId(
 				Mockito.anyString(), Mockito.anyLong())
 		).thenReturn(
 			_fileEntry
+		);
+
+		Mockito.when(
+			_fileEntry.getMimeType()
+		).thenReturn(
+			ContentTypes.IMAGE_JPEG
 		);
 
 		Mockito.when(
@@ -79,6 +80,12 @@ public class AMBackwardsCompatibilityHtmlContentTransformerTest {
 			_group
 		);
 
+		ReflectionTestUtil.setFieldValue(
+			_contentTransformer, "_amImageHTMLTagFactory",
+			_amImageHTMLTagFactory);
+		ReflectionTestUtil.setFieldValue(
+			_contentTransformer, "_amImageMimeTypeProvider",
+			_amImageMimeTypeProvider);
 		ReflectionTestUtil.setFieldValue(
 			_contentTransformer, "_dlAppLocalService", _dlAppLocalService);
 		ReflectionTestUtil.setFieldValue(
@@ -210,6 +217,8 @@ public class AMBackwardsCompatibilityHtmlContentTransformerTest {
 
 	private final AMImageHTMLTagFactory _amImageHTMLTagFactory = Mockito.mock(
 		AMImageHTMLTagFactory.class);
+	private final AMImageMimeTypeProvider _amImageMimeTypeProvider =
+		Mockito.mock(AMImageMimeTypeProvider.class);
 	private final AMBackwardsCompatibilityHtmlContentTransformer
 		_contentTransformer =
 			new AMBackwardsCompatibilityHtmlContentTransformer();

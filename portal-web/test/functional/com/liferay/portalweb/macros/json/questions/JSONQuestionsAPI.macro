@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "Directly calls the JSON WS API to add a question without tag"
 	macro _addQuestion {
 		Variables.assertDefined(parameterList = "${categoryId},${titleField},${bodyField}");
 
@@ -20,14 +19,14 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/message-board-sections/${categoryId}/message-board-threads \
-			-H 'Content-Type: application/json' \
-			-u '${userEmailAddress}:${userPassword}' \
-			-d '{
-				"headline": "${titleField}",
-				"articleBody": "${bodyField}",
-				"encodingFormat": "${encodingFormat}",
-				"viewableBy": "Anyone"
-			}'
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}' \
+				-d '{
+					"headline": "${titleField}",
+					"articleBody": "${bodyField}",
+					"encodingFormat": "${encodingFormat}",
+					"viewableBy": "Anyone"
+				}'
 		''';
 
 		echo("## Adding a 'Question' with the following info using JSONWS:");
@@ -38,10 +37,9 @@ definition {
 
 		echo("## * CategoryID: ${categoryId}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly calls the JSON WS API to add a question"
 	macro _addQuestionWithTag {
 		Variables.assertDefined(parameterList = "${categoryId},${tagField},${titleField},${bodyField}");
 
@@ -57,16 +55,16 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/message-board-sections/${categoryId}/message-board-threads \
-			-H 'Content-Type: application/json' \
-			-u '${userEmailAddress}:${userPassword}' \
-			-d '{
-				"keywords": [
-					"${tagField}"
-				],
-				"headline": "${titleField}",
-				"articleBody": "${bodyField}",
-				"viewableBy": "Anyone"
-			}'
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}' \
+				-d '{
+					"keywords": [
+						"${tagField}"
+					],
+					"headline": "${titleField}",
+					"articleBody": "${bodyField}",
+					"viewableBy": "Anyone"
+				}'
 		''';
 
 		echo("## Adding a 'Question' with the following info using JSONWS:");
@@ -79,7 +77,7 @@ definition {
 
 		echo("## * CategoryID: ${categoryId}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
 }

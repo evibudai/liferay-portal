@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -43,18 +34,18 @@ else if (metadataField.equals("categories")) {
 	}
 }
 else if (metadataField.equals("create-date")) {
-	value = dateFormatDate.format(assetEntry.getCreateDate());
+	value = dateFormat.format(assetEntry.getCreateDate());
 }
 else if (metadataField.equals("expiration-date")) {
 	if (assetEntry.getExpirationDate() == null) {
 		value = StringPool.BLANK;
 	}
 	else {
-		value = dateFormatDate.format(assetEntry.getExpirationDate());
+		value = dateFormat.format(assetEntry.getExpirationDate());
 	}
 }
 else if (metadataField.equals("modified-date")) {
-	value = dateFormatDate.format(assetEntry.getModifiedDate());
+	value = dateFormat.format(assetEntry.getModifiedDate());
 }
 else if (metadataField.equals("priority")) {
 	value = LanguageUtil.get(resourceBundle, "priority") + StringPool.COLON + StringPool.SPACE + assetEntry.getPriority();
@@ -64,7 +55,7 @@ else if (metadataField.equals("publish-date")) {
 		value = StringPool.BLANK;
 	}
 	else {
-		value = dateFormatDate.format(assetEntry.getPublishDate());
+		value = dateFormat.format(assetEntry.getPublishDate());
 	}
 }
 else if (metadataField.equals("tags")) {
@@ -103,57 +94,50 @@ else if (metadataField.equals("view-count")) {
 		}
 		%>
 
-		<div class="metadata-author">
-			<div class="asset-avatar">
-				<liferay-ui:user-portrait
+		<div class="autofit-padded autofit-row">
+			<div class="autofit-col">
+				<liferay-user:user-portrait
 					user="<%= assetRendererUser %>"
 				/>
 			</div>
 
-			<div class="asset-user-info">
+			<div class="autofit-col autofit-col-expand">
 				<c:choose>
 					<c:when test="<%= assetRendererUser != null %>">
-						<span class="user-info"><%= HtmlUtil.escape(assetRendererUser.getFullName()) %></span>
+						<h4 class="component-title mt-0"><%= HtmlUtil.escape(assetRendererUser.getFullName()) %></h4>
 					</c:when>
 					<c:otherwise>
-						<span class="user-info"><liferay-ui:message key="anonymous"></liferay-ui:message></span>
+						<h4 class="component-title mt-0"><liferay-ui:message key="anonymous"></liferay-ui:message></h4>
 					</c:otherwise>
 				</c:choose>
 
-				<span class="date-info"><%= displayDate %></span>
+				<h5 class="component-subtitle"><%= displayDate %></h5>
 			</div>
 		</div>
 	</c:when>
 	<c:when test="<%= Validator.isNotNull(value) %>">
-		<clay:col
-			cssClass="form-feedback-item"
-			md="3"
-			size="6"
-			sm="4"
-		>
-			<dt class="metadata-entry-label <%= showLabel ? StringPool.BLANK : "hide" %>"><%= label %></dt>
+		<dt class="metadata-entry-label <%= showLabel ? StringPool.BLANK : "hide" %>"><%= label %></dt>
 
-			<dd class="metadata-entry <%= metadataFieldCssClass %>">
-				<c:choose>
-					<c:when test='<%= value.equals("categories") %>'>
-						<liferay-asset:asset-categories-summary
-							className="<%= assetEntry.getClassName() %>"
-							classPK="<%= assetEntry.getClassPK() %>"
-							portletURL="<%= filterByMetadata ? renderResponse.createRenderURL() : null %>"
-						/>
-					</c:when>
-					<c:when test='<%= value.equals("tags") %>'>
-						<liferay-asset:asset-tags-summary
-							className="<%= assetEntry.getClassName() %>"
-							classPK="<%= assetEntry.getClassPK() %>"
-							portletURL="<%= filterByMetadata ? renderResponse.createRenderURL() : null %>"
-						/>
-					</c:when>
-					<c:otherwise>
-						<%= value %>
-					</c:otherwise>
-				</c:choose>
-			</dd>
-		</clay:col>
+		<dd class="metadata-entry <%= metadataFieldCssClass %>">
+			<c:choose>
+				<c:when test='<%= value.equals("categories") %>'>
+					<liferay-asset:asset-categories-summary
+						className="<%= assetEntry.getClassName() %>"
+						classPK="<%= assetEntry.getClassPK() %>"
+						portletURL="<%= filterByMetadata ? renderResponse.createRenderURL() : null %>"
+					/>
+				</c:when>
+				<c:when test='<%= value.equals("tags") %>'>
+					<liferay-asset:asset-tags-summary
+						className="<%= assetEntry.getClassName() %>"
+						classPK="<%= assetEntry.getClassPK() %>"
+						portletURL="<%= filterByMetadata ? renderResponse.createRenderURL() : null %>"
+					/>
+				</c:when>
+				<c:otherwise>
+					<%= value %>
+				</c:otherwise>
+			</c:choose>
+		</dd>
 	</c:when>
 </c:choose>

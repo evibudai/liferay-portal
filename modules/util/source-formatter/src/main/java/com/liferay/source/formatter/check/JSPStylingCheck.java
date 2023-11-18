@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -19,6 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.check.util.JSPSourceUtil;
+import com.liferay.source.formatter.check.util.SourceUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +26,7 @@ public class JSPStylingCheck extends BaseStylingCheck {
 
 		content = _combineJavaSourceBlocks(fileName, content);
 
-		content = _formatJspExpressionTag(content);
+		content = _formatJSPExpressionTag(content);
 
 		content = _formatLineBreak(fileName, content);
 
@@ -206,7 +198,7 @@ public class JSPStylingCheck extends BaseStylingCheck {
 		return content;
 	}
 
-	private String _formatJspExpressionTag(String content) {
+	private String _formatJSPExpressionTag(String content) {
 		Matcher matcher = _jspExpressionTagPattern.matcher(content);
 
 		while (matcher.find()) {
@@ -270,7 +262,23 @@ public class JSPStylingCheck extends BaseStylingCheck {
 
 		matcher = _incorrectLineBreakPattern6.matcher(content);
 
-		return matcher.replaceAll("$1\n$2\t$3\n$2$4");
+		content = matcher.replaceAll("$1\n$2\t$3\n$2$4");
+
+		matcher = _incorrectLineBreakPattern7.matcher(content);
+
+		while (matcher.find()) {
+			int lineNumber = getLineNumber(content, matcher.start(1));
+
+			String line = SourceUtil.getLine(content, lineNumber);
+
+			if (!line.endsWith("%>")) {
+				addMessage(
+					fileName, "There should be a line break after '<%'",
+					lineNumber);
+			}
+		}
+
+		return content;
 	}
 
 	private static final Pattern _adjacentJavaBlocksPattern = Pattern.compile(
@@ -293,6 +301,8 @@ public class JSPStylingCheck extends BaseStylingCheck {
 		"(<%=)\n\t*(.*)\n\t*(%>)");
 	private static final Pattern _incorrectLineBreakPattern6 = Pattern.compile(
 		"(\n(\t+)\\w+='<%=) (HashMapBuilder\\..*) *(%>')");
+	private static final Pattern _incorrectLineBreakPattern7 = Pattern.compile(
+		"\n(\t*<% .)");
 	private static final Pattern _incorrectSingleLineJavaSourcePattern =
 		Pattern.compile("(\t*)(<% (.*) %>)\n");
 	private static final Pattern _jspExpressionTagPattern = Pattern.compile(

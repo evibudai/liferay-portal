@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -23,7 +14,7 @@ import classNames from 'classnames';
 import {useEffect, useState} from 'react';
 
 import Header from '../../../../common/components/header';
-import Table from '../../../../common/components/table';
+import Table, {TableRowContentType} from '../../../../common/components/table';
 import {
 	Parameters,
 	deletePolicyByExternalReferenceCode,
@@ -46,20 +37,20 @@ type Policy = {
 	termPremium: number;
 };
 
-type TableContent = {[keys: string]: string};
+type TableContent = {[keys: string]: string | boolean};
 
 type TableItemType = {
-	bold: boolean;
-	clickable: boolean;
+	centered?: boolean;
+	clickable?: boolean;
+	clickableSort?: boolean;
+	greyColor?: boolean;
+	hasSort?: boolean;
+	icon?: boolean;
 	key: string;
-	type: string;
+	redColor?: boolean;
+	requestLabel: string;
+	type?: string;
 	value: string;
-};
-
-type TableRowContentType = {[keys: string]: string};
-
-type itemsPolicies = {
-	[keys: string]: string;
 };
 
 type itemsPolicyFilter = {
@@ -67,13 +58,20 @@ type itemsPolicyFilter = {
 	productName: string;
 };
 
-type itemsProducts = {
-	[keys: string]: string;
+type itemsPolicies = TableContent;
+
+type itemsProducts = TableContent;
+
+type itemsPicklists = TableContent;
+
+type StateSortType = {
+	[keys: string]: boolean;
 };
 
-type itemsPicklists = {
-	[keys: string]: string;
-};
+enum Order {
+	Ascendant = 'asc',
+	Descendant = 'desc',
+}
 
 const daysToExpirePolicyAlert = 15;
 
@@ -101,6 +99,20 @@ const PoliciesTable = () => {
 		[]
 	);
 	const [checkedStateStatus, setCheckedStateStatus] = useState<boolean[]>([]);
+	const [sortPolicyByEndDate, setSortPolicyByEndDate] = useState<string>(
+		Order.Ascendant
+	);
+
+	const [sortState, setSortState] = useState<StateSortType>({
+		commission: false,
+		externalReferenceCode: false,
+		monthlyPremium: false,
+		policyOwnerName: false,
+		policyPeriod: true,
+		policyStatus: false,
+		productName: false,
+		renewalDue: true,
+	});
 
 	const filterSearch = `contains(policyOwnerName,'${searchInput}') or contains(policyOwnerEmail, '${searchInput}') or contains(externalReferenceCode, '${searchInput}')`;
 
@@ -115,12 +127,16 @@ const PoliciesTable = () => {
 	const generateParameters = (filtered?: string) => {
 		const parameters: Parameters =
 			filtered === undefined
-				? {page: '0', pageSize: '0', sort: 'endDate:asc'}
+				? {
+						page: '0',
+						pageSize: '0',
+						sort: `endDate:${sortPolicyByEndDate}`,
+				  }
 				: {
 						filter: filtered,
 						page: '0',
 						pageSize: '0',
-						sort: 'endDate:asc',
+						sort: `endDate:${sortPolicyByEndDate}`,
 				  };
 
 		return parameters;
@@ -376,44 +392,62 @@ const PoliciesTable = () => {
 		{
 			bold: false,
 			centered: true,
+			clickableSort: true,
+			hasSort: true,
 			key: 'renewalDue',
 			redColor: hasRedLine,
+			requestLabel: 'renewalDue',
 			value: 'Renewal Due',
 		},
 		{
+			clickableSort: false,
 			key: 'productName',
+			requestLabel: 'productName',
 			value: 'Product',
 		},
 		{
 			bold: true,
 			clickable: true,
+			clickableSort: false,
 			key: 'externalReferenceCode',
+			requestLabel: 'externalReferenceCode',
 			type: 'link',
 			value: 'Policy Number',
 		},
 		{
+			clickableSort: false,
 			greyColor: true,
 			key: 'policyOwnerName',
+			requestLabel: 'policyOwnerName',
 			value: 'Name',
 		},
 		{
+			clickableSort: false,
 			greyColor: true,
 			key: 'monthlyPremium',
+			requestLabel: 'monthlyPremium',
 			value: 'Monthly Premium',
 		},
 		{
+			clickableSort: true,
 			greyColor: true,
+			hasSort: true,
 			key: 'policyPeriod',
+			requestLabel: 'renewalDue',
 			value: 'Policy Period',
 		},
 		{
+			clickableSort: false,
 			greyColor: true,
 			key: 'commission',
+			requestLabel: 'commission',
 			value: 'Commission',
 		},
 		{
+			clickableSort: false,
 			greyColor: true,
 			key: 'policyStatus',
+			requestLabel: 'policyStatus',
 			value: 'Status',
 		},
 	];
@@ -509,9 +543,8 @@ const PoliciesTable = () => {
 						if (renewalDue === 0) {
 							return 'Due Today';
 						}
-						else {
-							return renewalDue;
-						}
+
+						return renewalDue;
 					};
 
 					const policyPeriod = `${formatDate(
@@ -521,9 +554,12 @@ const PoliciesTable = () => {
 
 					const monthlyPremium = termPremium / 12;
 
+					const commissionValue = Number(commission);
+
 					policiesList.push({
-						commission: `$${commission.toFixed(2)}`,
+						commission: `$${commissionValue.toFixed(2)}`,
 						externalReferenceCode,
+						isClickable: productName === 'Auto' ? true : false,
 						isExpiring: (renewalDue < 0).toString(),
 						isRedLine: (
 							renewalDue >= 0 &&
@@ -540,16 +576,6 @@ const PoliciesTable = () => {
 							renewalDue >= 0 ? renewalDue : null
 						}`,
 					});
-
-					policiesList.sort((firstPolicy, secondPolicy) =>
-						Number(firstPolicy.renewalDueCalculation) >
-						Number(secondPolicy.renewalDueCalculation)
-							? 1
-							: Number(secondPolicy.renewalDueCalculation) >
-							  Number(firstPolicy.renewalDueCalculation)
-							? -1
-							: 0
-					);
 				}
 			);
 			setPolicies(policiesList);
@@ -570,6 +596,20 @@ const PoliciesTable = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [pageSize, page, searchInput, filterCheckedLabel, parameterDebounce]);
 
+	const handleParametersChange = (filter: string) => {
+		setSortPolicyByEndDate(filter);
+		setParameters((previous) => ({
+			...previous,
+			sort: `endDate:${filter}`,
+		}));
+	};
+
+	const setSortRule = () => {
+		sortPolicyByEndDate === Order.Descendant
+			? handleParametersChange(Order.Ascendant)
+			: handleParametersChange(Order.Descendant);
+	};
+
 	const title = `Policies (${totalCount})`;
 
 	const handleRedirectToGmail = (email: string) => {
@@ -588,7 +628,7 @@ const PoliciesTable = () => {
 		rowContent: TableRowContentType
 	) => {
 		if (item.clickable && item.key === 'email') {
-			handleRedirectToGmail(rowContent[item.key]);
+			handleRedirectToGmail(rowContent[item.key] as string);
 		}
 
 		if (
@@ -596,10 +636,14 @@ const PoliciesTable = () => {
 			item.key === 'externalReferenceCode'
 		) {
 			handleRedirectToDetailsPages(
-				rowContent['externalReferenceCode'],
+				rowContent['externalReferenceCode'] as string,
 				'policy-details'
 			);
 		}
+	};
+
+	const setHeader = () => {
+		setSortRule();
 	};
 
 	return (
@@ -615,6 +659,7 @@ const PoliciesTable = () => {
 								onKeyDown={handleKeyDown}
 								placeholder="Search for..."
 								type="text"
+								value={searchInput}
 							/>
 						</ClayInput.GroupItem>
 
@@ -669,7 +714,7 @@ const PoliciesTable = () => {
 											checked={
 												checkedStateProduct[
 													checkedIndex
-												]
+												] ?? false
 											}
 											key={checkedIndex}
 											label={
@@ -708,7 +753,9 @@ const PoliciesTable = () => {
 									) => (
 										<ClayCheckbox
 											checked={
-												checkedStateStatus[checkedIndex]
+												checkedStateStatus[
+													checkedIndex
+												] ?? false
 											}
 											key={checkedIndex}
 											label={
@@ -806,6 +853,11 @@ const PoliciesTable = () => {
 				data={policies}
 				headers={HEADERS}
 				onClickRules={onClickRules}
+				onSaveCurrent={setHeader}
+				setSort={setSortState}
+				setSortByOrder={setSortRule}
+				sort={sortState}
+				sortByOrder={sortPolicyByEndDate}
 			/>
 
 			<div className="d-flex justify-content-between mt-3">

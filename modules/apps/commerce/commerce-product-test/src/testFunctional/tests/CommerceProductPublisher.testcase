@@ -1,0 +1,91 @@
+@component-name = "portal-commerce"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Shopping Experience";
+
+	setUp {
+		CommerceConfiguration.commerceSetUp(minium = "true");
+	}
+
+	tearDown {
+		CommerceConfiguration.commerceTearDown();
+	}
+
+	@description = "This is a test for COMMERCE-10627 and COMMERCE-10455 that assert if it is possible to add and remove rules for the Product Publisher filter"
+	@priority = 4
+	test CanAddAndRemoveProductPublisherTagFilterRules {
+		property portal.acceptance = "false";
+
+		task ("Given the admin navigates to the pending order details page") {
+			ApplicationsMenu.gotoSite(site = "Minium");
+
+			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
+		}
+
+		task ("When the admin deploy the Product Publisher widget") {
+			CommerceAcceleratorsInitializer.addPortlet(portletName = "Product Publisher");
+		}
+
+		task ("Then the admin is able to add and remove new rules to the filter") {
+			CommerceWidget.updateProductPublisherConfiguration(
+				filterEntries = "featured",
+				filterType = "Tags",
+				portletName = "Product Publisher",
+				productSelection = "Dynamic");
+
+			for (var productName : list "Brake Rotors,Premium Brake Pads,Brake Pads,Premium Brake Fluid,Brake Fluid") {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+
+			CommerceWidget.deleteFilterEntry(portletName = "Product Publisher");
+
+			for (var productName : list "U-Joint,Transmission Cooler Line Assembly,Torque Converters,Wheel Seal - Front,Mount") {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10454. When the user changes the Product Source selected, the 'Product Publisher' modal is updated accordingly"
+	@priority = 3
+	test CanAssertProductSourceUpdated {
+		task ("Given the Product Publisher is deployed on a page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			CommerceAcceleratorsInitializer.addPortlet(portletName = "Product Publisher");
+
+			Portlet.gotoPortletOptions(
+				portletName = "Product Publisher",
+				portletOption = "Configuration");
+		}
+
+		task ("And the Product Entries panel is not shown") {
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+			AssertElementNotPresent(
+				key_panel = "Product Entries",
+				locator1 = "Panel#PANEL");
+		}
+
+		task ("When the Manual option is selected") {
+			Click(
+				locator1 = "Radio#ANY",
+				radioLabel = "Manual");
+		}
+
+		task ("Then the 'Product Entries' panel is automatically shown") {
+			AssertElementPresent(
+				key_panel = "Product Entries",
+				locator1 = "Panel#PANEL");
+		}
+	}
+
+}

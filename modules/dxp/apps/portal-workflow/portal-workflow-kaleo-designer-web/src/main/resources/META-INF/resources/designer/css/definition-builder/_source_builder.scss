@@ -1,10 +1,17 @@
 .cke_contents,
 .CodeMirror {
-	height: calc(100vh - 90px - 64px - 56px) !important;
+	height: calc(
+		100vh - 90px - 64px - var(--control-menu-container-height)
+	) !important;
 }
 
 .cke_top {
 	display: none !important;
+}
+
+.loading-animation-squares {
+	margin-bottom: 1.5rem;
+	margin-top: 1.5rem;
 }
 
 .source-toolbar {

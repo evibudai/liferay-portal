@@ -1,45 +1,41 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
-import ClayForm, {ClayRadio, ClayRadioGroup, ClayToggle} from '@clayui/form';
-import {Card, SingleSelect} from '@liferay/object-js-components-web';
+import ClayForm, {ClayRadio, ClayRadioGroup} from '@clayui/form';
+import {SingleSelect, Toggle} from '@liferay/object-js-components-web';
+import classNames from 'classnames';
 import React, {useMemo} from 'react';
 
-import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
+import {defaultLanguageId} from '../../../../utils/constants';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+import '../../EditObjectFieldContent.scss';
+
 const languages = Liferay.Language.available;
 const languageLabels = Object.values(languages).map((language) => {
 	return {label: language};
 });
+const defaultLanguage = languageLabels[0].label;
 
-interface ISearchableProps {
-	disabled?: boolean;
-	errors: ObjectFieldErrors;
+interface SearchableProps {
 	isApproved: boolean;
+	modelBuilder?: boolean;
 	objectField: Partial<ObjectField>;
+	onSubmit?: () => void;
 	readOnly: boolean;
 	setValues: (values: Partial<ObjectField>) => void;
 }
 
 export function SearchableContainer({
 	isApproved,
+	modelBuilder,
 	objectField,
+	onSubmit,
 	readOnly,
 	setValues,
-}: ISearchableProps) {
+}: SearchableProps) {
 	const isSearchableString =
 		objectField.indexed &&
 		(objectField.DBType === 'Clob' ||
@@ -52,11 +48,17 @@ export function SearchableContainer({
 			objectField.indexedLanguageId &&
 			languages[objectField.indexedLanguageId];
 
-		return label ?? undefined;
+		return label || defaultLanguage;
 	}, [objectField.indexedLanguageId]);
 
 	return (
-		<Card title={Liferay.Language.get('searchable')}>
+		<div
+			className={classNames({
+				'lfr-objects__edit-object-field-card-content':
+					modelBuilder === false,
+				'lfr-objects__edit-object-field-model-builder-panel': modelBuilder,
+			})}
+		>
 			{isApproved && (
 				<ClayAlert displayType="info" title="Info">
 					{Liferay.Language.get(
@@ -66,16 +68,35 @@ export function SearchableContainer({
 			)}
 
 			<ClayForm.Group>
-				<ClayToggle
+				<Toggle
+					disabled={
+						objectField.businessType === 'Encrypted' ||
+						objectField.system
+					}
 					label={Liferay.Language.get('searchable')}
 					name="indexed"
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
 					onToggle={(indexed) => setValues({indexed})}
 					toggled={objectField.indexed}
 				/>
 			</ClayForm.Group>
 
 			{isSearchableString && (
-				<ClayForm.Group>
+				<ClayForm.Group
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+				>
 					<ClayRadioGroup
 						onChange={(selected: string | number) => {
 							const indexedAsKeyword = selected === 'true';
@@ -110,11 +131,18 @@ export function SearchableContainer({
 			{isSearchableString && !objectField.indexedAsKeyword && (
 				<SingleSelect
 					label={Liferay.Language.get('language')}
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
 					onChange={(value) => {
 						const [indexedLanguageId] = Object.entries(
 							languages
 						).find(([, label]) => value.label === label) as [
-							Locale,
+							Liferay.Language.Locale,
 							string
 						];
 
@@ -125,6 +153,6 @@ export function SearchableContainer({
 					value={selectedLanguage}
 				/>
 			)}
-		</Card>
+		</div>
 	);
 }

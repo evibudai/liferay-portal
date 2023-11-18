@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
@@ -122,6 +113,7 @@ const Options = ({
 	editingLanguageId,
 	generateOptionValueUsingOptionLabel,
 	onChange,
+	tabPressed,
 	value = {},
 }) => {
 	const {builderRules} = useFormState();
@@ -345,6 +337,10 @@ const Options = ({
 	const dedup = (fields, index, property, value) => {
 		const {generateKeyword, id} = fields[index];
 
+		if (index === fields.length - 1 && tabPressed) {
+			return [fields];
+		}
+
 		if (property === 'value' && generateKeyword) {
 			value = dedupValue(
 				fields,
@@ -389,6 +385,8 @@ const Options = ({
 
 	const add = (fields, index, property, value) => {
 		fields[index][property] = value;
+
+		fields[index]['newField'] = true;
 
 		if (defaultLanguageId !== editingLanguageId) {
 			fields[index]['edited'] = true;
@@ -551,78 +549,93 @@ const Main = ({
 	value = {},
 	visible,
 	...otherProps
-}) => (
-	<DndProvider backend={HTML5Backend} context={window}>
-		<FieldBase {...otherProps} readOnly={readOnly} visible={visible}>
-			<Options
-				allowSpecialCharacters={allowSpecialCharacters}
-				defaultLanguageId={defaultLanguageId}
-				disabled={readOnly}
-				editingLanguageId={editingLanguageId}
-				generateOptionValueUsingOptionLabel={
-					generateOptionValueUsingOptionLabel
-				}
-				onChange={(value) => onChange({}, value)}
-				value={value}
-			>
-				{({
-					defaultOptionRef,
-					fieldError,
-					handleBlur,
-					handleField,
-					index,
-					onClick,
-					option,
-					showCloseButton,
-				}) =>
-					option && (
-						<KeyValue
-							allowSpecialCharacters={allowSpecialCharacters}
-							displayErrors={
-								fieldError && fieldError === option.value
-							}
-							editingLanguageId={editingLanguageId}
-							errorMessage={Liferay.Language.get(
-								'this-reference-is-already-being-used'
-							)}
-							generateKeyword={option.generateKeyword}
-							keyword={option.value}
-							keywordReadOnly={keywordReadOnly}
-							name={`option${index}`}
-							onBlur={handleBlur}
-							onChange={(value) => handleField('label', value)}
-							onClick={onClick}
-							onFocus={() => {
-								if (defaultOptionRef.current) {
-									handleField('label', '');
-									defaultOptionRef.current = false;
+}) => {
+	const [tabPressed, setTabPressed] = useState(false);
+
+	return (
+		<DndProvider backend={HTML5Backend} context={window}>
+			<FieldBase {...otherProps} readOnly={readOnly} visible={visible}>
+				<Options
+					allowSpecialCharacters={allowSpecialCharacters}
+					defaultLanguageId={defaultLanguageId}
+					disabled={readOnly}
+					editingLanguageId={editingLanguageId}
+					generateOptionValueUsingOptionLabel={
+						generateOptionValueUsingOptionLabel
+					}
+					onChange={(value) => onChange({}, value)}
+					tabPressed={tabPressed}
+					value={value}
+				>
+					{({
+						defaultOptionRef,
+						fieldError,
+						handleBlur,
+						handleField,
+						index,
+						onClick,
+						option,
+						showCloseButton,
+					}) =>
+						option && (
+							<KeyValue
+								allowSpecialCharacters={allowSpecialCharacters}
+								displayErrors={
+									fieldError && fieldError === option.value
 								}
-							}}
-							onKeywordBlur={handleBlur}
-							onKeywordChange={(value, generate) => {
-								handleField('generateKeyword', generate);
-								handleField('value', value);
-							}}
-							onReferenceBlur={handleBlur}
-							onReferenceChange={(value) =>
-								handleField('reference', value)
-							}
-							placeholder={placeholder}
-							readOnly={option.disabled}
-							reference={option.reference}
-							required={required}
-							showCloseButton={showCloseButton}
-							showKeyword={showKeyword}
-							showLabel={false}
-							value={option.label}
-							visible={visible}
-						/>
-					)
-				}
-			</Options>
-		</FieldBase>
-	</DndProvider>
-);
+								editingLanguageId={editingLanguageId}
+								errorMessage={Liferay.Language.get(
+									'this-reference-is-already-being-used'
+								)}
+								generateKeyword={option.generateKeyword}
+								keyword={option.value}
+								keywordReadOnly={keywordReadOnly}
+								name={`option${index}`}
+								onBlur={handleBlur}
+								onChange={(value) =>
+									handleField('label', value)
+								}
+								onClick={onClick}
+								onFocus={() => {
+									if (defaultOptionRef.current) {
+										handleField('label', '');
+										defaultOptionRef.current = false;
+									}
+								}}
+								onKeyDown={(event) => {
+									if (event.key === 'Tab') {
+										setTabPressed(true);
+									}
+									else {
+										setTabPressed(false);
+									}
+								}}
+								onKeywordBlur={handleBlur}
+								onKeywordChange={(value, generate) => {
+									handleField('generateKeyword', generate);
+									handleField('value', value);
+								}}
+								onReferenceBlur={handleBlur}
+								onReferenceChange={(value) =>
+									handleField('reference', value)
+								}
+								placeholder={placeholder}
+								readOnly={option.disabled}
+								reference={option.reference}
+								required={required}
+								showCloseButton={showCloseButton}
+								showKeyword={showKeyword}
+								showLabel={false}
+								value={option.label}
+								visible={visible}
+							/>
+						)
+					}
+				</Options>
+			</FieldBase>
+		</DndProvider>
+	);
+};
 
 Main.displayName = 'Options';
 

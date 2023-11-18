@@ -45,7 +45,7 @@
 </tr>
 <tr>
 	<td>CHECKBOX_NESTED</td>
-	<td>//div[contains(@class,'autofit-row')]//div[contains(text(),'${key_label}')]//..//..//input</td>
+	<td>//div[contains(@class,'autofit-row')]//span[contains(text(),'${key_label}')]//..//..//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -110,7 +110,7 @@
 </tr>
 <tr>
 	<td>CLAY_SECTION</td>
-	<td>//*[contains(@class,'container-fluid')]//parent::*[not(contains(@class,'hide')) and contains(@id,'ClaySamplePortlet')]</td>
+	<td>//div[contains(@class, portlet-dropzone)]//div[contains(@class, "portlet-boundary_com_liferay_clay_sample_web_portlet_ClaySamplePortlet_")]</td>
 	<td></td>
 </tr>
 

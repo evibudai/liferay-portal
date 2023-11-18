@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -39,24 +30,38 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(assetRenderer.getTitle(locale));
 %>
 
-<clay:container-fluid>
-	<div class="instance-content-container">
-		<c:if test="<%= assetEntry != null %>">
-			<liferay-asset:asset-display
-				assetEntry="<%= assetEntry %>"
-				assetRenderer="<%= assetRenderer %>"
-				assetRendererFactory="<%= assetRendererFactory %>"
-			/>
+<clay:container-fluid
+	cssClass="container-view"
+>
+	<clay:col
+		cssClass="lfr-asset-column lfr-asset-column-details"
+		md="12"
+	>
+		<div class="card">
+			<div class="panel-body">
+				<div class="instance-content-container">
+					<c:if test="<%= assetEntry != null %>">
+						<liferay-asset:asset-display
+							assetEntry="<%= assetEntry %>"
+							assetRenderer="<%= assetRenderer %>"
+							assetRendererFactory="<%= assetRendererFactory %>"
+							showExtraInfo="<%= workflowInstanceViewDisplayContext.isShowExtraInfo() %>"
+						/>
 
-			<%
-			String viewInContextURL = assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, null);
-			%>
+						<%
+						WorkflowHandler<?> workflowHandler = WorkflowHandlerRegistryUtil.getWorkflowHandler(assetRenderer.getClassName());
 
-			<c:if test="<%= viewInContextURL != null %>">
-				<div class="asset-more">
-					<aui:a href="<%= viewInContextURL %>"><liferay-ui:message key="view-in-context" /> &raquo;</aui:a>
+						String viewInContextURL = workflowHandler.getURLViewInContext(assetRenderer.getClassPK(), liferayPortletRequest, liferayPortletResponse, null);
+						%>
+
+						<c:if test="<%= viewInContextURL != null %>">
+							<div class="asset-more">
+								<aui:a href="<%= viewInContextURL %>"><liferay-ui:message key="view-in-context" /> &raquo;</aui:a>
+							</div>
+						</c:if>
+					</c:if>
 				</div>
-			</c:if>
-		</c:if>
-	</div>
+			</div>
+		</div>
+	</clay:col>
 </clay:container-fluid>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
@@ -18,7 +9,7 @@ import React from 'react';
 
 import {config} from '../../app/config/index';
 import {useCustomCollectionSelectorURL} from '../../app/contexts/CollectionItemContext';
-import itemSelectorValueToCollection from '../../app/utils/item-selector-value/itemSelectorValueToCollection';
+import itemSelectorValueToCollection from '../../app/utils/item_selector_value/itemSelectorValueToCollection';
 import ItemSelector from './ItemSelector';
 
 const DEFAULT_OPTION_MENU_ITEMS = [];
@@ -27,8 +18,8 @@ export default function CollectionSelector({
 	collectionItem,
 	itemSelectorURL,
 	label,
+	onBeforeCollectionSelect,
 	onCollectionSelect,
-	onPreventCollectionSelect,
 	optionsMenuItems = DEFAULT_OPTION_MENU_ITEMS,
 }) {
 	const eventName = `${config.portletNamespace}selectInfoList`;
@@ -50,8 +41,8 @@ export default function CollectionSelector({
 					config.infoListSelectorURL
 				}
 				label={label}
+				onBeforeItemSelect={onBeforeCollectionSelect}
 				onItemSelect={onCollectionSelect}
-				onPreventCollectionSelect={onPreventCollectionSelect}
 				optionsMenuItems={optionsMenuItems}
 				quickMappedInfoItems={
 					config.selectedMappingTypes?.linkedCollection
@@ -68,7 +59,7 @@ export default function CollectionSelector({
 					<ClayIcon className="mr-2 mt-0" symbol="info-panel-open" />
 
 					<span className="text-2">
-						{Liferay.Language.get('collection-prefiltered')}
+						{Liferay.Language.get('collection-filtered')}
 					</span>
 				</p>
 			)}
@@ -79,6 +70,6 @@ export default function CollectionSelector({
 CollectionSelector.propTypes = {
 	collectionItem: PropTypes.shape({title: PropTypes.string}),
 	label: PropTypes.string,
+	onBeforeCollectionSelect: PropTypes.func,
 	onCollectionSelect: PropTypes.func.isRequired,
-	onPreventCollectionSelect: PropTypes.func,
 };

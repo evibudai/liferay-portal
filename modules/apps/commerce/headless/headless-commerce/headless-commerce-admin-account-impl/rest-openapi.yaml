@@ -288,6 +288,13 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 channelExternalReferenceCode:
                     type: string
                 channelId:
@@ -308,25 +315,47 @@ components:
                     format: double
                     type: number
             type: object
-        AccountGroup:
+        AccountChannelShippingOption:
             properties:
-                customFields:
-                    additionalProperties: true
-                    type: object
-                externalReferenceCode:
-                    example: AB-34098-789-N
+                accountExternalReferenceCode:
+                    example: UAB-34098-789-N
                     type: string
-                id:
+                accountId:
                     example: 30130
                     format: int64
                     minimum: 0
-                    readOnly: true
                     type: integer
-                name:
-                    example: AccountGroup Name
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
+                channelExternalReferenceCode:
                     type: string
-            required:
-                - name
+                channelId:
+                    format: int64
+                    type: integer
+                id:
+                    example: 30324
+                    format: int64
+                    minimum: 0
+                    type: integer
+                shippingMethodId:
+                    example: 30324
+                    format: int64
+                    minimum: 0
+                    type: integer
+                shippingMethodKey:
+                    type: string
+                shippingOptionId:
+                    example: 30324
+                    format: int64
+                    minimum: 0
+                    type: integer
+                shippingOptionKey:
+                    type: string
             type: object
         AccountMember:
             properties:
@@ -416,6 +445,29 @@ components:
                         hr_HR: Role Title HR
                         hu_HU: Role Title HU
                     type: object
+            required:
+                - name
+            type: object
+        AdminAccountGroup:
+            properties:
+                customFields:
+                    additionalProperties: true
+                    type: object
+                description:
+                    example: AdminAccountGroup Description
+                    type: string
+                externalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                id:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                name:
+                    example: AdminAccountGroup Name
+                    type: string
             required:
                 - name
             type: object
@@ -517,7 +569,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Account API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.account.client', and version '4.0.19'."
+        artifact ID 'com.liferay.headless.commerce.admin.account.client', and version '4.0.29'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -1241,6 +1293,185 @@ paths:
             summary: Updates an account channel discount.
             tags:
                 - AccountChannelEntry
+    /account-channel-payment-methods/{id}:
+        delete:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Deletes account channel payment method.
+            tags:
+                - AccountChannelEntry
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets an account channel payment method.
+            tags:
+                - AccountChannelEntry
+        patch:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Updates an account channel payment method.
+            tags:
+                - AccountChannelEntry
     /account-channel-payment-terms/{id}:
         delete:
             parameters:
@@ -1778,6 +2009,185 @@ paths:
             summary: Updates an account channel shipping address.
             tags:
                 - AccountChannelEntry
+    /account-channel-shipping-options/{id}:
+        delete:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Deletes account channel shipping option.
+            tags:
+                - AccountChannelShippingOption
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets an account channel shipping option.
+            tags:
+                - AccountChannelShippingOption
+        patch:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Updates an account channel shipping option.
+            tags:
+                - AccountChannelShippingOption
     /account-channel-users/{id}:
         delete:
             parameters:
@@ -2405,6 +2815,10 @@ paths:
                   schema:
                       type: integer
                 - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
                   name: sort
                   required: false
                   schema:
@@ -2415,12 +2829,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -2461,27 +2875,27 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         post:
             operationId: postAccountGroup
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Created
                 202:
@@ -2528,9 +2942,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Creates or updates an AccountGroup.
+            summary: Creates or updates an AdminAccountGroup.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accountGroups/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteAccountGroupByExternalReferenceCode
@@ -2565,9 +2979,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Deletes an AccountGroup by external reference code.
+            summary: Deletes an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         get:
             operationId: getAccountGroupByExternalReferenceCode
             parameters:
@@ -2587,10 +3001,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -2631,9 +3045,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.read
-            summary: Gets an AccountGroup by external reference code.
+            summary: Gets an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         patch:
             operationId: patchAccountGroupByExternalReferenceCode
             parameters:
@@ -2652,10 +3066,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
@@ -2702,9 +3116,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Updates an AccountGroup by external reference code.
+            summary: Updates an AdminAccountGroup by external reference code.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accountGroups/by-externalReferenceCode/{externalReferenceCode}/accounts:
         post:
             operationId: postAccountGroupByExternalReferenceCodeAccount
@@ -2892,9 +3306,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Deletes an AccountGroup by ID.
+            summary: Deletes an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         get:
             operationId: getAccountGroup
             parameters:
@@ -2915,10 +3329,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/AccountGroup"
+                                $ref: "#/components/schemas/AdminAccountGroup"
                     description:
                         Successful operation
                 400:
@@ -2959,9 +3373,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.read
-            summary: Gets an AccountGroup by ID.
+            summary: Gets an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
         patch:
             operationId: patchAccountGroup
             parameters:
@@ -2981,10 +3395,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/AccountGroup"
+                            $ref: "#/components/schemas/AdminAccountGroup"
                 required: true
             responses:
                 201:
@@ -3031,9 +3445,9 @@ paths:
                 - BearerAuth: []
                 - OAuth2:
                       - CommerceOpenApiAdmin.write
-            summary: Updates an AccountGroup by ID.
+            summary: Updates an AdminAccountGroup by ID.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts:
         get:
             operationId: getAccountsPage
@@ -4017,6 +4431,170 @@ paths:
             summary: Creates an account channel discount.
             tags:
                 - AccountChannelEntry
+    /accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-payment-methods:
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      description:
+                          The resource external reference code
+                      example: AB-34098-789-N
+                      minLength: 1
+                      type: string
+                  style: simple
+                - in: query
+                  explode: true
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+                - in: query
+                  explode: true
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelEntry"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets a list of channel payment methods.
+            tags:
+                - AccountChannelEntry
+        post:
+            parameters:
+                - in: path
+                  explode: false
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      description:
+                          The resource external reference code
+                      example: AB-34098-789-N
+                      minLength: 1
+                      type: string
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                    description:
+                        Created
+                202:
+                    description:
+                        Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Creates an account channel payment method.
+            tags:
+                - AccountChannelEntry
     /accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-payment-terms:
         get:
             parameters:
@@ -4509,6 +5087,170 @@ paths:
             summary: Creates an account channel shipping address.
             tags:
                 - AccountChannelEntry
+    /accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-shipping-option:
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      description:
+                          The resource external reference code
+                      example: AB-34098-789-N
+                      minLength: 1
+                      type: string
+                  style: simple
+                - in: query
+                  explode: true
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+                - in: query
+                  explode: true
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelShippingOption"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelShippingOption"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets a list of account channel shipping options.
+            tags:
+                - AccountChannelShippingOption
+        post:
+            parameters:
+                - in: path
+                  explode: false
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      description:
+                          The resource external reference code
+                      example: AB-34098-789-N
+                      minLength: 1
+                      type: string
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                    description:
+                        Created
+                202:
+                    description:
+                        Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Creates or updates an account channel shipping option.
+            tags:
+                - AccountChannelShippingOption
     /accounts/by-externalReferenceCode/{externalReferenceCode}/account-channel-users:
         get:
             parameters:
@@ -4869,12 +5611,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -4915,7 +5657,7 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of Account's AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts/by-externalReferenceCode/{externalReferenceCode}/accountMembers:
         get:
             operationId: getAccountByExternalReferenceCodeAccountMembersPage
@@ -6585,6 +7327,172 @@ paths:
             summary: Creates an account channel discount.
             tags:
                 - AccountChannelEntry
+    /accounts/{id}/account-channel-payment-methods:
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The account Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+                - in: query
+                  explode: true
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+                - in: query
+                  explode: true
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelEntry"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets a list of channel payment methods.
+            tags:
+                - AccountChannelEntry
+        post:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          The account id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelEntry"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelEntry"
+                    description:
+                        Created
+                202:
+                    description:
+                        Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Creates an account channel payment method.
+            tags:
+                - AccountChannelEntry
     /accounts/{id}/account-channel-payment-terms:
         get:
             parameters:
@@ -7083,6 +7991,168 @@ paths:
             summary: Creates an account channel shipping address.
             tags:
                 - AccountChannelEntry
+    /accounts/{id}/account-channel-shipping-option:
+        get:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          Account Id
+                      format: int64
+                      type: integer
+                  style: simple
+                - in: query
+                  explode: true
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+                - in: query
+                  explode: true
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelShippingOption"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AccountChannelShippingOption"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.read
+            summary: Gets a list of account channel shipping options.
+            tags:
+                - AccountChannelShippingOption
+        post:
+            parameters:
+                - in: path
+                  explode: false
+                  name: id
+                  required: true
+                  schema:
+                      description:
+                          Account Id
+                      format: int64
+                      type: integer
+                  style: simple
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/AccountChannelShippingOption"
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AccountChannelShippingOption"
+                    description:
+                        Created
+                202:
+                    description:
+                        Async
+                204:
+                    description:
+                        Updated
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - CommerceOpenApiAdmin.write
+            summary: Creates or updates an account channel shipping option.
+            tags:
+                - AccountChannelShippingOption
     /accounts/{id}/account-channel-users:
         get:
             parameters:
@@ -7449,12 +8519,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/AccountGroup"
+                                    $ref: "#/components/schemas/AdminAccountGroup"
                                 type: array
                     description:
                         Successful operation
@@ -7495,7 +8565,7 @@ paths:
                       - CommerceOpenApiAdmin.read
             summary: Gets a list of Account's AccountGroups.
             tags:
-                - AccountGroup
+                - AdminAccountGroup
     /accounts/{id}/accountMembers:
         get:
             operationId: getAccountIdAccountMembersPage

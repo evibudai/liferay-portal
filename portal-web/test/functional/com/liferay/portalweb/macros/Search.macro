@@ -6,26 +6,6 @@ definition {
 		AssertElementNotPresent(locator1 = "Search#SEARCH_INFO");
 	}
 
-	macro gotoResultAssetViaTitle {
-		AssertClick(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE",
-			value1 = "${searchAssetTitle}");
-	}
-
-	macro openSearchPage {
-		if (!(isSet(siteURLKey))) {
-			var siteURLKey = "guest";
-		}
-
-		if (isSet(locale)) {
-			Navigator.openWithAppendToBaseURL(urlAppend = "${locale}/web/${siteURLKey}/search");
-		}
-		else {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/${siteURLKey}/search");
-		}
-	}
-
 	macro searchCP {
 		WaitForElementPresent(locator1 = "TextInput#SEARCH");
 
@@ -33,7 +13,7 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SEARCH",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		KeyPress(
 			locator1 = "TextInput#SEARCH",
@@ -45,13 +25,13 @@ definition {
 	}
 
 	macro searchPG {
-		var key_portletName = "${portletName}";
+		var key_portletName = ${portletName};
 
 		AssertElementPresent(locator1 = "Portlet#SEARCH_FIELD");
 
 		Type(
 			locator1 = "Portlet#SEARCH_FIELD",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		KeyPress(
 			locator1 = "Portlet#SEARCH_FIELD",
@@ -62,26 +42,13 @@ definition {
 		}
 	}
 
-	macro viewNoResultAssetTitle {
-		AssertElementNotPresent(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE");
-	}
-
 	macro viewNotPresentInContentBody {
 		AssertClick(
-			key_rowEntry = "${siteName}",
+			key_rowEntry = ${siteName},
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
-			value1 = "${siteName}");
+			value1 = ${siteName});
 
 		AssertElementNotPresent(locator1 = "//body[.='${elementValue}']");
-	}
-
-	macro viewResultAssetTitle {
-		AssertTextEquals(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE",
-			value1 = "${searchAssetTitle}");
 	}
 
 }

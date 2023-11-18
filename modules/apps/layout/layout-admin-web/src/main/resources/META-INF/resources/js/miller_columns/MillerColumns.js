@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {usePrevious} from '@liferay/frontend-js-react-web';
+import {DragPreview} from '@liferay/layout-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
-import DragPreview from './DragPreview';
 import MillerColumnsColumn from './MillerColumnsColumn';
 
 const getItemsMap = (columns, oldItems = new Map()) => {
@@ -69,7 +61,11 @@ const getItemsMap = (columns, oldItems = new Map()) => {
 const noop = () => {};
 
 const MillerColumns = ({
+	createPageTemplateURL,
+	getPageTemplateCollectionsURL,
+	getItemActionsURL,
 	initialColumns = [],
+	isLayoutSetPrototype,
 	isPrivateLayoutsEnabled,
 	namespace,
 	onColumnsChange = noop,
@@ -259,15 +255,36 @@ const MillerColumns = ({
 		);
 	};
 
+	const getDragPreviewLabel = (item) => {
+		const items = item?.items;
+
+		if (items) {
+			if (items.length > 1) {
+				return sub(Liferay.Language.get('x-elements'), items.length);
+			}
+			else {
+				const [item] = items;
+
+				return item.title;
+			}
+		}
+	};
+
 	return (
 		<DndProvider backend={HTML5Backend}>
-			<DragPreview rtl={rtl} />
+			<DragPreview getLabel={getDragPreviewLabel} />
 
 			<div className="bg-white miller-columns-row" ref={ref}>
 				{columns.map((column, index) => (
 					<MillerColumnsColumn
 						columnItems={column.items}
 						columnsContainer={ref}
+						createPageTemplateURL={createPageTemplateURL}
+						getItemActionsURL={getItemActionsURL}
+						getPageTemplateCollectionsURL={
+							getPageTemplateCollectionsURL
+						}
+						isLayoutSetPrototype={isLayoutSetPrototype}
 						isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
 						items={items}
 						key={index}

@@ -1,28 +1,14 @@
 @import 'cadmin-variables';
 @import 'variables';
 
-@import './download-spreadsheet-button';
+@import 'DownloadSpreadsheetButton';
+@import 'VocabulariesSelection';
 
 html#{$cadmin-selector} {
 	.cadmin {
 		.audit-graph {
-			position: relative;
 			&-loading {
 				min-height: 304px;
-			}
-		}
-
-		.content-dashboard-management-toolbar {
-			.navbar-expand-md .container-fluid {
-				padding: 0;
-			}
-			.navbar-form {
-				padding-right: 0;
-			}
-			@media (min-width: 768px) {
-				.management-bar.navbar-expand-md .navbar-form {
-					padding-right: 0;
-				}
 			}
 		}
 
@@ -48,7 +34,6 @@ html#{$cadmin-selector} {
 		.empty-state {
 			left: 50%;
 			max-width: 350px;
-			position: absolute;
 			transform: translate(-40%, 70%);
 			z-index: 1;
 		}
@@ -147,6 +132,12 @@ html#{$cadmin-selector} {
 				.sidebar-header {
 					top: 0;
 				}
+
+				.sidebar-section {
+					.nav {
+						border-bottom: 1px solid $cadmin-gray-300;
+					}
+				}
 			}
 		}
 
@@ -174,7 +165,6 @@ html#{$cadmin-selector} {
 				text-align: center;
 
 				& img {
-					height: calc(100% - 0.25rem);
 					object-fit: contain;
 					width: 100%;
 				}
@@ -189,17 +179,15 @@ html#{$cadmin-selector} {
 			}
 		}
 
-		@import './manage-collaborators';
+		@import 'ManageCollaborators';
 	}
 
-	.has-control-menu {
-		.loading-indicator-wrapper {
-			height: calc(100% - #{$controlMenuHeight});
-		}
+	.loading-indicator-wrapper {
+		height: calc(100% - var(--control-menu-container-height));
+	}
 
-		.content-dashboard.sidebar {
-			top: $controlMenuHeight;
-		}
+	.content-dashboard.sidebar {
+		top: var(--control-menu-container-height);
 	}
 
 	.sidebar-open {

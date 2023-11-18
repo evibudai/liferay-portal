@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -97,7 +88,17 @@ AUI.add(
 							direction = 0;
 						}
 
-						instance._orderItem(box, direction);
+						if (!targetBtn.attr('disabled')) {
+							instance._orderItem(box, direction);
+						}
+					}
+				},
+
+				_initToggleBtn(button) {
+					const instance = this;
+
+					if (button) {
+						instance._toggleBtnState(button, true);
 					}
 				},
 
@@ -141,7 +142,7 @@ AUI.add(
 					const instance = this;
 
 					instance._toggleBtnMove(event);
-					instance._toggleBtnSort(event);
+					instance._toggleBtnSort(event.currentTarget);
 				},
 
 				_onSelectFocus(event, box) {
@@ -153,7 +154,11 @@ AUI.add(
 				},
 
 				_orderItem(box, direction) {
+					const instance = this;
+
 					Util.reorder(box, direction);
+
+					instance._toggleBtnSort(box);
 
 					Liferay.fire(NAME + ':orderItem', {
 						box,
@@ -277,8 +282,12 @@ AUI.add(
 					}
 
 					instance._toggleReorderToolbars();
-				},
 
+					instance._initToggleBtn(contentBox.one('.move-left'));
+					instance._initToggleBtn(contentBox.one('.move-right'));
+					instance._initToggleBtn(contentBox.one('.reorder-down'));
+					instance._initToggleBtn(contentBox.one('.reorder-up'));
+				},
 				_toggleBtnMove(event) {
 					const instance = this;
 
@@ -305,8 +314,7 @@ AUI.add(
 							destinationBoxMaxItems
 					);
 				},
-
-				_toggleBtnSort(event) {
+				_toggleBtnSort(changedBox) {
 					const instance = this;
 
 					const contentBox = instance.get('contentBox');
@@ -314,26 +322,44 @@ AUI.add(
 					const sortBtnDown = contentBox.one('.reorder-down');
 					const sortBtnUp = contentBox.one('.reorder-up');
 
-					const currentTarget = event.currentTarget;
+					const leftBox = instance._leftBox;
+					const rightBox = instance._rightBox;
 
-					if (currentTarget && sortBtnDown && sortBtnUp) {
-						const length = currentTarget.get('length');
-						const selectedIndex = currentTarget.get(
-							'selectedIndex'
-						);
+					if (changedBox && sortBtnDown && sortBtnUp) {
+						const length = changedBox.get('length');
+
+						const selectedIndexes = changedBox
+							.get('options')
+							.getDOMNodes()
+							.filter((option) => option.selected)
+
+							.map((option) => option.index);
 
 						let btnDisabledDown = false;
 						let btnDisabledUp = false;
 
-						if (selectedIndex === length - 1) {
-							btnDisabledDown = true;
+						if (changedBox === leftBox) {
+							const noItems = !length;
+
+							const noItemsSelected = !selectedIndexes.length;
+
+							const firstItemSelected = selectedIndexes.includes(
+								0
+							);
+
+							const lastItemSelected = selectedIndexes.includes(
+								length - 1
+							);
+
+							btnDisabledUp =
+								firstItemSelected || noItemsSelected || noItems;
+
+							btnDisabledDown =
+								lastItemSelected || noItemsSelected || noItems;
 						}
-						else if (selectedIndex === 0) {
-							btnDisabledUp = true;
-						}
-						else if (selectedIndex === -1) {
+						else if (changedBox === rightBox) {
 							btnDisabledDown = true;
-							btnDisabledUp = true;
+							btnDisabledUp = false;
 						}
 
 						instance._toggleBtnState(sortBtnDown, btnDisabledDown);

@@ -37,22 +37,25 @@ definition {
 
 		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Asset Publisher Page");
 
-		PagesAdmin.addPage(pageName = "Asset Publisher Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Asset Publisher Page",
+			layoutTemplate = "1 Column");
 
-		Navigator.gotoPage(pageName = "Asset Publisher Page");
-
-		Portlet.addPG(portletName = "Asset Publisher");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Asset Publisher Page",
+			widgetName = "Asset Publisher");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -70,7 +73,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ApproveBlogsEntryPG {
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
@@ -114,11 +117,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-70157. Verify that an approved web content is displayed on Asset Publisher."
-	@priority = "4"
+	@priority = 4
 	test ApprovedWebContentIsDisplayed {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#ApprovedWebContentIsDisplayed";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -134,13 +135,13 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
 		WorkflowAsset.createNewBasicWebContent(wcTitle = "Web Content Title");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
@@ -166,7 +167,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-72846."
-	@priority = "5"
+	@priority = 5
 	test ApproveMessageBoardsThreadPG {
 		property portal.acceptance = "true";
 
@@ -181,7 +182,7 @@ definition {
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 
-		Notifications.viewBadgeCount(notificationCount = "1");
+		Notifications.viewBadgeCount(notificationCount = 1);
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -212,10 +213,8 @@ definition {
 			threadSubject = "MB Thread Message Subject");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ApproveWebContentPG {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#ApproveWebContentPG";
-
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
 		WebContent.addWithWorkflowPGViaAP(
@@ -248,10 +247,8 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69817. Verify that a Draft Blog Entry is not displayed on Asset Publisher."
-	@priority = "3"
+	@priority = 3
 	test DraftBlogIsNotDisplayed {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#DraftBlogIsNotDisplayed";
-
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Asset Publisher Page",
 			siteURLKey = "guest");
@@ -281,10 +278,8 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69816. Verify that when the user edits an approved blog, the blog returns to pending and is removed from Asset Publisher."
-	@priority = "3"
+	@priority = 3
 	test EditedBlogReturnsToPendingAndIsNotDisplayed {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#EditedBlogReturnsToPendingAndIsNotDisplayed";
-
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Asset Publisher Page",
 			siteURLKey = "guest");
@@ -293,7 +288,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -325,7 +320,7 @@ definition {
 			entryTitle = "Blogs Entry Title",
 			entryTitleEdit = "Blogs Entry Title Edit");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
@@ -333,11 +328,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69814. Verify that a Pending Web Content is not displayed on Asset Publisher."
-	@priority = "3"
+	@priority = 3
 	test PendingWebContentIsNotDisplayed {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#PendingWebContentIsNotDisplayed";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -353,13 +346,13 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
 		WorkflowAsset.createNewBasicWebContent(wcTitle = "Web Content Title");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -380,7 +373,7 @@ definition {
 		WebContent.viewWithWorkflowPGViaAP(webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectBlogsEntryPG {
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
@@ -420,11 +413,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69815. Verify that a rejected web content is not displayed on Asset Publisher."
-	@priority = "3"
+	@priority = 3
 	test RejectedWebContentIsNotDisplayed {
-		property test.name.skip.portal.instance = "WorkflowAssetPublisher#RejectedWebContentIsNotDisplayed";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -440,13 +431,13 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 
 		WorkflowAsset.createNewBasicWebContent(wcTitle = "Web Content Title");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -474,7 +465,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
 

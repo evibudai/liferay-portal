@@ -1,29 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.proxy.internal;
 
+import com.liferay.petra.concurrent.ConcurrentReferenceKeyHashMap;
+import com.liferay.petra.memory.FinalizeManager;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.DelegateProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -57,56 +51,54 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 			pkg.getName(), StringPool.PERIOD, interfaceClass.getSimpleName(),
 			"ASMWrapper");
 
-		Class<?> asmWrapperClass = null;
+		Map<String, Class<?>> classReferences = _classReferencesMap.get(
+			classLoader);
 
-		synchronized (classLoader) {
-			try {
-				try {
-					asmWrapperClass = classLoader.loadClass(
-						asmWrapperClassName);
-				}
-				catch (ClassNotFoundException classNotFoundException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(classNotFoundException);
-					}
+		if (classReferences == null) {
+			classReferences = new ConcurrentHashMap<>();
 
-					byte[] classData = _generateASMWrapperClassData(
-						StringUtil.replace(asmWrapperClassName, '.', '/'),
-						interfaceClass, delegateObject, defaultObject);
+			Map<String, Class<?>> previousClassReferences =
+				_classReferencesMap.putIfAbsent(classLoader, classReferences);
 
-					asmWrapperClass = (Class<?>)_defineClassMethod.invoke(
-						classLoader, asmWrapperClassName, classData, 0,
-						classData.length);
-				}
-
-				Constructor<?> constructor =
-					asmWrapperClass.getDeclaredConstructor(
-						delegateObject.getClass(), defaultObject.getClass());
-
-				constructor.setAccessible(true);
-
-				return (T)constructor.newInstance(
-					delegateObject, defaultObject);
+			if (previousClassReferences != null) {
+				classReferences = previousClassReferences;
 			}
-			catch (Throwable throwable) {
-				throw new RuntimeException(throwable);
-			}
+		}
+
+		Class<?> asmWrapperClass = classReferences.get(asmWrapperClassName);
+
+		if (asmWrapperClass == null) {
+			asmWrapperClass = _loadClass(
+				classLoader, asmWrapperClassName, interfaceClass,
+				delegateObject);
+
+			classReferences.put(asmWrapperClassName, asmWrapperClass);
+		}
+
+		try {
+			Constructor<?> constructor = asmWrapperClass.getDeclaredConstructor(
+				delegateObject.getClass(), interfaceClass);
+
+			constructor.setAccessible(true);
+
+			return (T)constructor.newInstance(delegateObject, defaultObject);
+		}
+		catch (Throwable throwable) {
+			throw new RuntimeException(throwable);
 		}
 	}
 
 	private <T> byte[] _generateASMWrapperClassData(
 		String asmWrapperClassBinaryName, Class<T> interfaceClass,
-		Object delegateObject, T defaultObject) {
+		Object delegateObject) {
 
 		String interfaceClassBinaryName = _getClassBinaryName(interfaceClass);
+		String interfaceClassDescriptor = Type.getDescriptor(interfaceClass);
 
 		Class<?> delegateObjectClass = delegateObject.getClass();
 
 		String delegateObjectClassDescriptor = Type.getDescriptor(
 			delegateObjectClass);
-
-		String defaultObjectClassDescriptor = Type.getDescriptor(
-			defaultObject.getClass());
 
 		ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
@@ -125,7 +117,7 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 
 		fieldVisitor = classWriter.visitField(
 			Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL, "_default",
-			defaultObjectClassDescriptor, null, null);
+			interfaceClassDescriptor, null, null);
 
 		fieldVisitor.visitEnd();
 
@@ -135,7 +127,7 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 			Opcodes.ACC_PRIVATE, "<init>",
 			Type.getMethodDescriptor(
 				Type.VOID_TYPE, Type.getType(delegateObjectClass),
-				Type.getType(defaultObjectClassDescriptor)),
+				Type.getType(interfaceClassDescriptor)),
 			null, null);
 
 		methodVisitor.visitCode();
@@ -159,7 +151,7 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 
 		methodVisitor.visitFieldInsn(
 			Opcodes.PUTFIELD, asmWrapperClassBinaryName, "_default",
-			defaultObjectClassDescriptor);
+			interfaceClassDescriptor);
 
 		methodVisitor.visitInsn(Opcodes.RETURN);
 
@@ -177,32 +169,29 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 				_generateMethod(
 					classWriter, delegateMethod, asmWrapperClassBinaryName,
 					"_delegate", delegateObjectClassDescriptor,
-					_getClassBinaryName(delegateObjectClass));
+					_getClassBinaryName(delegateObjectClass),
+					Opcodes.INVOKEVIRTUAL);
 			}
 			catch (NoSuchMethodException noSuchMethodException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchMethodException);
-				}
-
 				_generateMethod(
 					classWriter, method, asmWrapperClassBinaryName, "_default",
-					defaultObjectClassDescriptor,
-					_getClassBinaryName(defaultObject.getClass()));
+					interfaceClassDescriptor, interfaceClassBinaryName,
+					Opcodes.INVOKEINTERFACE);
 			}
 		}
 
 		_generateMethod(
 			classWriter, _equalsMethod, asmWrapperClassBinaryName, "_delegate",
 			delegateObjectClassDescriptor,
-			_getClassBinaryName(delegateObjectClass));
+			_getClassBinaryName(delegateObjectClass), Opcodes.INVOKEVIRTUAL);
 		_generateMethod(
 			classWriter, _hashCodeMethod, asmWrapperClassBinaryName,
 			"_delegate", delegateObjectClassDescriptor,
-			_getClassBinaryName(delegateObjectClass));
+			_getClassBinaryName(delegateObjectClass), Opcodes.INVOKEVIRTUAL);
 		_generateMethod(
 			classWriter, _toStringMethod, asmWrapperClassBinaryName,
 			"_delegate", delegateObjectClassDescriptor,
-			_getClassBinaryName(delegateObjectClass));
+			_getClassBinaryName(delegateObjectClass), Opcodes.INVOKEVIRTUAL);
 
 		classWriter.visitEnd();
 
@@ -212,7 +201,8 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 	private void _generateMethod(
 		ClassWriter classWriter, Method method,
 		String asmWrapperClassBinaryName, String fieldName,
-		String targetClassDescriptor, String targetClassBinaryName) {
+		String targetClassDescriptor, String targetClassBinaryName,
+		int opcode) {
 
 		Class<?>[] exceptions = method.getExceptionTypes();
 
@@ -245,8 +235,9 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 		}
 
 		methodVisitor.visitMethodInsn(
-			Opcodes.INVOKEVIRTUAL, targetClassBinaryName, method.getName(),
-			Type.getMethodDescriptor(method), false);
+			opcode, targetClassBinaryName, method.getName(),
+			Type.getMethodDescriptor(method),
+			opcode == Opcodes.INVOKEINTERFACE);
 
 		Type type = Type.getType(method.getReturnType());
 
@@ -263,9 +254,34 @@ public class ASMDelegateProxyFactory implements DelegateProxyFactory {
 		return StringUtil.replace(className, '.', '/');
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		ASMDelegateProxyFactory.class);
+	private Class<?> _loadClass(
+		ClassLoader classLoader, String asmWrapperClassName,
+		Class<?> interfaceClass, Object delegateObject) {
 
+		synchronized (classLoader) {
+			try {
+				return classLoader.loadClass(asmWrapperClassName);
+			}
+			catch (ClassNotFoundException classNotFoundException) {
+				try {
+					byte[] classData = _generateASMWrapperClassData(
+						StringUtil.replace(asmWrapperClassName, '.', '/'),
+						interfaceClass, delegateObject);
+
+					return (Class<?>)_defineClassMethod.invoke(
+						classLoader, asmWrapperClassName, classData, 0,
+						classData.length);
+				}
+				catch (Throwable throwable) {
+					throw new RuntimeException(throwable);
+				}
+			}
+		}
+	}
+
+	private static final Map<ClassLoader, Map<String, Class<?>>>
+		_classReferencesMap = new ConcurrentReferenceKeyHashMap<>(
+			FinalizeManager.WEAK_REFERENCE_FACTORY);
 	private static final Method _defineClassMethod;
 	private static final Method _equalsMethod;
 	private static final Method _hashCodeMethod;

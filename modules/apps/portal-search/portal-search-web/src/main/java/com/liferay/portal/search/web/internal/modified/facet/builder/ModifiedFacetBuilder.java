@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.builder;
@@ -20,11 +11,11 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CalendarFactory;
-import com.liferay.portal.kernel.util.DateFormatFactory;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.facet.Facet;
 import com.liferay.portal.search.facet.modified.ModifiedFacetFactory;
+import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -36,15 +27,10 @@ import java.util.Map;
 public class ModifiedFacetBuilder {
 
 	public ModifiedFacetBuilder(
-		ModifiedFacetFactory modifiedFacetFactory,
-		CalendarFactory calendarFactory, DateFormatFactory dateFormatFactory,
-		JSONFactory jsonFactory) {
+		ModifiedFacetFactory modifiedFacetFactory, JSONFactory jsonFactory) {
 
 		_modifiedFacetFactory = modifiedFacetFactory;
-		_calendarFactory = calendarFactory;
 		_jsonFactory = jsonFactory;
-
-		_dateRangeFactory = new DateRangeFactory(dateFormatFactory);
 	}
 
 	public Facet build() {
@@ -67,6 +53,10 @@ public class ModifiedFacetBuilder {
 
 	public void setCustomRangeTo(String customRangeTo) {
 		_customRangeTo = customRangeTo;
+	}
+
+	public void setOrder(String order) {
+		_order = order;
 	}
 
 	public void setRangesJSONArray(JSONArray rangesJSONArray) {
@@ -94,14 +84,14 @@ public class ModifiedFacetBuilder {
 
 		facetConfiguration.setFieldName(facet.getFieldName());
 		facetConfiguration.setLabel("any-time");
-		facetConfiguration.setOrder("OrderHitsDesc");
+		facetConfiguration.setOrder(_order);
 		facetConfiguration.setStatic(false);
 		facetConfiguration.setWeight(1.0);
 
 		JSONObject jsonObject = facetConfiguration.getData();
 
 		jsonObject.put(
-			"ranges", getRangesJSONArray(_calendarFactory.getCalendar()));
+			"ranges", getRangesJSONArray(CalendarFactoryUtil.getCalendar()));
 
 		return facetConfiguration;
 	}
@@ -109,7 +99,8 @@ public class ModifiedFacetBuilder {
 	private JSONArray _getDefaultRangesJSONArray(Calendar calendar) {
 		JSONArray rangesJSONArray = _jsonFactory.createJSONArray();
 
-		Map<String, String> map = _dateRangeFactory.getRangeStrings(calendar);
+		Map<String, String> map = DateRangeFactoryUtil.getRangeStrings(
+			calendar);
 
 		map.forEach(
 			(key, value) -> {
@@ -145,7 +136,7 @@ public class ModifiedFacetBuilder {
 		if (!Validator.isBlank(_customRangeFrom) &&
 			!Validator.isBlank(_customRangeTo)) {
 
-			String rangeString = _dateRangeFactory.getRangeString(
+			String rangeString = DateRangeFactoryUtil.getRangeString(
 				_customRangeFrom, _customRangeTo);
 
 			_searchContext.setAttribute(facet.getFieldId(), rangeString);
@@ -162,19 +153,18 @@ public class ModifiedFacetBuilder {
 				return rangesMap.get(selectedRange);
 			}
 
-			return _dateRangeFactory.getRangeString(
-				selectedRange, _calendarFactory.getCalendar());
+			return DateRangeFactoryUtil.getRangeString(
+				selectedRange, CalendarFactoryUtil.getCalendar());
 		}
 
 		return null;
 	}
 
-	private final CalendarFactory _calendarFactory;
 	private String _customRangeFrom;
 	private String _customRangeTo;
-	private final DateRangeFactory _dateRangeFactory;
 	private final JSONFactory _jsonFactory;
 	private final ModifiedFacetFactory _modifiedFacetFactory;
+	private String _order;
 	private JSONArray _rangesJSONArray;
 	private SearchContext _searchContext;
 	private String[] _selectedRanges;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.taglib.servlet.taglib.base;
@@ -75,6 +66,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 
 	public java.lang.String getImageSelectorURL() {
 		return _imageSelectorURL;
+	}
+
+	public java.lang.String getLayoutSelectorURL() {
+		return _layoutSelectorURL;
 	}
 
 	public boolean getLocalizable() {
@@ -149,6 +144,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		_imageSelectorURL = imageSelectorURL;
 	}
 
+	public void setLayoutSelectorURL(java.lang.String layoutSelectorURL) {
+		_layoutSelectorURL = layoutSelectorURL;
+	}
+
 	public void setLocalizable(boolean localizable) {
 		_localizable = localizable;
 	}
@@ -199,6 +198,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		_groupId = 0;
 		_ignoreRequestValue = false;
 		_imageSelectorURL = null;
+		_layoutSelectorURL = null;
 		_localizable = true;
 		_readOnly = false;
 		_repeatable = true;
@@ -226,6 +226,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		setNamespacedAttribute(request, "groupId", _groupId);
 		setNamespacedAttribute(request, "ignoreRequestValue", _ignoreRequestValue);
 		setNamespacedAttribute(request, "imageSelectorURL", _imageSelectorURL);
+		setNamespacedAttribute(request, "layoutSelectorURL", _layoutSelectorURL);
 		setNamespacedAttribute(request, "localizable", _localizable);
 		setNamespacedAttribute(request, "readOnly", _readOnly);
 		setNamespacedAttribute(request, "repeatable", _repeatable);
@@ -251,6 +252,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 	private long _groupId = 0;
 	private boolean _ignoreRequestValue = false;
 	private java.lang.String _imageSelectorURL = null;
+	private java.lang.String _layoutSelectorURL = null;
 	private boolean _localizable = true;
 	private boolean _readOnly = false;
 	private boolean _repeatable = true;

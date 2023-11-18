@@ -30,5 +30,13 @@
 			"en-US": "Open"
 		},
 		"type": "string"
+	},
+	{
+		"key": "PROCESSING",
+		"name": "Processing",
+		"name_i18n": {
+			"en-US": "Processing"
+		},
+		"type": "string"
 	}
 ]

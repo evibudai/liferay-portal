@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.facet.display.context.builder;
@@ -19,12 +10,12 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.security.permission.comparator.ModelResourceComparator;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SortedArrayList;
@@ -34,6 +25,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.io.Serializable;
 
@@ -60,11 +52,9 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
-
 		_typeFacetPortletInstanceConfiguration =
-			portletDisplay.getPortletInstanceConfiguration(
-				TypeFacetPortletInstanceConfiguration.class);
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				TypeFacetPortletInstanceConfiguration.class, _themeDisplay);
 	}
 
 	public AssetEntriesSearchFacetDisplayContext build() {
@@ -170,6 +160,12 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 			bucketDisplayContexts.add(bucketDisplayContext);
 		}
 
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
+		}
+
 		return bucketDisplayContexts;
 	}
 
@@ -209,6 +205,10 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		_locale = locale;
 	}
 
+	public void setOrder(String order) {
+		_order = order;
+	}
+
 	public void setPaginationStartParameterName(
 		String paginationStartParameterName) {
 
@@ -230,8 +230,8 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		_parameterValues = Collections.singletonList(parameterValue);
 	}
 
-	public void setParameterValues(List<String> paramValues) {
-		_parameterValues = paramValues;
+	public void setParameterValues(String... paramValues) {
+		_parameterValues = ListUtil.fromArray(paramValues);
 	}
 
 	public void setTypeNames(Map<String, String> typeNames) {
@@ -284,6 +284,10 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 					ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
 						Long.valueOf(parts[1]));
 
+				if (objectDefinition == null) {
+					continue;
+				}
+
 				typeName = objectDefinition.getLabel(_themeDisplay.getLocale());
 			}
 
@@ -298,6 +302,7 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
 	private Locale _locale;
+	private String _order;
 	private String _paginationStartParameterName;
 	private String _parameterName;
 	private List<String> _parameterValues = Collections.emptyList();

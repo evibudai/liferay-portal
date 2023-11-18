@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.runtime.configuration;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.saml.runtime.credential.KeyStoreManager;
 
@@ -21,11 +13,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Arrays;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -104,15 +93,9 @@ public class ServicesDropDownMetaTypeProvider
 
 	@Override
 	public String[] getLocales() {
-		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales();
-
-		Stream<Locale> stream = availableLocales.stream();
-
-		return stream.map(
-			Locale::toLanguageTag
-		).toArray(
-			String[]::new
-		);
+		return TransformUtil.transformToArray(
+			LanguageUtil.getAvailableLocales(), Locale::toLanguageTag,
+			String.class);
 	}
 
 	public String getMetatypePID() {
@@ -158,26 +141,20 @@ public class ServicesDropDownMetaTypeProvider
 
 							@Override
 							public String[] getOptionLabels() {
-								Stream<ServiceReference<?>> stream =
-									_getServiceReferences();
-
-								return stream.map(
-									_labelFunction
-								).toArray(
-									String[]::new
-								);
+								return (String[])TransformUtil.transform(
+									_getServiceReferences(),
+									serviceReference -> _labelFunction.apply(
+										serviceReference),
+									String.class);
 							}
 
 							@Override
 							public String[] getOptionValues() {
-								Stream<ServiceReference<?>> stream =
-									_getServiceReferences();
-
-								return stream.map(
-									_valuesFunction
-								).toArray(
-									String[]::new
-								);
+								return TransformUtil.transform(
+									_getServiceReferences(),
+									serviceReference -> _valuesFunction.apply(
+										serviceReference),
+									String.class);
 							}
 
 							@Override
@@ -220,15 +197,15 @@ public class ServicesDropDownMetaTypeProvider
 		};
 	}
 
-	private Stream<ServiceReference<?>> _getServiceReferences() {
+	private ServiceReference<KeyStoreManager>[] _getServiceReferences() {
 		ServiceReference<KeyStoreManager>[] serviceReferences =
 			_serviceTracker.getServiceReferences();
 
 		if (serviceReferences == null) {
-			return Stream.empty();
+			return null;
 		}
 
-		return Arrays.stream(serviceReferences);
+		return serviceReferences;
 	}
 
 	private String _attributeDescription;

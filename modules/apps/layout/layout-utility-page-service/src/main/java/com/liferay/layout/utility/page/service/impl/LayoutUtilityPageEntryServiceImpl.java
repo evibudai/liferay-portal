@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.service.impl;
@@ -22,7 +13,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -47,37 +38,54 @@ public class LayoutUtilityPageEntryServiceImpl
 	public LayoutUtilityPageEntry addLayoutUtilityPageEntry(
 			String externalReferenceCode, long groupId, long plid,
 			long previewFileEntryId, boolean defaultLayoutUtilityPageEntry,
-			String name, String type, long masterLayoutPlid)
+			String name, String type, long masterLayoutPlid,
+			ServiceContext serviceContext)
 		throws PortalException {
 
-		_groupPermission.check(
+		GroupPermissionUtil.check(
 			getPermissionChecker(), groupId,
 			LayoutUtilityPageActionKeys.ADD_LAYOUT_UTILITY_PAGE_ENTRY);
 
 		return layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 			externalReferenceCode, getUserId(), groupId, plid,
 			previewFileEntryId, defaultLayoutUtilityPageEntry, name, type,
-			masterLayoutPlid);
+			masterLayoutPlid, serviceContext);
 	}
 
 	@Override
 	public LayoutUtilityPageEntry copyLayoutUtilityPageEntry(
-			long groupId, long layoutUtilityPageEntryId,
+			long groupId, long sourceLayoutUtilityPageEntryId,
 			ServiceContext serviceContext)
-		throws PortalException {
+		throws Exception {
 
-		_groupPermission.check(
+		GroupPermissionUtil.check(
 			getPermissionChecker(), groupId,
 			LayoutUtilityPageActionKeys.ADD_LAYOUT_UTILITY_PAGE_ENTRY);
 
 		return layoutUtilityPageEntryLocalService.copyLayoutUtilityPageEntry(
-			getUserId(), groupId, layoutUtilityPageEntryId, serviceContext);
+			getUserId(), groupId, sourceLayoutUtilityPageEntryId,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutUtilityPageEntry deleteLayoutUtilityPageEntry(
 			long layoutUtilityPageEntryId)
 		throws PortalException {
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.DELETE);
+
+		if (layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+			GroupPermissionUtil.check(
+				getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+				LayoutUtilityPageActionKeys.
+					ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+		}
 
 		return layoutUtilityPageEntryLocalService.deleteLayoutUtilityPageEntry(
 			layoutUtilityPageEntryId);
@@ -137,8 +145,49 @@ public class LayoutUtilityPageEntryServiceImpl
 			long layoutUtilityPageEntryId)
 		throws PortalException {
 
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		GroupPermissionUtil.check(
+			getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+			LayoutUtilityPageActionKeys.
+				ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.UPDATE);
+
 		return layoutUtilityPageEntryLocalService.
 			setDefaultLayoutUtilityPageEntry(layoutUtilityPageEntryId);
+	}
+
+	@Override
+	public LayoutUtilityPageEntry unsetDefaultLayoutUtilityPageEntry(
+			long layoutUtilityPageEntryId)
+		throws PortalException {
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		GroupPermissionUtil.check(
+			getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+			LayoutUtilityPageActionKeys.
+				ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.UPDATE);
+
+		if (!layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+			return layoutUtilityPageEntry;
+		}
+
+		layoutUtilityPageEntry.setDefaultLayoutUtilityPageEntry(false);
+
+		return layoutUtilityPageEntryLocalService.updateLayoutUtilityPageEntry(
+			layoutUtilityPageEntry);
 	}
 
 	@Override
@@ -162,9 +211,6 @@ public class LayoutUtilityPageEntryServiceImpl
 		return layoutUtilityPageEntryLocalService.updateLayoutUtilityPageEntry(
 			layoutUtilityPageEntryId, name);
 	}
-
-	@Reference
-	private GroupPermission _groupPermission;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.layout.utility.page.model.LayoutUtilityPageEntry)"

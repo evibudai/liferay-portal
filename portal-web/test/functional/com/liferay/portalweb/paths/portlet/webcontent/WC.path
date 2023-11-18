@@ -108,7 +108,7 @@
 </tr>
 <tr>
 	<td>ENTRY_LIST_TITLE_ON_LIVE</td>
-	<td>//*[contains(@data-title,'${key_webContentTitle}')]//*[@data-qa-id='rowItemContent']//p</td>
+	<td>//*[contains(@data-title,'${key_webContentTitle}')]//*[@data-qa-id='rowItemContent']//span[contains(@class,'text-truncate')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -164,7 +164,7 @@
 
 <tr>
 	<td>SIDEBAR_BODY</td>
-	<td>//div[@class='sidebar-body']//div[contains(@id,'TabsSection')]</td>
+	<td>//div[contains(@class,'sidebar-body')]//div[contains(@id,'tabpanel')]</td>
 	<td></td>
 </tr>
 <tr>

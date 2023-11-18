@@ -42,7 +42,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_NO_RESULTS</td>
-	<td>//span[contains(text(), 'Performance by Step')]/../../../following-sibling::div//p[contains(text(),'There is no data at the moment.')]</td>
+	<td>//span[contains(text(), 'Performance by Step')]/../../../following-sibling::div//div[contains(text(),'There is no data at the moment.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_PAGE_NO_RESULTS_FOUND</td>
-	<td>//p[contains(text(),'No results were found.')]</td>
+	<td>//div[contains(@class,'c-empty-state-text')][normalize-space(text())='No results were found.']</td>
 	<td></td>
 </tr>
 <tr>

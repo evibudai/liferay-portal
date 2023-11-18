@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.asset.model;
@@ -20,6 +11,8 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.asset.kernel.model.DDMFormValuesReader;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
@@ -27,18 +20,18 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleDisplay;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.util.JournalContent;
+import com.liferay.journal.util.JournalHelper;
 import com.liferay.journal.web.internal.asset.JournalArticleDDMFormValuesReader;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
-import com.liferay.journal.web.internal.util.JournalHelperUtil;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalServiceUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -96,10 +89,12 @@ public class JournalArticleAssetRenderer
 	}
 
 	public JournalArticleAssetRenderer(
-		JournalArticle article, HtmlParser htmlParser) {
+		JournalArticle article, HtmlParser htmlParser,
+		JournalHelper journalHelper) {
 
 		_article = article;
 		_htmlParser = htmlParser;
+		_journalHelper = journalHelper;
 	}
 
 	public JournalArticle getArticle() {
@@ -385,7 +380,7 @@ public class JournalArticleAssetRenderer
 		}
 
 		if (layout != null) {
-			String friendlyURL = JournalHelperUtil.createURLPattern(
+			String friendlyURL = _journalHelper.createURLPattern(
 				_article, themeDisplay.getLocale(), layout.isPrivateLayout(),
 				JournalArticleConstants.CANONICAL_URL_SEPARATOR, themeDisplay);
 
@@ -400,7 +395,10 @@ public class JournalArticleAssetRenderer
 		if (_assetDisplayPageFriendlyURLProvider != null) {
 			String friendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					getClassName(), _article.getResourcePrimKey(),
+					new InfoItemReference(
+						getClassName(),
+						new ClassPKInfoItemIdentifier(
+							_article.getResourcePrimKey())),
 					themeDisplay);
 
 			if (Validator.isNotNull(friendlyURL)) {
@@ -459,7 +457,6 @@ public class JournalArticleAssetRenderer
 		throws Exception {
 
 		httpServletRequest.setAttribute(WebKeys.JOURNAL_ARTICLE, _article);
-
 		httpServletRequest.setAttribute(
 			WebKeys.JOURNAL_ARTICLE_DISPLAY,
 			_getArticleDisplay(httpServletRequest));
@@ -654,6 +651,7 @@ public class JournalArticleAssetRenderer
 		_assetDisplayPageFriendlyURLProvider;
 	private final HtmlParser _htmlParser;
 	private JournalContent _journalContent;
+	private final JournalHelper _journalHelper;
 	private JournalServiceConfiguration _journalServiceConfiguration;
 
 }

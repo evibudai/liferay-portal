@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.testray;
@@ -33,6 +24,14 @@ import java.util.Map;
  * @author Michael Hashimoto
  */
 public class TestrayFactory {
+
+	public static PortalLogTestrayCaseResult newPortalLogTestrayCaseResult(
+		TestrayBuild testrayBuild, TopLevelBuild topLevelBuild,
+		AxisTestClassGroup axisTestClassGroup) {
+
+		return new PortalLogTestrayCaseResult(
+			testrayBuild, topLevelBuild, axisTestClassGroup);
+	}
 
 	public static TestrayAttachment newTestrayAttachment(
 		TestrayCaseResult testrayCaseResult, String name, String key) {
@@ -184,7 +183,7 @@ public class TestrayFactory {
 		newTopLevelBuildTestrayCaseResult(
 			TestrayBuild testrayBuild, TopLevelBuild topLevelBuild) {
 
-		Integer testrayBuildID = testrayBuild.getID();
+		Long testrayBuildID = testrayBuild.getID();
 
 		if (_topLevelBuildTestrayCaseResults.containsKey(testrayBuildID)) {
 			return _topLevelBuildTestrayCaseResults.get(testrayBuildID);
@@ -215,7 +214,7 @@ public class TestrayFactory {
 		new HashMap<>();
 	private static final Map<String, TestrayServer> _testrayServers =
 		new HashMap<>();
-	private static final Map<Integer, TopLevelBuildTestrayCaseResult>
+	private static final Map<Long, TopLevelBuildTestrayCaseResult>
 		_topLevelBuildTestrayCaseResults = new HashMap<>();
 
 }

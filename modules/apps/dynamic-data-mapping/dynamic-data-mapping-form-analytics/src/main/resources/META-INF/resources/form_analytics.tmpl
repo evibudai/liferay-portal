@@ -8,7 +8,9 @@ Liferay.on(
 					fieldName: event.fieldName,
 					focusDuration: event.focusDuration,
 					formId: event.formId,
-					page: event.page
+					formPageTitle: event.formPageTitle,
+					page: event.page,
+					title: event.title
 				}
 			);
 		}
@@ -24,7 +26,9 @@ Liferay.on(
 				{
 					fieldName: event.fieldName,
 					formId: event.formId,
-					page: event.page
+					formPageTitle: event.formPageTitle,
+					page: event.page,
+					title:event.title
 				}
 			);
 		}
@@ -39,6 +43,7 @@ Liferay.on(
 				'Form',
 				{
 					formId: event.formId,
+					formPageTitle: event.formPageTitle,
 					page: event.page,
 					title: event.title
 				}

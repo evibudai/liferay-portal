@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -247,103 +238,120 @@ public class LayoutSetPrototypeModelImpl
 	public Map<String, Function<LayoutSetPrototype, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<LayoutSetPrototype, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<LayoutSetPrototype, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<LayoutSetPrototype, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<LayoutSetPrototype, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<LayoutSetPrototype, Object>>();
-		Map<String, BiConsumer<LayoutSetPrototype, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<LayoutSetPrototype, ?>>();
+		private static final Map<String, Function<LayoutSetPrototype, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", LayoutSetPrototype::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<LayoutSetPrototype, Long>)
-				LayoutSetPrototype::setMvccVersion);
-		attributeGetterFunctions.put("uuid", LayoutSetPrototype::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<LayoutSetPrototype, String>)
-				LayoutSetPrototype::setUuid);
-		attributeGetterFunctions.put(
-			"layoutSetPrototypeId",
-			LayoutSetPrototype::getLayoutSetPrototypeId);
-		attributeSetterBiConsumers.put(
-			"layoutSetPrototypeId",
-			(BiConsumer<LayoutSetPrototype, Long>)
-				LayoutSetPrototype::setLayoutSetPrototypeId);
-		attributeGetterFunctions.put(
-			"companyId", LayoutSetPrototype::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<LayoutSetPrototype, Long>)
-				LayoutSetPrototype::setCompanyId);
-		attributeGetterFunctions.put("userId", LayoutSetPrototype::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<LayoutSetPrototype, Long>)
-				LayoutSetPrototype::setUserId);
-		attributeGetterFunctions.put(
-			"userName", LayoutSetPrototype::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<LayoutSetPrototype, String>)
-				LayoutSetPrototype::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", LayoutSetPrototype::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<LayoutSetPrototype, Date>)
-				LayoutSetPrototype::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", LayoutSetPrototype::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<LayoutSetPrototype, Date>)
-				LayoutSetPrototype::setModifiedDate);
-		attributeGetterFunctions.put("name", LayoutSetPrototype::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<LayoutSetPrototype, String>)
-				LayoutSetPrototype::setName);
-		attributeGetterFunctions.put(
-			"description", LayoutSetPrototype::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<LayoutSetPrototype, String>)
-				LayoutSetPrototype::setDescription);
-		attributeGetterFunctions.put(
-			"settings", LayoutSetPrototype::getSettings);
-		attributeSetterBiConsumers.put(
-			"settings",
-			(BiConsumer<LayoutSetPrototype, String>)
-				LayoutSetPrototype::setSettings);
-		attributeGetterFunctions.put("active", LayoutSetPrototype::getActive);
-		attributeSetterBiConsumers.put(
-			"active",
-			(BiConsumer<LayoutSetPrototype, Boolean>)
-				LayoutSetPrototype::setActive);
+		static {
+			Map<String, Function<LayoutSetPrototype, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<LayoutSetPrototype, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", LayoutSetPrototype::getMvccVersion);
+			attributeGetterFunctions.put("uuid", LayoutSetPrototype::getUuid);
+			attributeGetterFunctions.put(
+				"layoutSetPrototypeId",
+				LayoutSetPrototype::getLayoutSetPrototypeId);
+			attributeGetterFunctions.put(
+				"companyId", LayoutSetPrototype::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", LayoutSetPrototype::getUserId);
+			attributeGetterFunctions.put(
+				"userName", LayoutSetPrototype::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", LayoutSetPrototype::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", LayoutSetPrototype::getModifiedDate);
+			attributeGetterFunctions.put("name", LayoutSetPrototype::getName);
+			attributeGetterFunctions.put(
+				"description", LayoutSetPrototype::getDescription);
+			attributeGetterFunctions.put(
+				"settings", LayoutSetPrototype::getSettings);
+			attributeGetterFunctions.put(
+				"active", LayoutSetPrototype::getActive);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<LayoutSetPrototype, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<LayoutSetPrototype, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<LayoutSetPrototype, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<LayoutSetPrototype, Long>)
+					LayoutSetPrototype::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<LayoutSetPrototype, String>)
+					LayoutSetPrototype::setUuid);
+			attributeSetterBiConsumers.put(
+				"layoutSetPrototypeId",
+				(BiConsumer<LayoutSetPrototype, Long>)
+					LayoutSetPrototype::setLayoutSetPrototypeId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<LayoutSetPrototype, Long>)
+					LayoutSetPrototype::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<LayoutSetPrototype, Long>)
+					LayoutSetPrototype::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<LayoutSetPrototype, String>)
+					LayoutSetPrototype::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<LayoutSetPrototype, Date>)
+					LayoutSetPrototype::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<LayoutSetPrototype, Date>)
+					LayoutSetPrototype::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<LayoutSetPrototype, String>)
+					LayoutSetPrototype::setName);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<LayoutSetPrototype, String>)
+					LayoutSetPrototype::setDescription);
+			attributeSetterBiConsumers.put(
+				"settings",
+				(BiConsumer<LayoutSetPrototype, String>)
+					LayoutSetPrototype::setSettings);
+			attributeSetterBiConsumers.put(
+				"active",
+				(BiConsumer<LayoutSetPrototype, Boolean>)
+					LayoutSetPrototype::setActive);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1216,7 +1224,8 @@ public class LayoutSetPrototypeModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<LayoutSetPrototype, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

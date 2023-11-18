@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.bootstrap;
 
 import com.liferay.petra.io.BigEndianCodec;
+import com.liferay.petra.process.ProcessExecutor;
+import com.liferay.petra.process.local.LocalProcessExecutor;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -22,18 +15,19 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.bootstrap.log.BundleStartStopLogger;
 import com.liferay.portal.bootstrap.log.PortalSynchronousLogListener;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
+import com.liferay.portal.kernel.concurrent.SystemExecutorServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
+import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ModuleFrameworkPropsValues;
-import com.liferay.portal.kernel.util.NamedThreadFactory;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -87,9 +81,9 @@ import java.util.Queue;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
@@ -314,8 +308,6 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			ReflectionUtil.throwException(frameworkEvent.getThrowable());
 		}
 
-		_framework.stop();
-
 		BundleContext bundleContext = _framework.getBundleContext();
 
 		ServiceReference<LogReaderService> serviceReference =
@@ -329,6 +321,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		}
 
 		bundleContext.removeBundleListener(_bundleListener);
+
+		_framework.stop();
 
 		frameworkEvent = _framework.waitForStop(timeout);
 
@@ -543,7 +537,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		crc32.update(fileName.getBytes());
 
 		_calculateChecksum(file.canWrite() ? 1000L : -1000L, crc32);
-		_calculateChecksum(file.lastModified(), crc32);
+		_calculateChecksum(file.lastModified() / 1000, crc32);
 		_calculateChecksum(file.length(), crc32);
 
 		return crc32.getValue();
@@ -728,6 +722,31 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		return string.substring(beginIndex, endIndex);
 	}
 
+	private OSGiBeanProperties _findOSGiBeanProperties(Object bean) {
+		Class<?> clazz = bean.getClass();
+
+		if (!(bean instanceof BaseLocalService)) {
+			return clazz.getAnnotation(OSGiBeanProperties.class);
+		}
+
+		for (Class<?> interfaceClass : clazz.getInterfaces()) {
+			if ((interfaceClass == BaseLocalService.class) ||
+				!BaseLocalService.class.isAssignableFrom(interfaceClass)) {
+
+				continue;
+			}
+
+			OSGiBeanProperties osgiBeanProperties =
+				interfaceClass.getAnnotation(OSGiBeanProperties.class);
+
+			if (osgiBeanProperties != null) {
+				return osgiBeanProperties;
+			}
+		}
+
+		return null;
+	}
+
 	private Attributes _getExtraManifestAttributes() {
 		try (InputStream inputStream =
 				ModuleFrameworkImpl.class.getResourceAsStream(
@@ -766,17 +785,6 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 
 		return StringUtil.replace(
 			uriString, CharPool.BACK_SLASH, CharPool.FORWARD_SLASH);
-	}
-
-	private Dictionary<String, Object> _getProperties(
-		Object bean, String beanName) {
-
-		Class<?> clazz = bean.getClass();
-
-		OSGiBeanProperties osgiBeanProperties = clazz.getAnnotation(
-			OSGiBeanProperties.class);
-
-		return _getProperties(osgiBeanProperties, beanName);
 	}
 
 	private Dictionary<String, Object> _getProperties(
@@ -1199,7 +1207,12 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			_log.debug("Register application context");
 		}
 
-		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
+		Collection<ServiceRegistration<?>> serviceRegistrations =
+			new ConcurrentLinkedQueue<>();
+
+		ExecutorService executorService =
+			SystemExecutorServiceUtil.getExecutorService();
+		List<Future<Void>> futures = new ArrayList<>();
 
 		ConfigurableListableBeanFactory configurableListableBeanFactory =
 			configurableApplicationContext.getBeanFactory();
@@ -1208,26 +1221,40 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			configurableListableBeanFactory.getBeanNamesIterator();
 
 		iterator.forEachRemaining(
-			beanName -> {
-				Object bean = null;
+			beanName -> futures.add(
+				executorService.submit(
+					() -> {
+						Object bean = null;
 
-				try {
-					bean = configurableApplicationContext.getBean(beanName);
-				}
-				catch (Exception exception) {
-					_log.error(exception);
-				}
+						try {
+							bean = configurableApplicationContext.getBean(
+								beanName);
+						}
+						catch (Exception exception) {
+							_log.error(exception);
+						}
 
-				if (bean != null) {
-					ServiceRegistration<?> serviceRegistration =
-						_registerService(
-							_framework.getBundleContext(), beanName, bean);
+						if (bean != null) {
+							ServiceRegistration<?> serviceRegistration =
+								_registerService(
+									_framework.getBundleContext(), beanName,
+									bean);
 
-					if (serviceRegistration != null) {
-						serviceRegistrations.add(serviceRegistration);
-					}
-				}
-			});
+							if (serviceRegistration != null) {
+								serviceRegistrations.add(serviceRegistration);
+							}
+						}
+					},
+					null)));
+
+		for (Future<Void> future : futures) {
+			try {
+				future.get();
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+		}
 
 		_springContextServices.put(
 			configurableApplicationContext, serviceRegistrations);
@@ -1253,10 +1280,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private ServiceRegistration<?> _registerService(
 		BundleContext bundleContext, String beanName, Object bean) {
 
-		Class<?> clazz = bean.getClass();
-
-		OSGiBeanProperties osgiBeanProperties = clazz.getAnnotation(
-			OSGiBeanProperties.class);
+		OSGiBeanProperties osgiBeanProperties = _findOSGiBeanProperties(bean);
 
 		Set<String> names = OSGiBeanProperties.Service.interfaceNames(
 			bean, osgiBeanProperties,
@@ -1516,15 +1540,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		if (ModuleFrameworkPropsValues.
 				MODULE_FRAMEWORK_CONCURRENT_STARTUP_ENABLED) {
 
-			Runtime runtime = Runtime.getRuntime();
-
-			Thread currentThread = Thread.currentThread();
-
-			ExecutorService executorService = Executors.newFixedThreadPool(
-				runtime.availableProcessors(),
-				new NamedThreadFactory(
-					"ModuleFramework-Static-Bundles", Thread.NORM_PRIORITY,
-					currentThread.getContextClassLoader()));
+			ExecutorService executorService =
+				SystemExecutorServiceUtil.getExecutorService();
 
 			List<Future<Void>> futures = new ArrayList<>(bundles.size());
 
@@ -1541,8 +1558,6 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 							}));
 				}
 			}
-
-			executorService.shutdown();
 
 			for (Future<Void> future : futures) {
 				try {
@@ -1594,18 +1609,12 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			_log.debug("Setting up required service");
 		}
 
-		Props props = PropsUtil.getProps();
+		bundleContext.registerService(
+			ProcessExecutor.class, new LocalProcessExecutor(), null);
 
-		ServiceRegistration<Props> serviceRegistration =
-			bundleContext.registerService(
-				Props.class, props,
-				_getProperties(props, Props.class.getName()));
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Registered required service as " +
-					serviceRegistration.getReference());
-		}
+		bundleContext.registerService(
+			Props.class, PropsUtil.getProps(),
+			_getProperties(null, Props.class.getName()));
 	}
 
 	private void _startConfigurationBundles(Collection<Bundle> bundles)
@@ -1721,7 +1730,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private void _unregisterApplicationContext(
 		ConfigurableApplicationContext configurableApplicationContext) {
 
-		List<ServiceRegistration<?>> serviceRegistrations =
+		Collection<ServiceRegistration<?>> serviceRegistrations =
 			_springContextServices.remove(configurableApplicationContext);
 
 		if (serviceRegistrations == null) {
@@ -1784,7 +1793,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private Framework _framework;
 	private LogListener _logListener;
 	private final Map
-		<ConfigurableApplicationContext, List<ServiceRegistration<?>>>
+		<ConfigurableApplicationContext, Collection<ServiceRegistration<?>>>
 			_springContextServices = new ConcurrentHashMap<>();
 
 }

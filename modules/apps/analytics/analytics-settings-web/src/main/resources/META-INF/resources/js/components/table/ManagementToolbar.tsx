@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -29,7 +20,6 @@ interface IManagementToolbarProps {
 	addItemTitle?: string;
 	columns: TColumn[];
 	disabled: boolean;
-	makeRequest: () => void;
 	onAddItem?: () => void;
 	showCheckbox: boolean;
 }
@@ -38,11 +28,15 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 	addItemTitle = Liferay.Language.get('add-item'),
 	columns,
 	disabled,
-	makeRequest,
 	onAddItem,
 	showCheckbox,
 }) => {
-	const {filter, globalChecked, keywords: storedKeywords, rows} = useData();
+	const {
+		filter,
+		globalChecked,
+		keywords: storedKeywords,
+		pagination: {totalCount},
+	} = useData();
 	const dispatch = useDispatch();
 
 	const [keywords, setKeywords] = useState('');
@@ -56,8 +50,13 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 						<ClayManagementToolbar.Item>
 							<ClayCheckbox
 								checked={globalChecked}
+								data-testid="globalCheckbox"
 								disabled={disabled}
-								onChange={makeRequest}
+								onChange={() => {
+									dispatch({
+										type: Events.ToggleGlobalCheckbox,
+									});
+								}}
 							/>
 						</ClayManagementToolbar.Item>
 					)}
@@ -109,7 +108,8 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 					/>
 
 					<ClayManagementToolbar.Item>
-						<ClayButton
+						<ClayButtonWithIcon
+							aria-label={Liferay.Language.get('sort')}
 							className="nav-link nav-link-monospaced"
 							disabled={disabled}
 							displayType="unstyled"
@@ -119,9 +119,8 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 									type: Events.ChangeFilter,
 								});
 							}}
-						>
-							<ClayIcon symbol={getOrderBySymbol(filter)} />
-						</ClayButton>
+							symbol={getOrderBySymbol(filter)}
+						/>
 					</ClayManagementToolbar.Item>
 				</ClayManagementToolbar.ItemList>
 
@@ -193,9 +192,12 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 			{storedKeywords && (
 				<ClayResultsBar>
 					<ClayResultsBar.Item expand>
-						<span className="component-text text-truncate-inline">
+						<span
+							className="component-text text-truncate-inline"
+							data-testid="subnav-description"
+						>
 							<span className="text-truncate">
-								<span>{getResultsLanguage(rows)}</span>
+								<span>{getResultsLanguage(totalCount)}</span>
 
 								<strong>{` "${storedKeywords}"`}</strong>
 							</span>
@@ -205,6 +207,7 @@ const ManagementToolbar: React.FC<IManagementToolbarProps> = ({
 					<ClayResultsBar.Item>
 						<ClayButton
 							className="component-link tbar-link"
+							data-testid="subnav-clear-button"
 							displayType="unstyled"
 							onClick={() => {
 								dispatch({

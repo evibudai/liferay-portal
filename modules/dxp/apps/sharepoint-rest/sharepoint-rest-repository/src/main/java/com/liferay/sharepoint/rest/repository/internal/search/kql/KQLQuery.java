@@ -1,21 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.sharepoint.rest.repository.internal.search.kql;
-
-import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  * @author Adolfo Pérez
@@ -23,11 +11,13 @@ import java.util.stream.Stream;
 public interface KQLQuery {
 
 	public static KQLQuery and(KQLQuery... kqlQueries) {
-		Stream<KQLQuery> queryStream = Arrays.stream(kqlQueries);
+		KQLQuery kqlQuery = NullKQLQuery.INSTANCE;
 
-		return queryStream.reduce(
-			NullKQLQuery.INSTANCE,
-			(kqlQuery1, kqlQuery2) -> kqlQuery1.and(kqlQuery2));
+		for (KQLQuery curKQLQuery : kqlQueries) {
+			kqlQuery = kqlQuery.and(curKQLQuery);
+		}
+
+		return kqlQuery;
 	}
 
 	public static KQLQuery eq(String field, String value) {

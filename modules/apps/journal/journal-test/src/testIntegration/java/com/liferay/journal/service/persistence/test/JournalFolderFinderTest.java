@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.persistence.test;
@@ -80,39 +71,42 @@ public class JournalFolderFinderTest {
 	}
 
 	@Test
-	public void testCountF_A_ByG_F() throws Exception {
+	public void testCountF_A_ByG_F_DDMSK() throws Exception {
 		QueryDefinition<Object> queryDefinition = new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
 		Assert.assertEquals(
 			3,
-			_journalFolderFinder.countF_A_ByG_F(
-				_group.getGroupId(), _folder1.getFolderId(), queryDefinition));
+			_journalFolderFinder.countF_A_ByG_F_DDMSI(
+				_group.getGroupId(), _folder1.getFolderId(), 0,
+				queryDefinition));
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_IN_TRASH);
 
 		Assert.assertEquals(
 			1,
-			_journalFolderFinder.countF_A_ByG_F(
-				_group.getGroupId(), _folder1.getFolderId(), queryDefinition));
+			_journalFolderFinder.countF_A_ByG_F_DDMSI(
+				_group.getGroupId(), _folder1.getFolderId(), 0,
+				queryDefinition));
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_IN_TRASH, true);
 
 		Assert.assertEquals(
 			2,
-			_journalFolderFinder.countF_A_ByG_F(
-				_group.getGroupId(), _folder1.getFolderId(), queryDefinition));
+			_journalFolderFinder.countF_A_ByG_F_DDMSI(
+				_group.getGroupId(), _folder1.getFolderId(), 0,
+				queryDefinition));
 	}
 
 	@Test
-	public void testFindF_A_ByG_F() throws Exception {
+	public void testFindF_A_ByG_F_DDMSK() throws Exception {
 		QueryDefinition<Object> queryDefinition = new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
-		List<Object> results = _journalFolderFinder.findF_A_ByG_F(
-			_group.getGroupId(), _folder1.getFolderId(), queryDefinition);
+		List<Object> results = _journalFolderFinder.findF_A_ByG_F_DDMSI(
+			_group.getGroupId(), _folder1.getFolderId(), 0, queryDefinition);
 
 		Assert.assertEquals(results.toString(), 3, results.size());
 
@@ -135,8 +129,8 @@ public class JournalFolderFinderTest {
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_IN_TRASH);
 
-		results = _journalFolderFinder.findF_A_ByG_F(
-			_group.getGroupId(), _folder1.getFolderId(), queryDefinition);
+		results = _journalFolderFinder.findF_A_ByG_F_DDMSI(
+			_group.getGroupId(), _folder1.getFolderId(), 0, queryDefinition);
 
 		Assert.assertEquals(results.toString(), 1, results.size());
 
@@ -156,8 +150,8 @@ public class JournalFolderFinderTest {
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_IN_TRASH, true);
 
-		results = _journalFolderFinder.findF_A_ByG_F(
-			_group.getGroupId(), _folder1.getFolderId(), queryDefinition);
+		results = _journalFolderFinder.findF_A_ByG_F_DDMSI(
+			_group.getGroupId(), _folder1.getFolderId(), 0, queryDefinition);
 
 		Assert.assertEquals(results.toString(), 2, results.size());
 

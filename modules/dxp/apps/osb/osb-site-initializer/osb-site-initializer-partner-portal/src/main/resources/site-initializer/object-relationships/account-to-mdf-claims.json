@@ -1,9 +1,9 @@
 {
 	"deletionType": "cascade",
 	"label": {
-		"en-US": "Company"
+		"en-US": "Account to MDF Claims"
 	},
-	"name": "accountToMdfClaims",
+	"name": "accToMDFClms",
 	"objectDefinitionId1": "[$OBJECT_DEFINITION_ID:AccountEntry$]",
 	"objectDefinitionId2": "[$OBJECT_DEFINITION_ID:MDFClaim$]",
 	"objectDefinitionName2": "MDFClaim",

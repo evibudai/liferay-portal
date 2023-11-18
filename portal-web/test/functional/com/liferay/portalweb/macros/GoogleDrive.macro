@@ -7,7 +7,7 @@ definition {
 			locator1 = "Button#SELECT_FILE",
 			value1 = "Select File");
 
-		if (isSet(windowTitle)) {
+		if (isSet(userEmailAddress)) {
 			SelectWindow(locator1 = "GoogleLogin#PAGE_TITLE");
 
 			if (IsElementPresent(locator1 = "GoogleLogin#HEADER")) {
@@ -18,7 +18,7 @@ definition {
 
 			Type(
 				locator1 = "GoogleLogin#LOGIN_EMAIL_FIELD",
-				value1 = "${userEmailAddress}");
+				value1 = ${userEmailAddress});
 
 			Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
 
@@ -26,12 +26,12 @@ definition {
 
 			Type(
 				locator1 = "GoogleLogin#LOGIN_PASSWORD_FIELD",
-				value1 = "${userPassword}");
+				value1 = ${userPassword});
 
 			Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
-
-			SelectWindow.selectWindowNoSPARefresh(locator1 = "title=${windowTitle}");
 		}
+
+		SelectWindow.selectWindowNoSPARefresh(locator1 = "title=${windowTitle}");
 
 		if (IsElementNotPresent(locator1 = "GoogleDrive#GOOGLE_DRIVE_IFRAME")) {
 			Refresh();
@@ -49,7 +49,7 @@ definition {
 	}
 
 	macro selectDocument {
-		var key_googleDocName = "${googleDocName}";
+		var key_googleDocName = ${googleDocName};
 
 		if (IsElementNotPresent(locator1 = "GoogleDrive#LIST_VIEW_DOCUMENT_SPECIFIC")) {
 			Click(locator1 = "GoogleDrive#LIST_VIEW_BUTTON");
@@ -57,7 +57,7 @@ definition {
 
 		Click(
 			locator1 = "GoogleDrive#LIST_VIEW_DOCUMENT_SPECIFIC",
-			value1 = "${googleDocName}");
+			value1 = ${googleDocName});
 
 		ClickNoError(
 			locator1 = "GoogleDrive#SELECT_BUTTON",
@@ -65,11 +65,11 @@ definition {
 
 		SelectFrameTop();
 
-		var key_dmDocumentTitle = "${googleDocTitle}";
+		var key_dmDocumentTitle = ${googleDocTitle};
 
 		AssertTextEquals(
 			locator1 = "DocumentsAndMediaEntry#SELECTED_DOCUMENT_TITLE",
-			value1 = "${googleDocTitle}");
+			value1 = ${googleDocTitle});
 	}
 
 }

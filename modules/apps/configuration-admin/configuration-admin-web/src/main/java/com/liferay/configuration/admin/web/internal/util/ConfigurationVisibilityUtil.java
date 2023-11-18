@@ -1,28 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.configuration.admin.web.internal.util;
 
 import com.liferay.configuration.admin.display.ConfigurationVisibilityController;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -40,31 +41,191 @@ public class ConfigurationVisibilityUtil {
 			return false;
 		}
 
-		return isVisible(configurationModel.getBaseID(), scope, scopePK);
+		if (!isVisibleByFeatureFlagKey(
+				configurationModel.getFeatureFlagKey(), scope, scopePK) ||
+			!isVisibleByVisibilityControllerKey(
+				configurationModel.getVisibilityControllerKey(), scope,
+				scopePK)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	public static boolean isVisible(
 		String pid, ExtendedObjectClassDefinition.Scope scope,
 		Serializable scopePK) {
 
+		Class<?> clazz = _getClass(pid);
+
+		if (!isVisibleByFeatureFlagKey(
+				_getFeatureFlagKey(clazz), scope, scopePK) ||
+			!isVisibleByVisibilityControllerKey(
+				_getVisibilityControllerKey(clazz, pid), scope, scopePK)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public static boolean isVisibleByFeatureFlagKey(
+		String featureFlagKey, ExtendedObjectClassDefinition.Scope scope,
+		Serializable scopePK) {
+
+		if (Validator.isBlank(featureFlagKey)) {
+			return true;
+		}
+
+		if (scope.equals(ExtendedObjectClassDefinition.Scope.COMPANY)) {
+			return FeatureFlagManagerUtil.isEnabled(
+				(long)scopePK, featureFlagKey);
+		}
+
+		if (scope.equals(ExtendedObjectClassDefinition.Scope.GROUP)) {
+			Group group = GroupLocalServiceUtil.fetchGroup((long)scopePK);
+
+			if (group != null) {
+				return FeatureFlagManagerUtil.isEnabled(
+					group.getCompanyId(), featureFlagKey);
+			}
+		}
+
+		return FeatureFlagManagerUtil.isEnabled(featureFlagKey);
+	}
+
+	public static boolean isVisibleByVisibilityControllerKey(
+		String visibilityControllerKey,
+		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
+
+		if (Validator.isNull(visibilityControllerKey)) {
+			return true;
+		}
+
 		ConfigurationVisibilityController configurationVisibilityController =
-			_getConfigurationVisibilityController(pid);
+			_serviceTrackerMap.getService(visibilityControllerKey);
+
+		if (configurationVisibilityController == null) {
+			return true;
+		}
 
 		return configurationVisibilityController.isVisible(scope, scopePK);
 	}
 
-	private static ConfigurationVisibilityController
-		_getConfigurationVisibilityController(String pid) {
-
-		if (_serviceTrackerMap.containsKey(pid)) {
-			return _serviceTrackerMap.getService(pid);
+	private static Class<?> _getClass(Bundle bundle, String pid) {
+		try {
+			return bundle.loadClass(pid);
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(classNotFoundException);
+			}
 		}
 
-		return _configurationVisibilityController;
+		return null;
 	}
 
-	private static final ConfigurationVisibilityController
-		_configurationVisibilityController = (scope, scopePK) -> true;
+	private static Class<?> _getClass(String pid) {
+		Class<?> clazz = null;
+
+		for (Bundle bundle : _bundleContext.getBundles()) {
+			if (pid.startsWith(bundle.getSymbolicName())) {
+				clazz = _getClass(bundle, pid);
+			}
+
+			if (clazz != null) {
+				return clazz;
+			}
+		}
+
+		for (Bundle bundle : _bundleContext.getBundles()) {
+			clazz = _getClass(bundle, pid);
+
+			if (clazz != null) {
+				return clazz;
+			}
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("No class found for PID " + pid);
+		}
+
+		return null;
+	}
+
+	private static String _getFeatureFlagKey(Class<?> clazz) {
+		if (clazz == null) {
+			return StringPool.BLANK;
+		}
+
+		ExtendedObjectClassDefinition extendedObjectClassDefinition =
+			clazz.getAnnotation(ExtendedObjectClassDefinition.class);
+
+		if (extendedObjectClassDefinition == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Class " + clazz.getName() +
+						" is missing ExtendedObjectClassDefinition");
+			}
+
+			return StringPool.BLANK;
+		}
+
+		String featureFlagKey = extendedObjectClassDefinition.featureFlagKey();
+
+		if (Validator.isBlank(featureFlagKey)) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Class " + clazz.getName() + " is missing featureFlagKey");
+			}
+
+			return StringPool.BLANK;
+		}
+
+		return featureFlagKey;
+	}
+
+	private static String _getVisibilityControllerKey(
+		Class<?> clazz, String defaultValue) {
+
+		if (clazz == null) {
+			return defaultValue;
+		}
+
+		ExtendedObjectClassDefinition extendedObjectClassDefinition =
+			clazz.getAnnotation(ExtendedObjectClassDefinition.class);
+
+		if (extendedObjectClassDefinition == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Class " + clazz.getName() +
+						" is missing ExtendedObjectClassDefinition");
+			}
+
+			return defaultValue;
+		}
+
+		String visibilityControllerKey =
+			extendedObjectClassDefinition.visibilityControllerKey();
+
+		if (Validator.isBlank(visibilityControllerKey)) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Class " + clazz.getName() +
+						" is missing visibilityControllerKey");
+			}
+
+			return defaultValue;
+		}
+
+		return visibilityControllerKey;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ConfigurationVisibilityUtil.class);
+
+	private static final BundleContext _bundleContext;
 	private static final ServiceTrackerMap
 		<String, ConfigurationVisibilityController> _serviceTrackerMap;
 
@@ -72,9 +233,34 @@ public class ConfigurationVisibilityUtil {
 		Bundle bundle = FrameworkUtil.getBundle(
 			ConfigurationVisibilityController.class);
 
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_bundleContext = bundleContext;
+
+		ServiceReferenceMapper<String, ConfigurationVisibilityController>
+			configurationPidPropertyMapper =
+				new PropertyServiceReferenceMapper<>("configuration.pid");
+		ServiceReferenceMapper<String, ConfigurationVisibilityController>
+			visibilityControllerKeyPropertyMapper =
+				new PropertyServiceReferenceMapper<>(
+					"visibility.controller.key");
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundle.getBundleContext(), ConfigurationVisibilityController.class,
-			"configuration.pid");
+			bundleContext, ConfigurationVisibilityController.class, null,
+			(serviceReference, emitter) -> {
+				configurationPidPropertyMapper.map(serviceReference, emitter);
+				visibilityControllerKeyPropertyMapper.map(
+					serviceReference, emitter);
+
+				ConfigurationVisibilityController service =
+					bundleContext.getService(serviceReference);
+
+				String key = service.getKey();
+
+				if (!Validator.isBlank(key)) {
+					emitter.emit(key);
+				}
+			});
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.impl;
@@ -27,6 +18,7 @@ import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.model.CommerceShippingMethod;
+import com.liferay.commerce.model.attributes.provider.CommerceModelAttributesProvider;
 import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
@@ -62,6 +54,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -70,6 +63,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -705,7 +700,8 @@ public class CommerceShipmentLocalServiceImpl
 		for (CommerceShipmentItem commerceShipmentItem :
 				commerceShipmentItems) {
 
-			if ((commerceShipmentItem.getQuantity() < 1) ||
+			if (BigDecimalUtil.lte(
+					commerceShipmentItem.getQuantity(), BigDecimal.ZERO) ||
 				(commerceShipmentItem.getCommerceInventoryWarehouseId() <= 0)) {
 
 				throw new CommerceShipmentStatusException();
@@ -731,15 +727,17 @@ public class CommerceShipmentLocalServiceImpl
 			() -> {
 				Message message = new Message();
 
+				DTOConverter<?, ?> commerceShipmentDTOConverter =
+					_dtoConverterRegistry.getDTOConverter(
+						CommerceShipment.class.getName());
+
 				message.setPayload(
 					JSONUtil.put(
+						"classPK", commerceShipment.getCommerceShipmentId()
+					).put(
 						"commerceShipment",
 						() -> {
-							DTOConverter<?, ?> dtoConverter =
-								_dtoConverterRegistry.getDTOConverter(
-									CommerceShipment.class.getName());
-
-							Object object = dtoConverter.toDTO(
+							Object object = commerceShipmentDTOConverter.toDTO(
 								new DefaultDTOConverterContext(
 									_dtoConverterRegistry,
 									commerceShipment.getCommerceShipmentId(),
@@ -751,6 +749,15 @@ public class CommerceShipmentLocalServiceImpl
 					).put(
 						"commerceShipmentId",
 						commerceShipment.getCommerceShipmentId()
+					).put(
+						"model" + CommerceShipment.class.getName(),
+						commerceShipment.getModelAttributes()
+					).put(
+						"modelDTO" +
+							commerceShipmentDTOConverter.getContentType(),
+						_commerceModelAttributesProvider.getModelAttributes(
+							commerceShipment, commerceShipmentDTOConverter,
+							commerceShipment.getUserId())
 					));
 
 				MessageBusUtil.sendMessage(
@@ -915,6 +922,9 @@ public class CommerceShipmentLocalServiceImpl
 
 	@Reference
 	private CommerceAddressLocalService _commerceAddressLocalService;
+
+	@Reference
+	private CommerceModelAttributesProvider _commerceModelAttributesProvider;
 
 	@Reference
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;

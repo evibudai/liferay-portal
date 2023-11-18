@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.model.impl;
@@ -70,7 +61,7 @@ public class AnalyticsDeleteMessageModelImpl
 	public static final String TABLE_NAME = "AnalyticsDeleteMessage";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"analyticsDeleteMessageId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"className", Types.VARCHAR},
@@ -82,6 +73,7 @@ public class AnalyticsDeleteMessageModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("analyticsDeleteMessageId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -92,7 +84,7 @@ public class AnalyticsDeleteMessageModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AnalyticsDeleteMessage (mvccVersion LONG default 0 not null,analyticsDeleteMessageId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,className VARCHAR(255) null,classPK LONG)";
+		"create table AnalyticsDeleteMessage (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,analyticsDeleteMessageId LONG not null,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,className VARCHAR(255) null,classPK LONG,primary key (analyticsDeleteMessageId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table AnalyticsDeleteMessage";
@@ -219,84 +211,106 @@ public class AnalyticsDeleteMessageModelImpl
 	public Map<String, Function<AnalyticsDeleteMessage, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AnalyticsDeleteMessage, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<AnalyticsDeleteMessage, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<AnalyticsDeleteMessage, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AnalyticsDeleteMessage, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<AnalyticsDeleteMessage, Object>>();
-		Map<String, BiConsumer<AnalyticsDeleteMessage, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<AnalyticsDeleteMessage, ?>>();
+		private static final Map
+			<String, Function<AnalyticsDeleteMessage, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", AnalyticsDeleteMessage::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<AnalyticsDeleteMessage, Long>)
-				AnalyticsDeleteMessage::setMvccVersion);
-		attributeGetterFunctions.put(
-			"analyticsDeleteMessageId",
-			AnalyticsDeleteMessage::getAnalyticsDeleteMessageId);
-		attributeSetterBiConsumers.put(
-			"analyticsDeleteMessageId",
-			(BiConsumer<AnalyticsDeleteMessage, Long>)
-				AnalyticsDeleteMessage::setAnalyticsDeleteMessageId);
-		attributeGetterFunctions.put(
-			"companyId", AnalyticsDeleteMessage::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AnalyticsDeleteMessage, Long>)
-				AnalyticsDeleteMessage::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", AnalyticsDeleteMessage::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<AnalyticsDeleteMessage, Long>)
-				AnalyticsDeleteMessage::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", AnalyticsDeleteMessage::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<AnalyticsDeleteMessage, Date>)
-				AnalyticsDeleteMessage::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", AnalyticsDeleteMessage::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<AnalyticsDeleteMessage, Date>)
-				AnalyticsDeleteMessage::setModifiedDate);
-		attributeGetterFunctions.put(
-			"className", AnalyticsDeleteMessage::getClassName);
-		attributeSetterBiConsumers.put(
-			"className",
-			(BiConsumer<AnalyticsDeleteMessage, String>)
-				AnalyticsDeleteMessage::setClassName);
-		attributeGetterFunctions.put(
-			"classPK", AnalyticsDeleteMessage::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<AnalyticsDeleteMessage, Long>)
-				AnalyticsDeleteMessage::setClassPK);
+		static {
+			Map<String, Function<AnalyticsDeleteMessage, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<AnalyticsDeleteMessage, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", AnalyticsDeleteMessage::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", AnalyticsDeleteMessage::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"analyticsDeleteMessageId",
+				AnalyticsDeleteMessage::getAnalyticsDeleteMessageId);
+			attributeGetterFunctions.put(
+				"companyId", AnalyticsDeleteMessage::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", AnalyticsDeleteMessage::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", AnalyticsDeleteMessage::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", AnalyticsDeleteMessage::getModifiedDate);
+			attributeGetterFunctions.put(
+				"className", AnalyticsDeleteMessage::getClassName);
+			attributeGetterFunctions.put(
+				"classPK", AnalyticsDeleteMessage::getClassPK);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<AnalyticsDeleteMessage, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AnalyticsDeleteMessage, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<AnalyticsDeleteMessage, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"analyticsDeleteMessageId",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setAnalyticsDeleteMessageId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<AnalyticsDeleteMessage, Date>)
+					AnalyticsDeleteMessage::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<AnalyticsDeleteMessage, Date>)
+					AnalyticsDeleteMessage::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"className",
+				(BiConsumer<AnalyticsDeleteMessage, String>)
+					AnalyticsDeleteMessage::setClassName);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<AnalyticsDeleteMessage, Long>)
+					AnalyticsDeleteMessage::setClassPK);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -311,6 +325,20 @@ public class AnalyticsDeleteMessageModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@Override
@@ -516,6 +544,7 @@ public class AnalyticsDeleteMessageModelImpl
 			new AnalyticsDeleteMessageImpl();
 
 		analyticsDeleteMessageImpl.setMvccVersion(getMvccVersion());
+		analyticsDeleteMessageImpl.setCtCollectionId(getCtCollectionId());
 		analyticsDeleteMessageImpl.setAnalyticsDeleteMessageId(
 			getAnalyticsDeleteMessageId());
 		analyticsDeleteMessageImpl.setCompanyId(getCompanyId());
@@ -537,6 +566,8 @@ public class AnalyticsDeleteMessageModelImpl
 
 		analyticsDeleteMessageImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		analyticsDeleteMessageImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		analyticsDeleteMessageImpl.setAnalyticsDeleteMessageId(
 			this.<Long>getColumnOriginalValue("analyticsDeleteMessageId"));
 		analyticsDeleteMessageImpl.setCompanyId(
@@ -631,6 +662,8 @@ public class AnalyticsDeleteMessageModelImpl
 			new AnalyticsDeleteMessageCacheModel();
 
 		analyticsDeleteMessageCacheModel.mvccVersion = getMvccVersion();
+
+		analyticsDeleteMessageCacheModel.ctCollectionId = getCtCollectionId();
 
 		analyticsDeleteMessageCacheModel.analyticsDeleteMessageId =
 			getAnalyticsDeleteMessageId();
@@ -731,6 +764,7 @@ public class AnalyticsDeleteMessageModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _analyticsDeleteMessageId;
 	private long _companyId;
 	private long _userId;
@@ -742,7 +776,8 @@ public class AnalyticsDeleteMessageModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<AnalyticsDeleteMessage, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -768,6 +803,7 @@ public class AnalyticsDeleteMessageModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put(
 			"analyticsDeleteMessageId", _analyticsDeleteMessageId);
 		_columnOriginalValues.put("companyId", _companyId);
@@ -791,19 +827,21 @@ public class AnalyticsDeleteMessageModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("analyticsDeleteMessageId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("analyticsDeleteMessageId", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("companyId", 8L);
 
-		columnBitmasks.put("createDate", 16L);
+		columnBitmasks.put("userId", 16L);
 
-		columnBitmasks.put("modifiedDate", 32L);
+		columnBitmasks.put("createDate", 32L);
 
-		columnBitmasks.put("className", 64L);
+		columnBitmasks.put("modifiedDate", 64L);
 
-		columnBitmasks.put("classPK", 128L);
+		columnBitmasks.put("className", 128L);
+
+		columnBitmasks.put("classPK", 256L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.menu.item.display.page.test;
@@ -22,8 +13,10 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.layout.display.page.LayoutDisplayPageInfoItemFieldValuesProvider;
@@ -69,8 +62,6 @@ import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -233,8 +224,8 @@ public class SiteNavigationMenuItemDisplayPageTest {
 			_group.getCreatorUserId(), _group.getGroupId(), 0,
 			_portal.getClassNameId(AssetCategory.class.getName()), 0,
 			RandomTestUtil.randomString(),
-			LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true, 0,
-			0, 0, 0, _serviceContext);
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
+			0, _serviceContext);
 
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.addSiteNavigationMenu(
@@ -266,11 +257,13 @@ public class SiteNavigationMenuItemDisplayPageTest {
 
 		String friendlyURL =
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				_portal.getClassName(
-					GetterUtil.getLong(
-						typeSettingsUnicodeProperties.get("classNameId"))),
-				GetterUtil.getLong(
-					typeSettingsUnicodeProperties.get("classPK")),
+				new InfoItemReference(
+					_portal.getClassName(
+						GetterUtil.getLong(
+							typeSettingsUnicodeProperties.get("classNameId"))),
+					new ClassPKInfoItemIdentifier(
+						GetterUtil.getLong(
+							typeSettingsUnicodeProperties.get("classPK")))),
 				themeDisplay);
 
 		SiteNavigationMenuItemType siteNavigationMenuItemType =
@@ -355,16 +348,15 @@ public class SiteNavigationMenuItemDisplayPageTest {
 		Locale defaultLocale = _portal.getSiteDefaultLocale(
 			_group.getGroupId());
 
-		Set<Locale> locales = LanguageUtil.getAvailableLocales();
+		Locale nondefaultLocale = null;
 
-		Stream<Locale> stream = locales.stream();
+		for (Locale locale : LanguageUtil.getAvailableLocales()) {
+			if (!Objects.equals(defaultLocale, locale)) {
+				nondefaultLocale = locale;
 
-		Locale nondefaultLocale = stream.filter(
-			locale -> !Objects.equals(defaultLocale, locale)
-		).findFirst(
-		).orElse(
-			null
-		);
+				break;
+			}
+		}
 
 		Assert.assertNotNull(nondefaultLocale);
 
@@ -396,16 +388,15 @@ public class SiteNavigationMenuItemDisplayPageTest {
 		Locale defaultLocale = _portal.getSiteDefaultLocale(
 			_group.getGroupId());
 
-		Set<Locale> locales = LanguageUtil.getAvailableLocales();
+		Locale nontranslatedLocale = null;
 
-		Stream<Locale> stream = locales.stream();
+		for (Locale locale : LanguageUtil.getAvailableLocales()) {
+			if (!Objects.equals(defaultLocale, locale)) {
+				nontranslatedLocale = locale;
 
-		Locale nontranslatedLocale = stream.filter(
-			locale -> !Objects.equals(defaultLocale, locale)
-		).findFirst(
-		).orElse(
-			null
-		);
+				break;
+			}
+		}
 
 		Assert.assertNotNull(nontranslatedLocale);
 
@@ -509,7 +500,7 @@ public class SiteNavigationMenuItemDisplayPageTest {
 					defaultLocale, AssetCategory.class.getName())
 			).put(
 				"useCustomName",
-				String.valueOf(!Objects.equals("{}", localizedNames))
+				String.valueOf(!Objects.equals(localizedNames, "{}"))
 			).buildString(),
 			_serviceContext);
 	}

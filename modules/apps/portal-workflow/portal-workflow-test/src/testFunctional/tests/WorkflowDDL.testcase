@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,7 +28,7 @@ definition {
 	}
 
 	@description = "Verify that the user can Approve a DDL Entry"
-	@priority = "5"
+	@priority = 5
 	test CanApproveDDLEntry {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -55,10 +55,10 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -83,7 +83,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69474. Verify that if it is possible to create a Dynamic Data List."
-	@priority = "5"
+	@priority = 5
 	test CanCreateDDL {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -110,25 +110,58 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		KaleoFormsNewSubmissions.viewStatusDDL(status = "Pending");
 	}
 
-	@description = "Verify that the user can Publish a Entry after Save as Draft"
-	@ignore = "true"
-	@priority = "4"
+	@description = "LRQA-69476 - Verify that the user can Publish a Entry after Save as Draft"
+	@priority = 4
 	test CanPublishAfterSaveAsDraft {
+		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
-		// TODO LRQA-69476 CanPublishAfterSaveAsDraft pending implementation
+		DDLList.addCP(
+			ddlListDescription = "DDL List Description",
+			ddlListName = "DDL List",
+			workflowDefinition = "Single Approver");
 
+		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Contacts");
+
+		DDLDataDefinition.save();
+
+		DDLList.viewCP(ddlListName = "DDL List");
+
+		LexiconEntry.gotoAdd();
+
+		KaleoFormsNewSubmissions.addNewContacts(
+			ddlCompany = "Liferay",
+			ddlEmail = "qa@liferay.com",
+			ddlFirstName = "Test",
+			ddlInstantMesseger = "Liferay",
+			ddlJobTitle = "QA",
+			ddlLastName = "Test",
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
+
+		DDLRecord.saveAsDraftCP();
+
+		KaleoFormsNewSubmissions.viewStatusDDL(status = "Draft");
+
+		KaleoFormsNewSubmissions.editDLLRecordContacts(
+			ddlCompanyEdit = "Liferay Edit",
+			ddlFirstNameEdit = "Test Edit",
+			ddlListName = "DDL List");
+
+		DDLRecord.submitForWorkflow();
+
+		KaleoFormsNewSubmissions.viewStatusDDL(status = "Pending");
 	}
 
 	@description = "Verify that, when the user Save as Draft, the DDL status is Draft"
-	@priority = "3"
+	@priority = 3
 	test CanSaveAsDraft {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -155,8 +188,8 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
 		DDLRecord.saveAsDraftCP();
 
@@ -164,7 +197,7 @@ definition {
 	}
 
 	@description = "Verify that the Entry is not displayed on My Workflow Tasks when the user Delete a DDL with Pending entry"
-	@priority = "4"
+	@priority = 4
 	test DeletedEntryIsNotDisplayedOnMyWorkflowTasks {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -191,10 +224,10 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -216,7 +249,7 @@ definition {
 	}
 
 	@description = "Verify that, when the user Save as Draft, the task is not displayed on My Workflow Tasks"
-	@priority = "3"
+	@priority = 3
 	test DraftEntryIsNotDisplayedOnMyWorkflowTasks {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -243,8 +276,8 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
 		DDLRecord.saveAsDraftCP();
 
@@ -254,7 +287,7 @@ definition {
 	}
 
 	@description = "Verify that, editing an Approved entry, the DDL Entry status returns to Pending"
-	@priority = "4"
+	@priority = 4
 	test EditApprovedEntryReturnsToPending {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -281,10 +314,10 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -312,13 +345,13 @@ definition {
 			ddlFirstNameEdit = "Test Edit",
 			ddlListName = "DDL List");
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		KaleoFormsNewSubmissions.viewStatusDDL(status = "Pending");
 	}
 
 	@description = "This is a use case for LPS-61212."
-	@priority = "5"
+	@priority = 5
 	test EditDDLRecordViaMyWorkflowTasks {
 		property portal.acceptance = "true";
 
@@ -370,7 +403,7 @@ definition {
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -387,7 +420,7 @@ definition {
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -432,7 +465,7 @@ definition {
 	}
 
 	@description = "Verify that, editing a Pending entry, a message is displayed"
-	@priority = "2"
+	@priority = 2
 	test MessageIsDisplayedOnEditingPendingEntry {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -459,19 +492,19 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		KaleoFormsNewSubmissions.viewStatusDDL(status = "Pending");
 
-		DDLRecord.editPG(ddlListName = "${ddlListName}");
+		DDLRecord.editPG(ddlListName = ${ddlListName});
 
 		KaleoFormsNewSubmissions.viewWorkflowInProcessMessage(errorMessage = "There is a publication workflow in process. Some actions may be disabled depending on the status and your role through this process.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectDynamicdatalistCP {
 		var ddlDataDefinitionName = "DDL Definition";
 		var ddlListName = "DDL List";
@@ -531,7 +564,7 @@ definition {
 			fieldFieldLabel = "Text Label",
 			fieldName = "TextName");
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -590,7 +623,7 @@ definition {
 	}
 
 	@description = "Verify that, editing a Pending entry, the DDL Entry status remains on Pending"
-	@priority = "3"
+	@priority = 3
 	test StatusIsPendingWhenPendingEntryIsEdited {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -617,10 +650,10 @@ definition {
 			ddlInstantMesseger = "Liferay",
 			ddlJobTitle = "QA",
 			ddlLastName = "Test",
-			ddlPhoneMobile = "12345678",
-			ddlPhoneOffice = "12345678");
+			ddlPhoneMobile = 12345678,
+			ddlPhoneOffice = 12345678);
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		KaleoFormsNewSubmissions.viewStatusDDL(status = "Pending");
 

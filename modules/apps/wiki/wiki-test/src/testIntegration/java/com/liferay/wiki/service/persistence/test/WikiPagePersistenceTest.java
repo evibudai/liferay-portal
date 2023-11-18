@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.service.persistence.test;
@@ -127,6 +118,8 @@ public class WikiPagePersistenceTest {
 
 		newWikiPage.setMvccVersion(RandomTestUtil.nextLong());
 
+		newWikiPage.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newWikiPage.setUuid(RandomTestUtil.randomString());
 
 		newWikiPage.setResourcePrimKey(RandomTestUtil.nextLong());
@@ -182,6 +175,9 @@ public class WikiPagePersistenceTest {
 
 		Assert.assertEquals(
 			existingWikiPage.getMvccVersion(), newWikiPage.getMvccVersion());
+		Assert.assertEquals(
+			existingWikiPage.getCtCollectionId(),
+			newWikiPage.getCtCollectionId());
 		Assert.assertEquals(existingWikiPage.getUuid(), newWikiPage.getUuid());
 		Assert.assertEquals(
 			existingWikiPage.getPageId(), newWikiPage.getPageId());
@@ -622,14 +618,15 @@ public class WikiPagePersistenceTest {
 
 	protected OrderByComparator<WikiPage> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"WikiPage", "mvccVersion", true, "uuid", true, "pageId", true,
-			"resourcePrimKey", true, "groupId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "externalReferenceCode", true, "nodeId", true,
-			"title", true, "version", true, "minorEdit", true, "summary", true,
-			"format", true, "head", true, "parentTitle", true, "redirectTitle",
-			true, "lastPublishDate", true, "status", true, "statusByUserId",
-			true, "statusByUserName", true, "statusDate", true);
+			"WikiPage", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "pageId", true, "resourcePrimKey", true, "groupId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "externalReferenceCode", true, "nodeId",
+			true, "title", true, "version", true, "minorEdit", true, "summary",
+			true, "format", true, "head", true, "parentTitle", true,
+			"redirectTitle", true, "lastPublishDate", true, "status", true,
+			"statusByUserId", true, "statusByUserName", true, "statusDate",
+			true);
 	}
 
 	@Test
@@ -949,6 +946,8 @@ public class WikiPagePersistenceTest {
 		WikiPage wikiPage = _persistence.create(pk);
 
 		wikiPage.setMvccVersion(RandomTestUtil.nextLong());
+
+		wikiPage.setCtCollectionId(RandomTestUtil.nextLong());
 
 		wikiPage.setUuid(RandomTestUtil.randomString());
 

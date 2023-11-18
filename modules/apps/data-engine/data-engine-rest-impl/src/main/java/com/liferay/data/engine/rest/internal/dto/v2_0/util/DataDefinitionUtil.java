@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.dto.v2_0.util;
@@ -18,7 +9,7 @@ import com.liferay.data.engine.content.type.DataDefinitionContentType;
 import com.liferay.data.engine.field.type.util.LocalizedValueUtil;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinitionField;
-import com.liferay.data.engine.rest.internal.content.type.DataDefinitionContentTypeRegistry;
+import com.liferay.data.engine.rest.internal.content.type.DataDefinitionContentTypeRegistryUtil;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesRegistry;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
@@ -32,6 +23,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.spi.converter.SPIDDMFormRuleConverter;
 import com.liferay.dynamic.data.mapping.util.SettingsDDMFormFieldsUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -55,8 +47,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Jeyvison Nascimento
@@ -64,7 +54,6 @@ import java.util.stream.Stream;
 public class DataDefinitionUtil {
 
 	public static DataDefinition toDataDefinition(
-			DataDefinitionContentTypeRegistry dataDefinitionContentTypeRegistry,
 			DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
 			DDMStructure ddmStructure,
 			DDMStructureLayoutLocalService ddmStructureLayoutLocalService,
@@ -74,7 +63,7 @@ public class DataDefinitionUtil {
 		DDMForm ddmForm = ddmStructure.getDDMForm();
 
 		DataDefinitionContentType dataDefinitionContentType =
-			dataDefinitionContentTypeRegistry.getDataDefinitionContentType(
+			DataDefinitionContentTypeRegistryUtil.getDataDefinitionContentType(
 				ddmStructure.getClassNameId());
 
 		return new DataDefinition() {
@@ -263,21 +252,12 @@ public class DataDefinitionUtil {
 		DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
 		DDMStructureLayoutLocalService ddmStructureLayoutLocalService) {
 
-		if (ListUtil.isEmpty(ddmFormFields)) {
-			return new DataDefinitionField[0];
-		}
-
-		Stream<DDMFormField> stream = ddmFormFields.stream();
-
-		return stream.map(
+		return TransformUtil.transformToArray(
+			ddmFormFields,
 			ddmFormField -> _toDataDefinitionField(
 				ddmFormField, ddmFormFieldTypeServicesRegistry,
-				ddmStructureLayoutLocalService)
-		).collect(
-			Collectors.toList()
-		).toArray(
-			new DataDefinitionField[0]
-		);
+				ddmStructureLayoutLocalService),
+			DataDefinitionField.class);
 	}
 
 	private static JSONArray _toJSONArray(String value) {
@@ -294,15 +274,8 @@ public class DataDefinitionUtil {
 	}
 
 	private static String[] _toLanguageIds(Set<Locale> locales) {
-		Stream<Locale> stream = locales.stream();
-
-		return stream.map(
-			LanguageUtil::getLanguageId
-		).collect(
-			Collectors.toList()
-		).toArray(
-			new String[0]
-		);
+		return TransformUtil.transformToArray(
+			locales, LanguageUtil::getLanguageId, String.class);
 	}
 
 	private static Map<String, List<JSONObject>> _toMap(

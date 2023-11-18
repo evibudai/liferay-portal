@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useDrop as useDndDrop} from 'react-dnd';
@@ -123,6 +114,17 @@ const isDroppingFieldIntoFieldset = (sourceField, targetField) =>
 const isSameField = (targetField, sourceField) =>
 	targetField && targetField.fieldName === sourceField.fieldName;
 
+const isElementsSetOverTarget = (target, source) => {
+	if (target) {
+		return (
+			!!Object.keys(target).length &&
+			source?.dragType === 'elementSet:add'
+		);
+	}
+
+	return false;
+};
+
 export function useDrop({
 	columnIndex,
 	field,
@@ -147,6 +149,8 @@ export function useDrop({
 	const [{canDrop, overTarget}, drop] = useDndDrop({
 		accept: [...Object.values(DRAG_TYPES), DRAG_ELEMENT_SET_ADD],
 		canDrop: (item) =>
+			!isElementsSetOverTarget(field, item.data) &&
+			!isElementsSetOverTarget(parentField, item.data) &&
 			!isSameField(field, item.data) &&
 			!isDroppingFieldGroupIntoField(field, item.data) &&
 			!isDroppingFieldIntoFieldset(item.data, field) &&

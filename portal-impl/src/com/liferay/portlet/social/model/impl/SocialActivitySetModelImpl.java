@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.social.model.impl;
@@ -251,104 +242,126 @@ public class SocialActivitySetModelImpl
 	public Map<String, Function<SocialActivitySet, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<SocialActivitySet, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<SocialActivitySet, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<SocialActivitySet, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<SocialActivitySet, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<SocialActivitySet, Object>>();
-		Map<String, BiConsumer<SocialActivitySet, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<SocialActivitySet, ?>>();
+		private static final Map<String, Function<SocialActivitySet, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", SocialActivitySet::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", SocialActivitySet::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"activitySetId", SocialActivitySet::getActivitySetId);
-		attributeSetterBiConsumers.put(
-			"activitySetId",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setActivitySetId);
-		attributeGetterFunctions.put("groupId", SocialActivitySet::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<SocialActivitySet, Long>)SocialActivitySet::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", SocialActivitySet::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setCompanyId);
-		attributeGetterFunctions.put("userId", SocialActivitySet::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<SocialActivitySet, Long>)SocialActivitySet::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", SocialActivitySet::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", SocialActivitySet::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId", SocialActivitySet::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<SocialActivitySet, Long>)
-				SocialActivitySet::setClassNameId);
-		attributeGetterFunctions.put("classPK", SocialActivitySet::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<SocialActivitySet, Long>)SocialActivitySet::setClassPK);
-		attributeGetterFunctions.put("type", SocialActivitySet::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<SocialActivitySet, Integer>)SocialActivitySet::setType);
-		attributeGetterFunctions.put(
-			"extraData", SocialActivitySet::getExtraData);
-		attributeSetterBiConsumers.put(
-			"extraData",
-			(BiConsumer<SocialActivitySet, String>)
-				SocialActivitySet::setExtraData);
-		attributeGetterFunctions.put(
-			"activityCount", SocialActivitySet::getActivityCount);
-		attributeSetterBiConsumers.put(
-			"activityCount",
-			(BiConsumer<SocialActivitySet, Integer>)
-				SocialActivitySet::setActivityCount);
+		static {
+			Map<String, Function<SocialActivitySet, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<SocialActivitySet, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", SocialActivitySet::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", SocialActivitySet::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"activitySetId", SocialActivitySet::getActivitySetId);
+			attributeGetterFunctions.put(
+				"groupId", SocialActivitySet::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", SocialActivitySet::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", SocialActivitySet::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", SocialActivitySet::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", SocialActivitySet::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", SocialActivitySet::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", SocialActivitySet::getClassPK);
+			attributeGetterFunctions.put("type", SocialActivitySet::getType);
+			attributeGetterFunctions.put(
+				"extraData", SocialActivitySet::getExtraData);
+			attributeGetterFunctions.put(
+				"activityCount", SocialActivitySet::getActivityCount);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<SocialActivitySet, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<SocialActivitySet, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<SocialActivitySet, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"activitySetId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setActivitySetId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<SocialActivitySet, Long>)
+					SocialActivitySet::setClassPK);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<SocialActivitySet, Integer>)
+					SocialActivitySet::setType);
+			attributeSetterBiConsumers.put(
+				"extraData",
+				(BiConsumer<SocialActivitySet, String>)
+					SocialActivitySet::setExtraData);
+			attributeSetterBiConsumers.put(
+				"activityCount",
+				(BiConsumer<SocialActivitySet, Integer>)
+					SocialActivitySet::setActivityCount);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -924,7 +937,8 @@ public class SocialActivitySetModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<SocialActivitySet, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

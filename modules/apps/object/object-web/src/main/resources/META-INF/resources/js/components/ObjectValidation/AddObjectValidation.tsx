@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -17,8 +8,15 @@ import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal, {ClayModalProvider, useModal} from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
-import {API, Input, SingleSelect} from '@liferay/object-js-components-web';
+import {
+	API,
+	Input,
+	REQUIRED_MSG,
+	SingleSelect,
+} from '@liferay/object-js-components-web';
 import React, {FormEvent, useEffect, useState} from 'react';
+
+import {defaultLanguageId} from '../../utils/constants';
 
 interface ModalAddObjectValidationProps extends AddObjectValidationProps {
 	observer: Observer;
@@ -39,8 +37,7 @@ interface ObjectValidationErrors {
 	typeError: string;
 }
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-const requiredLabel = Liferay.Language.get('required');
+const requiredLabel = REQUIRED_MSG;
 
 function ModalAddObjectValidation({
 	apiURL,
@@ -82,9 +79,8 @@ function ModalAddObjectValidation({
 		else {
 			setShowError(false);
 			try {
-				await API.save(
-					apiURL,
-					{
+				await API.save({
+					item: {
 						active: false,
 						engine: typeSelection.name,
 						name: {
@@ -92,8 +88,9 @@ function ModalAddObjectValidation({
 						},
 						script: 'script_placeholder',
 					},
-					'POST'
-				);
+					method: 'POST',
+					url: apiURL,
+				});
 				onClose();
 
 				window.location.reload();

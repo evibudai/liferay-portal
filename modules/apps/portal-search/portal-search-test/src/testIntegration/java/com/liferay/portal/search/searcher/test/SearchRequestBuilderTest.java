@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.searcher.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprint;
@@ -34,6 +26,7 @@ import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.rescore.Rescore;
@@ -85,7 +78,7 @@ public class SearchRequestBuilderTest {
 	@Before
 	public void setUp() throws Exception {
 		_journalArticleSearchFixture = new JournalArticleSearchFixture(
-			_journalArticleLocalService);
+			_ddmStructureLocalService, _journalArticleLocalService, _portal);
 
 		_journalArticleSearchFixture.setUp();
 
@@ -385,8 +378,8 @@ public class SearchRequestBuilderTest {
 			searchRequestBuilder.build());
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), fieldName, expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			fieldName, expected);
 	}
 
 	private void _assertSearch(
@@ -417,8 +410,8 @@ public class SearchRequestBuilderTest {
 			searchRequestBuilder.build());
 
 		DocumentsAssert.assertValues(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), fieldName, expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			fieldName, expected);
 	}
 
 	private void _assertSearch(
@@ -437,8 +430,8 @@ public class SearchRequestBuilderTest {
 			).build());
 
 		DocumentsAssert.assertValues(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), fieldName, expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			fieldName, expected);
 	}
 
 	private Rescore _buildRescore(String fieldName, String value) {
@@ -452,6 +445,12 @@ public class SearchRequestBuilderTest {
 	private boolean _isElasticsearch() {
 		return Objects.equals(_searchEngine.getVendor(), "Elasticsearch");
 	}
+
+	@Inject
+	private static DDMStructureLocalService _ddmStructureLocalService;
+
+	@Inject
+	private static Portal _portal;
 
 	@Inject
 	private ComplexQueryPartBuilderFactory _complexQueryPartBuilderFactory;

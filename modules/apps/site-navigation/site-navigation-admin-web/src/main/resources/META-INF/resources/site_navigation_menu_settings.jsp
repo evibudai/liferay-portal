@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -39,15 +30,26 @@ SiteNavigationMenu siteNavigationMenu = siteNavigationAdminDisplayContext.getSit
 				<strong><liferay-ui:message key="this-menu-will-act-as-the" /></strong>
 			</h5>
 
-			<aui:icon image="check-circle-full" markupView="lexicon" /> <liferay-ui:message key="<%= typeKey %>" />
+			<clay:icon
+				symbol="check-circle-full"
+			/>
+
+			<liferay-ui:message key="<%= typeKey %>" />
 		</div>
 	</c:if>
 
 	<aui:fieldset>
-		<aui:input checked="<%= siteNavigationMenu.isAuto() %>" label="when-creating-a-new-page,-the-page-will-be-automatically-added-to-this-menu-unless-the-user-deselects-it" name="auto" type="checkbox" />
+		<clay:checkbox
+			checked="<%= siteNavigationMenu.isAuto() %>"
+			id='<%= liferayPortletResponse.getNamespace() + "auto" %>'
+			label="when-creating-a-new-page,-display-an-option-to-add-it-to-this-navigation-menu"
+			name='<%= liferayPortletResponse.getNamespace() + "auto" %>'
+		/>
 	</aui:fieldset>
 
-	<aui:button-row>
-		<aui:button cssClass="btn-block" type="submit" value="save" />
-	</aui:button-row>
+	<clay:button
+		block="<%= true %>"
+		label="save"
+		type="submit"
+	/>
 </aui:form>

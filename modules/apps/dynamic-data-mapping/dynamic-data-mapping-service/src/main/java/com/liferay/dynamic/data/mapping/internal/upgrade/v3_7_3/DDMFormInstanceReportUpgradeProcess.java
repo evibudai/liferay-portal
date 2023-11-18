@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v3_7_3;
@@ -128,6 +119,10 @@ public class DDMFormInstanceReportUpgradeProcess extends UpgradeProcess {
 						"totalItems", dataJSONObject.getInt("totalItems") + 1);
 				}
 
+				if (dataJSONObject.length() == 0) {
+					continue;
+				}
+
 				long groupId = resultSet1.getLong("groupId");
 
 				long companyId = resultSet1.getLong("companyId");
@@ -153,19 +148,20 @@ public class DDMFormInstanceReportUpgradeProcess extends UpgradeProcess {
 		if (StringUtil.equals(type, "checkbox_multiple") ||
 			StringUtil.equals(type, "select")) {
 
-			return new CheckboxMultipleDDMFormFieldTypeReportProcessor();
+			return new CheckboxMultipleDDMFormFieldTypeReportProcessor(
+				_jsonFactory);
 		}
 		else if (StringUtil.equals(type, "color") ||
 				 StringUtil.equals(type, "date") ||
 				 StringUtil.equals(type, "text")) {
 
-			return new TextDDMFormFieldTypeReportProcessor();
+			return new TextDDMFormFieldTypeReportProcessor(_jsonFactory);
 		}
 		else if (StringUtil.equals(type, "grid")) {
 			return new UpgradeGridDDMFormFieldTypeReportProcessor(ddmFormField);
 		}
 		else if (StringUtil.equals(type, "numeric")) {
-			return new NumericDDMFormFieldTypeReportProcessor();
+			return new NumericDDMFormFieldTypeReportProcessor(_jsonFactory);
 		}
 		else if (StringUtil.equals(type, "radio")) {
 			return new RadioDDMFormFieldTypeReportProcessor();

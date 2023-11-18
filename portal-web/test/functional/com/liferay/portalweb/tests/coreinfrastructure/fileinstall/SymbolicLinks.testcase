@@ -1,0 +1,40 @@
+@component-name = "portal-file-install"
+definition {
+
+	property ci.retries.disabled = "true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "File Install";
+
+	@priority = 4
+	test SetLiferayHomeToASymbolicLink {
+		property skip.start.app.server = "true";
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+		property testcase.url = "file:///opt/dev/projects/github/liferay-portal/";
+
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+		var projectDir = PropsUtil.get("project.dir");
+
+		var symbolicLink = "${projectDir}/temp-bundles-symlink";
+
+		AntCommands.runCommand("build-test.xml", "create-symbolic-link -Dsymbolic.link=${symbolicLink} -Dsymbolic.link.resource=${liferayHome}");
+
+		AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dupdate.properties=liferay.home=${symbolicLink} -Dupdate.properties.original=liferay.home=${liferayHome}");
+
+		Portlet.startServer(keepOSGiState = "true");
+
+		Navigator.openSpecificURL(url = "http://localhost:8080");
+
+		User.firstLoginUI(
+			password = "test",
+			specificURL = "http://localhost:8080",
+			userEmailAddress = "test@liferay.com");
+
+		Portlet.shutdownServer();
+
+		AntCommands.runCommand("build-test.xml", "delete-symbolic-link -Dsymbolic.link=${symbolicLink}");
+	}
+
+}

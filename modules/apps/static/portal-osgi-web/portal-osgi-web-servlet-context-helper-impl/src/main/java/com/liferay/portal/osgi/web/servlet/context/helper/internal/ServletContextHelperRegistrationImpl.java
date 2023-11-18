@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.servlet.context.helper.internal;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.events.ShutdownHelperUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
@@ -93,7 +85,7 @@ public class ServletContextHelperRegistrationImpl
 
 		_servletContextName = getServletContextName(contextPath);
 
-		URL url = _bundle.getEntry("WEB-INF/");
+		URL url = bundle.getEntry("WEB-INF/");
 
 		if (url != null) {
 			_annotatedClasses = new HashSet<>();
@@ -148,7 +140,7 @@ public class ServletContextHelperRegistrationImpl
 	@Override
 	public void close() {
 		try {
-			_servletContextRegistration.unregister();
+			_servletContextServiceRegistration.unregister();
 		}
 		catch (IllegalStateException illegalStateException) {
 			if (_log.isDebugEnabled()) {
@@ -221,9 +213,11 @@ public class ServletContextHelperRegistrationImpl
 			}
 		}
 
-		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
+		if (!ShutdownHelperUtil.isShutdown()) {
+			BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
-		_clearResidualMBeans(bundleWiring.getClassLoader());
+			_clearResidualMBeans(bundleWiring.getClassLoader());
+		}
 	}
 
 	@Override
@@ -595,7 +589,7 @@ public class ServletContextHelperRegistrationImpl
 				"osgi.web.version", _bundle.getVersion()
 			).build();
 
-		_servletContextRegistration = _bundleContext.registerService(
+		_servletContextServiceRegistration = _bundleContext.registerService(
 			ServletContext.class, servletContext, properties);
 	}
 
@@ -651,7 +645,8 @@ public class ServletContextHelperRegistrationImpl
 	private final ServiceRegistration<ServletContextListener>
 		_servletContextListenerServiceRegistration;
 	private final String _servletContextName;
-	private ServiceRegistration<ServletContext> _servletContextRegistration;
+	private ServiceRegistration<ServletContext>
+		_servletContextServiceRegistration;
 	private final boolean _wabShapedBundle;
 	private final WebXMLDefinition _webXMLDefinition;
 

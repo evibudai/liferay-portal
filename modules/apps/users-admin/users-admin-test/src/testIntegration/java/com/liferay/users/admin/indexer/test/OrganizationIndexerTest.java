@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.indexer.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Organization;
@@ -25,7 +17,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
@@ -37,8 +28,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -143,11 +132,9 @@ public class OrganizationIndexerTest {
 	protected void assertHits(String keywords, int length) throws Exception {
 		SearchResponse searchResponse = search(keywords);
 
-		Stream<Document> stream = searchResponse.getDocumentsStream();
-
 		AssertUtils.assertEquals(
 			() -> StringBundler.concat(
-				keywords, "->", stream.collect(Collectors.toList())),
+				keywords, "->", searchResponse.getDocuments()),
 			length, searchResponse.getTotalHits());
 	}
 
@@ -160,13 +147,9 @@ public class OrganizationIndexerTest {
 	protected List<String> getNames(String keywords) throws Exception {
 		SearchResponse searchResponse = search(keywords);
 
-		Stream<Document> stream = searchResponse.getDocumentsStream();
-
-		return stream.map(
-			document -> document.getString(Field.NAME)
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			searchResponse.getDocuments(),
+			document -> document.getString(Field.NAME));
 	}
 
 	protected SearchResponse search(String keywords) throws Exception {
@@ -174,6 +157,8 @@ public class OrganizationIndexerTest {
 			searchRequestBuilderFactory.builder(
 			).companyId(
 				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
 			).fields(
 				Field.NAME
 			).modelIndexerClasses(

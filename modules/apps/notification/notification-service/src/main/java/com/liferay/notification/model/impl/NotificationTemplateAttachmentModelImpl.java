@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.model.impl;
@@ -213,72 +204,88 @@ public class NotificationTemplateAttachmentModelImpl
 	public Map<String, Function<NotificationTemplateAttachment, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<NotificationTemplateAttachment, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<NotificationTemplateAttachment, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<NotificationTemplateAttachment, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<NotificationTemplateAttachment, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String,
-					 Function<NotificationTemplateAttachment, Object>>();
-		Map<String, BiConsumer<NotificationTemplateAttachment, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<NotificationTemplateAttachment, ?>>();
+		private static final Map
+			<String, Function<NotificationTemplateAttachment, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", NotificationTemplateAttachment::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<NotificationTemplateAttachment, Long>)
-				NotificationTemplateAttachment::setMvccVersion);
-		attributeGetterFunctions.put(
-			"notificationTemplateAttachmentId",
-			NotificationTemplateAttachment::
-				getNotificationTemplateAttachmentId);
-		attributeSetterBiConsumers.put(
-			"notificationTemplateAttachmentId",
-			(BiConsumer<NotificationTemplateAttachment, Long>)
+		static {
+			Map<String, Function<NotificationTemplateAttachment, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String,
+						 Function<NotificationTemplateAttachment, Object>>();
+
+			attributeGetterFunctions.put(
+				"mvccVersion", NotificationTemplateAttachment::getMvccVersion);
+			attributeGetterFunctions.put(
+				"notificationTemplateAttachmentId",
 				NotificationTemplateAttachment::
-					setNotificationTemplateAttachmentId);
-		attributeGetterFunctions.put(
-			"companyId", NotificationTemplateAttachment::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<NotificationTemplateAttachment, Long>)
-				NotificationTemplateAttachment::setCompanyId);
-		attributeGetterFunctions.put(
-			"notificationTemplateId",
-			NotificationTemplateAttachment::getNotificationTemplateId);
-		attributeSetterBiConsumers.put(
-			"notificationTemplateId",
-			(BiConsumer<NotificationTemplateAttachment, Long>)
-				NotificationTemplateAttachment::setNotificationTemplateId);
-		attributeGetterFunctions.put(
-			"objectFieldId", NotificationTemplateAttachment::getObjectFieldId);
-		attributeSetterBiConsumers.put(
-			"objectFieldId",
-			(BiConsumer<NotificationTemplateAttachment, Long>)
-				NotificationTemplateAttachment::setObjectFieldId);
+					getNotificationTemplateAttachmentId);
+			attributeGetterFunctions.put(
+				"companyId", NotificationTemplateAttachment::getCompanyId);
+			attributeGetterFunctions.put(
+				"notificationTemplateId",
+				NotificationTemplateAttachment::getNotificationTemplateId);
+			attributeGetterFunctions.put(
+				"objectFieldId",
+				NotificationTemplateAttachment::getObjectFieldId);
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<NotificationTemplateAttachment, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<NotificationTemplateAttachment, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String,
+						 BiConsumer<NotificationTemplateAttachment, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<NotificationTemplateAttachment, Long>)
+					NotificationTemplateAttachment::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"notificationTemplateAttachmentId",
+				(BiConsumer<NotificationTemplateAttachment, Long>)
+					NotificationTemplateAttachment::
+						setNotificationTemplateAttachmentId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<NotificationTemplateAttachment, Long>)
+					NotificationTemplateAttachment::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"notificationTemplateId",
+				(BiConsumer<NotificationTemplateAttachment, Long>)
+					NotificationTemplateAttachment::setNotificationTemplateId);
+			attributeSetterBiConsumers.put(
+				"objectFieldId",
+				(BiConsumer<NotificationTemplateAttachment, Long>)
+					NotificationTemplateAttachment::setObjectFieldId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -627,7 +634,8 @@ public class NotificationTemplateAttachmentModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<NotificationTemplateAttachment, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

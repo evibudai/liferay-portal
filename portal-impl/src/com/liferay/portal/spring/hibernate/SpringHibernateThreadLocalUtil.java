@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.hibernate;
@@ -58,6 +49,19 @@ public class SpringHibernateThreadLocalUtil {
 		return (T)resource;
 	}
 
+	public static boolean isCurrentTransactionReadOnly() {
+		Boolean currentTransactionReadOnly =
+			_currentTransactionReadOnlyThreadLocal.get();
+
+		// Spring only saves TRUE or null into this thread local
+
+		if (currentTransactionReadOnly == null) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public static <T> T setResource(Object key, Object resource) {
 		Map<Object, Object> resources = _resourcesThreadLocal.get();
 
@@ -95,6 +99,8 @@ public class SpringHibernateThreadLocalUtil {
 		return (T)oldResource;
 	}
 
+	private static final ThreadLocal<Boolean>
+		_currentTransactionReadOnlyThreadLocal;
 	private static final ThreadLocal<Map<Object, Object>> _resourcesThreadLocal;
 
 	static {
@@ -102,6 +108,7 @@ public class SpringHibernateThreadLocalUtil {
 			Field nameField = ReflectionUtil.getDeclaredField(
 				NamedThreadLocal.class, "name");
 
+			ThreadLocal<?> currentTransactionReadOnlyThreadLocal = null;
 			ThreadLocal<?> resourcesThreadLocal = null;
 
 			for (Field field :
@@ -133,10 +140,20 @@ public class SpringHibernateThreadLocalUtil {
 
 					String name = field.getName();
 
-					if (name.equals("resources")) {
+					if (name.equals("currentTransactionReadOnly")) {
+						currentTransactionReadOnlyThreadLocal = threadLocal;
+					}
+					else if (name.equals("resources")) {
 						resourcesThreadLocal = threadLocal;
 					}
 				}
+			}
+
+			if (currentTransactionReadOnlyThreadLocal == null) {
+				throw new ExceptionInInitializerError(
+					"Unable to locate \"currentTransactionReadOnly\" thread " +
+						"local field from " +
+							TransactionSynchronizationManager.class);
 			}
 
 			if (resourcesThreadLocal == null) {
@@ -144,6 +161,9 @@ public class SpringHibernateThreadLocalUtil {
 					"Unable to locate \"resources\" thread local field from " +
 						TransactionSynchronizationManager.class);
 			}
+
+			_currentTransactionReadOnlyThreadLocal =
+				(ThreadLocal<Boolean>)currentTransactionReadOnlyThreadLocal;
 
 			_resourcesThreadLocal =
 				(ThreadLocal<Map<Object, Object>>)resourcesThreadLocal;

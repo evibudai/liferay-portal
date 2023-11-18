@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.info.item.provider;
@@ -22,15 +13,14 @@ import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
+import com.liferay.info.localized.bundle.ModelResourceLocalizedValue;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.web.internal.info.item.KBArticleInfoItemFields;
+import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
-
-import java.util.Locale;
-import java.util.Set;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
@@ -50,7 +40,10 @@ public class KBArticleInfoItemFormProvider
 	public InfoForm getInfoForm() {
 		return _getInfoForm(
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
-				KBArticle.class.getName()));
+				KBArticle.class.getName()),
+			_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+				KBArticle.class.getName(), StringPool.BLANK,
+				KBArticle.class.getSimpleName(), 0));
 	}
 
 	@Override
@@ -60,7 +53,10 @@ public class KBArticleInfoItemFormProvider
 				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
 					_assetEntryLocalService.getEntry(
 						KBArticle.class.getName(),
-						kbArticle.getResourcePrimKey())));
+						kbArticle.getResourcePrimKey())),
+				_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+					KBArticle.class.getName(), StringPool.BLANK,
+					KBArticle.class.getSimpleName(), 0));
 		}
 		catch (PortalException portalException) {
 			throw new RuntimeException(
@@ -74,7 +70,10 @@ public class KBArticleInfoItemFormProvider
 	public InfoForm getInfoForm(String formVariationKey, long groupId) {
 		return _getInfoForm(
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
-				KBArticle.class.getName(), 0, groupId));
+				KBArticle.class.getName(), 0, groupId),
+			_displayPageInfoItemFieldSetProvider.getInfoFieldSet(
+				KBArticle.class.getName(), StringPool.BLANK,
+				KBArticle.class.getSimpleName(), groupId));
 	}
 
 	private InfoFieldSet _getBasicInformationInfoFieldSet() {
@@ -114,18 +113,20 @@ public class KBArticleInfoItemFormProvider
 		).build();
 	}
 
-	private InfoForm _getInfoForm(InfoFieldSet assetEntryInfoFieldSet) {
-		Set<Locale> availableLocales = _language.getAvailableLocales();
+	private InfoFieldSet _getDisplayPageInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			KBArticleInfoItemFields.displayPageURLInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "display-page")
+		).name(
+			"display-page"
+		).build();
+	}
 
-		InfoLocalizedValue.Builder infoLocalizedValueBuilder =
-			InfoLocalizedValue.builder();
-
-		for (Locale locale : availableLocales) {
-			infoLocalizedValueBuilder.value(
-				locale,
-				ResourceActionsUtil.getModelResource(
-					locale, KBArticle.class.getName()));
-		}
+	private InfoForm _getInfoForm(
+		InfoFieldSet assetEntryInfoFieldSet,
+		InfoFieldSet displayPageInfoFieldSet) {
 
 		return InfoForm.builder(
 		).infoFieldSetEntry(
@@ -141,12 +142,24 @@ public class KBArticleInfoItemFormProvider
 		).infoFieldSetEntry(
 			_getConfigurationInfoFieldSet()
 		).infoFieldSetEntry(
+			unsafeConsumer -> {
+				if (!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
+					unsafeConsumer.accept(_getDisplayPageInfoFieldSet());
+				}
+			}
+		).infoFieldSetEntry(
+			unsafeConsumer -> {
+				if (FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
+					unsafeConsumer.accept(displayPageInfoFieldSet);
+				}
+			}
+		).infoFieldSetEntry(
 			assetEntryInfoFieldSet
 		).infoFieldSetEntry(
 			_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(
 				KBArticle.class.getName())
 		).labelInfoLocalizedValue(
-			infoLocalizedValueBuilder.build()
+			new ModelResourceLocalizedValue(KBArticle.class.getName())
 		).name(
 			KBArticle.class.getName()
 		).build();
@@ -160,14 +173,15 @@ public class KBArticleInfoItemFormProvider
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
+	private DisplayPageInfoItemFieldSetProvider
+		_displayPageInfoItemFieldSetProvider;
+
+	@Reference
 	private ExpandoInfoItemFieldSetProvider _expandoInfoItemFieldSetProvider;
 
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
-
-	@Reference
-	private Language _language;
 
 	@Reference
 	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;

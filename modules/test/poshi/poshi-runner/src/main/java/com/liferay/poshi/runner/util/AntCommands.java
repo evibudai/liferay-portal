@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.util;
 
 import com.liferay.poshi.core.PoshiGetterUtil;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.util.OSDetector;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -24,12 +15,35 @@ import java.io.File;
 import java.io.InputStreamReader;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Michael Hashimoto
  */
 public class AntCommands implements Callable<Void> {
+
+	public static void runCommand(String fileName, String target)
+		throws Exception {
+
+		AntCommands antCommands = new AntCommands(fileName, target);
+
+		ExecutorService executorService = Executors.newCachedThreadPool();
+
+		Future<Void> future = executorService.submit(antCommands);
+
+		try {
+			future.get(600, TimeUnit.SECONDS);
+		}
+		catch (ExecutionException | TimeoutException exception) {
+			throw exception;
+		}
+	}
 
 	public AntCommands(String fileName, String target) {
 		_fileName = fileName;
@@ -44,6 +58,8 @@ public class AntCommands implements Callable<Void> {
 
 		String projectDirName = PoshiGetterUtil.getProjectDirName();
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		if (!OSDetector.isWindows()) {
 			projectDirName = StringUtil.replace(projectDirName, "\\", "//");
 
@@ -52,7 +68,7 @@ public class AntCommands implements Callable<Void> {
 			sb.append(" ");
 			sb.append(_target);
 			sb.append(" -Dtest.ant.launched.by.selenium=true -Dtest.class=");
-			sb.append(PropsValues.TEST_NAME);
+			sb.append(poshiProperties.testName);
 		}
 		else {
 			sb.append("cmd /c ant -f ");
@@ -60,7 +76,7 @@ public class AntCommands implements Callable<Void> {
 			sb.append(" ");
 			sb.append(_target);
 			sb.append(" -Dtest.ant.launched.by.selenium=true -Dtest.class=");
-			sb.append(PropsValues.TEST_NAME);
+			sb.append(poshiProperties.testName);
 		}
 
 		Process process = runtime.exec(

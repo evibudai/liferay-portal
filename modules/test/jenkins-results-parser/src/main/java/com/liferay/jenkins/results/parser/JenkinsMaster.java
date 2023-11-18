@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -162,6 +153,29 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 		return new ArrayList<>(_buildURLs);
 	}
 
+	public List<DefaultBuild> getDefaultBuilds() {
+		List<String> buildURLs = getBuildURLs();
+
+		List<DefaultBuild> oldDefaultBuilds = new ArrayList<>();
+
+		for (DefaultBuild defaultBuild : _defaultBuilds) {
+			if (!buildURLs.contains(defaultBuild.getBuildURL())) {
+				oldDefaultBuilds.add(defaultBuild);
+			}
+			else {
+				buildURLs.remove(defaultBuild.getBuildURL());
+			}
+		}
+
+		_defaultBuilds.removeAll(oldDefaultBuilds);
+
+		for (String buildURL : buildURLs) {
+			_defaultBuilds.add(BuildFactory.newDefaultBuild(buildURL));
+		}
+
+		return _defaultBuilds;
+	}
+
 	public int getIdleJenkinsSlavesCount() {
 		int idleSlavesCount = 0;
 
@@ -273,6 +287,10 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 
 	public Map<String, JSONObject> getQueuedBuildURLs() {
 		return new HashMap<>(_queuedBuildURLs);
+	}
+
+	public String getRemoteURL() {
+		return _masterRemoteURL;
 	}
 
 	public Integer getSlaveRAM() {
@@ -710,6 +728,10 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 				JenkinsResultsParserUtil.combine(
 					"jenkins.local.url[", _masterName, "]"));
 
+			_masterRemoteURL = properties.getProperty(
+				JenkinsResultsParserUtil.combine(
+					"jenkins.remote.url[", _masterName, "]"));
+
 			Integer slaveRAM = getSlaveRAMMinimumDefault();
 
 			String slaveRAMString = JenkinsResultsParserUtil.getProperty(
@@ -797,10 +819,12 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 	private final Map<Long, Integer> _batchSizes = new TreeMap<>();
 	private boolean _blacklisted;
 	private final List<String> _buildURLs = new CopyOnWriteArrayList<>();
+	private final List<DefaultBuild> _defaultBuilds = new ArrayList<>();
 	private JenkinsCohort _jenkinsCohort;
 	private final Map<String, JenkinsSlave> _jenkinsSlavesMap =
 		Collections.synchronizedMap(new HashMap<String, JenkinsSlave>());
 	private final String _masterName;
+	private final String _masterRemoteURL;
 	private final String _masterURL;
 	private int _queueCount;
 	private final Map<String, JSONObject> _queuedBuildURLs =

@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import TestrayError from '../../TestrayError';
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
 import {CategoryOptions} from '../../pages/Project/Routines/Builds/BuildForm/Stack/StackList';
 import yupSchema from '../../schema/yup';
-import {SearchBuilder, searchUtil} from '../../util/search';
-import {BuildStatuses, CaseResultStatuses} from '../../util/statuses';
-import Rest from './Rest';
+import {CaseResultStatuses} from '../../util/statuses';
 import {testrayCaseResultImpl} from './TestrayCaseResult';
 import {testrayFactorRest} from './TestrayFactor';
 import {testrayRunImpl} from './TestrayRun';
@@ -36,8 +27,8 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 	constructor() {
 		super({
 			adapter: ({
-				active,
 				description,
+				dueStatus,
 				gitHash,
 				name,
 				productVersionId: r_productVersionToBuilds_c_productVersionId,
@@ -47,9 +38,8 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 				template,
 				templateTestrayBuildId,
 			}) => ({
-				active,
 				description,
-				dueStatus: BuildStatuses.ACTIVE,
+				dueStatus,
 				gitHash,
 				name,
 				promoted,
@@ -59,12 +49,16 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 				template,
 				templateTestrayBuildId,
 			}),
-			nestedFields: 'productVersion',
+			nestedFields: 'buildToTasks,productVersion',
 			transformData: (testrayBuild) => ({
 				...testrayBuild,
+				...testrayCaseResultImpl.normalizeCaseResultAggregation(
+					testrayBuild
+				),
 				creator: testrayBuild?.creator || {},
 				productVersion:
 					testrayBuild?.r_productVersionToBuilds_c_productVersion,
+				tasks: testrayBuild.buildToTasks ?? [],
 			}),
 			uri: 'builds',
 		});
@@ -139,7 +133,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 
 	public async hasBuildsInProjectId(projectId: number): Promise<boolean> {
 		const routineResponse = await this.fetcher<APIResponse<TestrayRoutine>>(
-			`/routines?filter=${searchUtil.eq(
+			`/routines?filter=${SearchBuilder.eq(
 				'projectId',
 				projectId
 			)}&fields=id`
@@ -152,7 +146,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		}
 
 		const buildResponse = await this.fetcher<APIResponse<TestrayBuild>>(
-			`/${this.uri}?filter=${searchUtil.eq(
+			`/${this.uri}?filter=${SearchBuilder.eq(
 				'routineId',
 				routine.id
 			)}&fields=id`
@@ -197,7 +191,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 
 	public async getCurrentCaseIds(buildId: string | number) {
 		const response = await this.fetcher(
-			`/caseresults?filter=${searchUtil.eq(
+			`/caseresults?filter=${SearchBuilder.eq(
 				'buildId',
 				buildId
 			)}&pageSize=1000&fields=r_caseToCaseResult_c_caseId`

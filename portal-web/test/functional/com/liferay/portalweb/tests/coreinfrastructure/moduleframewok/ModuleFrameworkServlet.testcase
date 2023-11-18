@@ -12,19 +12,20 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "This is a use case for LPS-153486."
-	@priority = "3"
+	@priority = 3
 	test ServletMultipartConfigInShieldedContainer {
 		property configure.servlet.multipart = "true";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "ModuleFrameworkServlet#ServletMultipartConfigInShieldedContainer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = JSONCompany.getPortalURL();
 		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "Document_1.txt");
@@ -37,7 +38,7 @@ definition {
 				-F 0=@${dependencyFilePath}
 		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 

@@ -1,35 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useEffect} from 'react';
 
-import {DEFAULT_PAGINATION, TPagination} from '../../utils/pagination';
-import {useLazyRequest, useRequest} from '../../utils/useRequest';
+import {TPagination} from '../../utils/pagination';
+import {useRequest} from '../../utils/useRequest';
 import Content from './Content';
 import TableContext, {Events, useData, useDispatch} from './Context';
 import ManagementToolbar from './ManagementToolbar';
 import PaginationBar from './PaginationBar';
-import StateRenderer from './StateRenderer';
+import StateRenderer, {TEmptyState} from './StateRenderer';
 import {TColumn, TFormattedItems, TItem, TTableRequestParams} from './types';
 
-interface ITableProps<TRawItem> {
+export interface ITableProps<TRawItem> {
 	addItemTitle?: string;
 	columns: TColumn[];
 	disabled?: boolean;
-	emptyStateTitle: string;
+	emptyState: TEmptyState;
 	mapperItems: (items: TRawItem[]) => TItem[];
-	noResultsTitle: string;
 	onAddItem?: () => void;
 	onItemsChange?: (items: TFormattedItems) => void;
 	requestFn: (params: TTableRequestParams) => Promise<any>;
@@ -44,21 +34,14 @@ export function Table<TRawItem>({
 	addItemTitle,
 	columns,
 	disabled = false,
-	emptyStateTitle,
+	emptyState,
 	mapperItems,
-	noResultsTitle,
 	onAddItem,
 	onItemsChange,
 	requestFn,
 	showCheckbox = true,
 }: ITableProps<TRawItem>) {
-	const {
-		filter,
-		formattedItems,
-		globalChecked,
-		keywords,
-		pagination,
-	} = useData();
+	const {filter, formattedItems, keywords, pagination} = useData();
 	const dispatch = useDispatch();
 
 	const {data, error, loading, refetch} = useRequest<
@@ -72,31 +55,6 @@ export function Table<TRawItem>({
 			pageSize: pagination.pageSize,
 		},
 	});
-
-	const [makeRequest, lazyResult] = useLazyRequest<
-		TData<TRawItem>,
-		TTableRequestParams
-	>(requestFn, {
-		filter,
-		keywords: '',
-		pagination: {
-			page: DEFAULT_PAGINATION.page,
-			pageSize: pagination.maxCount,
-		},
-	});
-
-	useEffect(() => {
-		if (lazyResult.data) {
-			dispatch({
-				payload: {
-					globalChecked: !globalChecked,
-					items: mapperItems(lazyResult.data.items),
-				},
-				type: Events.ToggleGlobalCheckbox,
-			});
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [lazyResult.data]);
 
 	useEffect(() => {
 		if (data) {
@@ -135,20 +93,16 @@ export function Table<TRawItem>({
 			<ManagementToolbar
 				addItemTitle={addItemTitle}
 				columns={columns}
-				disabled={
-					disabled || (empty && !keywords) || lazyResult.loading
-				}
-				makeRequest={makeRequest}
+				disabled={disabled || (empty && !keywords)}
 				onAddItem={onAddItem}
 				showCheckbox={showCheckbox}
 			/>
 
 			<StateRenderer
 				empty={empty}
-				emptyStateTitle={emptyStateTitle}
-				error={error || lazyResult.error}
-				loading={loading || lazyResult.loading}
-				noResultsTitle={noResultsTitle}
+				emptyState={emptyState}
+				error={error}
+				loading={loading}
 				refetch={refetch}
 			>
 				<Content

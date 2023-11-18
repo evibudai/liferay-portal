@@ -1,28 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service.impl;
 
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.type.grouped.model.CPDefinitionGroupedEntry;
 import com.liferay.commerce.product.type.grouped.service.base.CPDefinitionGroupedEntryServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -36,6 +30,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Andrea Di Giorgi
+ * @author Alessio Antonio Rendina
  */
 @Component(
 	property = {
@@ -57,10 +52,33 @@ public class CPDefinitionGroupedEntryServiceImpl
 
 		for (long entryCPDefinitionId : entryCPDefinitionIds) {
 			_checkCommerceCatalog(entryCPDefinitionId, ActionKeys.VIEW);
-		}
 
-		cpDefinitionGroupedEntryLocalService.addCPDefinitionGroupedEntries(
-			cpDefinitionId, entryCPDefinitionIds, serviceContext);
+			CPDefinition cpDefinition =
+				cpDefinitionLocalService.getCPDefinition(entryCPDefinitionId);
+
+			cpDefinitionGroupedEntryLocalService.addCPDefinitionGroupedEntry(
+				cpDefinitionId, cpDefinition.getCProductId(), 0, 1,
+				serviceContext);
+		}
+	}
+
+	@Override
+	public CPDefinitionGroupedEntry addCPDefinitionGroupedEntry(
+			long cpDefinitionId, long entryCProductId, double priority,
+			int quantity, ServiceContext serviceContext)
+		throws PortalException {
+
+		_checkCommerceCatalog(cpDefinitionId, ActionKeys.UPDATE);
+
+		CProduct entryCProduct = cProductLocalService.getCProduct(
+			entryCProductId);
+
+		_checkCommerceCatalog(
+			entryCProduct.getPublishedCPDefinitionId(), ActionKeys.VIEW);
+
+		return cpDefinitionGroupedEntryLocalService.addCPDefinitionGroupedEntry(
+			cpDefinitionId, entryCProductId, priority, quantity,
+			serviceContext);
 	}
 
 	@Override
@@ -93,6 +111,19 @@ public class CPDefinitionGroupedEntryServiceImpl
 	}
 
 	@Override
+	public List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+			long companyId, long cpDefinitionId, String keywords, int start,
+			int end, Sort sort)
+		throws PortalException {
+
+		_checkCommerceCatalog(cpDefinitionId, ActionKeys.VIEW);
+
+		return cpDefinitionGroupedEntryLocalService.
+			getCPDefinitionGroupedEntries(
+				companyId, cpDefinitionId, keywords, start, end, sort);
+	}
+
+	@Override
 	public int getCPDefinitionGroupedEntriesCount(long cpDefinitionId)
 		throws PortalException {
 
@@ -100,6 +131,18 @@ public class CPDefinitionGroupedEntryServiceImpl
 
 		return cpDefinitionGroupedEntryLocalService.
 			getCPDefinitionGroupedEntriesCount(cpDefinitionId);
+	}
+
+	@Override
+	public int getCPDefinitionGroupedEntriesCount(
+			long companyId, long cpDefinitionId, String keywords)
+		throws PortalException {
+
+		_checkCommerceCatalog(cpDefinitionId, ActionKeys.VIEW);
+
+		return cpDefinitionGroupedEntryLocalService.
+			getCPDefinitionGroupedEntriesCount(
+				companyId, cpDefinitionId, keywords);
 	}
 
 	@Override
@@ -118,6 +161,36 @@ public class CPDefinitionGroupedEntryServiceImpl
 		}
 
 		return cpDefinitionGroupedEntry;
+	}
+
+	@Override
+	public List<CPDefinitionGroupedEntry>
+			getEntryCProductCPDefinitionGroupedEntries(
+				long entryCProductId, int start, int end,
+				OrderByComparator<CPDefinitionGroupedEntry> orderByComparator)
+		throws PortalException {
+
+		CProduct cProduct = cProductLocalService.getCProduct(entryCProductId);
+
+		_checkCommerceCatalog(
+			cProduct.getPublishedCPDefinitionId(), ActionKeys.VIEW);
+
+		return cpDefinitionGroupedEntryPersistence.findByEntryCProductId(
+			entryCProductId, start, end, orderByComparator);
+	}
+
+	@Override
+	public int getEntryCProductCPDefinitionGroupedEntriesCount(
+			long entryCProductId)
+		throws PortalException {
+
+		CProduct cProduct = cProductLocalService.getCProduct(entryCProductId);
+
+		_checkCommerceCatalog(
+			cProduct.getPublishedCPDefinitionId(), ActionKeys.VIEW);
+
+		return cpDefinitionGroupedEntryPersistence.countByEntryCProductId(
+			entryCProductId);
 	}
 
 	@Override
@@ -143,6 +216,9 @@ public class CPDefinitionGroupedEntryServiceImpl
 
 	@Reference
 	protected CPDefinitionLocalService cpDefinitionLocalService;
+
+	@Reference
+	protected CProductLocalService cProductLocalService;
 
 	private void _checkCommerceCatalog(long cpDefinitionId, String actionId)
 		throws PortalException {

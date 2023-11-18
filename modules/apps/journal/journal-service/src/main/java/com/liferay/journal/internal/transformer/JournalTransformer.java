@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.transformer;
@@ -35,6 +26,7 @@ import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -46,7 +38,6 @@ import com.liferay.portal.kernel.mobile.device.Device;
 import com.liferay.portal.kernel.mobile.device.UnknownDevice;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -74,7 +65,6 @@ import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
@@ -112,6 +102,7 @@ public class JournalTransformer {
 			JournalArticle article, DDMTemplate ddmTemplate,
 			JournalHelper journalHelper, String languageId,
 			LayoutDisplayPageProviderRegistry layoutDisplayPageProviderRegistry,
+			List<TransformerListener> transformerListeners,
 			PortletRequestModel portletRequestModel, boolean propagateException,
 			String script, ThemeDisplay themeDisplay, String viewMode)
 		throws Exception {
@@ -140,16 +131,13 @@ public class JournalTransformer {
 			_logTokens.debug(tokensString);
 		}
 
-		Document document = article.getDocument();
+		Document document = article.getDocumentByLocale(languageId);
 
 		document = document.clone();
 
 		if (_logTransformBefore.isDebugEnabled()) {
 			_logTransformBefore.debug(document);
 		}
-
-		List<TransformerListener> transformerListeners =
-			JournalTransformerListenerRegistryUtil.getTransformerListeners();
 
 		for (TransformerListener transformerListener : transformerListeners) {
 
@@ -220,6 +208,7 @@ public class JournalTransformer {
 
 		PortletRequest originalPortletRequest = null;
 		PortletResponse originalPortletResponse = null;
+		String originalLifecyclePhase = null;
 
 		HttpServletRequest httpServletRequest = null;
 
@@ -233,6 +222,9 @@ public class JournalTransformer {
 				originalPortletResponse =
 					(PortletResponse)httpServletRequest.getAttribute(
 						JavaConstants.JAVAX_PORTLET_RESPONSE);
+				originalLifecyclePhase =
+					(String)httpServletRequest.getAttribute(
+						PortletRequest.LIFECYCLE_PHASE);
 
 				httpServletRequest.setAttribute(
 					JavaConstants.JAVAX_PORTLET_REQUEST,
@@ -338,9 +330,8 @@ public class JournalTransformer {
 			else if (exception instanceof TransformException) {
 				throw (TransformException)exception;
 			}
-			else {
-				throw new TransformException("Unhandled exception", exception);
-			}
+
+			throw new TransformException("Unhandled exception", exception);
 		}
 		finally {
 			if ((httpServletRequest != null) && (portletRequestModel != null)) {
@@ -350,6 +341,8 @@ public class JournalTransformer {
 				httpServletRequest.setAttribute(
 					JavaConstants.JAVAX_PORTLET_RESPONSE,
 					originalPortletResponse);
+				httpServletRequest.setAttribute(
+					PortletRequest.LIFECYCLE_PHASE, originalLifecyclePhase);
 			}
 		}
 
@@ -406,37 +399,53 @@ public class JournalTransformer {
 				continue;
 			}
 
-			TemplateNode firstChildTemplateNode = childTemplateNodes.get(0);
+			String fieldSetName = templateNode.getName();
 
-			if (Objects.equals(
-					firstChildTemplateNode.getType(),
-					DDMFormFieldTypeConstants.FIELDSET)) {
+			if (!fieldSetName.endsWith("FieldSet")) {
+				continue;
+			}
 
+			String name = fieldSetName.substring(
+				0, fieldSetName.indexOf("FieldSet"));
+
+			TemplateNode mainChildTemplateNode = templateNode.getChild(name);
+
+			if (mainChildTemplateNode == null) {
 				backwardsCompatibilityTemplateNodes.addAll(
 					includeBackwardsCompatibilityTemplateNodes(
-						Arrays.asList(firstChildTemplateNode), parentOffset));
+						childTemplateNodes, parentOffset));
 
 				continue;
 			}
 
-			firstChildTemplateNode =
-				(TemplateNode)firstChildTemplateNode.clone();
+			if (Objects.equals(
+					mainChildTemplateNode.getType(),
+					DDMFormFieldTypeConstants.FIELDSET)) {
+
+				backwardsCompatibilityTemplateNodes.addAll(
+					includeBackwardsCompatibilityTemplateNodes(
+						Arrays.asList(mainChildTemplateNode), parentOffset));
+
+				continue;
+			}
 
 			List<TemplateNode> newChildTemplateNodes = new ArrayList<>(
 				childTemplateNodes);
 
-			newChildTemplateNodes.remove(0);
-
-			firstChildTemplateNode.appendChildren(
-				includeBackwardsCompatibilityTemplateNodes(
-					newChildTemplateNodes, parentOffset));
+			newChildTemplateNodes.remove(mainChildTemplateNode);
 
 			List<TemplateNode> newSiblingsTemplateNodes = new ArrayList<>(
-				firstChildTemplateNode.getSiblings());
+				mainChildTemplateNode.getSiblings());
 
 			if (!newSiblingsTemplateNodes.isEmpty()) {
-				newSiblingsTemplateNodes.remove(0);
+				newSiblingsTemplateNodes.remove(mainChildTemplateNode);
 			}
+
+			mainChildTemplateNode = (TemplateNode)mainChildTemplateNode.clone();
+
+			mainChildTemplateNode.appendChildren(
+				includeBackwardsCompatibilityTemplateNodes(
+					newChildTemplateNodes, parentOffset));
 
 			List<TemplateNode> siblingsTemplateNodes =
 				templateNode.getSiblings();
@@ -448,18 +457,18 @@ public class JournalTransformer {
 						siblingsTemplateNodes.size()));
 			}
 
-			List<TemplateNode> firstChildSiblingsTemplateNodes =
-				firstChildTemplateNode.getSiblings();
+			List<TemplateNode> mainChildSiblingsTemplateNodes =
+				mainChildTemplateNode.getSiblings();
 
-			firstChildSiblingsTemplateNodes.clear();
+			mainChildSiblingsTemplateNodes.clear();
 
-			firstChildSiblingsTemplateNodes.add(firstChildTemplateNode);
+			mainChildSiblingsTemplateNodes.add(mainChildTemplateNode);
 
-			firstChildSiblingsTemplateNodes.addAll(
+			mainChildSiblingsTemplateNodes.addAll(
 				includeBackwardsCompatibilityTemplateNodes(
 					newSiblingsTemplateNodes, parentOffset));
 
-			backwardsCompatibilityTemplateNodes.add(firstChildTemplateNode);
+			backwardsCompatibilityTemplateNodes.add(mainChildTemplateNode);
 		}
 
 		return backwardsCompatibilityTemplateNodes;
@@ -471,8 +480,8 @@ public class JournalTransformer {
 		Map<String, String> tokens) {
 
 		_addReservedEl(
-			article.getArticleId(), templateNodes, themeDisplay, tokens,
-			JournalStructureConstants.RESERVED_ARTICLE_ID);
+			JournalStructureConstants.RESERVED_ARTICLE_ID, templateNodes,
+			themeDisplay, tokens, article.getArticleId());
 
 		_addReservedEl(
 			JournalStructureConstants.RESERVED_ARTICLE_VERSION, templateNodes,
@@ -508,21 +517,10 @@ public class JournalTransformer {
 				Time.getRFC822(article.getDisplayDate()));
 		}
 
-		String smallImageURL = StringPool.BLANK;
-
-		if (Validator.isNotNull(article.getSmallImageURL())) {
-			smallImageURL = article.getSmallImageURL();
-		}
-		else if ((themeDisplay != null) && article.isSmallImage()) {
-			smallImageURL = StringBundler.concat(
-				themeDisplay.getPathImage(), "/journal/article?img_id=",
-				article.getSmallImageId(), "&t=",
-				WebServerServletTokenUtil.getToken(article.getSmallImageId()));
-		}
-
 		_addReservedEl(
 			JournalStructureConstants.RESERVED_ARTICLE_SMALL_IMAGE_URL,
-			templateNodes, themeDisplay, tokens, smallImageURL);
+			templateNodes, themeDisplay, tokens,
+			article.getArticleImageURL(themeDisplay));
 
 		String[] assetTagNames = AssetTagLocalServiceUtil.getTagNames(
 			JournalArticle.class.getName(), article.getResourcePrimKey());

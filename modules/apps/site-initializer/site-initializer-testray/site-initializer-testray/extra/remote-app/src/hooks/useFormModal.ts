@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useModal} from '@clayui/modal';
@@ -41,17 +32,19 @@ export type FormModal = {
 
 export type FormModalComponent = Omit<FormModal, 'forceRefetch'>;
 
-type UseFormModal = {
+type UseFormModal<T> = {
 	isVisible?: boolean;
-	onSave?: (param: any) => void;
+	onBeforeSave?: (state: T, act: () => void) => void;
+	onSave?: (param: T) => void;
 };
 
-const useFormModal = ({
+const useFormModal = <T = any>({
 	isVisible = false,
+	onBeforeSave,
 	onSave: onSaveModal = () => {},
-}: UseFormModal = {}): FormModal => {
+}: UseFormModal<T> = {}): FormModal => {
 	const {form} = useFormActions();
-	const [modalState, setModalState] = useState();
+	const [modalState, setModalState] = useState<T>();
 	const [visible, setVisible] = useState(isVisible);
 	const {observer, onClose} = useModal({
 		onClose: () => setVisible(false),
@@ -60,23 +53,31 @@ const useFormModal = ({
 	const [forceRefetch, setForceRefetch] = useState(0);
 
 	const onSave = (
-		state?: any,
+		state?: T,
 		options: onSaveOptions = {forceRefetch: true}
 	) => {
-		form.onSuccess();
+		const act = () => {
+			form.onSuccess();
 
-		if (visible) {
-			onClose();
+			if (visible) {
+				onClose();
+			}
+
+			if (options.forceRefetch) {
+				setForceRefetch(new Date().getTime());
+			}
+
+			if (state) {
+				setModalState(state);
+				onSaveModal(state);
+			}
+		};
+
+		if (onBeforeSave) {
+			return onBeforeSave(state as T, act);
 		}
 
-		if (options.forceRefetch) {
-			setForceRefetch(new Date().getTime());
-		}
-
-		if (state) {
-			setModalState(state);
-			onSaveModal(state);
-		}
+		act();
 	};
 
 	return {

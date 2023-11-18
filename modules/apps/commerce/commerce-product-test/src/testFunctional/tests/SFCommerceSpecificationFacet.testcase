@@ -15,11 +15,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8403"
-	@priority = "4"
+	@priority = 5
 	test VerifyDisplayFrequencies {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
-		var facetValueNameList = "1 Year Unlimited Mileage Warranty,Limited Lifetime,3 Year Unlimited Mileage Warranty,Steel,Rubber,Aluminum,Cast Iron,Neoprene,Ceramic,Plastic";
+		var facetTermList = "1 Year Unlimited Mileage Warranty,Limited Lifetime,3 Year Unlimited Mileage Warranty,Steel,Rubber,Aluminum,Cast Iron,Neoprene,Ceramic,Plastic";
 
 		ApplicationsMenu.gotoSite(site = "Minium");
 
@@ -29,17 +29,18 @@ definition {
 
 		IFrame.closeFrame();
 
-		for (var facetValueName : list "${facetValueNameList}") {
+		for (var facetTerm : list ${facetTermList}) {
 			AssertElementNotPresent(
-				facetValueName = "${facetValueName}",
-				locator1 = "Search#FACET_DISPLAY_FREQUENCIES");
+				key_facetType = "Specification Facet",
+				key_termValue = ${facetTerm},
+				locator1 = "Search#FACET_TERM_FREQUENCIES");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8401"
-	@priority = "4"
+	@priority = 5
 	test VerifyDisplayTemplate {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		var warrantyTagNameList = "1 Year Unlimited Mileage Warranty,Limited Lifetime,3 Year Unlimited Mileage Warranty";
 		var materialTagNameList = "Steel,Rubber,Aluminum,Cast Iron,Neoprene,Ceramic,Plastic";
@@ -52,16 +53,16 @@ definition {
 
 		IFrame.closeFrame();
 
-		for (var tagName : list "${warrantyTagNameList}") {
+		for (var tagName : list ${warrantyTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_CLOUD_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 
-		for (var tagName : list "${materialTagNameList}") {
+		for (var tagName : list ${materialTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_CLOUD_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 
 		CommerceWidget.updateFacetConfiguration(
@@ -70,16 +71,16 @@ definition {
 
 		IFrame.closeFrame();
 
-		for (var tagName : list "${warrantyTagNameList}") {
+		for (var tagName : list ${warrantyTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_COMPACT_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 
-		for (var tagName : list "${materialTagNameList}") {
+		for (var tagName : list ${materialTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_COMPACT_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 
 		CommerceWidget.updateFacetConfiguration(
@@ -88,21 +89,21 @@ definition {
 
 		IFrame.closeFrame();
 
-		for (var tagName : list "${warrantyTagNameList}") {
+		for (var tagName : list ${warrantyTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 
-		for (var tagName : list "${materialTagNameList}") {
+		for (var tagName : list ${materialTagNameList}) {
 			AssertElementPresent(
 				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
-				tagName = "${tagName}");
+				tagName = ${tagName});
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8401"
-	@priority = "4"
+	@priority = 4
 	test VerifyFrequencyThreshold {
 		property portal.acceptance = "false";
 
@@ -111,7 +112,7 @@ definition {
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		CommerceWidget.updateFacetConfiguration(
-			frequencyThreshold = "30",
+			frequencyThreshold = 30,
 			portletName = "Specification Facet");
 
 		IFrame.closeFrame();
@@ -120,20 +121,22 @@ definition {
 			key_facetLabel = "1 Year Unlimited Mileage Warranty",
 			locator1 = "CommerceWidget#FACET_DEFAULT_LABEL");
 
-		for (var facetLabel : list "${warrantyLabelNameList}") {
+		for (var facetLabel : list ${warrantyLabelNameList}) {
 			AssertElementNotPresent(
-				key_facetLabel = "${facetLabel}",
+				key_facetLabel = ${facetLabel},
 				locator1 = "CommerceWidget#FACET_DEFAULT_LABEL");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8399."
-	@priority = "3"
+	@priority = 3
 	test VerifyMaxTermsFieldValue {
+		property portal.acceptance = "false";
+
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		CommerceWidget.updateFacetConfiguration(
-			maxTerms = "101",
+			maxTerms = 101,
 			portletName = "Specification Facet");
 
 		AssertElementPresent(
@@ -142,7 +145,10 @@ definition {
 	}
 
 	@description = "This is for COMMERCE-8384."
+	@priority = 3
 	test VerifySpecificationFacetSetupTab {
+		property portal.acceptance = "false";
+
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		Portlet.gotoPortletOptions(
@@ -168,7 +174,10 @@ definition {
 		IFrame.closeFrame();
 	}
 
+	@priority = 5
 	test View100Terms {
+		property portal.acceptance = "true";
+
 		CommerceJSONSpecificationsAPI._addCommerceProductsWithSpecifications(
 			catalogName = "Minium",
 			specificationKey = "material");
@@ -176,13 +185,13 @@ definition {
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		CommerceWidget.updateFacetConfiguration(
-			maxTerms = "100",
+			maxTerms = 100,
 			portletName = "Specification Facet");
 
 		IFrame.closeFrame();
 
 		CommerceWidget.assertSpecificationPanel2FacetsCount(
-			expectedLabels = "100",
+			expectedLabels = 100,
 			specificationGroup = "Material");
 	}
 

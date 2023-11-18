@@ -5,6 +5,8 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Blogs";
 	property testray.main.component.name = "Upgrades Lima";
 
@@ -19,10 +21,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154447. It ensures that an image in the Blogs content field can be published and rendered correctly after an upgrade from 7.1.10.5."
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageFromContentFieldAfterUpgradeFrom71105Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.1.10.5";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -53,10 +56,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154446. It ensures that an image in the Blogs content field can be published and rendered correctly after an upgrade from 7.2.10.4."
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageFromContentFieldAfterUpgradeFrom72104Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.2.10.4";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -87,10 +91,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154445. It ensures that an image in the Blogs content field can be published and rendered correctly after an upgrade from 7.3.10.1."
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageFromContentFieldAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -119,10 +124,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154448. It ensures that an image in the Blogs content field can be published and rendered correctly after an upgrade from 7.0.10.15."
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageFromContentFieldAfterUpgradeFrom701015Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.0.10.15";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -147,10 +153,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154455. It ensures that a blogs small image can be published and rendered correctly after an upgrade from 7.1.10.5."
-	@priority = "4"
+	@priority = 4
 	test CanPublishSmallImageAfterUpgradeFrom71105Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.1.10.5";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -168,10 +175,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154454. It ensures that a blogs small image can be published and rendered correctly after an upgrade from 7.2.10.4."
-	@priority = "4"
+	@priority = 4
 	test CanPublishSmallImageAfterUpgradeFrom72104Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.2.10.4";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -189,10 +197,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154453. It ensures that a blogs small image can be published and rendered correctly after an upgrade from 7.3.10.1."
-	@priority = "4"
+	@priority = 4
 	test CanPublishSmallImageAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -210,10 +219,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154456. It ensures that a blogs small image can be published and rendered correctly after an upgrade from 7.0.10.15."
-	@priority = "4"
+	@priority = 4
 	test CanPublishSmallImageAfterUpgradeFrom701015Archive {
 		property data.archive.type = "data-archive-local-staging-with-blogs-entries";
 		property portal.version = "7.0.10.15";
+		property test.assert.warning.exceptions = "false";
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -141,11 +132,23 @@ public class NotPoshiElement extends PoshiElement {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("\"");
-		sb.append(equalsPoshiElement.attributeValue("arg1"));
-		sb.append("\" != \"");
-		sb.append(equalsPoshiElement.attributeValue("arg2"));
-		sb.append("\"");
+		String arg1 = equalsPoshiElement.attributeValue("arg1");
+
+		if (isQuotedContent(arg1)) {
+			arg1 = "\"" + arg1 + "\"";
+		}
+
+		sb.append(arg1);
+
+		sb.append(" != ");
+
+		String arg2 = equalsPoshiElement.attributeValue("arg2");
+
+		if (isQuotedContent(arg2)) {
+			arg2 = "\"" + arg2 + "\"";
+		}
+
+		sb.append(arg2);
 
 		return sb.toString();
 	}
@@ -153,6 +156,7 @@ public class NotPoshiElement extends PoshiElement {
 	private static final String _ELEMENT_NAME = "not";
 
 	private static final Pattern _conditionPattern = Pattern.compile(
-		"^(![\\s\\S]*|\"[\\s\\S]*\"[\\s]*!=[\\s]*\"[\\s\\S]*\")$");
+		"^(![\\s\\S]*|(?:\\d+|(?:\\$\\{|\\\")[\\s\\S]*" +
+			"(?:\\}|\"))[\\s]*!=[\\s]*[\\s\\S]*(?:\\d+|(?:\\}|\")))$");
 
 }

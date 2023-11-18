@@ -23,7 +23,7 @@ definition {
 	function openInTheNewTab {
 		WaitForSPARefresh();
 
-		RobotType.robotTypeShortcut(locator1 = "Ctrl + t");
+		selenium.executeJavaScript("sessionStorage.clear(); window.open();");
 
 		SelectWindow.selectPopUp(locator1 = "null");
 
@@ -40,6 +40,14 @@ definition {
 		selenium.open();
 	}
 
+	function openNoErrorNoSPARefresh {
+		selenium.selectWindow("null");
+
+		selenium.selectFrame("relative=top");
+
+		selenium.open();
+	}
+
 	function openRedirect {
 		WaitForSPARefresh();
 
@@ -47,7 +55,7 @@ definition {
 window.open("${locator1}","_self");
 		''';
 
-		selenium.runScript("${javascript}");
+		selenium.executeJavaScript(${javascript});
 	}
 
 }

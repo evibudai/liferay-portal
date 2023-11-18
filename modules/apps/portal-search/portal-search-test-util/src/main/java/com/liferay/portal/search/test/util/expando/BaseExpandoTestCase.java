@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.expando;
@@ -46,7 +37,6 @@ import com.liferay.portal.search.test.util.indexing.DocumentCreationHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
@@ -68,29 +58,37 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 	public static void setUpClassBaseExpandoTestCase() {
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		_serviceRegistration = bundleContext.registerService(
-			FieldQueryFactory.class,
-			createFieldQueryFactory(createExpandoFieldQueryBuilderFactory()),
+		_fieldQueryBuilderFactoryServiceRegistration =
+			bundleContext.registerService(
+				FieldQueryBuilderFactory.class,
+				createExpandoFieldQueryBuilderFactory(), null);
+
+		_fieldQueryFactoryServiceRegistration = bundleContext.registerService(
+			FieldQueryFactory.class, createFieldQueryFactory(bundleContext),
 			null);
 	}
 
 	@AfterClass
 	public static void tearDownClassBaseExpandoTestCase() {
-		_serviceRegistration.unregister();
+		ReflectionTestUtil.invoke(
+			_fieldQueryFactoryImpl, "deactivate", new Class<?>[0], null);
+
+		_fieldQueryBuilderFactoryServiceRegistration.unregister();
+
+		_fieldQueryFactoryServiceRegistration.unregister();
 	}
 
 	@Test
 	public void testMultipleClassNames() throws Exception {
-		List<String> duplicates = Arrays.asList(
-			"alpha", "alpha", "alpha bravo", "charlie", "delta");
+		String[] duplicates = {
+			"alpha", "alpha", "alpha bravo", "charlie", "delta"
+		};
 
 		addDocuments(this::addKeyword, duplicates);
 
-		addDocuments(this::addKeyword, Arrays.asList("keyword"));
-
+		addDocuments(this::addKeyword, "keyword");
 		addDocuments(this::addText, duplicates);
-
-		addDocuments(this::addText, Arrays.asList("text"));
+		addDocuments(this::addText, "text");
 
 		assertSearch("alpha", 6);
 		assertSearch("bravo", 2);
@@ -126,16 +124,19 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 	}
 
 	protected static FieldQueryFactoryImpl createFieldQueryFactory(
-		FieldQueryBuilderFactory fieldQueryBuilderFactory) {
+		BundleContext bundleContext) {
 
-		return new FieldQueryFactoryImpl() {
-			{
-				descriptionFieldQueryBuilder =
-					createDescriptionFieldQueryBuilder();
+		_fieldQueryFactoryImpl = new FieldQueryFactoryImpl();
 
-				addFieldQueryBuilderFactory(fieldQueryBuilderFactory);
-			}
-		};
+		ReflectionTestUtil.setFieldValue(
+			_fieldQueryFactoryImpl, "_descriptionFieldQueryBuilder",
+			createDescriptionFieldQueryBuilder());
+
+		ReflectionTestUtil.invoke(
+			_fieldQueryFactoryImpl, "activate",
+			new Class<?>[] {BundleContext.class}, bundleContext);
+
+		return _fieldQueryFactoryImpl;
 	}
 
 	protected DocumentCreationHelper addKeyword(String value) {
@@ -357,7 +358,10 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 	private static final String _FIELD_TEXT =
 		"expando__custom_fields__testColumnName";
 
-	private static ServiceRegistration<?> _serviceRegistration;
+	private static ServiceRegistration<FieldQueryBuilderFactory>
+		_fieldQueryBuilderFactoryServiceRegistration;
+	private static FieldQueryFactoryImpl _fieldQueryFactoryImpl;
+	private static ServiceRegistration<?> _fieldQueryFactoryServiceRegistration;
 
 	@Mock
 	private ExpandoColumn _indexTypeKeywordExpandoColumn = createExpandoColumn(

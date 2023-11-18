@@ -2,6 +2,7 @@
 @ignore = "true"
 definition {
 
+	property app.server.bundles.size = "12890";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Smoke";
@@ -17,6 +18,13 @@ definition {
 	static var userPassword = "password";
 	var userScreenName = "joeblogs";
 	static var integer = ${endYear} - ${numberOfYears};
+	var newInteger = 13;
+	var testRef = "test";
+
+	echo(${test});
+
+	var reference = ${testRef};
+	var test = StringUtil.replace(${test}, ${test}, "${test} ${test2}");
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -29,7 +37,7 @@ definition {
 	}
 
 	@description = "Ensure that a user can add multiple Blogs Entries."
-	@priority = "4"
+	@priority = 4
 	@simple-annotation
 	test AddBlogsEntries {
 		property testray.component.names = "Blogs";
@@ -37,6 +45,12 @@ definition {
 
 		task ("Add a blogs entry called 'Blogs Entry1 Title' with content 'Blogs Entry1 Content'") {
 			Navigator.openURL();
+
+			ListUtil.add(${orderID}, ${orderIDs});
+
+			var pages = selenium.getElementValue("//tr[td[contains(@class,'line-content')][contains(.,'textAlign = \"right\"')]]/td[contains(@class,'line-number')]");
+			var camelCase = StringUtil.replace(${camelCase}, " ", "");
+			var payload = StringUtil.replace(${payload}, ${payload}, "${payload}}");
 
 			ProductMenu.gotoPortlet(
 				category = "Content",
@@ -61,10 +75,12 @@ definition {
 				entryTitle = "Blogs Entry2 Title");
 		}
 
-		var portalInstanceIds = StringUtil.regexReplaceAll("${portalInstanceIds}", "[\[\]\"]", "");
+		var portalInstanceIds = StringUtil.regexReplaceAll(${portalInstanceIds}, "[\[\]\"]", "");
+
+		StringUtil.assertEquals("\"Row 1\": \"Column 1\"", ${data});
 	}
 
-	@priority = "5"
+	@priority = 5
 	test AddUser {
 
 		// This is a comment
@@ -80,7 +96,8 @@ definition {
 		var specialCharacters = "\"\\"";
 		var userEmailAddress = "userea@liferay.com";
 		var userFirstName = "userfn";
-		var userLastName = "userln";
+
+		var userLastName = "${userFirstName} userln";
 
 		FormFields.editText(
 			fieldName = "label",
@@ -90,19 +107,19 @@ definition {
 
 		echo("This is a message.");
 
-		for (var breadcrumbName : list "${breadcrumbListVisible}") {
-			var key_breadcrumbName = "${breadcrumbName}";
-			var breadcrumbNameUppercase = StringUtil.upperCase("${breadcrumbName}");
+		for (var breadcrumbName : list ${breadcrumbListVisible}) {
+			var key_breadcrumbName = ${breadcrumbName};
+			var breadcrumbNameUppercase = StringUtil.upperCase(${breadcrumbName});
 			var historyVersion = selenium.getText("Staging#HISTORY_VERSION");
 
 			AssertTextEquals(
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-				value1 = "${breadcrumbNameUppercase}");
+				value1 = ${breadcrumbNameUppercase});
 
-			for (var breadcrumbName : list "${breadcrumbListVisible}") {
+			for (var breadcrumbName : list ${breadcrumbListVisible}) {
 				AssertTextEquals(
 					locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-					value1 = "${breadcrumbNameUppercase}");
+					value1 = ${breadcrumbNameUppercase});
 			}
 
 			AssertTextEquals(
@@ -134,20 +151,20 @@ definition {
 		for (var breadcrumbName : list "Breadcrumb: 1, Breadcrumb: 2") {
 			AssertTextEquals(
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-				value1 = "${breadcrumbNameUppercase}");
+				value1 = ${breadcrumbNameUppercase});
 		}
 
 		User.addCP(
-			userEmailAddress = "${userEmailAddress}",
-			userFirstName = "${userFirstName}",
-			userLastName = "${userLastName}",
-			userScreenName = "${userScreenName}",
+			userEmailAddress = ${userEmailAddress},
+			userFirstName = ${userFirstName},
+			userLastName = ${userLastName},
+			userScreenName = ${userScreenName},
 			userScreenName = "");
 	}
 
 	@ignore = "true"
 	test GotoLinkToPageChildPages {
-		var key_pageName = "${parentPage}";
+		var key_pageName = ${parentPage};
 
 		if (!(("true" == "true") || ("true" == "false"))) {
 			fail("Allowed values are 'true' or 'false'.");
@@ -155,7 +172,7 @@ definition {
 	}
 
 	@description = "Ensure that the super admin can add pages, add portlets, navigate to the product menu, use the WYSIWYG editor, and view alert messages."
-	@priority = "5"
+	@priority = 5
 	test Smoke {
 		property portal.smoke = "true";
 		property test.assert.warning.exceptions = "true";
@@ -187,7 +204,7 @@ definition {
 			}
 		}
 
-		if ("${check}" == "true") {
+		if (${check} == "true") {
 			Alert.viewSuccessMessage();
 		}
 
@@ -202,18 +219,18 @@ definition {
 			fail("Element not present");
 		}
 
-		if ((IsElementPresent(locator1 = "Blogs#ADD_BLOGS_ENTRY")) && ("${check}" == "true") && isSet(duplicate)) {
+		if ((IsElementPresent(locator1 = "Blogs#ADD_BLOGS_ENTRY")) && (${check} == "true") && isSet(duplicate)) {
 			Alert.viewSuccessMessage();
 		}
 
-		if ((IsElementPresent(locator1 = "Blogs#ADD_BLOGS_ENTRY")) || ("${check}" == "true") || isSet(duplicate)) {
+		if ((IsElementPresent(locator1 = "Blogs#ADD_BLOGS_ENTRY")) || (${check} == "true") || isSet(duplicate)) {
 			Alert.viewSuccessMessage();
 		}
 
 		if (IsElementPresent(locator1 = "Blogs#ADD_BLOGS_ENTRY")) {
 			Alert.viewSuccessMessage();
 		}
-		else if ("${check}" == "true") {
+		else if (${check} == "true") {
 			Alert.viewErrorMessage();
 		}
 
@@ -222,10 +239,10 @@ definition {
 		}
 
 		if ((isSet(A) && isSet(B)) || (!(isSet(B)) && !(isSet(A)))) {
-			fail("${failMessage}");
+			fail(${failMessage});
 		}
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var testCDATA = ''''alert(0)'"alert(0)"><img src=x onerror=alert(0)><script>alert(0)</script>''';
 		var testNestedCDATA1 = '''<root available-locales="en_US" default-locale="en_US">%0A%09%09<dynamic-content language-id="en_US">%0A%09%09%09<![CDATA[${content}]]>%0A%09%09</dynamic-content>%0A</root>''';
 		var testNestedCDATA2 = '''<![CDATA[Test Script]]>''';
@@ -243,7 +260,7 @@ definition {
 
 		KaleoDesigner.viewSourceXMLLine(
 			kdSourceXML = '''<name>Timer Name</name>''',
-			line = "21");
+			line = 21);
 
 		User.editDetailsViaMyAccount(
 			userFirstNameEdit = ''''alert(0)'"alert(0)"><img src=x onerror=alert(0)><script>alert(0)</script>''',
@@ -271,7 +288,7 @@ definition {
 		Type(
 			key_fieldName = "Integer",
 			locator1 = "DDMField#INTEGER",
-			value1 = "5");
+			value1 = 5);
 
 		Click(locator1 = "Home#PAGE");
 

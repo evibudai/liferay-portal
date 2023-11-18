@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service.persistence.impl;
@@ -53,17 +44,17 @@ import org.osgi.service.component.annotations.Reference;
 public class JournalFolderFinderImpl
 	extends JournalFolderFinderBaseImpl implements JournalFolderFinder {
 
-	public static final String COUNT_A_BY_G_U_F =
-		JournalFolderFinder.class.getName() + ".countA_ByG_U_F";
+	public static final String COUNT_A_BY_G_U_F_DDMSI =
+		JournalFolderFinder.class.getName() + ".countA_ByG_U_F_DDMSI";
 
 	public static final String COUNT_F_BY_G_F =
 		JournalFolderFinder.class.getName() + ".countF_ByG_F";
 
-	public static final String FIND_A_BY_G_U_F =
-		JournalFolderFinder.class.getName() + ".findA_ByG_U_F";
+	public static final String FIND_A_BY_G_U_F_DDMSI =
+		JournalFolderFinder.class.getName() + ".findA_ByG_U_F_DDMSI";
 
-	public static final String FIND_A_BY_G_U_F_L =
-		JournalFolderFinder.class.getName() + ".findA_ByG_U_F_L";
+	public static final String FIND_A_BY_G_U_F_DDMSI_L =
+		JournalFolderFinder.class.getName() + ".findA_ByG_U_F_DDMSI_L";
 
 	public static final String FIND_F_BY_NO_ASSETS =
 		JournalFolderFinder.class.getName() + ".findF_ByNoAssets";
@@ -75,40 +66,48 @@ public class JournalFolderFinderImpl
 		JournalFolderFinder.class.getName() + ".findF_ByG_F_L";
 
 	@Override
-	public int countF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition) {
-
-		return doCountF_A_ByG_F(groupId, folderId, queryDefinition, false);
-	}
-
-	@Override
-	public int filterCountF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition) {
-
-		return doCountF_A_ByG_F(groupId, folderId, queryDefinition, true);
-	}
-
-	@Override
-	public List<Object> filterFindF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition) {
-
-		return doFindF_A_ByG_F(groupId, folderId, queryDefinition, true);
-	}
-
-	@Override
-	public List<Object> filterFindF_A_ByG_F_L(
-		long groupId, long folderId, Locale locale,
+	public int countF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
 		QueryDefinition<?> queryDefinition) {
 
-		return doFindF_A_ByG_F_L(
-			groupId, folderId, locale, queryDefinition, true);
+		return doCountF_A_ByG_F_DDMSI(
+			groupId, folderId, ddmStructureId, queryDefinition, false);
 	}
 
 	@Override
-	public List<Object> findF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition) {
+	public int filterCountF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
+		QueryDefinition<?> queryDefinition) {
 
-		return doFindF_A_ByG_F(groupId, folderId, queryDefinition, false);
+		return doCountF_A_ByG_F_DDMSI(
+			groupId, folderId, ddmStructureId, queryDefinition, true);
+	}
+
+	@Override
+	public List<Object> filterFindF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
+		QueryDefinition<?> queryDefinition) {
+
+		return doFindF_A_ByG_F_DDMSI(
+			groupId, folderId, ddmStructureId, queryDefinition, true);
+	}
+
+	@Override
+	public List<Object> filterFindF_A_ByG_F_DDMSI_L(
+		long groupId, long folderId, long ddmStructureId, Locale locale,
+		QueryDefinition<?> queryDefinition) {
+
+		return doFindF_A_ByG_F_DDMSI_L(
+			groupId, folderId, ddmStructureId, locale, queryDefinition, true);
+	}
+
+	@Override
+	public List<Object> findF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
+		QueryDefinition<?> queryDefinition) {
+
+		return doFindF_A_ByG_F_DDMSI(
+			groupId, folderId, ddmStructureId, queryDefinition, false);
 	}
 
 	@Override
@@ -139,9 +138,9 @@ public class JournalFolderFinderImpl
 		}
 	}
 
-	protected int doCountF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition,
-		boolean inlineSQLHelper) {
+	protected int doCountF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
+		QueryDefinition<?> queryDefinition, boolean inlineSQLHelper) {
 
 		Session session = null;
 
@@ -156,10 +155,10 @@ public class JournalFolderFinderImpl
 						inlineSQLHelper),
 					") UNION ALL (",
 					getArticlesSQL(
-						COUNT_A_BY_G_U_F, groupId, queryDefinition,
+						COUNT_A_BY_G_U_F_DDMSI, groupId, queryDefinition,
 						inlineSQLHelper),
 					StringPool.CLOSE_PARENTHESIS),
-				folderId);
+				folderId, ddmStructureId);
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
@@ -187,6 +186,10 @@ public class JournalFolderFinderImpl
 				queryPos.add(folderId);
 			}
 
+			if (ddmStructureId > 0) {
+				queryPos.add(ddmStructureId);
+			}
+
 			int count = 0;
 
 			Iterator<Long> iterator = sqlQuery.iterate();
@@ -209,9 +212,9 @@ public class JournalFolderFinderImpl
 		}
 	}
 
-	protected List<Object> doFindF_A_ByG_F(
-		long groupId, long folderId, QueryDefinition<?> queryDefinition,
-		boolean inlineSQLHelper) {
+	protected List<Object> doFindF_A_ByG_F_DDMSI(
+		long groupId, long folderId, long ddmStructureId,
+		QueryDefinition<?> queryDefinition, boolean inlineSQLHelper) {
 
 		Session session = null;
 
@@ -226,10 +229,10 @@ public class JournalFolderFinderImpl
 						inlineSQLHelper),
 					") UNION ALL (",
 					getArticlesSQL(
-						FIND_A_BY_G_U_F, groupId, queryDefinition,
+						FIND_A_BY_G_U_F_DDMSI, groupId, queryDefinition,
 						inlineSQLHelper),
 					StringPool.CLOSE_PARENTHESIS),
-				folderId);
+				folderId, ddmStructureId);
 
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
@@ -261,6 +264,10 @@ public class JournalFolderFinderImpl
 
 			if (folderId >= 0) {
 				queryPos.add(folderId);
+			}
+
+			if (ddmStructureId > 0) {
+				queryPos.add(ddmStructureId);
 			}
 
 			List<Object> models = new ArrayList<>();
@@ -302,8 +309,8 @@ public class JournalFolderFinderImpl
 		}
 	}
 
-	protected List<Object> doFindF_A_ByG_F_L(
-		long groupId, long folderId, Locale locale,
+	protected List<Object> doFindF_A_ByG_F_DDMSI_L(
+		long groupId, long folderId, long ddmStructureId, Locale locale,
 		QueryDefinition<?> queryDefinition, boolean inlineSQLHelper) {
 
 		Session session = null;
@@ -319,10 +326,10 @@ public class JournalFolderFinderImpl
 						inlineSQLHelper),
 					") UNION ALL (",
 					getArticlesSQL(
-						FIND_A_BY_G_U_F_L, groupId, queryDefinition,
+						FIND_A_BY_G_U_F_DDMSI_L, groupId, queryDefinition,
 						inlineSQLHelper),
 					StringPool.CLOSE_PARENTHESIS),
-				folderId);
+				folderId, ddmStructureId);
 
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
@@ -354,6 +361,10 @@ public class JournalFolderFinderImpl
 
 			if (folderId >= 0) {
 				queryPos.add(folderId);
+			}
+
+			if (ddmStructureId > 0) {
+				queryPos.add(ddmStructureId);
 			}
 
 			queryPos.add(LocaleUtil.toLanguageId(locale));
@@ -413,6 +424,20 @@ public class JournalFolderFinderImpl
 		return sql;
 	}
 
+	protected String getDDMStructureId(long ddmStructureId) {
+		if (ddmStructureId <= 0) {
+			return StringPool.BLANK;
+		}
+
+		StringBundler sb = new StringBundler(3);
+
+		sb.append(" AND ");
+		sb.append(JournalArticleImpl.TABLE_NAME);
+		sb.append(".DDMStructureId = ? ");
+
+		return sb.toString();
+	}
+
 	protected String getFolderId(long folderId, String tableName) {
 		if (folderId < 0) {
 			return StringPool.BLANK;
@@ -452,14 +477,16 @@ public class JournalFolderFinderImpl
 		return sql;
 	}
 
-	protected String updateSQL(String sql, long folderId) {
+	protected String updateSQL(String sql, long folderId, long ddmStructureId) {
 		return StringUtil.replace(
 			sql,
 			new String[] {
-				"[$ARTICLE_FOLDER_ID$]", "[$FOLDER_PARENT_FOLDER_ID$]"
+				"[$ARTICLE_FOLDER_ID$]", "[$DDM_STRUCTURE_ID$]",
+				"[$FOLDER_PARENT_FOLDER_ID$]"
 			},
 			new String[] {
 				getFolderId(folderId, JournalArticleImpl.TABLE_NAME),
+				getDDMStructureId(ddmStructureId),
 				getFolderId(folderId, JournalFolderImpl.TABLE_NAME)
 			});
 	}

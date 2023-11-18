@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.model.impl;
@@ -73,14 +64,14 @@ public class KBFolderModelImpl
 	public static final String TABLE_NAME = "KBFolder";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"externalReferenceCode", Types.VARCHAR}, {"kbFolderId", Types.BIGINT},
-		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"parentKBFolderId", Types.BIGINT}, {"name", Types.VARCHAR},
-		{"urlTitle", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"lastPublishDate", Types.TIMESTAMP}
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
+		{"kbFolderId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP}, {"parentKBFolderId", Types.BIGINT},
+		{"name", Types.VARCHAR}, {"urlTitle", Types.VARCHAR},
+		{"description", Types.VARCHAR}, {"lastPublishDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -88,6 +79,7 @@ public class KBFolderModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("kbFolderId", Types.BIGINT);
@@ -105,7 +97,7 @@ public class KBFolderModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table KBFolder (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,kbFolderId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,parentKBFolderId LONG,name VARCHAR(75) null,urlTitle VARCHAR(75) null,description STRING null,lastPublishDate DATE null)";
+		"create table KBFolder (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,kbFolderId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,parentKBFolderId LONG,name VARCHAR(75) null,urlTitle VARCHAR(75) null,description STRING null,lastPublishDate DATE null,primary key (kbFolderId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table KBFolder";
 
@@ -259,85 +251,113 @@ public class KBFolderModelImpl
 	public Map<String, Function<KBFolder, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<KBFolder, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<KBFolder, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<KBFolder, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<KBFolder, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<KBFolder, Object>>();
-		Map<String, BiConsumer<KBFolder, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<KBFolder, ?>>();
+		private static final Map<String, Function<KBFolder, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", KBFolder::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<KBFolder, Long>)KBFolder::setMvccVersion);
-		attributeGetterFunctions.put("uuid", KBFolder::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<KBFolder, String>)KBFolder::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", KBFolder::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<KBFolder, String>)KBFolder::setExternalReferenceCode);
-		attributeGetterFunctions.put("kbFolderId", KBFolder::getKbFolderId);
-		attributeSetterBiConsumers.put(
-			"kbFolderId", (BiConsumer<KBFolder, Long>)KBFolder::setKbFolderId);
-		attributeGetterFunctions.put("groupId", KBFolder::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId", (BiConsumer<KBFolder, Long>)KBFolder::setGroupId);
-		attributeGetterFunctions.put("companyId", KBFolder::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<KBFolder, Long>)KBFolder::setCompanyId);
-		attributeGetterFunctions.put("userId", KBFolder::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<KBFolder, Long>)KBFolder::setUserId);
-		attributeGetterFunctions.put("userName", KBFolder::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<KBFolder, String>)KBFolder::setUserName);
-		attributeGetterFunctions.put("createDate", KBFolder::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate", (BiConsumer<KBFolder, Date>)KBFolder::setCreateDate);
-		attributeGetterFunctions.put("modifiedDate", KBFolder::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<KBFolder, Date>)KBFolder::setModifiedDate);
-		attributeGetterFunctions.put(
-			"parentKBFolderId", KBFolder::getParentKBFolderId);
-		attributeSetterBiConsumers.put(
-			"parentKBFolderId",
-			(BiConsumer<KBFolder, Long>)KBFolder::setParentKBFolderId);
-		attributeGetterFunctions.put("name", KBFolder::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<KBFolder, String>)KBFolder::setName);
-		attributeGetterFunctions.put("urlTitle", KBFolder::getUrlTitle);
-		attributeSetterBiConsumers.put(
-			"urlTitle", (BiConsumer<KBFolder, String>)KBFolder::setUrlTitle);
-		attributeGetterFunctions.put("description", KBFolder::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<KBFolder, String>)KBFolder::setDescription);
-		attributeGetterFunctions.put(
-			"lastPublishDate", KBFolder::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<KBFolder, Date>)KBFolder::setLastPublishDate);
+		static {
+			Map<String, Function<KBFolder, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<KBFolder, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", KBFolder::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", KBFolder::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", KBFolder::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode", KBFolder::getExternalReferenceCode);
+			attributeGetterFunctions.put("kbFolderId", KBFolder::getKbFolderId);
+			attributeGetterFunctions.put("groupId", KBFolder::getGroupId);
+			attributeGetterFunctions.put("companyId", KBFolder::getCompanyId);
+			attributeGetterFunctions.put("userId", KBFolder::getUserId);
+			attributeGetterFunctions.put("userName", KBFolder::getUserName);
+			attributeGetterFunctions.put("createDate", KBFolder::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", KBFolder::getModifiedDate);
+			attributeGetterFunctions.put(
+				"parentKBFolderId", KBFolder::getParentKBFolderId);
+			attributeGetterFunctions.put("name", KBFolder::getName);
+			attributeGetterFunctions.put("urlTitle", KBFolder::getUrlTitle);
+			attributeGetterFunctions.put(
+				"description", KBFolder::getDescription);
+			attributeGetterFunctions.put(
+				"lastPublishDate", KBFolder::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<KBFolder, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<KBFolder, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<KBFolder, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<KBFolder, Long>)KBFolder::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<KBFolder, Long>)KBFolder::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<KBFolder, String>)KBFolder::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<KBFolder, String>)
+					KBFolder::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"kbFolderId",
+				(BiConsumer<KBFolder, Long>)KBFolder::setKbFolderId);
+			attributeSetterBiConsumers.put(
+				"groupId", (BiConsumer<KBFolder, Long>)KBFolder::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<KBFolder, Long>)KBFolder::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<KBFolder, Long>)KBFolder::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<KBFolder, String>)KBFolder::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<KBFolder, Date>)KBFolder::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<KBFolder, Date>)KBFolder::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"parentKBFolderId",
+				(BiConsumer<KBFolder, Long>)KBFolder::setParentKBFolderId);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<KBFolder, String>)KBFolder::setName);
+			attributeSetterBiConsumers.put(
+				"urlTitle",
+				(BiConsumer<KBFolder, String>)KBFolder::setUrlTitle);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<KBFolder, String>)KBFolder::setDescription);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<KBFolder, Date>)KBFolder::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -353,6 +373,21 @@ public class KBFolderModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -745,6 +780,7 @@ public class KBFolderModelImpl
 		KBFolderImpl kbFolderImpl = new KBFolderImpl();
 
 		kbFolderImpl.setMvccVersion(getMvccVersion());
+		kbFolderImpl.setCtCollectionId(getCtCollectionId());
 		kbFolderImpl.setUuid(getUuid());
 		kbFolderImpl.setExternalReferenceCode(getExternalReferenceCode());
 		kbFolderImpl.setKbFolderId(getKbFolderId());
@@ -771,6 +807,8 @@ public class KBFolderModelImpl
 
 		kbFolderImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		kbFolderImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		kbFolderImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
 		kbFolderImpl.setExternalReferenceCode(
 			this.<String>getColumnOriginalValue("externalReferenceCode"));
@@ -873,6 +911,8 @@ public class KBFolderModelImpl
 		KBFolderCacheModel kbFolderCacheModel = new KBFolderCacheModel();
 
 		kbFolderCacheModel.mvccVersion = getMvccVersion();
+
+		kbFolderCacheModel.ctCollectionId = getCtCollectionId();
 
 		kbFolderCacheModel.uuid = getUuid();
 
@@ -1023,6 +1063,7 @@ public class KBFolderModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private String _externalReferenceCode;
 	private long _kbFolderId;
@@ -1042,8 +1083,9 @@ public class KBFolderModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<KBFolder, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<KBFolder, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1069,6 +1111,7 @@ public class KBFolderModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"externalReferenceCode", _externalReferenceCode);
@@ -1109,33 +1152,35 @@ public class KBFolderModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("uuid_", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("externalReferenceCode", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("kbFolderId", 8L);
+		columnBitmasks.put("externalReferenceCode", 8L);
 
-		columnBitmasks.put("groupId", 16L);
+		columnBitmasks.put("kbFolderId", 16L);
 
-		columnBitmasks.put("companyId", 32L);
+		columnBitmasks.put("groupId", 32L);
 
-		columnBitmasks.put("userId", 64L);
+		columnBitmasks.put("companyId", 64L);
 
-		columnBitmasks.put("userName", 128L);
+		columnBitmasks.put("userId", 128L);
 
-		columnBitmasks.put("createDate", 256L);
+		columnBitmasks.put("userName", 256L);
 
-		columnBitmasks.put("modifiedDate", 512L);
+		columnBitmasks.put("createDate", 512L);
 
-		columnBitmasks.put("parentKBFolderId", 1024L);
+		columnBitmasks.put("modifiedDate", 1024L);
 
-		columnBitmasks.put("name", 2048L);
+		columnBitmasks.put("parentKBFolderId", 2048L);
 
-		columnBitmasks.put("urlTitle", 4096L);
+		columnBitmasks.put("name", 4096L);
 
-		columnBitmasks.put("description", 8192L);
+		columnBitmasks.put("urlTitle", 8192L);
 
-		columnBitmasks.put("lastPublishDate", 16384L);
+		columnBitmasks.put("description", 16384L);
+
+		columnBitmasks.put("lastPublishDate", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

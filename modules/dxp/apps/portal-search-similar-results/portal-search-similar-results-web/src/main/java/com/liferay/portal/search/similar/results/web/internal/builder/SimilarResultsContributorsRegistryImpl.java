@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.similar.results.web.internal.builder;
@@ -21,8 +12,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.similar.results.web.spi.contributor.SimilarResultsContributor;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.RouteHelper;
-
-import java.util.Optional;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -38,23 +27,23 @@ public class SimilarResultsContributorsRegistryImpl
 	implements SimilarResultsContributorsRegistry {
 
 	@Override
-	public Optional<SimilarResultsRoute> detectRoute(String urlString) {
+	public SimilarResultsRoute detectRoute(String urlString) {
 		if (Validator.isBlank(urlString)) {
-			return Optional.empty();
+			return null;
 		}
 
 		for (SimilarResultsContributor similarResultsContributor :
 				_serviceTrackerList) {
 
-			Optional<SimilarResultsRoute> similarResultsRouteOptional =
-				_detectRoute(similarResultsContributor, urlString);
+			SimilarResultsRoute similarResultsRoute = _detectRoute(
+				similarResultsContributor, urlString);
 
-			if (similarResultsRouteOptional.isPresent()) {
-				return similarResultsRouteOptional;
+			if (similarResultsRoute != null) {
+				return similarResultsRoute;
 			}
 		}
 
-		return Optional.empty();
+		return null;
 	}
 
 	@Activate
@@ -68,7 +57,7 @@ public class SimilarResultsContributorsRegistryImpl
 		_serviceTrackerList.close();
 	}
 
-	private Optional<SimilarResultsRoute> _detectRoute(
+	private SimilarResultsRoute _detectRoute(
 		SimilarResultsContributor similarResultsContributor, String urlString) {
 
 		RouteBuilderImpl routeBuilderImpl = new RouteBuilderImpl();
@@ -84,16 +73,16 @@ public class SimilarResultsContributorsRegistryImpl
 				_log.debug(runtimeException);
 			}
 
-			return Optional.empty();
+			return null;
 		}
 
 		if (routeBuilderImpl.hasNoAttributes()) {
-			return Optional.empty();
+			return null;
 		}
 
 		routeBuilderImpl.contributor(similarResultsContributor);
 
-		return Optional.of(routeBuilderImpl.build());
+		return routeBuilderImpl.build();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

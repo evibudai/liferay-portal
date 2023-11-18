@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.persistence;
@@ -552,6 +543,184 @@ public class CPAttachmentFileEntryUtil {
 	}
 
 	/**
+	 * Returns all the cp attachment file entries where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @return the matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByFileEntryId(
+		long fileEntryId) {
+
+		return getPersistence().findByFileEntryId(fileEntryId);
+	}
+
+	/**
+	 * Returns a range of all the cp attachment file entries where fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @return the range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByFileEntryId(
+		long fileEntryId, int start, int end) {
+
+		return getPersistence().findByFileEntryId(fileEntryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp attachment file entries where fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByFileEntryId(
+		long fileEntryId, int start, int end,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().findByFileEntryId(
+			fileEntryId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp attachment file entries where fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByFileEntryId(
+		long fileEntryId, int start, int end,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByFileEntryId(
+			fileEntryId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first cp attachment file entry in the ordered set where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry findByFileEntryId_First(
+			long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByFileEntryId_First(
+			fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first cp attachment file entry in the ordered set where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp attachment file entry, or <code>null</code> if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry fetchByFileEntryId_First(
+		long fileEntryId,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().fetchByFileEntryId_First(
+			fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp attachment file entry in the ordered set where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry findByFileEntryId_Last(
+			long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByFileEntryId_Last(
+			fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp attachment file entry in the ordered set where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp attachment file entry, or <code>null</code> if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry fetchByFileEntryId_Last(
+		long fileEntryId,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().fetchByFileEntryId_Last(
+			fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the cp attachment file entries before and after the current cp attachment file entry in the ordered set where fileEntryId = &#63;.
+	 *
+	 * @param CPAttachmentFileEntryId the primary key of the current cp attachment file entry
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a cp attachment file entry with the primary key could not be found
+	 */
+	public static CPAttachmentFileEntry[] findByFileEntryId_PrevAndNext(
+			long CPAttachmentFileEntryId, long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByFileEntryId_PrevAndNext(
+			CPAttachmentFileEntryId, fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the cp attachment file entries where fileEntryId = &#63; from the database.
+	 *
+	 * @param fileEntryId the file entry ID
+	 */
+	public static void removeByFileEntryId(long fileEntryId) {
+		getPersistence().removeByFileEntryId(fileEntryId);
+	}
+
+	/**
+	 * Returns the number of cp attachment file entries where fileEntryId = &#63;.
+	 *
+	 * @param fileEntryId the file entry ID
+	 * @return the number of matching cp attachment file entries
+	 */
+	public static int countByFileEntryId(long fileEntryId) {
+		return getPersistence().countByFileEntryId(fileEntryId);
+	}
+
+	/**
 	 * Returns all the cp attachment file entries where classNameId = &#63; and classPK = &#63;.
 	 *
 	 * @param classNameId the class name ID
@@ -928,6 +1097,214 @@ public class CPAttachmentFileEntryUtil {
 	 */
 	public static int countByLtD_S(Date displayDate, int status) {
 		return getPersistence().countByLtD_S(displayDate, status);
+	}
+
+	/**
+	 * Returns all the cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @return the matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByG_C_F(
+		long groupId, long classNameId, long fileEntryId) {
+
+		return getPersistence().findByG_C_F(groupId, classNameId, fileEntryId);
+	}
+
+	/**
+	 * Returns a range of all the cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @return the range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByG_C_F(
+		long groupId, long classNameId, long fileEntryId, int start, int end) {
+
+		return getPersistence().findByG_C_F(
+			groupId, classNameId, fileEntryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByG_C_F(
+		long groupId, long classNameId, long fileEntryId, int start, int end,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().findByG_C_F(
+			groupId, classNameId, fileEntryId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPAttachmentFileEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param start the lower bound of the range of cp attachment file entries
+	 * @param end the upper bound of the range of cp attachment file entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp attachment file entries
+	 */
+	public static List<CPAttachmentFileEntry> findByG_C_F(
+		long groupId, long classNameId, long fileEntryId, int start, int end,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByG_C_F(
+			groupId, classNameId, fileEntryId, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first cp attachment file entry in the ordered set where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry findByG_C_F_First(
+			long groupId, long classNameId, long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByG_C_F_First(
+			groupId, classNameId, fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first cp attachment file entry in the ordered set where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp attachment file entry, or <code>null</code> if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry fetchByG_C_F_First(
+		long groupId, long classNameId, long fileEntryId,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().fetchByG_C_F_First(
+			groupId, classNameId, fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp attachment file entry in the ordered set where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry findByG_C_F_Last(
+			long groupId, long classNameId, long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByG_C_F_Last(
+			groupId, classNameId, fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp attachment file entry in the ordered set where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp attachment file entry, or <code>null</code> if a matching cp attachment file entry could not be found
+	 */
+	public static CPAttachmentFileEntry fetchByG_C_F_Last(
+		long groupId, long classNameId, long fileEntryId,
+		OrderByComparator<CPAttachmentFileEntry> orderByComparator) {
+
+		return getPersistence().fetchByG_C_F_Last(
+			groupId, classNameId, fileEntryId, orderByComparator);
+	}
+
+	/**
+	 * Returns the cp attachment file entries before and after the current cp attachment file entry in the ordered set where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param CPAttachmentFileEntryId the primary key of the current cp attachment file entry
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp attachment file entry
+	 * @throws NoSuchCPAttachmentFileEntryException if a cp attachment file entry with the primary key could not be found
+	 */
+	public static CPAttachmentFileEntry[] findByG_C_F_PrevAndNext(
+			long CPAttachmentFileEntryId, long groupId, long classNameId,
+			long fileEntryId,
+			OrderByComparator<CPAttachmentFileEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPAttachmentFileEntryException {
+
+		return getPersistence().findByG_C_F_PrevAndNext(
+			CPAttachmentFileEntryId, groupId, classNameId, fileEntryId,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 */
+	public static void removeByG_C_F(
+		long groupId, long classNameId, long fileEntryId) {
+
+		getPersistence().removeByG_C_F(groupId, classNameId, fileEntryId);
+	}
+
+	/**
+	 * Returns the number of cp attachment file entries where groupId = &#63; and classNameId = &#63; and fileEntryId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param fileEntryId the file entry ID
+	 * @return the number of matching cp attachment file entries
+	 */
+	public static int countByG_C_F(
+		long groupId, long classNameId, long fileEntryId) {
+
+		return getPersistence().countByG_C_F(groupId, classNameId, fileEntryId);
 	}
 
 	/**
@@ -2249,6 +2626,12 @@ public class CPAttachmentFileEntryUtil {
 
 	public static CPAttachmentFileEntryPersistence getPersistence() {
 		return _persistence;
+	}
+
+	public static void setPersistence(
+		CPAttachmentFileEntryPersistence persistence) {
+
+		_persistence = persistence;
 	}
 
 	private static volatile CPAttachmentFileEntryPersistence _persistence;

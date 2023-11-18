@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.item.selector.web.internal;
@@ -19,6 +10,7 @@ import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
@@ -26,10 +18,10 @@ import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollec
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -74,10 +66,7 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return ResourceBundleUtil.getString(
-			ResourceBundleUtil.getBundle(
-				locale, LayoutPageTemplateCollectionsItemSelectorView.class),
-			"page-template-collections");
+		return _language.get(locale, "page-template-collections");
 	}
 
 	@Override
@@ -106,6 +95,9 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 			_itemSelectorViewDescriptorRenderer;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private LayoutPageTemplateCollectionLocalService
 		_layoutPageTemplateCollectionLocalService;
 
@@ -124,7 +116,7 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 			_httpServletRequest = httpServletRequest;
 			_layoutPageTemplateCollection = layoutPageTemplateCollection;
 
-			_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 		}
 
@@ -193,10 +185,9 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 			_httpServletRequest = httpServletRequest;
 			_portletURL = portletURL;
 
-			_portletRequest = (PortletRequest)_httpServletRequest.getAttribute(
+			_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_REQUEST);
-
-			_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 		}
 
@@ -252,12 +243,14 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 						_layoutPageTemplateCollectionLocalService.
 							getLayoutPageTemplateCollections(
 								_themeDisplay.getScopeGroupId(),
+								LayoutPageTemplateEntryTypeConstants.BASIC,
 								searchContainer.getStart(),
 								searchContainer.getEnd(),
 								searchContainer.getOrderByComparator()),
 					_layoutPageTemplateCollectionLocalService.
 						getLayoutPageTemplateCollectionsCount(
-							_themeDisplay.getScopeGroupId()));
+							_themeDisplay.getScopeGroupId(),
+							LayoutPageTemplateEntryTypeConstants.BASIC));
 			}
 			else {
 				searchContainer.setResultsAndTotal(
@@ -265,12 +258,14 @@ public class LayoutPageTemplateCollectionsItemSelectorView
 						_layoutPageTemplateCollectionLocalService.
 							getLayoutPageTemplateCollections(
 								_themeDisplay.getScopeGroupId(), keywords,
+								LayoutPageTemplateEntryTypeConstants.BASIC,
 								searchContainer.getStart(),
 								searchContainer.getEnd(),
 								searchContainer.getOrderByComparator()),
 					_layoutPageTemplateCollectionLocalService.
 						getLayoutPageTemplateCollectionsCount(
-							_themeDisplay.getScopeGroupId(), keywords));
+							_themeDisplay.getScopeGroupId(), keywords,
+							LayoutPageTemplateEntryTypeConstants.BASIC));
 			}
 
 			return searchContainer;

@@ -1,27 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {ClientExtension} from 'frontend-js-components-web';
 import React, {useContext, useEffect, useState} from 'react';
 
 import {getComponentByModuleURL} from '../../../utils/modules';
 import ViewsContext from '../../../views/ViewsContext';
 import {VIEWS_ACTION_TYPES} from '../../../views/viewsReducer';
-import AutocompleteFilter, {
-	getOdataString as getAutocompleteFilterOdataString,
-	getSelectedItemsLabel as getAutocompleteFilterSelectedItemsLabel,
-} from './AutocompleteFilter';
 import DateRangeFilter, {
 	getOdataString as getDateRangeFilterOdataString,
 	getSelectedItemsLabel as getDateRangeFilterSelectedItemsLabel,
@@ -32,15 +20,12 @@ import SelectionFilter, {
 } from './SelectionFilter';
 
 const FILTER_TYPE_COMPONENT = {
-	autocomplete: AutocompleteFilter,
 	dateRange: DateRangeFilter,
 	selection: SelectionFilter,
 };
 
 const getFilterSelectedItemsLabel = (filter) => {
 	switch (filter.type) {
-		case 'autocomplete':
-			return getAutocompleteFilterSelectedItemsLabel(filter);
 		case 'dateRange':
 			return getDateRangeFilterSelectedItemsLabel(filter);
 		case 'selection':
@@ -52,8 +37,6 @@ const getFilterSelectedItemsLabel = (filter) => {
 
 const getOdataFilterString = (filter) => {
 	switch (filter.type) {
-		case 'autocomplete':
-			return getAutocompleteFilterOdataString(filter);
 		case 'dateRange':
 			return getDateRangeFilterOdataString(filter);
 		case 'selection':
@@ -83,11 +66,24 @@ const Filter = ({moduleURL, type, ...otherProps}) => {
 
 	useEffect(() => {
 		if (moduleURL) {
-			getComponentByModuleURL(moduleURL).then((FetchedComponent) =>
-				setComponent(() => FetchedComponent)
-			);
+			if (type === 'clientExtension') {
+				const getModule = async () => {
+					const cetModule = await import(
+						/* webpackIgnore: true */ moduleURL
+					);
+
+					setComponent(() => cetModule['default']);
+				};
+
+				getModule();
+			}
+			else {
+				getComponentByModuleURL(moduleURL).then((FetchedComponent) =>
+					setComponent(() => FetchedComponent)
+				);
+			}
 		}
-	}, [moduleURL]);
+	}, [moduleURL, type]);
 
 	const setFilter = ({id, ...otherProps}) => {
 		viewsDispatch({
@@ -101,10 +97,25 @@ const Filter = ({moduleURL, type, ...otherProps}) => {
 
 	return Component ? (
 		<div className="data-set-filter">
-			<Component setFilter={setFilter} {...otherProps} />
+			{type === 'clientExtension' ? (
+				<ClientExtension
+					args={{
+						filter: otherProps,
+						setFilter: (filter) =>
+							setFilter({
+								active: true,
+								id: otherProps.id,
+								...filter,
+							}),
+					}}
+					htmlElementBuilder={Component}
+				/>
+			) : (
+				<Component setFilter={setFilter} {...otherProps} />
+			)}
 		</div>
 	) : (
-		<ClayLoadingIndicator small />
+		<ClayLoadingIndicator size="sm" />
 	);
 };
 

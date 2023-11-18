@@ -1,26 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.upgrade.registry;
 
 import com.liferay.exportimport.internal.upgrade.v1_0_0.PublisherRequestUpgradeProcess;
-import com.liferay.exportimport.internal.upgrade.v1_0_2.UpgradeExportImportServiceConfiguration;
+import com.liferay.exportimport.internal.upgrade.v1_0_1.SystemEventsUpgradeProcess;
+import com.liferay.exportimport.internal.upgrade.v1_0_1.UpgradeBackgroundTaskExecutorClassNames;
+import com.liferay.exportimport.internal.upgrade.v1_0_2.ExportImportServiceConfigurationUpgradeProcess;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.model.Release;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -31,12 +25,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Daniel Kocsis
  */
-@Component(
-	service = {
-		ExportImportServiceUpgradeStepRegistrator.class,
-		UpgradeStepRegistrator.class
-	}
-)
+@Component(service = UpgradeStepRegistrator.class)
 public class ExportImportServiceUpgradeStepRegistrator
 	implements UpgradeStepRegistrator {
 
@@ -54,17 +43,13 @@ public class ExportImportServiceUpgradeStepRegistrator
 
 		registry.register(
 			"1.0.0", "1.0.1",
-			new com.liferay.exportimport.internal.upgrade.v1_0_1.
-				UpgradeBackgroundTaskExecutorClassNames());
-
-		registry.register(
-			"1.0.0", "1.0.2",
-			new com.liferay.exportimport.internal.upgrade.v1_0_2.
-				UpgradeBackgroundTaskExecutorClassNames());
+			new SystemEventsUpgradeProcess(
+				_groupLocalService, _systemEventLocalService),
+			new UpgradeBackgroundTaskExecutorClassNames());
 
 		registry.register(
 			"1.0.1", "1.0.2",
-			new UpgradeExportImportServiceConfiguration(
+			new ExportImportServiceConfigurationUpgradeProcess(
 				_configurationAdmin, _configurationProvider));
 	}
 
@@ -88,6 +73,9 @@ public class ExportImportServiceUpgradeStepRegistrator
 
 	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;
+
+	@Reference
+	private SystemEventLocalService _systemEventLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.facet;
@@ -26,7 +17,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * @author Bryan Engler
@@ -83,29 +73,17 @@ public class FacetDiscounter {
 			return;
 		}
 
-		Stream<String> termsStream = _findTermsOfField(field);
-
-		termsStream.forEach(this::_exclude);
-	}
-
-	private void _exclude(String term) {
-		int exclusions = _getExclusions(term);
-
-		_excludedTermsMap.put(term, exclusions + 1);
-	}
-
-	private Stream<String> _findTermsOfField(Field field) {
 		FacetCollector facetCollector = _facet.getFacetCollector();
 
-		List<TermCollector> termCollectors = facetCollector.getTermCollectors();
+		for (TermCollector termCollector : facetCollector.getTermCollectors()) {
+			String term = termCollector.getTerm();
 
-		Stream<TermCollector> termCollectorsStream = termCollectors.stream();
+			if (FacetBucketUtil.isFieldInBucket(field, term, _facet)) {
+				int exclusions = _getExclusions(term);
 
-		Stream<String> termsStream = termCollectorsStream.map(
-			TermCollector::getTerm);
-
-		return termsStream.filter(
-			term -> FacetBucketUtil.isFieldInBucket(field, term, _facet));
+				_excludedTermsMap.put(term, exclusions + 1);
+			}
+		}
 	}
 
 	private int _getExclusions(String term) {

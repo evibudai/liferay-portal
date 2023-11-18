@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.web.internal.executor;
@@ -38,12 +29,14 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"dispatch.task.executor.name=batch-planner-executor-name",
+		"dispatch.task.executor.name=" + BatchPlannerDispatchTaskExecutor.KEY,
 		"dispatch.task.executor.type=batch-planner"
 	},
 	service = DispatchTaskExecutor.class
 )
 public class BatchPlannerDispatchTaskExecutor extends BaseDispatchTaskExecutor {
+
+	public static final String KEY = "batch-planner-executor-name";
 
 	@Override
 	public void doExecute(
@@ -92,7 +85,7 @@ public class BatchPlannerDispatchTaskExecutor extends BaseDispatchTaskExecutor {
 
 	@Override
 	public String getName() {
-		return null;
+		return KEY;
 	}
 
 	private static final TransactionConfig _transactionConfig =

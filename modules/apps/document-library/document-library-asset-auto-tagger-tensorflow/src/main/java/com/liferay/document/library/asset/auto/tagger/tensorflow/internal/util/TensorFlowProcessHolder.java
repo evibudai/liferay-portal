@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util;
@@ -17,6 +8,7 @@ package com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.osgi.commands.TensorFlowAssetAutoTagProviderOSGiCommands;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.InitializeProcessCallable;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.TensorFlowDaemonProcessCallable;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.process.ProcessCallable;
 import com.liferay.petra.process.ProcessChannel;
 import com.liferay.petra.process.ProcessConfig;
@@ -62,11 +54,13 @@ public class TensorFlowProcessHolder {
 	}
 
 	public TensorFlowProcessHolder(
-			ProcessExecutor processExecutor, Bundle bundle)
+			Bundle bundle, ProcessExecutor processExecutor,
+			TensorFlowDownloadHelper tensorFlowDownloadHelper)
 		throws Exception {
 
-		_processExecutor = processExecutor;
 		_bundle = bundle;
+		_processExecutor = processExecutor;
+		_tensorFlowDownloadHelper = tensorFlowDownloadHelper;
 
 		_tensorFlowWorkDir = bundle.getDataFile("tensorflow-workdir");
 
@@ -82,14 +76,9 @@ public class TensorFlowProcessHolder {
 	public <T extends Serializable> T execute(
 		ProcessCallable<T> processCallable, int maxRelaunch, long timeout) {
 
-		ProcessChannel<String> processChannel = _processChannel;
-
-		if (processChannel == null) {
-			synchronized (this) {
-				processChannel = _startProcess(
-					_processExecutor, maxRelaunch, timeout);
-			}
-		}
+		ProcessChannel<String> processChannel =
+			_processChannelDCLSingleton.getSingleton(
+				() -> _startProcess(_processExecutor, maxRelaunch, timeout));
 
 		Future<T> future = processChannel.write(processCallable);
 
@@ -136,10 +125,10 @@ public class TensorFlowProcessHolder {
 		}
 
 		try (InputStream inputStream =
-				TensorFlowDownloadUtil.getNativeLibraryInputStream()) {
+				_tensorFlowDownloadHelper.getNativeLibraryInputStream()) {
 
 			Path targetPath = tempPath.resolve(
-				TensorFlowDownloadUtil.NATIVE_LIBRARY_FILE_NAME);
+				TensorFlowDownloadHelper.NATIVE_LIBRARY_FILE_NAME);
 
 			sb.append(targetPath);
 
@@ -212,59 +201,56 @@ public class TensorFlowProcessHolder {
 	private ProcessChannel<String> _startProcess(
 		ProcessExecutor processExecutor, int maxRelaunch, long timeout) {
 
-		if (_processChannel == null) {
-			try {
-				if ((System.currentTimeMillis() - _lastLaunchTime) > timeout) {
-					_relanuchCounter = 0;
-				}
-
-				if (_relanuchCounter >= maxRelaunch) {
-					throw new SystemException(
-						StringBundler.concat(
-							"The TensorFlow process has crashed more than ",
-							maxRelaunch,
-							" times. It is now disabled. To enable it again ",
-							"please open the Gogo shell and run ",
-							TensorFlowAssetAutoTagProviderOSGiCommands.SCOPE,
-							StringPool.COLON,
-							TensorFlowAssetAutoTagProviderOSGiCommands.
-								RESET_PROCESS_COUNTER));
-				}
-
-				_relanuchCounter++;
-
-				if (_processConfig == null) {
-					_processConfig = _createProcessConfig(
-						_bundle, _tensorFlowWorkDir.toPath());
-				}
-
-				_processChannel = processExecutor.execute(
-					_processConfig, new TensorFlowDaemonProcessCallable());
-
-				_lastLaunchTime = System.currentTimeMillis();
-
-				Future<String> future = _processChannel.write(
-					new InitializeProcessCallable(
-						TensorFlowDownloadUtil.getGraphBytes()));
-
-				future.get();
+		try {
+			if ((System.currentTimeMillis() - _lastLaunchTime) > timeout) {
+				_relanuchCounter = 0;
 			}
-			catch (Exception exception) {
-				ReflectionUtil.throwException(exception);
+
+			if (_relanuchCounter >= maxRelaunch) {
+				throw new SystemException(
+					StringBundler.concat(
+						"The TensorFlow process has crashed more than ",
+						maxRelaunch,
+						" times. It is now disabled. To enable it again ",
+						"please open the Gogo shell and run ",
+						TensorFlowAssetAutoTagProviderOSGiCommands.SCOPE,
+						StringPool.COLON,
+						TensorFlowAssetAutoTagProviderOSGiCommands.
+							RESET_PROCESS_COUNTER));
 			}
+
+			_relanuchCounter++;
+
+			if (_processConfig == null) {
+				_processConfig = _createProcessConfig(
+					_bundle, _tensorFlowWorkDir.toPath());
+			}
+
+			ProcessChannel<String> processChannel = processExecutor.execute(
+				_processConfig, new TensorFlowDaemonProcessCallable());
+
+			_lastLaunchTime = System.currentTimeMillis();
+
+			Future<String> future = processChannel.write(
+				new InitializeProcessCallable(
+					_tensorFlowDownloadHelper.getGraphBytes()));
+
+			future.get();
+
+			return processChannel;
 		}
-
-		return _processChannel;
+		catch (Exception exception) {
+			return ReflectionUtil.throwException(exception);
+		}
 	}
 
-	private synchronized void _stop() {
-		if (_processChannel != null) {
-			Future<?> future = _processChannel.getProcessNoticeableFuture();
+	private void _stop() {
+		_processChannelDCLSingleton.destroy(
+			processChannel -> {
+				Future<?> future = processChannel.getProcessNoticeableFuture();
 
-			future.cancel(true);
-
-			_processChannel = null;
-		}
+				future.cancel(true);
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -274,9 +260,11 @@ public class TensorFlowProcessHolder {
 	private static volatile int _relanuchCounter;
 
 	private final Bundle _bundle;
-	private volatile ProcessChannel<String> _processChannel;
+	private final DCLSingleton<ProcessChannel<String>>
+		_processChannelDCLSingleton = new DCLSingleton<>();
 	private ProcessConfig _processConfig;
 	private final ProcessExecutor _processExecutor;
+	private final TensorFlowDownloadHelper _tensorFlowDownloadHelper;
 	private final File _tensorFlowWorkDir;
 
 }

@@ -1,32 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter;
 
+import com.liferay.account.exception.NoSuchGroupAccountEntryRelException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
-import com.liferay.commerce.account.exception.NoSuchAccountGroupCommerceAccountRelException;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
 import com.liferay.commerce.model.CommerceAddress;
+import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
+import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelService;
-import com.liferay.commerce.product.service.CommerceChannelService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryService;
@@ -46,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.model.AccountChannelEntry",
-	service = {AccountChannelEntryDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class AccountChannelEntryDTOConverter
 	implements DTOConverter
@@ -67,12 +60,13 @@ public class AccountChannelEntryDTOConverter
 					(Long)dtoConverterContext.getId());
 
 		if (commerceChannelAccountEntryRel == null) {
-			throw new NoSuchAccountGroupCommerceAccountRelException();
+			throw new NoSuchGroupAccountEntryRelException();
 		}
 
 		return new AccountChannelEntry() {
 			{
 				accountId = commerceChannelAccountEntryRel.getAccountEntryId();
+				actions = dtoConverterContext.getActions();
 				channelId =
 					commerceChannelAccountEntryRel.getCommerceChannelId();
 				classPK = commerceChannelAccountEntryRel.getClassPK();
@@ -102,7 +96,7 @@ public class AccountChannelEntryDTOConverter
 				setChannelExternalReferenceCode(
 					() -> {
 						CommerceChannel commerceChannel =
-							_commerceChannelService.fetchCommerceChannel(
+							_commerceChannelLocalService.fetchCommerceChannel(
 								commerceChannelAccountEntryRel.
 									getCommerceChannelId());
 
@@ -174,6 +168,19 @@ public class AccountChannelEntryDTOConverter
 				return commerceDiscount.getExternalReferenceCode();
 			}
 		}
+		else if (type == CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT) {
+			CommercePaymentMethodGroupRel commercePaymentMethodGroupRel =
+				_commercePaymentMethodGroupRelLocalService.
+					getCommercePaymentMethodGroupRel(
+						GetterUtil.getLong(
+							commerceChannelAccountEntryRel.getClassPK()));
+
+			if (!Validator.isBlank(
+					commercePaymentMethodGroupRel.getPaymentIntegrationKey())) {
+
+				return commercePaymentMethodGroupRel.getPaymentIntegrationKey();
+			}
+		}
 		else if (type ==
 					CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT_TERM) {
 
@@ -226,10 +233,14 @@ public class AccountChannelEntryDTOConverter
 		_commerceChannelAccountEntryRelService;
 
 	@Reference
-	private CommerceChannelService _commerceChannelService;
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private CommerceDiscountService _commerceDiscountService;
+
+	@Reference
+	private CommercePaymentMethodGroupRelLocalService
+		_commercePaymentMethodGroupRelLocalService;
 
 	@Reference
 	private CommercePriceListService _commercePriceListService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.portlet;
@@ -70,8 +61,21 @@ public class PortletResponseUtil {
 		throws IOException {
 
 		setHeaders(
-			portletRequest, mimeResponse, fileName, contentType,
-			contentDispositionType);
+			portletRequest, mimeResponse, null, contentDispositionType,
+			contentType, fileName);
+
+		write(mimeResponse, bytes);
+	}
+
+	public static void sendFile(
+			PortletRequest portletRequest, MimeResponse mimeResponse,
+			String fileName, byte[] bytes, String contentType,
+			String contentDispositionType, String cacheControlValue)
+		throws IOException {
+
+		setHeaders(
+			portletRequest, mimeResponse, cacheControlValue,
+			contentDispositionType, contentType, fileName);
 
 		write(mimeResponse, bytes);
 	}
@@ -102,8 +106,8 @@ public class PortletResponseUtil {
 		throws IOException {
 
 		setHeaders(
-			portletRequest, mimeResponse, fileName, contentType,
-			contentDispositionType);
+			portletRequest, mimeResponse, null, contentDispositionType,
+			contentType, fileName);
 
 		write(mimeResponse, inputStream, contentLength);
 	}
@@ -253,7 +257,8 @@ public class PortletResponseUtil {
 
 	protected static void setHeaders(
 		PortletRequest portletRequest, MimeResponse mimeResponse,
-		String fileName, String contentType, String contentDispositionType) {
+		String cacheControlValue, String contentDispositionType,
+		String contentType, String fileName) {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Sending file of type " + contentType);
@@ -265,8 +270,15 @@ public class PortletResponseUtil {
 			mimeResponse.setContentType(contentType);
 		}
 
-		mimeResponse.setProperty(
-			HttpHeaders.CACHE_CONTROL, HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE);
+		if (Validator.isNull(cacheControlValue)) {
+			mimeResponse.setProperty(
+				HttpHeaders.CACHE_CONTROL,
+				HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE);
+		}
+		else {
+			mimeResponse.setProperty(
+				HttpHeaders.CACHE_CONTROL, cacheControlValue);
+		}
 
 		if (Validator.isNull(fileName)) {
 			return;

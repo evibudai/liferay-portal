@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.resource.v1_0;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.rule.model.COREntryRel;
@@ -24,11 +15,10 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleAccount;
-import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.AccountDTOConverter;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.AccountResource;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,11 +29,10 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {AccountResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = AccountResource.class
 )
-public class AccountResourceImpl
-	extends BaseAccountResourceImpl implements NestedFieldSupport {
+public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Override
 	public Account getOrderByExternalReferenceCodeAccount(
@@ -77,24 +66,25 @@ public class AccountResourceImpl
 	public Account getOrderRuleAccountAccount(Long id) throws Exception {
 		COREntryRel corEntryRel = _corEntryRelService.getCOREntryRel(id);
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.getCommerceAccount(
-				corEntryRel.getClassPK());
+		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+			corEntryRel.getClassPK());
 
-		return _toAccount(commerceAccount.getCommerceAccountId());
+		return _toAccount(accountEntry.getAccountEntryId());
 	}
 
-	private Account _toAccount(long commerceAccountId) throws Exception {
+	private Account _toAccount(long accountEntryId) throws Exception {
 		return _accountDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccountId, contextAcceptLanguage.getPreferredLocale()));
+				accountEntryId, contextAcceptLanguage.getPreferredLocale()));
 	}
 
-	@Reference
-	private AccountDTOConverter _accountDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.AccountDTOConverter)"
+	)
+	private DTOConverter<AccountEntry, Account> _accountDTOConverter;
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;

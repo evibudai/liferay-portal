@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -19,10 +10,11 @@
 <%
 CommerceContext commerceContext = (CommerceContext)request.getAttribute(CommerceWebKeys.COMMERCE_CONTEXT);
 
-CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+AccountEntry accountEntry = commerceContext.getAccountEntry();
 CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
 
 CPContentHelper cpContentHelper = (CPContentHelper)request.getAttribute(CPContentWebKeys.CP_CONTENT_HELPER);
+CPContentSkuOptionsHelper cpContentSkuOptionsHelper = (CPContentSkuOptionsHelper)request.getAttribute(CPContentWebKeys.CP_CONTENT_SKU_OPTIONS_HELPER);
 
 CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
 
@@ -58,7 +50,12 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 								</span>
 								-
 							</span>
-							<span data-qa-id="in-stock-quantity"><%= LanguageUtil.format(request, "x-in-stock", cpContentHelper.getStockQuantity(request)) %></span>
+
+							<%
+							String stockQuantity = cpContentHelper.getStockQuantity(request);
+							%>
+
+							<span data-qa-id="in-stock-quantity"><%= Validator.isNull(stockQuantity) ? StringPool.BLANK : LanguageUtil.format(request, "x-in-stock", stockQuantity) %></span>
 						</span>
 					</div>
 				</div>
@@ -89,16 +86,11 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 					</p>
 				</c:if>
 
-				<c:choose>
-					<c:when test="<%= cpSku != null %>">
-						<p class="m-0">
-							<%= cpContentHelper.getIncomingQuantityLabel(request, cpSku.getSku()) %>
-						</p>
-					</c:when>
-					<c:otherwise>
-						<p class="m-0" data-text-cp-instance-incoming-quantity-label></p>
-					</c:otherwise>
-				</c:choose>
+				<p class="m-0" data-text-cp-instance-incoming-quantity-label>
+					<c:if test="<%= cpSku != null %>">
+						<%= cpContentHelper.getIncomingQuantityLabel(company.getCompanyId(), locale, cpSku.getSku(), StringPool.BLANK, user) %>
+					</c:if>
+				</p>
 
 				<%
 				String hideCssClass = StringPool.BLANK;
@@ -152,31 +144,15 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 			</h4>
 
 			<div class="product-detail-options">
-				<form data-senna-off="true" name="fm">
-					<%= cpContentHelper.renderOptions(renderRequest, renderResponse) %>
-				</form>
-
-				<liferay-portlet:actionURL name="/cp_content_web/check_cp_instance" portletName="com_liferay_commerce_product_content_web_internal_portlet_CPContentPortlet" var="checkCPInstanceURL">
-					<portlet:param name="cpDefinitionId" value="<%= String.valueOf(cpDefinitionId) %>" />
-				</liferay-portlet:actionURL>
-
-				<liferay-frontend:component
-					context='<%=
-						HashMapBuilder.<String, Object>put(
-							"actionURL", checkCPInstanceURL
-						).put(
-							"cpDefinitionId", cpDefinitionId
-						).put(
-							"namespace", liferayPortletResponse.getNamespace()
-						).build()
-					%>'
-					module="product_detail/render/js/ProductOptionsHandler"
+				<commerce-ui:option-selector
+					CPDefinitionId="<%= cpCatalogEntry.getCPDefinitionId() %>"
+					namespace="<%= liferayPortletResponse.getNamespace() %>"
 				/>
 			</div>
 
 			<c:choose>
 				<c:when test="<%= cpSku != null %>">
-					<div class="availability-estimate mt-1"><%= cpContentHelper.getAvailabilityEstimateLabel(request) %></div>
+					<div class="availability-estimate mt-1"><%= HtmlUtil.escape(cpContentHelper.getAvailabilityEstimateLabel(request)) %></div>
 				</c:when>
 				<c:otherwise>
 					<div class="availability-estimate mt-1" data-text-cp-instance-availability-estimate></div>
@@ -185,40 +161,50 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 
 			<liferay-util:dynamic-include key="com.liferay.commerce.product.type.grouped.web#/grouped_product_type.jsp#" />
 
+			<c:if test="<%= cpSku != null %>">
+				<div class="mt-3">
+					<liferay-commerce:unit-of-measure-tier-price
+						CPInstanceId="<%= cpSku.getCPInstanceId() %>"
+						CProductId="<%= cpCatalogEntry.getCProductId() %>"
+						namespace="<%= liferayPortletResponse.getNamespace() %>"
+					/>
+				</div>
+			</c:if>
+
 			<div class="mt-3 price-container row">
 				<div class="col col-lg-9 col-xl-6">
 					<commerce-ui:price
 						CPCatalogEntry="<%= cpCatalogEntry %>"
 						namespace="<%= liferayPortletResponse.getNamespace() %>"
+						showDefaultSkuPrice="<%= true %>"
 					/>
 				</div>
 			</div>
 
-			<c:if test="<%= cpSku != null %>">
-				<liferay-commerce:tier-price
-					CPInstanceId="<%= cpSku.getCPInstanceId() %>"
-					taglibQuantityInputId='<%= liferayPortletResponse.getNamespace() + cpDefinitionId + "Quantity" %>'
-				/>
-			</c:if>
-
 			<%
-			int minOrderQuantity = cpContentHelper.getMinOrderQuantity(cpDefinitionId);
+			BigDecimal minOrderQuantity = cpContentHelper.getMinOrderQuantity(cpDefinitionId);
 			%>
 
-			<c:if test="<%= minOrderQuantity > CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY %>">
+			<c:if test="<%= BigDecimalUtil.gt(minOrderQuantity, CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY) %>">
 				<span class="min-quantity-per-order">
-					<liferay-ui:message arguments="<%= minOrderQuantity %>" key="minimum-quantity-per-order-x" />
+					<liferay-ui:message arguments="<%= minOrderQuantity.intValue() %>" key="minimum-quantity-per-order-x" />
 				</span>
 			</c:if>
 
-			<div class="align-items-center d-flex mt-3 product-detail-actions">
+			<div class="align-items-end d-flex mt-3 product-detail-actions">
 				<commerce-ui:add-to-cart
 					alignment="left"
 					CPCatalogEntry="<%= cpCatalogEntry %>"
 					inline="<%= true %>"
 					namespace="<%= liferayPortletResponse.getNamespace() %>"
+					showUnitOfMeasureSelector="<%= true %>"
 					size="lg"
-					skuOptions="[]"
+					skuOptions="<%= cpContentSkuOptionsHelper.getDefaultCPInstanceSkuOptions(cpCatalogEntry.getCPDefinitionId(), request) %>"
+				/>
+
+				<commerce-ui:request-quote
+					CPCatalogEntry="<%= cpCatalogEntry %>"
+					namespace="<%= liferayPortletResponse.getNamespace() %>"
 				/>
 
 				<commerce-ui:add-to-wish-list
@@ -401,7 +387,7 @@ String navSpecificationsId = liferayPortletResponse.getNamespace() + "navSpecifi
 			<frontend-data-set:classic-display
 				contextParams='<%=
 					HashMapBuilder.<String, String>put(
-						"commerceAccountId", (commerceAccount == null) ? "0" : String.valueOf(commerceAccount.getCommerceAccountId())
+						"commerceAccountId", (accountEntry == null) ? "0" : String.valueOf(accountEntry.getAccountEntryId())
 					).put(
 						"commerceChannelGroupId", String.valueOf(commerceContext.getCommerceChannelGroupId())
 					).put(

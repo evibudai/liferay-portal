@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.service.persistence.test;
@@ -191,31 +182,28 @@ public class SamlPeerBindingPersistenceTest {
 	}
 
 	@Test
-	public void testCountByC_U_D_SNIF_SNINQ_SPEI() throws Exception {
-		_persistence.countByC_U_D_SNIF_SNINQ_SPEI(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
-			RandomTestUtil.randomBoolean(), "", "", "");
+	public void testCountByC_D_SNIV() throws Exception {
+		_persistence.countByC_D_SNIV(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "");
 
-		_persistence.countByC_U_D_SNIF_SNINQ_SPEI(
-			0L, 0L, RandomTestUtil.randomBoolean(), "null", "null", "null");
+		_persistence.countByC_D_SNIV(
+			0L, RandomTestUtil.randomBoolean(), "null");
 
-		_persistence.countByC_U_D_SNIF_SNINQ_SPEI(
-			0L, 0L, RandomTestUtil.randomBoolean(), (String)null, (String)null,
-			(String)null);
+		_persistence.countByC_D_SNIV(
+			0L, RandomTestUtil.randomBoolean(), (String)null);
 	}
 
 	@Test
-	public void testCountByC_D_SNIF_SNINQ_SNIV_SPEI() throws Exception {
-		_persistence.countByC_D_SNIF_SNINQ_SNIV_SPEI(
-			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "", "",
-			"", "");
+	public void testCountByC_U_D_SPEI() throws Exception {
+		_persistence.countByC_U_D_SPEI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), "");
 
-		_persistence.countByC_D_SNIF_SNINQ_SNIV_SPEI(
-			0L, RandomTestUtil.randomBoolean(), "null", "null", "null", "null");
+		_persistence.countByC_U_D_SPEI(
+			0L, 0L, RandomTestUtil.randomBoolean(), "null");
 
-		_persistence.countByC_D_SNIF_SNINQ_SNIV_SPEI(
-			0L, RandomTestUtil.randomBoolean(), (String)null, (String)null,
-			(String)null, (String)null);
+		_persistence.countByC_U_D_SPEI(
+			0L, 0L, RandomTestUtil.randomBoolean(), (String)null);
 	}
 
 	@Test

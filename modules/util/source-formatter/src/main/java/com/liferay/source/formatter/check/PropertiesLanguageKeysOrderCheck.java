@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -21,8 +12,6 @@ import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import java.util.Map;
@@ -39,31 +28,6 @@ public class PropertiesLanguageKeysOrderCheck extends BaseFileCheck {
 		throws IOException {
 
 		if (!fileName.endsWith("/content/Language.properties")) {
-			return content;
-		}
-
-		int x = absolutePath.lastIndexOf("/");
-
-		File dir = new File(absolutePath.substring(0, x + 1));
-
-		File[] files = dir.listFiles(
-			new FilenameFilter() {
-
-				public boolean accept(File dir, String name) {
-					String s = StringUtil.toLowerCase(name);
-
-					if (!s.startsWith("language_") ||
-						!s.endsWith(".properties")) {
-
-						return false;
-					}
-
-					return true;
-				}
-
-			});
-
-		if (files.length > 1) {
 			return content;
 		}
 

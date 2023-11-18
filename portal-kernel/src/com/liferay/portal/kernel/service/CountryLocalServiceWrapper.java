@@ -1,18 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
+
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link CountryLocalService}.
@@ -43,18 +39,15 @@ public class CountryLocalServiceWrapper
 	 * @return the country that was added
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country addCountry(
-		com.liferay.portal.kernel.model.Country country) {
-
+	public Country addCountry(Country country) {
 		return _countryLocalService.addCountry(country);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country addCountry(
-			java.lang.String a2, java.lang.String a3, boolean active,
-			boolean billingAllowed, java.lang.String idd, java.lang.String name,
-			java.lang.String number, double position, boolean shippingAllowed,
-			boolean subjectToVAT, boolean zipRequired,
+	public Country addCountry(
+			String a2, String a3, boolean active, boolean billingAllowed,
+			String idd, String name, String number, double position,
+			boolean shippingAllowed, boolean subjectToVAT, boolean zipRequired,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -70,9 +63,7 @@ public class CountryLocalServiceWrapper
 	 * @return the new country
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country createCountry(
-		long countryId) {
-
+	public Country createCountry(long countryId) {
 		return _countryLocalService.createCountry(countryId);
 	}
 
@@ -106,8 +97,7 @@ public class CountryLocalServiceWrapper
 	 * @throws PortalException
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country deleteCountry(
-			com.liferay.portal.kernel.model.Country country)
+	public Country deleteCountry(Country country)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.deleteCountry(country);
@@ -125,7 +115,7 @@ public class CountryLocalServiceWrapper
 	 * @throws PortalException if a country with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country deleteCountry(long countryId)
+	public Country deleteCountry(long countryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.deleteCountry(countryId);
@@ -244,37 +234,27 @@ public class CountryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country fetchCountry(
-		long countryId) {
-
+	public Country fetchCountry(long countryId) {
 		return _countryLocalService.fetchCountry(countryId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country fetchCountryByA2(
-		long companyId, java.lang.String a2) {
-
+	public Country fetchCountryByA2(long companyId, String a2) {
 		return _countryLocalService.fetchCountryByA2(companyId, a2);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country fetchCountryByA3(
-		long companyId, java.lang.String a3) {
-
+	public Country fetchCountryByA3(long companyId, String a3) {
 		return _countryLocalService.fetchCountryByA3(companyId, a3);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country fetchCountryByName(
-		long companyId, java.lang.String name) {
-
+	public Country fetchCountryByName(long companyId, String name) {
 		return _countryLocalService.fetchCountryByName(companyId, name);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country fetchCountryByNumber(
-		long companyId, java.lang.String number) {
-
+	public Country fetchCountryByNumber(long companyId, String number) {
 		return _countryLocalService.fetchCountryByNumber(companyId, number);
 	}
 
@@ -286,16 +266,14 @@ public class CountryLocalServiceWrapper
 	 * @return the matching country, or <code>null</code> if a matching country could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country
-		fetchCountryByUuidAndCompanyId(java.lang.String uuid, long companyId) {
-
+	public Country fetchCountryByUuidAndCompanyId(String uuid, long companyId) {
 		return _countryLocalService.fetchCountryByUuidAndCompanyId(
 			uuid, companyId);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.CountryLocalization
-		fetchCountryLocalization(long countryId, java.lang.String languageId) {
+		fetchCountryLocalization(long countryId, String languageId) {
 
 		return _countryLocalService.fetchCountryLocalization(
 			countryId, languageId);
@@ -309,36 +287,32 @@ public class CountryLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Country>
-		getCompanyCountries(long companyId) {
-
+	public java.util.List<Country> getCompanyCountries(long companyId) {
 		return _countryLocalService.getCompanyCountries(companyId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Country>
-		getCompanyCountries(long companyId, boolean active) {
+	public java.util.List<Country> getCompanyCountries(
+		long companyId, boolean active) {
 
 		return _countryLocalService.getCompanyCountries(companyId, active);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Country>
-		getCompanyCountries(
-			long companyId, boolean active, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.portal.kernel.model.Country> orderByComparator) {
+	public java.util.List<Country> getCompanyCountries(
+		long companyId, boolean active, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<Country>
+			orderByComparator) {
 
 		return _countryLocalService.getCompanyCountries(
 			companyId, active, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Country>
-		getCompanyCountries(
-			long companyId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.portal.kernel.model.Country> orderByComparator) {
+	public java.util.List<Country> getCompanyCountries(
+		long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<Country>
+			orderByComparator) {
 
 		return _countryLocalService.getCompanyCountries(
 			companyId, start, end, orderByComparator);
@@ -366,9 +340,7 @@ public class CountryLocalServiceWrapper
 	 * @return the range of countries
 	 */
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Country> getCountries(
-		int start, int end) {
-
+	public java.util.List<Country> getCountries(int start, int end) {
 		return _countryLocalService.getCountries(start, end);
 	}
 
@@ -390,39 +362,35 @@ public class CountryLocalServiceWrapper
 	 * @throws PortalException if a country with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountry(long countryId)
+	public Country getCountry(long countryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountry(countryId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountryByA2(
-			long companyId, java.lang.String a2)
+	public Country getCountryByA2(long companyId, String a2)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryByA2(companyId, a2);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountryByA3(
-			long companyId, java.lang.String a3)
+	public Country getCountryByA3(long companyId, String a3)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryByA3(companyId, a3);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountryByName(
-			long companyId, java.lang.String name)
+	public Country getCountryByName(long companyId, String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryByName(companyId, name);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountryByNumber(
-			long companyId, java.lang.String number)
+	public Country getCountryByNumber(long companyId, String number)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryByNumber(companyId, number);
@@ -437,8 +405,7 @@ public class CountryLocalServiceWrapper
 	 * @throws PortalException if a matching country could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country getCountryByUuidAndCompanyId(
-			java.lang.String uuid, long companyId)
+	public Country getCountryByUuidAndCompanyId(String uuid, long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryByUuidAndCompanyId(
@@ -447,7 +414,7 @@ public class CountryLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.CountryLocalization
-			getCountryLocalization(long countryId, java.lang.String languageId)
+			getCountryLocalization(long countryId, String languageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.getCountryLocalization(
@@ -484,7 +451,7 @@ public class CountryLocalServiceWrapper
 	 * @return the OSGi service identifier
 	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _countryLocalService.getOSGiServiceIdentifier();
 	}
 
@@ -500,21 +467,20 @@ public class CountryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.portal.kernel.model.Country> searchCountries(
-				long companyId, java.lang.Boolean active,
-				java.lang.String keywords, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.portal.kernel.model.Country> orderByComparator)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<Country>
+			searchCountries(
+				long companyId, Boolean active, String keywords, int start,
+				int end,
+				com.liferay.portal.kernel.util.OrderByComparator<Country>
+					orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.searchCountries(
 			companyId, active, keywords, start, end, orderByComparator);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country updateActive(
-			long countryId, boolean active)
+	public Country updateActive(long countryId, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.updateActive(countryId, active);
@@ -531,18 +497,15 @@ public class CountryLocalServiceWrapper
 	 * @return the country that was updated
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Country updateCountry(
-		com.liferay.portal.kernel.model.Country country) {
-
+	public Country updateCountry(Country country) {
 		return _countryLocalService.updateCountry(country);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country updateCountry(
-			long countryId, java.lang.String a2, java.lang.String a3,
-			boolean active, boolean billingAllowed, java.lang.String idd,
-			java.lang.String name, java.lang.String number, double position,
-			boolean shippingAllowed, boolean subjectToVAT)
+	public Country updateCountry(
+			long countryId, String a2, String a3, boolean active,
+			boolean billingAllowed, String idd, String name, String number,
+			double position, boolean shippingAllowed, boolean subjectToVAT)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.updateCountry(
@@ -553,8 +516,7 @@ public class CountryLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.model.CountryLocalization
 			updateCountryLocalization(
-				com.liferay.portal.kernel.model.Country country,
-				java.lang.String languageId, java.lang.String title)
+				Country country, String languageId, String title)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.updateCountryLocalization(
@@ -564,8 +526,7 @@ public class CountryLocalServiceWrapper
 	@Override
 	public java.util.List<com.liferay.portal.kernel.model.CountryLocalization>
 			updateCountryLocalizations(
-				com.liferay.portal.kernel.model.Country country,
-				java.util.Map<java.lang.String, java.lang.String> titleMap)
+				Country country, java.util.Map<String, String> titleMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.updateCountryLocalizations(
@@ -573,12 +534,36 @@ public class CountryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Country updateGroupFilterEnabled(
+	public Country updateGroupFilterEnabled(
 			long countryId, boolean groupFilterEnabled)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _countryLocalService.updateGroupFilterEnabled(
 			countryId, groupFilterEnabled);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _countryLocalService.getBasePersistence();
+	}
+
+	@Override
+	public CTPersistence<Country> getCTPersistence() {
+		return _countryLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<Country> getModelClass() {
+		return _countryLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<Country>, R, E> updateUnsafeFunction)
+		throws E {
+
+		return _countryLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

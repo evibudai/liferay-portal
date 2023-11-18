@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.internal.search;
 
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -22,9 +14,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.search.spi.reindexer.BulkReindexer;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,6 +34,36 @@ public class UserBulkReindexer implements BulkReindexer {
 
 	@Override
 	public void reindex(long companyId, Collection<Long> classPKs) {
+		int size = classPKs.size();
+
+		if (size <= DBManagerUtil.getDBMaxParameters()) {
+			_reindex(companyId, classPKs);
+
+			return;
+		}
+
+		List<Long> classPKsList = ListUtil.fromCollection(classPKs);
+
+		int start = 0;
+		int end = DBManagerUtil.getDBMaxParameters();
+
+		while (start < size) {
+			_reindex(companyId, ListUtil.subList(classPKsList, start, end));
+
+			end += DBManagerUtil.getDBMaxParameters();
+			start += DBManagerUtil.getDBMaxParameters();
+		}
+	}
+
+	@Reference(
+		target = "(indexer.class.name=com.liferay.portal.kernel.model.User)"
+	)
+	protected Indexer<User> indexer;
+
+	@Reference
+	protected UserLocalService userLocalService;
+
+	private void _reindex(long companyId, Collection<Long> classPKs) {
 		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			userLocalService.getIndexableActionableDynamicQuery();
 
@@ -49,7 +73,7 @@ public class UserBulkReindexer implements BulkReindexer {
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
 			(User user) -> {
-				if (!user.isDefaultUser()) {
+				if (!user.isGuestUser()) {
 					try {
 						indexableActionableDynamicQuery.addDocuments(
 							indexer.getDocument(user));
@@ -71,14 +95,6 @@ public class UserBulkReindexer implements BulkReindexer {
 			throw new RuntimeException(portalException);
 		}
 	}
-
-	@Reference(
-		target = "(indexer.class.name=com.liferay.portal.kernel.model.User)"
-	)
-	protected Indexer<User> indexer;
-
-	@Reference
-	protected UserLocalService userLocalService;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserBulkReindexer.class);

@@ -1,42 +1,52 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useParams} from 'react-router-dom';
+import {Dispatch} from 'react';
+import {useNavigate, useOutletContext, useParams} from 'react-router-dom';
+import {KeyedMutator} from 'swr';
 
 import FloatingBox from '../../../components/FloatingBox';
 import ListView from '../../../components/ListView';
 import StatusBadge from '../../../components/StatusBadge';
 import {StatusBadgeType} from '../../../components/StatusBadge/StatusBadge';
 import {ListViewTypes} from '../../../context/ListViewContext';
+import SearchBuilder from '../../../core/SearchBuilder';
+import useMutate from '../../../hooks/useMutate';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../services/liferay';
-import {TestraySubTaskCaseResult} from '../../../services/rest';
+import {
+	TestraySubTask,
+	TestraySubTaskCaseResult,
+	testraySubTaskImpl,
+} from '../../../services/rest';
 import {testraySubtaskCaseResultImpl} from '../../../services/rest/TestraySubtaskCaseResults';
-import {searchUtil} from '../../../util/search';
 import {SubTaskStatuses} from '../../../util/statuses';
 
+type OutletContext = {
+	data: {
+		testraySubtask: TestraySubTask;
+	};
+	mutate: {
+		mutateSubtask: KeyedMutator<TestraySubTask>;
+	};
+};
+
 const SubtasksCaseResults = () => {
-	const {subtaskId} = useParams();
+	const navigate = useNavigate();
+	const {subtaskId, taskId} = useParams();
+	const {updateItemFromList} = useMutate();
+	const {
+		data: {testraySubtask},
+		mutate: {mutateSubtask},
+	} = useOutletContext<OutletContext>();
 
 	const getFloatingBoxAlerts = (
 		subtasksCaseResults: TestraySubTaskCaseResult[],
 		selectRows: number[]
 	) => {
 		const alerts = [];
-		const selectedRows = selectRows.map((rowId) =>
-			subtasksCaseResults.find(({id}) => rowId === id)
-		) as TestraySubTaskCaseResult[];
 
 		if (subtasksCaseResults.length === selectRows.length) {
 			alerts.push({
@@ -47,18 +57,12 @@ const SubtasksCaseResults = () => {
 		}
 
 		const subtaskStatusCheck = () => {
-			const subtasksOpenStatus = selectedRows.filter(
-				({subTask}) =>
-					subTask?.dueStatus &&
-					subTask?.dueStatus.key === SubTaskStatuses.OPEN
-			);
-
-			if (subtasksOpenStatus.length) {
+			if (testraySubtask.dueStatus?.key !== SubTaskStatuses.IN_ANALYSIS) {
 				return [
 					{
 						text: i18n.sub(
 							'subtask-x-must-be-in-analysis-to-be-used-in-a-split',
-							subtasksOpenStatus[0].subTask?.name as string
+							testraySubtask?.name as string
 						),
 					},
 				];
@@ -66,21 +70,16 @@ const SubtasksCaseResults = () => {
 		};
 
 		const subtaskUserCheck = () => {
-			const subtaskName = selectedRows.map(({subTask}) => subTask?.name);
+			const subtasksWithDifferentAssignedUsers =
+				testraySubtask?.user?.id?.toString() !==
+				Liferay.ThemeDisplay.getUserId();
 
-			const subtasksWithDifferentAssignedUsers = selectedRows.filter(
-				({subTask}) =>
-					subTask?.user?.id &&
-					subTask?.user?.id?.toString() ===
-						Liferay.ThemeDisplay.getUserId()
-			);
-
-			if (!subtasksWithDifferentAssignedUsers.length) {
+			if (subtasksWithDifferentAssignedUsers) {
 				return [
 					{
 						text: i18n.sub(
 							'subtask-x-must-be-assigned-to-you-to-be-user-in-a-split',
-							subtaskName[0] as string
+							testraySubtask?.name ?? ''
 						),
 					},
 				];
@@ -91,6 +90,49 @@ const SubtasksCaseResults = () => {
 		const statusOpen = subtaskStatusCheck() || [];
 
 		return [...alerts, ...alreadyAssigned, ...statusOpen];
+	};
+
+	const onSplitSubtasks = async (
+		dispatch: Dispatch<any>,
+		mutate: KeyedMutator<TestraySubTaskCaseResult>,
+		selectedCaseResults: TestraySubTaskCaseResult[]
+	) => {
+		const {currentSubtask, newSubtask} = await testraySubTaskImpl.split(
+			selectedCaseResults,
+			Number(subtaskId),
+			Number(taskId)
+		);
+
+		mutateSubtask(currentSubtask);
+
+		updateItemFromList(
+			mutate,
+			0,
+			{},
+			{
+				revalidate: true,
+			}
+		);
+
+		Liferay.Util.openToast({
+			message: i18n.sub('x-tests-were-split-into-x-successfully-view-x', [
+				selectedCaseResults.length.toString(),
+				newSubtask.name,
+				newSubtask.name,
+			]),
+			onClick: ({event}) => {
+				const {target} = event;
+
+				if (target?.id === 'testray-link') {
+					navigate(`../../subtasks/${newSubtask.id}`);
+				}
+			},
+		});
+
+		dispatch({
+			payload: [],
+			type: ListViewTypes.SET_CHECKED_ROW,
+		});
 	};
 
 	return (
@@ -156,7 +198,14 @@ const SubtasksCaseResults = () => {
 						size: 'md',
 						value: i18n.translate('case'),
 					},
-					{key: 'issues', value: i18n.translate('issues')},
+					{
+						key: 'issues',
+						render: (
+							_,
+							testraySubTaskCaseResult: TestraySubTaskCaseResult
+						) => testraySubTaskCaseResult.caseResult?.issues as any,
+						value: i18n.translate('issues'),
+					},
 					{
 						key: 'dueStatus',
 						render: (
@@ -178,6 +227,14 @@ const SubtasksCaseResults = () => {
 
 						value: i18n.translate('status'),
 					},
+					{
+						key: 'comment',
+						render: (
+							_,
+							testraySubTaskCaseResult: TestraySubTaskCaseResult
+						) => testraySubTaskCaseResult.caseResult?.comment,
+						value: i18n.translate('comment'),
+					},
 				],
 				navigateTo: ({caseResult}) =>
 					`/project/${caseResult.build?.project.id}/routines/${caseResult.build?.routine.id}/build/${caseResult.build?.id}/case-result/${caseResult.id}`,
@@ -188,11 +245,15 @@ const SubtasksCaseResults = () => {
 				testraySubtaskCaseResultImpl.transformDataFromList(response)
 			}
 			variables={{
-				filter: searchUtil.eq('subtaskId', subtaskId as string),
+				filter: SearchBuilder.eq('subtaskId', subtaskId as string),
 			}}
 		>
-			{({items}, {dispatch, listViewContext: {selectedRows}}) => {
+			{({items}, {dispatch, listViewContext: {selectedRows}, mutate}) => {
 				const alerts = getFloatingBoxAlerts(items, selectedRows);
+
+				const selectedCaseResults: TestraySubTaskCaseResult[] = selectedRows.map(
+					(rowId) => items.find(({id}) => rowId === id)
+				);
 
 				return (
 					<FloatingBox
@@ -204,6 +265,13 @@ const SubtasksCaseResults = () => {
 							})
 						}
 						isVisible={!!selectedRows.length}
+						onSubmit={() =>
+							onSplitSubtasks(
+								dispatch,
+								mutate,
+								selectedCaseResults
+							)
+						}
 						primaryButtonProps={{
 							disabled: !!alerts.length,
 							title: i18n.translate('split-tests'),
@@ -218,4 +286,5 @@ const SubtasksCaseResults = () => {
 		</ListView>
 	);
 };
+
 export default SubtasksCaseResults;

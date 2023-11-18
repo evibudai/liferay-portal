@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.pagination;
@@ -33,6 +24,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilterConfiguration;
 import com.liferay.portal.search.internal.facet.FacetPostProcessorImpl;
 import com.liferay.portal.search.internal.permission.DefaultSearchResultPermissionFilter;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.SearchRequest;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
@@ -182,21 +176,7 @@ public abstract class BasePermissionFilteredPaginationTestCase
 	public void testPastLast() throws Exception {
 		index(9, filtering());
 
-		assertPagination(10, 12, 3, "[[7, 8, 9]]");
-	}
-
-	@Test
-	public void testPastLastSecondIndex() throws Exception {
-		index(9, filtering());
-
-		assertPagination(11, 12, 3, "[[9]]");
-	}
-
-	@Test
-	public void testPastLastThirdIndex() throws Exception {
-		index(9, filtering());
-
-		assertPagination(12, 12, 3, "[[9]]");
+		assertPagination(10, 12, 3, "[[]]");
 	}
 
 	@Test
@@ -281,10 +261,9 @@ public abstract class BasePermissionFilteredPaginationTestCase
 		SearchContext searchContext = createSearchContext();
 
 		searchContext.setEnd(end);
-		searchContext.setStart(start);
-
 		searchContext.setSorts(
 			new Sort(Field.PRIORITY, Sort.DOUBLE_TYPE, false));
+		searchContext.setStart(start);
 
 		return searchContext;
 	}
@@ -307,9 +286,13 @@ public abstract class BasePermissionFilteredPaginationTestCase
 			indexerRegistry, permissionChecker, props,
 			defaultSearchResultPermissionFilterConfiguration);
 
+		SearchRequestBuilderFactory searchRequestBuilderFactory =
+			_getSearchRequestBuilderFactory();
+
 		return new DefaultSearchResultPermissionFilter(
 			new FacetPostProcessorImpl(), indexerRegistry, permissionChecker,
 			props, relatedEntryIndexerRegistry, this::doSearch,
+			searchRequestBuilderFactory,
 			defaultSearchResultPermissionFilterConfiguration);
 	}
 
@@ -511,6 +494,42 @@ public abstract class BasePermissionFilteredPaginationTestCase
 
 	protected int permissionFilteredSearchResultAccurateCountThreshold;
 	protected int searchQueryResultWindowLimit;
+
+	private SearchRequestBuilderFactory _getSearchRequestBuilderFactory() {
+		SearchRequestBuilderFactory searchRequestBuilderFactory = Mockito.mock(
+			SearchRequestBuilderFactory.class);
+
+		SearchRequestBuilder searchRequestBuilder = Mockito.mock(
+			SearchRequestBuilder.class);
+
+		Mockito.when(
+			searchRequestBuilderFactory.builder(Mockito.any())
+		).thenReturn(
+			searchRequestBuilder
+		);
+
+		SearchRequest searchRequest = Mockito.mock(SearchRequest.class);
+
+		Mockito.when(
+			searchRequestBuilder.build()
+		).thenReturn(
+			searchRequest
+		);
+
+		Mockito.when(
+			searchRequest.getFrom()
+		).thenReturn(
+			0
+		);
+
+		Mockito.when(
+			searchRequest.getSize()
+		).thenReturn(
+			10
+		);
+
+		return searchRequestBuilderFactory;
+	}
 
 	private static final long _FILTERED_ENTRY_IDENTIFIER = 1000000;
 

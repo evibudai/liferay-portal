@@ -1,0 +1,128 @@
+.radio-card {
+	&-container {
+		border: 1px solid #e2e2e4;
+		border-radius: 0.5rem;
+		display: flex;
+		flex-direction: column;
+		max-width: 37.5rem;
+		padding: 1rem;
+		width: 100%;
+
+		&-disabled {
+			opacity: 0.5;
+		}
+
+		&:hover {
+			background-color: #e6edfb;
+			border: 1px solid #004ad7;
+		}
+
+		&-selected {
+			background-color: #e6edfb;
+			border: 1px solid #004ad7;
+		}
+
+		&-small {
+			height: auto;
+			width: 270px;
+		}
+
+		transition: background-color 0.5s;
+		transition: border 0.5s;
+	}
+
+	&-main-info {
+		align-items: center;
+		display: flex;
+		justify-content: space-between;
+
+		&-small {
+			align-items: center;
+			display: flex;
+			gap: 4px;
+			justify-content: center;
+
+			&-background {
+				background-color: #fff;
+				border: #e2e2e4 1px solid;
+				border-radius: 4px;
+				display: flex;
+				height: 28px;
+				justify-content: center;
+				padding-top: 4px;
+				width: 40px;
+
+				img {
+					height: 18px;
+					width: 15px;
+				}
+			}
+
+			&-text-small {
+				font-size: 13px;
+			}
+		}
+	}
+
+	&-button {
+		background: none;
+		border: none;
+
+		&-icon {
+			filter: invert(21%) sepia(91%) saturate(3572%) hue-rotate(220deg)
+				brightness(100%) contrast(101%);
+			margin-bottom: 0.438rem;
+		}
+
+		&-disabled {
+			cursor: not-allowed;
+		}
+	}
+
+	&-title {
+		align-items: center;
+		display: flex;
+		gap: 0.5rem;
+		justify-content: center;
+
+		&-text {
+			font-size: 1.125rem;
+			font-weight: 600;
+			line-height: 1.25rem;
+
+			&-selected {
+				color: #004ad7;
+			}
+			transition: color 0.5s;
+		}
+
+		&-icon {
+			height: 1rem;
+			margin-top: 2px;
+			width: 1rem;
+			filter: invert(20%) sepia(92%) saturate(5175%) hue-rotate(214deg)
+				brightness(86%) contrast(110%);
+
+			transition: filter 0.5s;
+
+			&-rounded {
+				border-radius: 50%;
+				height: 32px;
+				width: 32px;
+			}
+		}
+
+		&-tooltip {
+			margin-bottom: 1rem;
+		}
+	}
+
+	&-description {
+		color: #54555f;
+		font-size: 0.813rem;
+		font-weight: 400;
+		line-height: 1rem;
+		margin-left: 2.5rem;
+		word-break: break-word;
+	}
+}

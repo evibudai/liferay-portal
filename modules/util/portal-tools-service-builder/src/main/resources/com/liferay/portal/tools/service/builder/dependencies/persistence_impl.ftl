@@ -9,9 +9,9 @@
 </#if>
 
 <#if osgiModule>
-	<#assign ctPersistenceHelper = "ctPersistenceHelper"/>
+	<#assign ctPersistenceHelper = "ctPersistenceHelper" />
 <#else>
-	<#assign ctPersistenceHelper = "CTPersistenceHelperUtil"/>
+	<#assign ctPersistenceHelper = "CTPersistenceHelperUtil" />
 </#if>
 
 <#if serviceBuilder.isVersionGTE_7_3_0() && !entity.isCacheEnabled()>
@@ -38,16 +38,6 @@
 
 <#if entity.isChangeTrackingEnabled()>
 	<#assign useCache = "useFinderCache && productionMode" />
-</#if>
-
-<#if osgiModule && serviceBuilder.isVersionGTE_7_4_0() && entity.hasUuid()>
-	<#assign
-		portalUUID = "_portalUUID"
-	/>
-<#else>
-	<#assign
-		portalUUID = "PortalUUIDUtil"
-	/>
 </#if>
 
 package ${packagePath}.service.persistence.impl;
@@ -132,7 +122,6 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.registry.Registry;
@@ -257,9 +246,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY + ".List2";
 
 	<#if serviceBuilder.isVersionGTE_7_3_0()>
-		<#assign columnBitmaskEnabled = (entity.databaseRegularEntityColumns?size &lt; 64) && !entity.hasEagerBlobColumn()/>
+		<#assign columnBitmaskEnabled = (entity.databaseRegularEntityColumns?size &lt; 64) && !entity.hasEagerBlobColumn() />
 	<#else>
-		<#assign columnBitmaskEnabled = (entity.finderEntityColumns?size &gt; 0) && (entity.finderEntityColumns?size &lt; 64) && !entity.hasEagerBlobColumn()/>
+		<#assign columnBitmaskEnabled = (entity.finderEntityColumns?size &gt; 0) && (entity.finderEntityColumns?size &lt; 64) && !entity.hasEagerBlobColumn() />
 	</#if>
 
 	private FinderPath _finderPathWithPaginationFindAll;
@@ -646,7 +635,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		${entity.variableName}.setPrimaryKey(${entity.PKVariableName});
 
 		<#if entity.hasUuid()>
-			String uuid = ${portalUUID}.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			${entity.variableName}.setUuid(uuid);
 		</#if>
@@ -804,7 +793,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 		<#if entity.hasUuid()>
 			if (Validator.isNull(${entity.variableName}.getUuid())) {
-				String uuid = ${portalUUID}.generate();
+				String uuid = PortalUUIDUtil.generate();
 
 				${entity.variableName}.setUuid(uuid);
 			}
@@ -819,19 +808,23 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				</#if>
 			}
 
-			<#if serviceBuilder.isVersionGTE_7_4_0() && entity.hasExternalReferenceCode()>
+			<#if serviceBuilder.isVersionGTE_7_3_0() && entity.hasExternalReferenceCode()>
 				else {
-					${entity.name} erc${entity.name} = fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(${entity.variableName}.getExternalReferenceCode(), ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						${entity.name} erc${entity.name} = fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(${entity.variableName}.getExternalReferenceCode(), ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
+					<#else>
+						${entity.name} erc${entity.name} = fetchBy${entity.externalReferenceCode?cap_first[0..0]}_ERC(${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id(), ${entity.variableName}.getExternalReferenceCode());
+					</#if>
 
 					if (isNew) {
 						if (erc${entity.name} != null) {
-								throw new ${duplicateEntityExternalReferenceCode}Exception("Duplicate ${entity.humanName} with external reference code " + ${entity.variableName}.getExternalReferenceCode());
+								throw new ${duplicateEntityExternalReferenceCode}Exception("Duplicate ${entity.humanName} with external reference code " + ${entity.variableName}.getExternalReferenceCode() + " and ${entity.externalReferenceCode} " + ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
 						}
 					}
 					else {
 						if ((erc${entity.name} != null) &&
 							(${entity.variableName}.get${entity.PKMethodName}() != erc${entity.name}.get${entity.PKMethodName}())) {
-								throw new ${duplicateEntityExternalReferenceCode}Exception("Duplicate ${entity.humanName} with external reference code " + ${entity.variableName}.getExternalReferenceCode());
+								throw new ${duplicateEntityExternalReferenceCode}Exception("Duplicate ${entity.humanName} with external reference code " + ${entity.variableName}.getExternalReferenceCode() + " and ${entity.externalReferenceCode} " + ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
 						}
 					}
 				}
@@ -1885,16 +1878,32 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
 				 * @param ${referenceEntity.variableName}PK the primary key of the ${referenceEntity.humanName}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+				 * @return <code>true</code> if an association between the ${entity.humanName} and the ${referenceEntity.humanName} was added; <code>false</code> if they were already associated
+				</#if>
 				 */
 				@Override
-				public void add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.PKClassName} ${referenceEntity.variableName}PK) {
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.PKClassName} ${referenceEntity.variableName}PK) {
+				<#else>
+					public void add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.PKClassName} ${referenceEntity.variableName}PK) {
+				</#if>
+
 					${entity.name} ${entity.variableName} = fetchByPrimaryKey(pk);
 
 					if (${entity.variableName} == null) {
-						${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							return ${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						<#else>
+							${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						</#if>
 					}
 					else {
-						${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							return ${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						<#else>
+							${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}PK);
+						</#if>
 					}
 				}
 
@@ -1903,16 +1912,32 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
 				 * @param ${referenceEntity.variableName} the ${referenceEntity.humanName}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+				 * @return <code>true</code> if an association between the ${entity.humanName} and the ${referenceEntity.humanName} was added; <code>false</code> if they were already associated
+				</#if>
 				 */
 				@Override
-				public void add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name} ${referenceEntity.variableName}) {
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name} ${referenceEntity.variableName}) {
+				<#else>
+					public void add${referenceEntity.name}(${entity.PKClassName} pk, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name} ${referenceEntity.variableName}) {
+				</#if>
+
 					${entity.name} ${entity.variableName} = fetchByPrimaryKey(pk);
 
 					if (${entity.variableName} == null) {
-						${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							return ${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						<#else>
+							${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(CompanyThreadLocal.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						</#if>
 					}
 					else {
-						${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							return ${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						<#else>
+							${entity.variableName}To${referenceEntity.name}TableMapper.addTableMapping(${entity.variableName}.getCompanyId(), pk, ${referenceEntity.variableName}.getPrimaryKey());
+						</#if>
 					}
 				}
 
@@ -1921,9 +1946,17 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
 				 * @param ${referenceEntity.variableName}PKs the primary keys of the ${referenceEntity.pluralHumanName}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+				 * @return <code>true</code> if at least one association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName} was added; <code>false</code> if they were all already associated
+				</#if>
 				 */
 				@Override
-				public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.variableName}PKs) {
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.variableName}PKs) {
+				<#else>
+					public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.variableName}PKs) {
+				</#if>
+
 					long companyId = 0;
 
 					${entity.name} ${entity.variableName} = fetchByPrimaryKey(pk);
@@ -1935,7 +1968,17 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						companyId = ${entity.variableName}.getCompanyId();
 					}
 
-					${entity.variableName}To${referenceEntity.name}TableMapper.addTableMappings(companyId, pk, ${referenceEntity.variableName}PKs);
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						long[] addedKeys = ${entity.variableName}To${referenceEntity.name}TableMapper.addTableMappings(companyId, pk, ${referenceEntity.variableName}PKs);
+
+						if (addedKeys.length > 0) {
+							return true;
+						}
+
+						return false;
+					<#else>
+						${entity.variableName}To${referenceEntity.name}TableMapper.addTableMappings(companyId, pk, ${referenceEntity.variableName}PKs);
+					</#if>
 				}
 
 				/**
@@ -1943,11 +1986,20 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
 				 * @param ${referenceEntity.pluralVariableName} the ${referenceEntity.pluralHumanName}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+				 * @return <code>true</code> if at least one association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName} was added; <code>false</code> if they were all already associated
+				</#if>
 				 */
 				@Override
-				public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVariableName}) {
-					add${referenceEntity.pluralName}(pk, ListUtil.toLongArray(${referenceEntity.pluralVariableName}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVariableName(), 7), 0)}_ACCESSOR));
-				}
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					public boolean add${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVariableName}) {
+						return add${referenceEntity.pluralName}(pk, ListUtil.toLongArray(${referenceEntity.pluralVariableName}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVariableName(), 7), 0)}_ACCESSOR));
+					}
+				<#else>
+					public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVariableName}) {
+						add${referenceEntity.pluralName}(pk, ListUtil.toLongArray(${referenceEntity.pluralVariableName}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVariableName(), 7), 0)}_ACCESSOR));
+					}
+				</#if>
 
 				/**
 				 * Clears all associations between the ${entity.humanName} and its ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
@@ -2835,7 +2887,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			</#if>
 		</#list>
 
-		_set${entity.name}UtilPersistence(this);
+		${entity.name}Util.setPersistence(this);
 	}
 
 	<#if dependencyInjectorDS>
@@ -2845,7 +2897,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public void destroy() {
 	</#if>
 
-		_set${entity.name}UtilPersistence(null);
+		${entity.name}Util.setPersistence(null);
 
 		${entityCache}.removeCache(${entity.name}Impl.class.getName());
 
@@ -2872,19 +2924,6 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				</#if>
 			</#if>
 		</#list>
-	}
-
-	private void _set${entity.name}UtilPersistence(${entity.name}Persistence ${entity.variableName}Persistence) {
-		try {
-			Field field = ${entity.name}Util.class.getDeclaredField("_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, ${entity.variableName}Persistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	<#if dependencyInjectorDS>
@@ -3121,14 +3160,6 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		<#include "model_arguments_resolver.ftl">
 	</#if>
 
-	<#if osgiModule && serviceBuilder.isVersionGTE_7_4_0() && entity.hasUuid()>
-		<#if dependencyInjectorDS>
-			@Reference
-		<#else>
-			@ServiceReference(type = PortalUUID.class)
-		</#if>
-		private PortalUUID ${portalUUID};
-	</#if>
 }
 
 <#function bindParameter entityColumns>

@@ -39,7 +39,8 @@
 	},
 	"settings": {
 		"masterPage": {
-			"key": "onboarding"
+			"key": "home"
 		}
-	}
+	},
+	"version": 1.1
 }

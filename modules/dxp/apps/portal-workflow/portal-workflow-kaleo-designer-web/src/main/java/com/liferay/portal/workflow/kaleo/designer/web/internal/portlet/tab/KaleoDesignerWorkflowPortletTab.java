@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.tab;
@@ -27,11 +18,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
-import com.liferay.portal.workflow.kaleo.designer.web.internal.action.executor.FunctionActionExecutorServiceWrapperTracker;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.constants.KaleoDesignerWebKeys;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.display.context.KaleoDesignerDisplayContext;
 import com.liferay.portal.workflow.kaleo.exception.DuplicateKaleoDefinitionNameException;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
+import com.liferay.portal.workflow.kaleo.runtime.action.ActionExecutorManager;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
@@ -63,11 +54,6 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
-	public String getSearchJspPath() {
-		return "/designer/kaleo_definition_search.jsp";
-	}
-
-	@Override
 	public ServletContext getServletContext() {
 		return _servletContext;
 	}
@@ -96,23 +82,6 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 		return "/designer/view_workflow_definitions.jsp";
 	}
 
-	@Reference(unbind = "-")
-	protected void setKaleoDefinitionVersionLocalService(
-		KaleoDefinitionVersionLocalService kaleoDefinitionVersionLocalService) {
-
-		_kaleoDefinitionVersionLocalService =
-			kaleoDefinitionVersionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected KaleoDefinitionVersionLocalService
-		kaleoDefinitionVersionLocalService;
-
 	private void _setKaleoDefinitionVersionRenderRequestAttribute(
 			RenderRequest renderRequest)
 		throws PortalException {
@@ -120,15 +89,13 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		_kaleoDesignerDisplayContext = new KaleoDesignerDisplayContext(
-			_functionActionExecutorServiceWrapperTracker, renderRequest,
-			_kaleoDefinitionVersionLocalService, _portletResourcePermission,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
-			_userLocalService);
-
 		renderRequest.setAttribute(
 			KaleoDesignerWebKeys.KALEO_DESIGNER_DISPLAY_CONTEXT,
-			_kaleoDesignerDisplayContext);
+			new KaleoDesignerDisplayContext(
+				_actionExecutorManager, renderRequest,
+				_kaleoDefinitionVersionLocalService, _portletResourcePermission,
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
+				_userLocalService));
 
 		String name = ParamUtil.getString(renderRequest, "name");
 
@@ -169,12 +136,11 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 		KaleoDesignerWorkflowPortletTab.class);
 
 	@Reference
-	private FunctionActionExecutorServiceWrapperTracker
-		_functionActionExecutorServiceWrapperTracker;
+	private ActionExecutorManager _actionExecutorManager;
 
+	@Reference
 	private KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
-	private KaleoDesignerDisplayContext _kaleoDesignerDisplayContext;
 
 	@Reference(
 		target = "(resource.name=" + WorkflowConstants.RESOURCE_NAME + ")"

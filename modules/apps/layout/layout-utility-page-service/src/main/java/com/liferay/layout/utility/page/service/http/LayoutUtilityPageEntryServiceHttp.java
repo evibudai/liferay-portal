@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.service.http;
@@ -55,7 +46,8 @@ public class LayoutUtilityPageEntryServiceHttp {
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long groupId, long plid, long previewFileEntryId,
 				boolean defaultLayoutUtilityPageEntry, String name, String type,
-				long masterLayoutPlid)
+				long masterLayoutPlid,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -67,7 +59,7 @@ public class LayoutUtilityPageEntryServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, groupId, plid,
 				previewFileEntryId, defaultLayoutUtilityPageEntry, name, type,
-				masterLayoutPlid);
+				masterLayoutPlid, serviceContext);
 
 			Object returnObj = null;
 
@@ -101,9 +93,9 @@ public class LayoutUtilityPageEntryServiceHttp {
 	public static com.liferay.layout.utility.page.model.LayoutUtilityPageEntry
 			copyLayoutUtilityPageEntry(
 				HttpPrincipal httpPrincipal, long groupId,
-				long layoutUtilityPageEntryId,
+				long sourceLayoutUtilityPageEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws Exception {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -112,7 +104,8 @@ public class LayoutUtilityPageEntryServiceHttp {
 				_copyLayoutUtilityPageEntryParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, layoutUtilityPageEntryId, serviceContext);
+				methodKey, groupId, sourceLayoutUtilityPageEntryId,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -120,11 +113,8 @@ public class LayoutUtilityPageEntryServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
+				if (exception instanceof Exception) {
+					throw (Exception)exception;
 				}
 
 				throw new com.liferay.portal.kernel.exception.SystemException(
@@ -457,6 +447,49 @@ public class LayoutUtilityPageEntryServiceHttp {
 	}
 
 	public static com.liferay.layout.utility.page.model.LayoutUtilityPageEntry
+			unsetDefaultLayoutUtilityPageEntry(
+				HttpPrincipal httpPrincipal, long layoutUtilityPageEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				LayoutUtilityPageEntryServiceUtil.class,
+				"unsetDefaultLayoutUtilityPageEntry",
+				_unsetDefaultLayoutUtilityPageEntryParameterTypes10);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, layoutUtilityPageEntryId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.layout.utility.page.model.
+				LayoutUtilityPageEntry)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.layout.utility.page.model.LayoutUtilityPageEntry
 			updateLayoutUtilityPageEntry(
 				HttpPrincipal httpPrincipal, long layoutUtilityPageEntryId,
 				long previewFileEntryId)
@@ -466,7 +499,7 @@ public class LayoutUtilityPageEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				LayoutUtilityPageEntryServiceUtil.class,
 				"updateLayoutUtilityPageEntry",
-				_updateLayoutUtilityPageEntryParameterTypes10);
+				_updateLayoutUtilityPageEntryParameterTypes11);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, layoutUtilityPageEntryId, previewFileEntryId);
@@ -510,7 +543,7 @@ public class LayoutUtilityPageEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				LayoutUtilityPageEntryServiceUtil.class,
 				"updateLayoutUtilityPageEntry",
-				_updateLayoutUtilityPageEntryParameterTypes11);
+				_updateLayoutUtilityPageEntryParameterTypes12);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, layoutUtilityPageEntryId, name);
@@ -550,7 +583,8 @@ public class LayoutUtilityPageEntryServiceHttp {
 	private static final Class<?>[] _addLayoutUtilityPageEntryParameterTypes0 =
 		new Class[] {
 			String.class, long.class, long.class, long.class, boolean.class,
-			String.class, String.class, long.class
+			String.class, String.class, long.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _copyLayoutUtilityPageEntryParameterTypes1 =
 		new Class[] {
@@ -586,11 +620,15 @@ public class LayoutUtilityPageEntryServiceHttp {
 			long.class
 		};
 	private static final Class<?>[]
-		_updateLayoutUtilityPageEntryParameterTypes10 = new Class[] {
-			long.class, long.class
+		_unsetDefaultLayoutUtilityPageEntryParameterTypes10 = new Class[] {
+			long.class
 		};
 	private static final Class<?>[]
 		_updateLayoutUtilityPageEntryParameterTypes11 = new Class[] {
+			long.class, long.class
+		};
+	private static final Class<?>[]
+		_updateLayoutUtilityPageEntryParameterTypes12 = new Class[] {
 			long.class, String.class
 		};
 

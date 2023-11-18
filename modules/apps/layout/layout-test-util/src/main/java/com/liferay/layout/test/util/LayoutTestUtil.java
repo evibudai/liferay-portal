@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.test.util;
 
+import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
@@ -185,6 +177,21 @@ public class LayoutTestUtil {
 				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
+	public static Layout addTypeContentLayout(
+			Group group, Map<Locale, String> nameMap)
+		throws Exception {
+
+		return LayoutLocalServiceUtil.addLayout(
+			TestPropsValues.getUserId(), group.getGroupId(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0, nameMap,
+			Collections.emptyMap(), Collections.emptyMap(),
+			Collections.emptyMap(), Collections.emptyMap(),
+			LayoutConstants.TYPE_CONTENT, StringPool.BLANK, false, false,
+			Collections.emptyMap(), 0,
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
+	}
+
 	public static Layout addTypeContentLayout(Group group, String name)
 		throws Exception {
 
@@ -235,7 +242,8 @@ public class LayoutTestUtil {
 			ServiceContextTestUtil.getServiceContext(
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId());
 
-		serviceContext.setAttribute("published", Boolean.TRUE);
+		serviceContext.setAttribute(
+			LayoutTypeSettingsConstants.KEY_PUBLISHED, Boolean.TRUE);
 
 		if (draftLayout != null) {
 			LayoutLocalServiceUtil.updateStatus(
@@ -261,9 +269,7 @@ public class LayoutTestUtil {
 
 		layout.setType(LayoutConstants.TYPE_LINK_TO_LAYOUT);
 
-		LayoutLocalServiceUtil.updateLayout(layout);
-
-		return layout;
+		return LayoutLocalServiceUtil.updateLayout(layout);
 	}
 
 	public static Layout addTypeLinkToURLLayout(long groupId, String url)
@@ -278,9 +284,7 @@ public class LayoutTestUtil {
 
 		layout.setType(LayoutConstants.TYPE_URL);
 
-		LayoutLocalServiceUtil.updateLayout(layout);
-
-		return layout;
+		return LayoutLocalServiceUtil.updateLayout(layout);
 	}
 
 	public static Layout addTypePortletLayout(Group group) throws Exception {
@@ -517,7 +521,6 @@ public class LayoutTestUtil {
 		layoutTypePortlet.setTypeSettingsProperty(
 			CustomizedPages.namespaceColumnId(columnId),
 			String.valueOf(customizable));
-
 		layoutTypePortlet.setUpdatePermission(customizable);
 
 		return LayoutServiceUtil.updateLayout(

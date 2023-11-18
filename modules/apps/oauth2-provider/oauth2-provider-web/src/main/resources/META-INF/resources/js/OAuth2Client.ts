@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import pkceChallenge from 'pkce-challenge';
@@ -101,9 +92,10 @@ class OAuth2Client {
 					resolve(tokenResponse);
 
 					tokenResponse.then((response) =>
-						sessionStorage.setItem(
+						Liferay.Util.SessionStorage.setItem(
 							sessionKey,
-							JSON.stringify(response)
+							JSON.stringify(response),
+							Liferay.Util.SessionStorage.TYPES.NECESSARY
 						)
 					);
 				}
@@ -167,9 +159,12 @@ class OAuth2Client {
 		const sessionKey = `${oauth2Client.clientId}-${Liferay.authToken}-token`;
 
 		return new Promise((resolve) => {
-			const cachedTokenData = sessionStorage.getItem(sessionKey);
+			const cachedTokenData = Liferay.Util.SessionStorage.getItem(
+				sessionKey,
+				Liferay.Util.SessionStorage.TYPES.NECESSARY
+			);
 
-			if (cachedTokenData !== null) {
+			if (cachedTokenData !== null && cachedTokenData !== undefined) {
 				resolve(JSON.parse(cachedTokenData));
 
 				return;

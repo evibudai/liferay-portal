@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.configuration.persistence.listener;
@@ -19,13 +10,12 @@ import com.liferay.portal.configuration.persistence.listener.ConfigurationModelL
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.user.associated.data.web.internal.configuration.AnonymousUserConfiguration;
 import com.liferay.user.associated.data.web.internal.configuration.AnonymousUserConfigurationRetriever;
 
 import java.util.Dictionary;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.osgi.service.cm.Configuration;
@@ -75,22 +65,15 @@ public class AnonymousUserConfigurationModelListener
 	private void _validateUniqueConfiguration(String pid, long companyId)
 		throws Exception {
 
-		Optional<Configuration> configurationOptional =
-			_anonymousUserConfigurationRetriever.getOptional(companyId);
+		Configuration configuration = _anonymousUserConfigurationRetriever.get(
+			companyId);
 
-		if (!configurationOptional.isPresent()) {
-			return;
-		}
-
-		Configuration configuration = configurationOptional.get();
-
-		if (pid.equals(configuration.getPid())) {
+		if ((configuration == null) || pid.equals(configuration.getPid())) {
 			return;
 		}
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", LocaleThreadLocal.getThemeDisplayLocale(),
-			getClass());
+			"content.Language", LocaleUtil.getMostRelevantLocale(), getClass());
 
 		String message = ResourceBundleUtil.getString(
 			resourceBundle,

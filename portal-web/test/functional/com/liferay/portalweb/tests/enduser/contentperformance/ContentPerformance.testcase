@@ -1,9 +1,11 @@
 @component-name = "portal-ab-test"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property property.group = "analytics.cloud.profile";
+	property test.run.type = "single";
 	property testray.main.component.name = "Content Performance";
 
 	setUp {
@@ -22,11 +24,11 @@ definition {
 
 			Navigator.openURL();
 
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloudWithTryAgain(siteName = "Test Site Name");
 		}
 
 		task ("Create content page") {
@@ -39,25 +41,8 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		Navigator.openURL();
-
-		AnalyticsCloud.teardownAnalyticsCloud();
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-
-		JSONUser.tearDownNonAdminUsers();
-	}
-
 	@description = "LPS-144031: When the user accesses to the content performance panel of a blog's display page, the author's field is NOT shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test AuthorNotShowInBlogDisplayPage {
 		task ("Create a Blog Entry") {
 			JSONBlog.addEntry(
@@ -93,7 +78,7 @@ definition {
 	}
 
 	@description = "LPS-144031: When the user accesses to the content performance panel of a content page, the author's field is NOT shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test AuthorNotShowInContentPage {
 		task ("Create and go to content page") {
 			JSONLayout.addPublicLayout(
@@ -116,7 +101,7 @@ definition {
 	}
 
 	@description = "LPS-144031: When the user accesses to the content performance panel of a document's display page, the author's field is NOT shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test AuthorNotShowInDocumentDisplayPage {
 		task ("Create a Document") {
 			JSONDocument.addFile(
@@ -152,7 +137,7 @@ definition {
 	}
 
 	@description = "LPS-144031: When the user accesses to the content performance panel of a widget page, the author's field is NOT shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test AuthorNotShowInWidgetPage {
 		task ("Create and go to Widget Page") {
 			PagesAdmin.addPage(
@@ -174,9 +159,10 @@ definition {
 	}
 
 	@description = "LPS-126044: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
-	@priority = "3"
+	@priority = 3
 	test ChangeLanguageInBlogDisplayPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInBlogDisplayPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -231,9 +217,10 @@ definition {
 	}
 
 	@description = "LPS-126044: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
-	@priority = "3"
+	@priority = 3
 	test ChangeLanguageInDocumentDisplayPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInDocumentDisplayPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -285,14 +272,17 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_URL",
 				value1 = "pt/web/test-site-name/test-widget-page-name");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertTextEquals(
+				locator1 = "ContentPerformance#LOCALE_BUTTON",
+				value1 = "pt-BR");
 		}
 	}
 
 	@description = "LPS-126047: When the user changes the language using the flag selector in the panel and so the URL, the metrics corresponding the canonical URL that corresponds to the language selected are shown"
-	@priority = "3"
+	@priority = 3
 	test ChangeLanguageInWidgetPage {
-		property test.name.skip.portal.instance = "ContentPerformance#ChangeLanguageInWidgetPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -334,44 +324,46 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_URL",
 				value1 = "pt/web/test-site-name");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertTextEquals(
+				locator1 = "ContentPerformance#LOCALE_BUTTON",
+				value1 = "pt-BR");
 		}
 	}
 
 	@description = "LPS-108856: When user opens Content Performance panel and AC is connected and synced, the Content Performance panel display all its functionalities"
-	@priority = "5"
+	@priority = 5
 	test CheckAllInfoDisplayed {
 		task ("Open Content Performance") {
 			ContentPerformance.openContentPerformance();
 		}
 
 		task ("Assert Title is present") {
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TITLE",
 				pageName = "Content Page");
 		}
 
 		task ("Assert URL is present") {
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_URL",
 				value1 = "http://");
 		}
 
 		task ("Assert View Graph is present") {
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TOTAL_VIEWS",
 				value1 = "Total Views");
 		}
 
 		task ("Assert View Graph is present") {
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TRAFFIC",
 				value1 = "Traffic Channels");
 		}
 	}
 
 	@description = "LPS-127220: When the user opens the flag selector dropdown in the panel, the default language is in top of the list"
-	@priority = "3"
+	@priority = 3
 	test DefaultLanguageOnTop {
 		task ("Open content performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -383,24 +375,24 @@ definition {
 
 		task ("Check if top language is the default one") {
 			AssertTextEquals.assertPartialText(
-				key_index = "1",
+				key_index = 1,
 				locator1 = "Translation#DROPDOWN_MENU_ITEM_INDEX",
 				value1 = "English");
 		}
 	}
 
 	@description = "LPS-105215: Validate the Content Performance panel default time range is by week"
-	@priority = "5"
+	@priority = 5
 	test DefaultTimeRangeWeek {
 		task ("Open Content Performance and Assert") {
 			ContentPerformance.openContentPerformance();
 
-			AssertElementPresent(locator1 = "ContentPerformance#SELECT_DATE_RANGE");
+			AssertVisible(locator1 = "ContentPerformance#SELECT_DATE_RANGE");
 		}
 	}
 
 	@description = "LPS-150536 Bug: Traffic sources with link and full pie chart when the content was published today and there is some data for that content in AC side"
-	@priority = "4"
+	@priority = 4
 	test EmptyDataAtPieChartPublishedToday {
 		task ("Create and go to content page") {
 			JSONLayout.addPublicLayout(
@@ -416,38 +408,40 @@ definition {
 		}
 
 		task ("Check that graph is empty (grey/gray)") {
-			AssertElementPresent(
+			AssertVisible(
 				colorHex = "f1f2f5",
 				locator1 = "ContentPerformance#PIE_CHART_WITH_COLOR");
 		}
 	}
 
 	@description = "LPS-105216: Validate that Free trial and dismiss buttons ARE NOT displayed when AC is enabled"
-	@priority = "3"
+	@priority = 3
 	test FreeTrialButtonNotPresent {
 		task ("Open Content Performance and Assert if element is not present") {
 			ContentPerformance.openContentPerformance();
 
-			AssertElementNotPresent(locator1 = "ContentPerformance#CONTENT_PERFORMANCE_DO_NOT_SHOW_AGAIN");
+			AssertElementNotPresent(
+				key_textValue = "Do not show me this again",
+				locator1 = "Sidebar#LINK");
 		}
 	}
 
 	@description = "LPS-108068: When there is no views nor reads in the selected range or in the default view, the line of the graphic will be at 0"
-	@priority = "3"
+	@priority = 3
 	test GraphicLineNoViewsReads {
 		task ("Open Content Performance panel") {
 			ContentPerformance.openContentPerformance();
 		}
 
 		task ("Assert line equal 0") {
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#NUMBER_VIEWS",
-				value1 = "0");
+				value1 = 0);
 		}
 	}
 
 	@description = "LPS-126044: When the user accesses to the content performance panel of a blog display page, the date interval selector is shown in the content performance panel, with 7 days selected as default"
-	@priority = "3"
+	@priority = 3
 	test IntervalSelectorInBlogDisplayPage {
 		task ("Create a Blog Entry") {
 			JSONBlog.addEntry(
@@ -483,7 +477,7 @@ definition {
 	}
 
 	@description = "LPS-127220: When the user opens the flag selector dropdown in the panel, the languages are alphabetically ordered"
-	@priority = "3"
+	@priority = 3
 	test LanguagesAlphabeticallyOrdered {
 		task ("Open content performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -495,9 +489,10 @@ definition {
 	}
 
 	@description = "LPS-110920: When the user selects a language in the switcher, the title, the URL and the metrics change accordingly"
-	@priority = "5"
+	@priority = 5
 	test LanguageSelector {
-		property test.name.skip.portal.instance = "ContentPerformance#LanguageSelector";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set portal to use Localized URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -546,14 +541,14 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_URL",
 				value1 = "/pt/web/test-site-name");
 
-			AssertElementPresent(
+			AssertVisible(
 				locator1 = "ContentPerformance#NUMBER_VIEWS",
-				value1 = "0");
+				value1 = 0);
 		}
 	}
 
 	@description = "LPS-110920: When the user selects a language in the switcher, it doesn't affect the user's language"
-	@priority = "3"
+	@priority = 3
 	test LanguageSelectorUserLanguage {
 		task ("Go to Edit page") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
@@ -602,7 +597,7 @@ definition {
 	}
 
 	@description = "LPS-127220: When the user opens the flag selector dropdown in the panel, the Translated/Unstraslated label does not appear"
-	@priority = "3"
+	@priority = 3
 	test LanguagesLabel {
 		task ("Open content performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -628,7 +623,7 @@ definition {
 	}
 
 	@description = "LPS-126044: When DXP is connected and synced to AC and the user clicks on the metrics icon in a blog display page, the content performance panel displays with the metrics of the content page"
-	@priority = "4"
+	@priority = 4
 	test MetricsIconVisibleInBlogDisplayPage {
 		task ("Create a Blog Entry") {
 			JSONBlog.addEntry(
@@ -661,12 +656,14 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TITLE",
 				pageName = "Test Widget Page Name");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertVisible(
+				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TRAFFIC",
+				value1 = "Traffic Channels");
 		}
 	}
 
 	@description = "LPS-127220: When DXP is connected and synced to AC and the user clicks on the metrics icon in a content page, the content performance panel displays with the metrics of the content page"
-	@priority = "4"
+	@priority = 4
 	test MetricsIconVisibleInContentPage {
 		task ("Open content performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -677,12 +674,14 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TITLE",
 				pageName = "Content Page");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertVisible(
+				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TRAFFIC",
+				value1 = "Traffic Channels");
 		}
 	}
 
 	@description = "LPS-126044: When DXP is connected and synced to AC and the user clicks on the metrics icon in a document display page, the content performance panel displays with the metrics of the content page"
-	@priority = "4"
+	@priority = 4
 	test MetricsIconVisibleInDocumentDisplayPage {
 		task ("Create a Document") {
 			JSONDocument.addFile(
@@ -715,12 +714,14 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TITLE",
 				pageName = "Test Widget Page Name");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertVisible(
+				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TRAFFIC",
+				value1 = "Traffic Channels");
 		}
 	}
 
 	@description = "LPS-126047: When DXP is connected and synced to AC and the user clicks on the metrics icon in a widget page, the content performance panel displays with the metrics of the content page"
-	@priority = "4"
+	@priority = 4
 	test MetricsIconVisibleInWidgetPage {
 		task ("Create Widget Page") {
 			PagesAdmin.addPage(
@@ -741,12 +742,14 @@ definition {
 				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TITLE",
 				pageName = "Widget Page Name");
 
-			ContentPerformance.viewTotalViews(numberViews = "0");
+			AssertVisible(
+				locator1 = "ContentPerformance#CONTENT_PERFORMANCE_TRAFFIC",
+				value1 = "Traffic Channels");
 		}
 	}
 
 	@description = "LPS-113910: When the user selects the info option while the Content performance panel is open, the side panel shows the Info panel"
-	@priority = "3"
+	@priority = 3
 	test MetricsToInfoPanel {
 		task ("Create a Web Content via JSONWS") {
 			JSONWebcontent.addWebContent(
@@ -797,24 +800,24 @@ definition {
 	}
 
 	@description = "LPS-113910: When the user has NOT permissions for editing and viewing the web content and the web content has a display page template associated, the View metrics option is not displayed"
-	@priority = "4"
+	@priority = 4
 	test MetricsUserWithoutPermissionsDPT {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		task ("Create a Role with permissios to access Content Dashboard") {
 			JSONRole.addRegularRole(
-				roleKey = "Content Dashboard Viewer",
-				roleTitle = "Content Dashboard Viewer");
+				roleKey = "Content Dashboard Viewer Test",
+				roleTitle = "Content Dashboard Viewer Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
-				roleTitle = "Content Dashboard Viewer");
+				roleTitle = "Content Dashboard Viewer Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Content Dashboard Viewer");
+				resourceName = 90,
+				roleTitle = "Content Dashboard Viewer Test");
 		}
 
 		task ("Create an User and assign to the role created") {
@@ -831,7 +834,7 @@ definition {
 				userEmailAddress = "userea@liferay.com");
 
 			JSONRole.assignRoleToUser(
-				roleTitle = "Content Dashboard Viewer",
+				roleTitle = "Content Dashboard Viewer Test",
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -877,14 +880,10 @@ definition {
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
 		}
-
-		task ("Delete role via JSONWS") {
-			JSONRole.deleteRole(roleTitle = "Content Dashboard Viewer");
-		}
 	}
 
 	@description = "LPS-113910: When the user has permissions for editing and viewing the web content and the web content has NOT a display page template associated, the View metrics option is not displayed"
-	@priority = "4"
+	@priority = 4
 	test MetricsUserWithPermissionsNoDPT {
 		task ("Create a Web Content via JSONWS not associated with any Display Page Template") {
 			JSONWebcontent.addWebContent(
@@ -905,7 +904,7 @@ definition {
 	}
 
 	@description = "LPS-113835: When the user with edit permissions edits the content of the display page, the Metrics button is shown"
-	@priority = "4"
+	@priority = 4
 	test MetricsWithEditPermissions {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -932,26 +931,26 @@ definition {
 
 		task ("Create role and assign to user") {
 			JSONRole.addRegularRole(
-				roleKey = "Content Dashboard Permissions",
-				roleTitle = "Content Dashboard Permissions");
+				roleKey = "Content Dashboard Permissions Test",
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
-				roleTitle = "Content Dashboard Permissions");
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Content Dashboard Permissions");
+				resourceName = 90,
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "UPDATE",
 				resourceName = "com.liferay.portal.kernel.model.Layout",
-				roleTitle = "Content Dashboard Permissions");
+				roleTitle = "Content Dashboard Permissions Test");
 
 			JSONRole.assignRoleToUser(
-				roleTitle = "Content Dashboard Permissions",
+				roleTitle = "Content Dashboard Permissions Test",
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -989,13 +988,11 @@ definition {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
-
-			JSONRole.deleteRole(roleTitle = "Content Dashboard Permissions");
 		}
 	}
 
 	@description = "LPS-113835: When the user with edit permissions and no permissions to edit the page, the Metrics button is shown"
-	@priority = "4"
+	@priority = 4
 	test MetricsWithEditPermissionsNotEditPage {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -1022,31 +1019,31 @@ definition {
 
 		task ("Crete a Role with proper permissons") {
 			JSONRole.addRegularRole(
-				roleKey = "Web Content Creator Edit Permissions",
-				roleTitle = "Web Content Creator Edit Permissions");
+				roleKey = "Web Content Creator Edit Permissions Test",
+				roleTitle = "Web Content Creator Edit Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Web Content Creator Edit Permissions");
+				resourceName = 90,
+				roleTitle = "Web Content Creator Edit Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
-				roleTitle = "Web Content Creator Edit Permissions");
+				roleTitle = "Web Content Creator Edit Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
-				roleTitle = "Web Content Creator Edit Permissions");
+				roleTitle = "Web Content Creator Edit Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "UPDATE",
 				resourceName = "com.liferay.journal.model.JournalArticle",
-				roleTitle = "Web Content Creator Edit Permissions");
+				roleTitle = "Web Content Creator Edit Permissions Test");
 
 			JSONRole.assignRoleToUser(
-				roleTitle = "Web Content Creator Edit Permissions",
+				roleTitle = "Web Content Creator Edit Permissions Test",
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1084,13 +1081,11 @@ definition {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
-
-			JSONRole.deleteRole(roleTitle = "Web Content Creator Edit Permissions");
 		}
 	}
 
 	@description = "LPS-113835: When the user has no permissions to edit the content of a display page, the Metrics button is not shown"
-	@priority = "4"
+	@priority = 4
 	test MetricsWithoutEditPermissions {
 		task ("Create a Web Content") {
 			JSONWebcontent.addWebContent(
@@ -1115,21 +1110,21 @@ definition {
 
 		task ("Create a Role") {
 			JSONRole.addRegularRole(
-				roleKey = "Content Dashboard Permissions",
-				roleTitle = "Content Dashboard Permissions");
+				roleKey = "Content Dashboard Permissions Test",
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
-				roleTitle = "Content Dashboard Permissions");
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Content Dashboard Permissions");
+				resourceName = 90,
+				roleTitle = "Content Dashboard Permissions Test");
 
 			JSONRole.assignRoleToUser(
-				roleTitle = "Content Dashboard Permissions",
+				roleTitle = "Content Dashboard Permissions Test",
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1167,13 +1162,11 @@ definition {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
-
-			JSONRole.deleteRole(roleTitle = "Content Dashboard Permissions");
 		}
 	}
 
 	@description = "LPS-113835: When the user has no permissions to edit the content of and has permission to edit the display page, the Metrics button is shown"
-	@priority = "4"
+	@priority = 4
 	test MetricsWithoutEditPermissionsYesEditPage {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -1200,26 +1193,26 @@ definition {
 
 		task ("Create role and assign to user") {
 			JSONRole.addRegularRole(
-				roleKey = "Content Dashboard Permissions",
-				roleTitle = "Content Dashboard Permissions");
+				roleKey = "Content Dashboard Permissions Test",
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "ACCESS_IN_CONTROL_PANEL",
 				resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
-				roleTitle = "Content Dashboard Permissions");
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Content Dashboard Permissions");
+				resourceName = 90,
+				roleTitle = "Content Dashboard Permissions Test");
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "UPDATE",
 				resourceName = "com.liferay.portal.kernel.model.Layout",
-				roleTitle = "Content Dashboard Permissions");
+				roleTitle = "Content Dashboard Permissions Test");
 
 			JSONRole.assignRoleToUser(
-				roleTitle = "Content Dashboard Permissions",
+				roleTitle = "Content Dashboard Permissions Test",
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1257,13 +1250,11 @@ definition {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
-
-			JSONRole.deleteRole(roleTitle = "Content Dashboard Permissions");
 		}
 	}
 
 	@description = "LPS-111042: As a content writer I want to know the keywords driving traffic to my contents by different countries"
-	@priority = "4"
+	@priority = 4
 	test NoNavigationWithoutIncomingTraffic {
 		task ("Open Content Performance") {
 			ContentPerformance.openContentPerformance();
@@ -1272,8 +1263,8 @@ definition {
 		task ("Check the value of engagement data") {
 			for (var channel : list "Referral,Social,Paid,Direct,Organic") {
 				ContentPerformance.viewTrafficViews(
-					key_numberViews = "0",
-					trafficChannel = "${channel}");
+					key_numberViews = "-",
+					trafficChannel = ${channel});
 			}
 		}
 
@@ -1281,13 +1272,13 @@ definition {
 			for (var channel : list "Referral,Social,Paid,Direct,Organic") {
 				AssertVisible(
 					locator1 = "ContentPerformance#TRAFFIC_CHANNELS_TEXT",
-					trafficChannel = "${channel}");
+					trafficChannel = ${channel});
 			}
 		}
 	}
 
 	@description = "LPS-126044: When the user accesses to the content performance panel of a blog display page, the name, the URL of the page and the language selector are shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test PanelInformationInBlogDisplayPage {
 		task ("Create a Blog Entry") {
 			JSONBlog.addEntry(
@@ -1329,7 +1320,7 @@ definition {
 	}
 
 	@description = "LPS-127220: When the user accesses to the content performance panel of a content page, the name, the URL of the page and the language selector are shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test PanelInformationInContentPage {
 		task ("Open content performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -1349,7 +1340,7 @@ definition {
 	}
 
 	@description = "LPS-126044: When the user accesses to the content performance panel of a document display page, the name, the URL of the page and the language selector are shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test PanelInformationInDocumentDisplayPage {
 		task ("Create a Document") {
 			JSONDocument.addFile(
@@ -1391,7 +1382,7 @@ definition {
 	}
 
 	@description = "LPS-126047: When the user accesses to the content performance panel of a widget page, the name, the URL of the page and the language selector are shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test PanelInformationInWidgetPage {
 		task ("Create Widget Page") {
 			PagesAdmin.addPage(
@@ -1421,7 +1412,7 @@ definition {
 	}
 
 	@description = "LPS-109417: When the graphic shows the publication date, all previous dots will be 0"
-	@priority = "5"
+	@priority = 5
 	test PublicationDatePreviousSet0 {
 		task ("Open Content Performance panel") {
 			ContentPerformance.openContentPerformance();
@@ -1434,14 +1425,14 @@ definition {
 		task ("Check that dates before publication date have no dots/0") {
 			for (var index : list "2,3,4,5,6,7") {
 				AssertElementNotPresent(
-					key_index = "${index}",
+					key_index = ${index},
 					locator1 = "ContentPerformance#DOT_GRAPH_INDEX");
 			}
 		}
 	}
 
 	@description = "LPS-126044: When the user accesses to the content performance panel of a blog display page, the views graph is shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test ViewsGraphInBlogDisplayPage {
 		task ("Create a Blog Entry") {
 			JSONBlog.addEntry(
@@ -1475,7 +1466,7 @@ definition {
 	}
 
 	@description = "LPS-126044: When the user accesses to the content performance panel of a document display page, the views graph is shown in the content performance panel"
-	@priority = "3"
+	@priority = 3
 	test ViewsGraphInDocumentDisplayPage {
 		task ("Create a Document") {
 			JSONDocument.addFile(

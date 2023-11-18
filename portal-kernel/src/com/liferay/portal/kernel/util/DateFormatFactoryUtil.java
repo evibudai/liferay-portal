@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -25,72 +16,88 @@ import java.util.TimeZone;
 public class DateFormatFactoryUtil {
 
 	public static DateFormat getDate(Locale locale) {
-		return _fastDateFormatFactory.getDate(locale);
+		return getDate(locale, null);
 	}
 
 	public static DateFormat getDate(Locale locale, TimeZone timeZone) {
-		return _fastDateFormatFactory.getDate(locale, timeZone);
+		DateFormat dateFormat = DateFormat.getDateInstance(
+			DateFormat.SHORT, locale);
+
+		if (timeZone != null) {
+			dateFormat.setTimeZone(timeZone);
+		}
+
+		return dateFormat;
 	}
 
 	public static DateFormat getDate(TimeZone timeZone) {
-		return _fastDateFormatFactory.getDate(timeZone);
-	}
-
-	public static DateFormatFactory getDateFormatFactory() {
-		return _fastDateFormatFactory;
+		return getDate(LocaleUtil.getDefault(), timeZone);
 	}
 
 	public static DateFormat getDateTime(Locale locale) {
-		return _fastDateFormatFactory.getDateTime(locale);
+		return getDateTime(locale, null);
 	}
 
 	public static DateFormat getDateTime(Locale locale, TimeZone timeZone) {
-		return _fastDateFormatFactory.getDateTime(locale, timeZone);
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(
+			DateFormat.SHORT, DateFormat.SHORT, locale);
+
+		if (timeZone != null) {
+			dateFormat.setTimeZone(timeZone);
+		}
+
+		return dateFormat;
 	}
 
 	public static DateFormat getDateTime(TimeZone timeZone) {
-		return _fastDateFormatFactory.getDateTime(timeZone);
+		return getDateTime(LocaleUtil.getDefault(), timeZone);
 	}
 
 	public static DateFormat getSimpleDateFormat(String pattern) {
-		return _fastDateFormatFactory.getSimpleDateFormat(pattern);
+		return getSimpleDateFormat(pattern, LocaleUtil.getDefault(), null);
 	}
 
 	public static DateFormat getSimpleDateFormat(
 		String pattern, Locale locale) {
 
-		return _fastDateFormatFactory.getSimpleDateFormat(pattern, locale);
+		return getSimpleDateFormat(pattern, locale, null);
 	}
 
 	public static DateFormat getSimpleDateFormat(
 		String pattern, Locale locale, TimeZone timeZone) {
 
-		return _fastDateFormatFactory.getSimpleDateFormat(
-			pattern, locale, timeZone);
+		DateFormat dateFormat = new PortalSimpleDateFormat(pattern, locale);
+
+		if (timeZone != null) {
+			dateFormat.setTimeZone(timeZone);
+		}
+
+		return dateFormat;
 	}
 
 	public static DateFormat getSimpleDateFormat(
 		String pattern, TimeZone timeZone) {
 
-		return _fastDateFormatFactory.getSimpleDateFormat(pattern, timeZone);
+		return getSimpleDateFormat(pattern, LocaleUtil.getDefault(), timeZone);
 	}
 
 	public static DateFormat getTime(Locale locale) {
-		return _fastDateFormatFactory.getTime(locale);
+		return getTime(locale, null);
 	}
 
 	public static DateFormat getTime(Locale locale, TimeZone timeZone) {
-		return _fastDateFormatFactory.getTime(locale, timeZone);
+		DateFormat dateFormat = DateFormat.getTimeInstance(
+			DateFormat.SHORT, locale);
+
+		if (timeZone != null) {
+			dateFormat.setTimeZone(timeZone);
+		}
+
+		return dateFormat;
 	}
 
 	public static DateFormat getTime(TimeZone timeZone) {
-		return _fastDateFormatFactory.getTime(timeZone);
+		return getTime(LocaleUtil.getDefault(), timeZone);
 	}
-
-	public void setDateFormatFactory(DateFormatFactory fastDateFormatFactory) {
-		_fastDateFormatFactory = fastDateFormatFactory;
-	}
-
-	private static DateFormatFactory _fastDateFormatFactory;
 
 }

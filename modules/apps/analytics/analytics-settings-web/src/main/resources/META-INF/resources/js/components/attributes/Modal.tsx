@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -46,7 +37,7 @@ const columns: TColumn[] = [
 	{
 		expanded: true,
 		id: EColumn.Name,
-		label: Liferay.Language.get('attribute'),
+		label: Liferay.Language.get('attribute[noun]'),
 	},
 	{
 		expanded: true,
@@ -54,16 +45,13 @@ const columns: TColumn[] = [
 		label: Liferay.Language.get('data-type'),
 	},
 	{
-		expanded: true,
 		id: EColumn.Example,
 		label: Liferay.Language.get('sample-data'),
 		sortable: false,
 	},
 	{
-		expanded: false,
 		id: EColumn.Source,
 		label: Liferay.Language.get('source'),
-		show: false,
 		sortable: false,
 	},
 ];
@@ -84,9 +72,12 @@ const Modal: React.FC<IModalProps> = ({
 			<ClayModal.Body>
 				<Table<TRawItem>
 					columns={columns}
-					emptyStateTitle={Liferay.Language.get(
-						'there-are-no-attributes'
-					)}
+					emptyState={{
+						noResultsTitle: Liferay.Language.get(
+							'no-attributes-were-found'
+						),
+						title: Liferay.Language.get('there-are-no-attributes'),
+					}}
 					mapperItems={(items) =>
 						items.map(
 							({
@@ -108,13 +99,10 @@ const Modal: React.FC<IModalProps> = ({
 									{id: EColumn.Source, value: source},
 								],
 								disabled: required,
-								id: name,
+								id: name + source,
 							})
 						)
 					}
-					noResultsTitle={Liferay.Language.get(
-						'no-attributes-were-found'
-					)}
 					onItemsChange={setItems}
 					requestFn={requestFn}
 				/>

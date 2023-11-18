@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.display.context;
@@ -18,19 +9,21 @@ import com.liferay.layout.importer.LayoutsImporterResultEntry;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,10 +33,12 @@ import javax.servlet.http.HttpServletRequest;
 public class ImportDisplayContext {
 
 	public ImportDisplayContext(
-		HttpServletRequest httpServletRequest, RenderRequest renderRequest) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
 		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
 	}
 
 	public String getDialogMessage() {
@@ -182,15 +177,10 @@ public class ImportDisplayContext {
 			return null;
 		}
 
-		Stream<LayoutsImporterResultEntry> stream =
-			layoutsImporterResultEntries.stream();
-
-		_layoutsImporterResultEntriesWithWarnings = stream.filter(
+		_layoutsImporterResultEntriesWithWarnings = ListUtil.filter(
+			layoutsImporterResultEntries,
 			layoutsImporterResultEntry -> ArrayUtil.isNotEmpty(
-				layoutsImporterResultEntry.getWarningMessages())
-		).collect(
-			Collectors.toList()
-		);
+				layoutsImporterResultEntry.getWarningMessages()));
 
 		return _layoutsImporterResultEntriesWithWarnings;
 	}
@@ -269,6 +259,23 @@ public class ImportDisplayContext {
 		return notImportedLayoutsImporterResultEntries;
 	}
 
+	public Map<String, Object> getProps() {
+		return HashMapBuilder.<String, Object>put(
+			"backURL", ParamUtil.getString(_httpServletRequest, "backURL")
+		).put(
+			"importURL",
+			ResourceURLBuilder.createResourceURL(
+				_renderResponse
+			).setParameter(
+				"layoutPageTemplateCollectionId",
+				ParamUtil.getString(
+					_httpServletRequest, "layoutPageTemplateCollectionId")
+			).setResourceID(
+				"/layout_page_template_admin/import"
+			).buildString()
+		).build();
+	}
+
 	public String getSuccessMessage(
 		Map.Entry<Integer, List<LayoutsImporterResultEntry>> entrySet) {
 
@@ -291,17 +298,13 @@ public class ImportDisplayContext {
 	}
 
 	private String _getTypeLabelKey(int type) {
-		if (type == LayoutPageTemplateEntryTypeConstants.TYPE_BASIC) {
+		if (type == LayoutPageTemplateEntryTypeConstants.BASIC) {
 			return "page-template";
 		}
-		else if (type ==
-					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE) {
-
+		else if (type == LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) {
 			return "display-page-template";
 		}
-		else if (type ==
-					LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT) {
-
+		else if (type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) {
 			return "master-page";
 		}
 
@@ -319,5 +322,6 @@ public class ImportDisplayContext {
 	private List<LayoutsImporterResultEntry>
 		_notImportedLayoutsImporterResultEntries;
 	private final RenderRequest _renderRequest;
+	private final RenderResponse _renderResponse;
 
 }

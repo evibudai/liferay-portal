@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib;
@@ -38,7 +29,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.taglib.util.LexiconUtil;
 import com.liferay.trash.TrashHelper;
 
 import java.util.Date;
@@ -165,30 +155,12 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 
 	@Override
 	public String getStickerCssClass() {
-		User user = UserLocalServiceUtil.fetchUser(
-			_article.getStatusByUserId());
-
-		if (user == null) {
-			return StringPool.BLANK;
-		}
-
-		return "sticker-user-icon " + LexiconUtil.getUserColorCssClass(user);
+		return "sticker-bottom-left ";
 	}
 
 	@Override
 	public String getStickerIcon() {
-		User user = UserLocalServiceUtil.fetchUser(
-			_article.getStatusByUserId());
-
-		if (user == null) {
-			return StringPool.BLANK;
-		}
-
-		if (user.getPortraitId() == 0) {
-			return "user";
-		}
-
-		return StringPool.BLANK;
+		return "web-content";
 	}
 
 	@Override

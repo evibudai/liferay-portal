@@ -12,27 +12,42 @@
 		persistState=true
 		title="last-modified"
 	>
+		<#if !modifiedFacetDisplayContext.isNothingSelected()>
+			<@clay.button
+				cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+				displayType="link"
+				id="${namespace + 'facetModifiedClear'}"
+				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+			>
+				<strong>${languageUtil.get(locale, "clear")}</strong>
+			</@clay.button>
+		</#if>
+
 		<ul class="list-unstyled modified">
 			<#if entries?has_content>
 				<#list entries as entry>
 					<li class="facet-value">
 						<div class="custom-control custom-radio">
-							<label class="facet-checkbox-label" for="${entry.getLabel()}">
+							<label class="facet-checkbox-label" for="${entry.getBucketText()}">
 								<input
 									autocomplete="off"
 									${(entry.isSelected())?then("checked", "")}
 									class="custom-control-input facet-term"
 									disabled
-									id="${entry.getLabel()}"
-									name="${entry.getLabel()}"
-									onChange='${"window.location.href = \"${entry.getRangeURL()}\";"}'
+									id="${entry.getBucketText()}"
+									name="${entry.getBucketText()}"
+									onChange='${"window.location.href = \"${entry.getFilterValue()}\";"}'
 									role="radio"
 									type="radio"
 								/>
 
 								<span class="custom-control-label term-name ${(entry.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 									<span class="custom-control-label-text">
-										<@liferay_ui["message"] key="${htmlUtil.escape(entry.getLabel())}" />
+										<#if entry.isSelected()>
+											<strong><@liferay_ui["message"] key="${htmlUtil.escape(entry.getBucketText())}" /></strong>
+										<#else>
+											<@liferay_ui["message"] key="${htmlUtil.escape(entry.getBucketText())}" />
+										</#if>
 									</span>
 								</span>
 
@@ -47,28 +62,32 @@
 
 			<li class="facet-value">
 				<div class="custom-control custom-radio">
-					<label class="facet-checkbox-label" for="${customRangeModifiedFacetTermDisplayContext.getLabel()}">
+					<label class="facet-checkbox-label" for="${customRangeBucketDisplayContext.getBucketText()}">
 						<input
 							autocomplete="off"
-							${(customRangeModifiedFacetTermDisplayContext.isSelected())?then("checked", "")}
+							${(customRangeBucketDisplayContext.isSelected())?then("checked", "")}
 							class="custom-control-input facet-term"
 							disabled
-							id="${customRangeModifiedFacetTermDisplayContext.getLabel()}"
-							name="${customRangeModifiedFacetTermDisplayContext.getLabel()}"
-							onChange='${"window.location.href = \"${customRangeModifiedFacetTermDisplayContext.getRangeURL()}\";"}'
+							id="${customRangeBucketDisplayContext.getBucketText()}"
+							name="${customRangeBucketDisplayContext.getBucketText()}"
+							onChange='${"window.location.href = \"${customRangeBucketDisplayContext.getFilterValue()}\";"}'
 							role="radio"
 							type="radio"
 						/>
 
-						<span class="custom-control-label term-name ${(customRangeModifiedFacetTermDisplayContext.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
+						<span class="custom-control-label term-name ${(customRangeBucketDisplayContext.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 							<span class="custom-control-label-text">
-								<@liferay_ui["message"] key="${htmlUtil.escape(customRangeModifiedFacetTermDisplayContext.getLabel())}" />
+								<#if customRangeBucketDisplayContext.isSelected()>
+									<strong><@liferay_ui["message"] key="${htmlUtil.escape(customRangeBucketDisplayContext.getBucketText())}" /></strong>
+								<#else>
+									<@liferay_ui["message"] key="${htmlUtil.escape(customRangeBucketDisplayContext.getBucketText())}" />
+								</#if>
 							</span>
 						</span>
 
-						<#if customRangeModifiedFacetTermDisplayContext.isSelected()>
+						<#if customRangeBucketDisplayContext.isSelected()>
 							<small class="term-count">
-								(${customRangeModifiedFacetTermDisplayContext.getFrequency()})
+								(${customRangeBucketDisplayContext.getFrequency()})
 							</small>
 						</#if>
 					</label>
@@ -110,21 +129,15 @@
 					</@>
 				</div>
 
-				<@liferay_aui.button
+				<@clay["button"]
 					cssClass="modified-facet-custom-range-filter-button"
 					disabled=modifiedFacetCalendarDisplayContext.isRangeBackwards()
-					name="searchCustomRangeButton"
-					value="search"
+					displayType="secondary"
+					id="${namespace + 'searchCustomRangeButton'}"
+					label="search"
+					name="${namespace + 'searchCustomRangeButton'}"
 				/>
 			</div>
 		</ul>
-
-		<#if !modifiedFacetDisplayContext.isNothingSelected()>
-			<@liferay_aui.button
-				cssClass="btn-link btn-unstyled facet-clear-btn"
-				onClick="Liferay.Search.FacetUtil.clearSelections(event);"
-				value="clear"
-			/>
-		</#if>
 	</@>
 </@>

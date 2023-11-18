@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.display.context;
 
 import com.liferay.fragment.constants.FragmentConstants;
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
@@ -24,10 +14,14 @@ import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.service.FragmentCollectionLocalServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
-import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
-import com.liferay.portal.kernel.util.Base64;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.upload.UploadRequest;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.io.File;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,31 +31,29 @@ import javax.servlet.http.HttpServletRequest;
 public class RenderFragmentEntryDisplayContext {
 
 	public RenderFragmentEntryDisplayContext(
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest) {
 
 		_httpServletRequest = httpServletRequest;
+		_liferayPortletRequest = liferayPortletRequest;
 
 		_fragmentCollectionContributorRegistry =
 			(FragmentCollectionContributorRegistry)
-				_httpServletRequest.getAttribute(
-					FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
+				httpServletRequest.getAttribute(
+					FragmentCollectionContributorRegistry.class.getName());
 	}
 
-	public DefaultFragmentRendererContext getDefaultFragmentRendererContext() {
+	public DefaultFragmentRendererContext getDefaultFragmentRendererContext()
+		throws Exception {
+
 		FragmentEntry fragmentEntry = _getFragmentEntry();
 
-		String css = new String(
-			Base64.decode(
-				BeanParamUtil.getString(
-					fragmentEntry, _httpServletRequest, "css")));
-		String html = new String(
-			Base64.decode(
-				BeanParamUtil.getString(
-					fragmentEntry, _httpServletRequest, "html")));
-		String js = new String(
-			Base64.decode(
-				BeanParamUtil.getString(
-					fragmentEntry, _httpServletRequest, "js")));
+		UploadRequest uploadRequest = _getUploadRequest();
+
+		String css = _readParameter(fragmentEntry, "css", uploadRequest);
+		String html = _readParameter(fragmentEntry, "html", uploadRequest);
+		String js = _readParameter(fragmentEntry, "js", uploadRequest);
+
 		String configuration = BeanParamUtil.getString(
 			fragmentEntry, _httpServletRequest, "configuration");
 
@@ -80,6 +72,7 @@ public class RenderFragmentEntryDisplayContext {
 		fragmentEntryLink.setHtml(html);
 		fragmentEntryLink.setJs(js);
 		fragmentEntryLink.setConfiguration(configuration);
+		fragmentEntryLink.setNamespace("namespace");
 
 		String rendererKey = null;
 
@@ -100,7 +93,6 @@ public class RenderFragmentEntryDisplayContext {
 		DefaultFragmentRendererContext defaultFragmentRendererContext =
 			new DefaultFragmentRendererContext(fragmentEntryLink);
 
-		defaultFragmentRendererContext.setMode(FragmentEntryLinkConstants.VIEW);
 		defaultFragmentRendererContext.setUseCachedContent(false);
 
 		return defaultFragmentRendererContext;
@@ -135,8 +127,32 @@ public class RenderFragmentEntryDisplayContext {
 		return fragmentEntry;
 	}
 
+	private UploadRequest _getUploadRequest() {
+		if (_liferayPortletRequest != null) {
+			return PortalUtil.getUploadPortletRequest(_liferayPortletRequest);
+		}
+
+		return PortalUtil.getUploadServletRequest(_httpServletRequest);
+	}
+
+	private String _readParameter(
+			FragmentEntry fragmentEntry, String parameterName,
+			UploadRequest uploadRequest)
+		throws Exception {
+
+		File file = uploadRequest.getFile(parameterName);
+
+		if (file != null) {
+			return FileUtil.read(file);
+		}
+
+		return BeanParamUtil.getString(
+			fragmentEntry, _httpServletRequest, parameterName);
+	}
+
 	private final FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
 	private final HttpServletRequest _httpServletRequest;
+	private final LiferayPortletRequest _liferayPortletRequest;
 
 }

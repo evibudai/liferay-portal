@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -38,26 +29,66 @@ List<NavigationItem> navigationItems = localizedItemSelectorRendering.getNavigat
 		</div>
 	</c:when>
 	<c:otherwise>
-		<c:if test="<%= navigationItems.size() > 1 %>">
-			<clay:navigation-bar
-				cssClass="border-bottom"
-				inverted="<%= false %>"
-				navigationItems="<%= navigationItems %>"
-			/>
-		</c:if>
-
 		<c:choose>
-			<c:when test='<%= ParamUtil.getBoolean(request, "showGroupSelector") %>'>
-				<liferay-item-selector:group-selector />
+			<c:when test="<%= navigationItems.size() > 1 %>">
+				<c:choose>
+					<c:when test="<%= navigationItems.size() <= 5 %>">
+						<clay:navigation-bar
+							cssClass="border-bottom"
+							inverted="<%= false %>"
+							navigationItems="<%= navigationItems %>"
+						/>
+
+						<liferay-util:include page="/view_item_selector.jsp" servletContext="<%= application %>" />
+					</c:when>
+					<c:otherwise>
+						<clay:container-fluid
+							cssClass="container-view"
+						>
+							<clay:row>
+								<clay:col
+									lg="3"
+								>
+									<clay:vertical-nav
+										verticalNavItems="<%= localizedItemSelectorRendering.getVerticalNavItemList() %>"
+									/>
+								</clay:col>
+
+								<clay:col
+									lg="9"
+								>
+									<clay:sheet
+										size="full"
+									>
+
+										<%
+										NavigationItem activeNavigationItem = localizedItemSelectorRendering.getActiveNavigationItem();
+										%>
+
+										<c:if test="<%= activeNavigationItem != null %>">
+											<h2 class="sheet-title">
+												<clay:content-row
+													verticalAlign="center"
+												>
+													<clay:content-col>
+														<%= GetterUtil.getString(activeNavigationItem.get("label")) %>
+													</clay:content-col>
+												</clay:content-row>
+											</h2>
+										</c:if>
+
+										<clay:sheet-section>
+											<liferay-util:include page="/view_item_selector.jsp" servletContext="<%= application %>" />
+										</clay:sheet-section>
+									</clay:sheet>
+								</clay:col>
+							</clay:row>
+						</clay:container-fluid>
+					</c:otherwise>
+				</c:choose>
 			</c:when>
 			<c:otherwise>
-
-				<%
-				ItemSelectorViewRenderer itemSelectorViewRenderer = localizedItemSelectorRendering.getSelectedItemSelectorViewRenderer();
-
-				itemSelectorViewRenderer.renderHTML(pageContext);
-				%>
-
+				<liferay-util:include page="/view_item_selector.jsp" servletContext="<%= application %>" />
 			</c:otherwise>
 		</c:choose>
 	</c:otherwise>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.dto.v1_0;
@@ -323,6 +314,63 @@ public class ObjectDefinition implements Serializable {
 	protected Boolean enableComments;
 
 	@Schema
+	public Boolean getEnableLocalization() {
+		return enableLocalization;
+	}
+
+	public void setEnableLocalization(Boolean enableLocalization) {
+		this.enableLocalization = enableLocalization;
+	}
+
+	@JsonIgnore
+	public void setEnableLocalization(
+		UnsafeSupplier<Boolean, Exception> enableLocalizationUnsafeSupplier) {
+
+		try {
+			enableLocalization = enableLocalizationUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableLocalization;
+
+	@Schema
+	public Boolean getEnableObjectEntryDraft() {
+		return enableObjectEntryDraft;
+	}
+
+	public void setEnableObjectEntryDraft(Boolean enableObjectEntryDraft) {
+		this.enableObjectEntryDraft = enableObjectEntryDraft;
+	}
+
+	@JsonIgnore
+	public void setEnableObjectEntryDraft(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryDraftUnsafeSupplier) {
+
+		try {
+			enableObjectEntryDraft = enableObjectEntryDraftUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableObjectEntryDraft;
+
+	@Schema
 	public Boolean getEnableObjectEntryHistory() {
 		return enableObjectEntryHistory;
 	}
@@ -436,6 +484,34 @@ public class ObjectDefinition implements Serializable {
 	protected Map<String, String> label;
 
 	@Schema
+	public Boolean getModifiable() {
+		return modifiable;
+	}
+
+	public void setModifiable(Boolean modifiable) {
+		this.modifiable = modifiable;
+	}
+
+	@JsonIgnore
+	public void setModifiable(
+		UnsafeSupplier<Boolean, Exception> modifiableUnsafeSupplier) {
+
+		try {
+			modifiable = modifiableUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean modifiable;
+
+	@Schema
 	public String getName() {
 		return name;
 	}
@@ -520,6 +596,39 @@ public class ObjectDefinition implements Serializable {
 	protected ObjectField[] objectFields;
 
 	@Schema
+	public String getObjectFolderExternalReferenceCode() {
+		return objectFolderExternalReferenceCode;
+	}
+
+	public void setObjectFolderExternalReferenceCode(
+		String objectFolderExternalReferenceCode) {
+
+		this.objectFolderExternalReferenceCode =
+			objectFolderExternalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setObjectFolderExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			objectFolderExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			objectFolderExternalReferenceCode =
+				objectFolderExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String objectFolderExternalReferenceCode;
+
+	@Schema
 	@Valid
 	public ObjectLayout[] getObjectLayouts() {
 		return objectLayouts;
@@ -579,6 +688,38 @@ public class ObjectDefinition implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ObjectRelationship[] objectRelationships;
+
+	@Schema
+	@Valid
+	public ObjectValidationRule[] getObjectValidationRules() {
+		return objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		ObjectValidationRule[] objectValidationRules) {
+
+		this.objectValidationRules = objectValidationRules;
+	}
+
+	@JsonIgnore
+	public void setObjectValidationRules(
+		UnsafeSupplier<ObjectValidationRule[], Exception>
+			objectValidationRulesUnsafeSupplier) {
+
+		try {
+			objectValidationRules = objectValidationRulesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ObjectValidationRule[] objectValidationRules;
 
 	@Schema
 	@Valid
@@ -780,6 +921,39 @@ public class ObjectDefinition implements Serializable {
 	protected String restContextPath;
 
 	@Schema
+	public String getRootObjectDefinitionExternalReferenceCode() {
+		return rootObjectDefinitionExternalReferenceCode;
+	}
+
+	public void setRootObjectDefinitionExternalReferenceCode(
+		String rootObjectDefinitionExternalReferenceCode) {
+
+		this.rootObjectDefinitionExternalReferenceCode =
+			rootObjectDefinitionExternalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setRootObjectDefinitionExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			rootObjectDefinitionExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			rootObjectDefinitionExternalReferenceCode =
+				rootObjectDefinitionExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String rootObjectDefinitionExternalReferenceCode;
+
+	@Schema
 	public String getScope() {
 		return scope;
 	}
@@ -833,7 +1007,7 @@ public class ObjectDefinition implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Status status;
 
 	@Schema
@@ -889,7 +1063,7 @@ public class ObjectDefinition implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean system;
 
 	@Schema
@@ -1056,6 +1230,26 @@ public class ObjectDefinition implements Serializable {
 			sb.append(enableComments);
 		}
 
+		if (enableLocalization != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableLocalization\": ");
+
+			sb.append(enableLocalization);
+		}
+
+		if (enableObjectEntryDraft != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableObjectEntryDraft\": ");
+
+			sb.append(enableObjectEntryDraft);
+		}
+
 		if (enableObjectEntryHistory != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1098,6 +1292,16 @@ public class ObjectDefinition implements Serializable {
 			sb.append("\"label\": ");
 
 			sb.append(_toJSON(label));
+		}
+
+		if (modifiable != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"modifiable\": ");
+
+			sb.append(modifiable);
 		}
 
 		if (name != null) {
@@ -1154,6 +1358,20 @@ public class ObjectDefinition implements Serializable {
 			sb.append("]");
 		}
 
+		if (objectFolderExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectFolderExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectFolderExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (objectLayouts != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1187,6 +1405,26 @@ public class ObjectDefinition implements Serializable {
 				sb.append(String.valueOf(objectRelationships[i]));
 
 				if ((i + 1) < objectRelationships.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (objectValidationRules != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectValidationRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < objectValidationRules.length; i++) {
+				sb.append(String.valueOf(objectValidationRules[i]));
+
+				if ((i + 1) < objectValidationRules.length) {
 					sb.append(", ");
 				}
 			}
@@ -1282,6 +1520,20 @@ public class ObjectDefinition implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(restContextPath));
+
+			sb.append("\"");
+		}
+
+		if (rootObjectDefinitionExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rootObjectDefinitionExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(rootObjectDefinitionExternalReferenceCode));
 
 			sb.append("\"");
 		}
@@ -1442,5 +1694,7 @@ public class ObjectDefinition implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.serdes.v1_0;
@@ -77,6 +68,16 @@ public class ObjectRelationshipSerDes {
 			sb.append(objectRelationship.getDeletionType());
 
 			sb.append("\"");
+		}
+
+		if (objectRelationship.getEdge() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"edge\": ");
+
+			sb.append(objectRelationship.getEdge());
 		}
 
 		if (objectRelationship.getId() != null) {
@@ -171,6 +172,16 @@ public class ObjectRelationshipSerDes {
 			sb.append(objectRelationship.getObjectDefinitionId2());
 		}
 
+		if (objectRelationship.getObjectDefinitionModifiable2() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectDefinitionModifiable2\": ");
+
+			sb.append(objectRelationship.getObjectDefinitionModifiable2());
+		}
+
 		if (objectRelationship.getObjectDefinitionName2() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -183,6 +194,16 @@ public class ObjectRelationshipSerDes {
 			sb.append(_escape(objectRelationship.getObjectDefinitionName2()));
 
 			sb.append("\"");
+		}
+
+		if (objectRelationship.getObjectDefinitionSystem2() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectDefinitionSystem2\": ");
+
+			sb.append(objectRelationship.getObjectDefinitionSystem2());
 		}
 
 		if (objectRelationship.getParameterObjectFieldId() != null) {
@@ -218,6 +239,16 @@ public class ObjectRelationshipSerDes {
 			sb.append("\"reverse\": ");
 
 			sb.append(objectRelationship.getReverse());
+		}
+
+		if (objectRelationship.getSystem() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"system\": ");
+
+			sb.append(objectRelationship.getSystem());
 		}
 
 		if (objectRelationship.getType() != null) {
@@ -269,6 +300,13 @@ public class ObjectRelationshipSerDes {
 			map.put(
 				"deletionType",
 				String.valueOf(objectRelationship.getDeletionType()));
+		}
+
+		if (objectRelationship.getEdge() == null) {
+			map.put("edge", null);
+		}
+		else {
+			map.put("edge", String.valueOf(objectRelationship.getEdge()));
 		}
 
 		if (objectRelationship.getId() == null) {
@@ -336,6 +374,16 @@ public class ObjectRelationshipSerDes {
 				String.valueOf(objectRelationship.getObjectDefinitionId2()));
 		}
 
+		if (objectRelationship.getObjectDefinitionModifiable2() == null) {
+			map.put("objectDefinitionModifiable2", null);
+		}
+		else {
+			map.put(
+				"objectDefinitionModifiable2",
+				String.valueOf(
+					objectRelationship.getObjectDefinitionModifiable2()));
+		}
+
 		if (objectRelationship.getObjectDefinitionName2() == null) {
 			map.put("objectDefinitionName2", null);
 		}
@@ -343,6 +391,16 @@ public class ObjectRelationshipSerDes {
 			map.put(
 				"objectDefinitionName2",
 				String.valueOf(objectRelationship.getObjectDefinitionName2()));
+		}
+
+		if (objectRelationship.getObjectDefinitionSystem2() == null) {
+			map.put("objectDefinitionSystem2", null);
+		}
+		else {
+			map.put(
+				"objectDefinitionSystem2",
+				String.valueOf(
+					objectRelationship.getObjectDefinitionSystem2()));
 		}
 
 		if (objectRelationship.getParameterObjectFieldId() == null) {
@@ -369,6 +427,13 @@ public class ObjectRelationshipSerDes {
 		}
 		else {
 			map.put("reverse", String.valueOf(objectRelationship.getReverse()));
+		}
+
+		if (objectRelationship.getSystem() == null) {
+			map.put("system", null);
+		}
+		else {
+			map.put("system", String.valueOf(objectRelationship.getSystem()));
 		}
 
 		if (objectRelationship.getType() == null) {
@@ -411,6 +476,11 @@ public class ObjectRelationshipSerDes {
 					objectRelationship.setDeletionType(
 						ObjectRelationship.DeletionType.create(
 							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "edge")) {
+				if (jsonParserFieldValue != null) {
+					objectRelationship.setEdge((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -468,11 +538,27 @@ public class ObjectRelationshipSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "objectDefinitionModifiable2")) {
+
+				if (jsonParserFieldValue != null) {
+					objectRelationship.setObjectDefinitionModifiable2(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "objectDefinitionName2")) {
 
 				if (jsonParserFieldValue != null) {
 					objectRelationship.setObjectDefinitionName2(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "objectDefinitionSystem2")) {
+
+				if (jsonParserFieldValue != null) {
+					objectRelationship.setObjectDefinitionSystem2(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -495,6 +581,11 @@ public class ObjectRelationshipSerDes {
 				if (jsonParserFieldValue != null) {
 					objectRelationship.setReverse(
 						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "system")) {
+				if (jsonParserFieldValue != null) {
+					objectRelationship.setSystem((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {

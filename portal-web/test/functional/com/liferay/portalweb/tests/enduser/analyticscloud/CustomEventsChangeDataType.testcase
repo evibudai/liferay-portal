@@ -61,13 +61,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -76,9 +78,9 @@ definition {
 	}
 
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10200 | Test Summary: Change data type from description"
-	@priority = "5"
+	@priority = 5
 	test CanChangeDataTypeFromDescription {
-		property test.name.skip.portal.instance = "CustomEventsChangeDataType#CanChangeDataTypeFromDescription";
+		property test.run.type = "single";
 
 		var attributeName = "animal";
 		var attributeValue = "dog";
@@ -87,10 +89,10 @@ definition {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
-				attributesName = "${attributeName}",
-				attributesValue = "${attributeValue}",
-				customEventName = "${customEventName}",
-				timeToSendCustomEvent = "1");
+				attributesName = ${attributeName},
+				attributesValue = ${attributeValue},
+				customEventName = ${customEventName},
+				timeToSendCustomEvent = 1);
 		}
 
 		task ("Close sessions") {
@@ -100,20 +102,20 @@ definition {
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToEventAnalysis();
 		}
 
 		task ("Add the custom event to analysis") {
-			ACEventAnalysis.addEvent(customEventName = "${customEventName}");
+			ACEventAnalysis.addEvent(customEventName = ${customEventName});
 		}
 
 		task ("Change the type of the attribute") {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.changeAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				editOption = "Description",
 				newDataType = "Number");
 		}
@@ -122,25 +124,25 @@ definition {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.viewChangedAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				newDataType = "Number");
 		}
 	}
 
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10201 | Test Summary: Change data type from filter"
-	@priority = "5"
+	@priority = 5
 	test CanChangeDataTypeFromFilter {
 		var attributeName = "phone";
-		var attributeValue = "87900809";
+		var attributeValue = 87900809;
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
-				attributesName = "${attributeName}",
-				attributesValue = "${attributeValue}",
-				customEventName = "${customEventName}",
-				timeToSendCustomEvent = "1");
+				attributesName = ${attributeName},
+				attributesValue = ${attributeValue},
+				customEventName = ${customEventName},
+				timeToSendCustomEvent = 1);
 		}
 
 		task ("Close sessions") {
@@ -150,20 +152,20 @@ definition {
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToEventAnalysis();
 		}
 
 		task ("Add the custom event to analysis") {
-			ACEventAnalysis.addEvent(customEventName = "${customEventName}");
+			ACEventAnalysis.addEvent(customEventName = ${customEventName});
 		}
 
 		task ("Change the type of the attribute") {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.changeAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				editOption = "Filter",
 				newDataType = "Date");
 		}
@@ -172,7 +174,7 @@ definition {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.viewChangedAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				newDataType = "Date");
 
 			ACCustomEvents.viewDataType(typeValue = "Date");
@@ -180,7 +182,7 @@ definition {
 	}
 
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10205 | Test Summary: Change data type to Boolean"
-	@priority = "4"
+	@priority = 4
 	test CanChangeDataTypeToBoolean {
 		var attributeName = "job";
 		var attributeValue = "QA";
@@ -189,10 +191,10 @@ definition {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
-				attributesName = "${attributeName}",
-				attributesValue = "${attributeValue}",
-				customEventName = "${customEventName}",
-				timeToSendCustomEvent = "1");
+				attributesName = ${attributeName},
+				attributesValue = ${attributeValue},
+				customEventName = ${customEventName},
+				timeToSendCustomEvent = 1);
 		}
 
 		task ("Close sessions") {
@@ -202,20 +204,20 @@ definition {
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToEventAnalysis();
 		}
 
 		task ("Add the custom event to analysis") {
-			ACEventAnalysis.addEvent(customEventName = "${customEventName}");
+			ACEventAnalysis.addEvent(customEventName = ${customEventName});
 		}
 
 		task ("Change the type of the attribute to boolean") {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.changeAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				editOption = "Description",
 				newDataType = "Boolean");
 		}
@@ -224,13 +226,13 @@ definition {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.viewChangedAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				newDataType = "Boolean");
 		}
 	}
 
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10203 | Test Summary: Change data type to Time"
-	@priority = "4"
+	@priority = 4
 	test CanChangeDataTypeToTime {
 		var attributeName = "portal";
 		var attributeValue = "ac";
@@ -239,10 +241,10 @@ definition {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
-				attributesName = "${attributeName}",
-				attributesValue = "${attributeValue}",
-				customEventName = "${customEventName}",
-				timeToSendCustomEvent = "1");
+				attributesName = ${attributeName},
+				attributesValue = ${attributeValue},
+				customEventName = ${customEventName},
+				timeToSendCustomEvent = 1);
 		}
 
 		task ("Close sessions") {
@@ -252,20 +254,20 @@ definition {
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToEventAnalysis();
 		}
 
 		task ("Add the custom event to analysis") {
-			ACEventAnalysis.addEvent(customEventName = "${customEventName}");
+			ACEventAnalysis.addEvent(customEventName = ${customEventName});
 		}
 
 		task ("Change the type of the attribute to duration (Time)") {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.changeAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				editOption = "Description",
 				newDataType = "Duration");
 		}
@@ -274,7 +276,7 @@ definition {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.viewChangedAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				newDataType = "Duration");
 
 			ACCustomEvents.viewDataType(typeValue = "Duration");
@@ -282,8 +284,13 @@ definition {
 	}
 
 	@description = "Feature ID: LRAC-7185 | Automation ID: LRAC-10206 | Test Summary: Undefined for results cannot be interpreted"
-	@priority = "3"
+	@priority = 3
 	test ViewUndefinedResultsIsDisplayedWhenChangeDataTypeThatCannotBeInterpreted {
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix investigate issue
+		// AC Quarantine Ticket: LRAC-14034
+
 		var attributeName = "company";
 		var attributeValue = "liferay";
 
@@ -291,10 +298,10 @@ definition {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
-				attributesName = "${attributeName}",
-				attributesValue = "${attributeValue}",
-				customEventName = "${customEventName}",
-				timeToSendCustomEvent = "1");
+				attributesName = ${attributeName},
+				attributesValue = ${attributeValue},
+				customEventName = ${customEventName},
+				timeToSendCustomEvent = 1);
 		}
 
 		task ("Close sessions") {
@@ -304,17 +311,17 @@ definition {
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToEventAnalysis();
 		}
 
 		task ("Add the custom event to analysis") {
-			ACEventAnalysis.addEvent(customEventName = "${customEventName}");
+			ACEventAnalysis.addEvent(customEventName = ${customEventName});
 		}
 
 		task ("Add the breakdown to analysis") {
-			ACEventAnalysis.addBreakdown(attributeNameList = "${attributeName}");
+			ACEventAnalysis.addBreakdown(attributeNameList = ${attributeName});
 		}
 
 		task ("Check that the attribute's value appears in the analysis") {
@@ -322,24 +329,24 @@ definition {
 
 			ACTimeFilter.setLast24Hours();
 
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "${attributeValue}");
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = ${attributeValue});
 		}
 
 		task ("Remove the attribute from the analysis") {
-			ACEventAnalysis.removeFromAnalysis(removeValue = "${attributeName}");
+			ACEventAnalysis.removeFromAnalysis(removeValue = ${attributeName});
 		}
 
 		task ("Change the type of the attribute to number") {
 			ACEventAnalysis.clickToAddBreakdownButton();
 
 			ACEventAnalysis.changeAttributeDataType(
-				attributeName = "${attributeName}",
+				attributeName = ${attributeName},
 				editOption = "Description",
 				newDataType = "Number");
 		}
 
 		task ("Add the breakdown to analysis") {
-			ACEventAnalysis.addBreakdown(attributeNameList = "${attributeName}");
+			ACEventAnalysis.addBreakdown(attributeNameList = ${attributeName});
 		}
 
 		task ("Check that the attribute value does not appear in the analysis when it has a different data type") {

@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -60,8 +52,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -93,7 +83,7 @@ public class RedirectEntriesDisplayContext {
 		_redirectEntryService = redirectEntryService;
 		_stagingGroupHelper = stagingGroupHelper;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_expirationDateFormat = DateFormat.getDateInstance(
@@ -374,16 +364,11 @@ public class RedirectEntriesDisplayContext {
 		List<SearchResult> searchResults = SearchResultUtil.getSearchResults(
 			hits, LocaleUtil.getDefault());
 
-		Stream<SearchResult> stream = searchResults.stream();
-
 		redirectEntrySearch.setResultsAndTotal(
-			() -> stream.map(
-				SearchResult::getClassPK
-			).map(
-				_redirectEntryLocalService::fetchRedirectEntry
-			).collect(
-				Collectors.toList()
-			),
+			() -> TransformUtil.transform(
+				searchResults,
+				searchResult -> _redirectEntryLocalService.fetchRedirectEntry(
+					searchResult.getClassPK())),
 			hits.getLength());
 	}
 

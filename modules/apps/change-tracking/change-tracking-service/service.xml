@@ -39,7 +39,7 @@
 			<finder-column arrayable-operator="OR" name="sourceModelClassPK" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="CTCollection" remote-service="true" trash-enabled="false" uuid="false">
+	<entity external-reference-code="true" local-service="true" name="CTCollection" remote-service="true" trash-enabled="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -54,9 +54,12 @@
 
 		<!-- Other fields -->
 
+		<column name="ctRemoteId" type="long" />
 		<column name="schemaVersionId" type="long" />
 		<column name="name" type="String" />
 		<column name="description" type="String" />
+		<column name="onDemandUserId" type="long" />
+		<column name="shareable" type="boolean" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
 		<column name="statusDate" type="Date" />
@@ -78,6 +81,36 @@
 		<finder name="C_S" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column arrayable-operator="OR" name="status" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="CTCollectionTemplate" remote-service="true" trash-enabled="false" uuid="false">
+
+		<!-- PK fields -->
+
+		<column name="ctCollectionTemplateId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="name" type="String" />
+		<column name="description" type="String" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="createDate" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="CTComment" remote-service="false" trash-enabled="false" uuid="false">
@@ -114,7 +147,7 @@
 			<finder-column name="ctEntryId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="CTEntry" remote-service="false" trash-enabled="false" uuid="false">
+	<entity external-reference-code="true" local-service="true" name="CTEntry" remote-service="false" trash-enabled="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -222,6 +255,7 @@
 
 		<column name="ctCollectionId" type="long" />
 		<column name="backgroundTaskId" type="long" />
+		<column name="type" type="int" />
 
 		<!-- Order -->
 
@@ -236,6 +270,43 @@
 		</finder>
 		<finder name="CtCollectionId" return-type="Collection">
 			<finder-column name="ctCollectionId" />
+		</finder>
+		<finder name="C_T" return-type="Collection">
+			<finder-column name="ctCollectionId" />
+			<finder-column name="type" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="CTRemote" remote-service="true" trash-enabled="false" uuid="false">
+
+		<!-- PK fields -->
+
+		<column name="ctRemoteId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="name" type="String" />
+		<column name="description" type="String" />
+		<column name="url" type="String" />
+		<column name="clientId" type="String" />
+		<column name="clientSecret" type="String" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="createDate" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="CTSchemaVersion" remote-service="false" trash-enabled="false" uuid="false">
@@ -267,6 +338,7 @@
 	<exceptions>
 		<exception>CTCollectionDescription</exception>
 		<exception>CTCollectionName</exception>
+		<exception>CTCollectionStatus</exception>
 		<exception>CTEnclosure</exception>
 		<exception>CTLocalized</exception>
 		<exception>CTStagingEnabled</exception>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model;
@@ -57,6 +48,8 @@ public class CPDisplayLayoutWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
+		attributes.put(
+			"layoutPageTemplateEntryUuid", getLayoutPageTemplateEntryUuid());
 		attributes.put("layoutUuid", getLayoutUuid());
 
 		return attributes;
@@ -134,6 +127,13 @@ public class CPDisplayLayoutWrapper
 
 		if (classPK != null) {
 			setClassPK(classPK);
+		}
+
+		String layoutPageTemplateEntryUuid = (String)attributes.get(
+			"layoutPageTemplateEntryUuid");
+
+		if (layoutPageTemplateEntryUuid != null) {
+			setLayoutPageTemplateEntryUuid(layoutPageTemplateEntryUuid);
 		}
 
 		String layoutUuid = (String)attributes.get("layoutUuid");
@@ -241,6 +241,16 @@ public class CPDisplayLayoutWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the layout page template entry uuid of this cp display layout.
+	 *
+	 * @return the layout page template entry uuid of this cp display layout
+	 */
+	@Override
+	public String getLayoutPageTemplateEntryUuid() {
+		return model.getLayoutPageTemplateEntryUuid();
 	}
 
 	/**
@@ -401,6 +411,18 @@ public class CPDisplayLayoutWrapper
 	@Override
 	public void setGroupId(long groupId) {
 		model.setGroupId(groupId);
+	}
+
+	/**
+	 * Sets the layout page template entry uuid of this cp display layout.
+	 *
+	 * @param layoutPageTemplateEntryUuid the layout page template entry uuid of this cp display layout
+	 */
+	@Override
+	public void setLayoutPageTemplateEntryUuid(
+		String layoutPageTemplateEntryUuid) {
+
+		model.setLayoutPageTemplateEntryUuid(layoutPageTemplateEntryUuid);
 	}
 
 	/**

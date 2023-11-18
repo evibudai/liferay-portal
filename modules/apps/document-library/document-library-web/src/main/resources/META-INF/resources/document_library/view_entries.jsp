@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -141,11 +132,11 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 											<div class="card-row">
 												<div class="autofit-col autofit-col-expand">
 													<aui:a cssClass="card-title text-truncate" href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>" title="<%= HtmlUtil.escapeAttribute(latestFileVersion.getTitle()) %>">
-														<%= HtmlUtil.escape(latestFileVersion.getTitle()) %>
+														<%= latestFileVersion.getTitle() %>
 													</aui:a>
 
 													<div class="card-subtitle text-truncate">
-														<%= LanguageUtil.format(request, "x-ago-by-x", new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - latestFileVersion.getCreateDate().getTime(), true), HtmlUtil.escape(latestFileVersion.getUserName())}, false) %>
+														<%= LanguageUtil.format(request, "modified-x-ago-by-x", new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - fileEntry.getModifiedDate().getTime(), true), HtmlUtil.escape(latestFileVersion.getUserName())}, false) %>
 													</div>
 
 													<div class="card-detail">
@@ -200,37 +191,50 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 											name="title"
 										>
 											<div class="autofit-row">
-												<div class="autofit-col">
+												<div class="autofit-col pr-1">
 													<liferay-document-library:mime-type-sticker
 														cssClass="sticker-secondary"
 														fileVersion="<%= latestFileVersion %>"
 													/>
 												</div>
 
-												<div class="autofit-col autofit-col-expand">
+												<div class="autofit-col autofit-col-expand pl-1">
 													<div class="table-title">
-														<aui:a href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"><%= HtmlUtil.unescape(latestFileVersion.getTitle()) %></aui:a>
+														<clay:link
+															href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
+															label="<%= HtmlUtil.unescape(latestFileVersion.getTitle()) %>"
+														/>
+
+														<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
+															<span class="inline-item inline-item-after state-icon">
+																<clay:icon
+																	aria-label='<%= LanguageUtil.get(request, "locked") %>'
+																	symbol="lock"
+																/>
+															</span>
+														</c:if>
+
+														<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
+															<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
+																<clay:icon
+																	aria-label='<%= LanguageUtil.get(request, "shared") %>'
+																	symbol="users"
+																/>
+															</span>
+														</c:if>
+
+														<c:if test="<%= fileShortcut != null %>">
+															<span class="inline-item inline-item-after state-icon">
+																<clay:icon
+																	aria-label='<%= LanguageUtil.get(request, "shortcut") %>'
+																	symbol="shortcut"
+																	title='<%= LanguageUtil.get(request, "shortcut") %>'
+																/>
+															</span>
+														</c:if>
 													</div>
 												</div>
 											</div>
-
-											<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-												<span class="inline-item inline-item-after state-icon">
-													<aui:icon image="lock" markupView="lexicon" message="locked" />
-												</span>
-											</c:if>
-
-											<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-												<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
-													<aui:icon image="users" markupView="lexicon" message="shared" />
-												</span>
-											</c:if>
-
-											<c:if test="<%= fileShortcut != null %>">
-												<span class="inline-item inline-item-after state-icon">
-													<aui:icon image="shortcut" markupView="lexicon" message="shortcut" />
-												</span>
-											</c:if>
 										</liferay-ui:search-container-column-text>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("description") %>'>
@@ -299,7 +303,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 										<liferay-ui:search-container-column-date
 											cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 											name="modified-date"
-											value="<%= latestFileVersion.getModifiedDate() %>"
+											value="<%= fileEntry.getModifiedDate() %>"
 										/>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("action") %>'>
@@ -395,7 +399,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 											name="name"
 										>
 											<div class="autofit-row">
-												<div class="autofit-col">
+												<div class="autofit-col pr-1">
 													<clay:sticker
 														cssClass="sticker-document"
 														displayType="secondary"
@@ -403,9 +407,9 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 													/>
 												</div>
 
-												<div class="autofit-col autofit-col-expand">
+												<div class="autofit-col autofit-col-expand pl-1">
 													<div class="table-title">
-														<aui:a
+														<clay:link
 															href='<%=
 																PortletURLBuilder.createRenderURL(
 																	liferayPortletResponse
@@ -417,9 +421,8 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 																	"folderId", curFolder.getFolderId()
 																).buildString()
 															%>'
-														>
-															<%= HtmlUtil.unescape(curFolder.getName()) %>
-														</aui:a>
+															label="<%= HtmlUtil.unescape(curFolder.getName()) %>"
+														/>
 													</div>
 												</div>
 											</div>

@@ -1,47 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
-import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
-import ClayLocalizedInput from '@clayui/localized-input';
-import ClayModal, {useModal} from '@clayui/modal';
+import {useModal} from '@clayui/modal';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import ClayToolbar from '@clayui/toolbar';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import getCN from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useContext, useRef, useState} from 'react';
+import React, {useContext, useState} from 'react';
 
-import {
-	formatLocaleWithDashes,
-	formatLocaleWithUnderscores,
-	sub,
-} from '../utils/language';
-import {removeDuplicates} from '../utils/utils';
+import formatLocaleWithDashes from '../utils/language/format_locale_with_dashes';
+import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
+import sub from '../utils/language/sub';
+import EditERCModal from './EditERCModal';
+import EditTitleModal from './EditTitleModal';
 import ThemeContext from './ThemeContext';
-
-/**
- * Turns a basic locale into an object with original locale (label) and icon
- * for flag (symbol), used for Clay's localized input.
- * @param {string} locale Language identifier
- * @returns {Object}
- */
-const convertLocaleStringToObject = (locale) => ({
-	label: formatLocaleWithDashes(locale),
-	symbol: formatLocaleWithDashes(locale).toLocaleLowerCase(),
-});
 
 /**
  * Determines which language to display the title and description, by
@@ -49,241 +27,59 @@ const convertLocaleStringToObject = (locale) => ({
  * from being displayed in two different languages. Preference is given to
  * the locale language, then the defaultLanguage. If neither are available,
  * it chooses the first available language.
- * @param {Object} title Titles in all available locales
+ * @param {Object} titleI18n Titles in all available locales
  * @param {string} locale
  * @param {string} defaultLocale
  * @param {Object} availableLanguages
  * @returns {string}
  */
-const getDisplayLocale = (title, locale, defaultLocale, availableLanguages) => {
-	if (title[formatLocaleWithDashes(locale)]) {
+const getDisplayLocale = (
+	titleI18n,
+	locale,
+	defaultLocale,
+	availableLanguages
+) => {
+	if (titleI18n[formatLocaleWithDashes(locale)]) {
 		return formatLocaleWithDashes(locale);
 	}
 
-	if (title[formatLocaleWithDashes(defaultLocale)]) {
+	if (titleI18n[formatLocaleWithDashes(defaultLocale)]) {
 		return formatLocaleWithDashes(defaultLocale);
 	}
 
 	if (
-		Object.keys(title).length &&
+		Object.keys(titleI18n).length &&
 		Object.keys(availableLanguages).includes(
-			formatLocaleWithUnderscores(Object.keys(title)[0])
+			formatLocaleWithUnderscores(Object.keys(titleI18n)[0])
 		)
 	) {
-		return Object.keys(title)[0];
+		return Object.keys(titleI18n)[0];
 	}
 
 	return formatLocaleWithDashes(defaultLocale);
 };
 
-function EditTitleModal({
-	disabled,
-	initialDescription,
-	initialTitle,
-	modalFieldFocus,
-	observer,
-	onClose,
-	onSubmit,
-}) {
-	const {availableLanguages, defaultLocale, locale} = useContext(
-		ThemeContext
-	);
-
-	// Converts the availableLanguages into the list expected for
-	// Clay's localized input. Positions defaultLocale first in order
-	// to view it as the 'default' option.
-
-	const localesForSelector = removeDuplicates([
-		defaultLocale,
-		...Object.keys(availableLanguages),
-	]).map(convertLocaleStringToObject);
-
-	const [selectedLocale, setSelectedLocale] = useState(
-		convertLocaleStringToObject(
-			getDisplayLocale(
-				initialTitle,
-				locale,
-				defaultLocale,
-				availableLanguages
-			)
-		)
-	);
-
-	const defaultLocaleBCP47 = formatLocaleWithDashes(defaultLocale);
-
-	const [description, setDescription] = useState(initialDescription);
-	const [hasError, setHasError] = useState(false);
-	const [title, setTitle] = useState(initialTitle);
-
-	const descriptionInputRef = useRef();
-	const titleInputRef = useRef();
-
-	const _handleBlur = (event) => {
-		if (selectedLocale.label === defaultLocaleBCP47) {
-			setHasError(!event.currentTarget.value);
-		}
-		else {
-			setHasError(!title[defaultLocaleBCP47]);
-		}
-	};
-
-	const _handleSelectedLocaleChange = (inputRef) => (value) => {
-		setSelectedLocale(value);
-		inputRef.current.focus();
-	};
-
-	const _handleSubmit = (event) => {
-		event.preventDefault();
-
-		if (!title[defaultLocaleBCP47]) {
-			setHasError(true);
-
-			titleInputRef.current.focus();
-		}
-		else {
-			onSubmit({description, title});
-
-			onClose();
-		}
-	};
-
-	const _getTitleLabel = () => (
-		<>
-			{Liferay.Language.get('title')}
-
-			{selectedLocale.label === defaultLocaleBCP47 && (
-				<ClayIcon
-					className="ml-1 reference-mark"
-					focusable="false"
-					role="presentation"
-					symbol="asterisk"
-				/>
-			)}
-		</>
-	);
-
-	return (
-		<ClayModal
-			className="sxp-edit-title-modal"
-			observer={observer}
-			size="md"
-		>
-			<ClayForm onSubmit={_handleSubmit}>
-				<ClayModal.Body>
-					{disabled && (
-						<ClayAlert
-							displayType="danger"
-							title={Liferay.Language.get('error')}
-						>
-							{sub(Liferay.Language.get('x-is-invalid'), [
-								Liferay.Language.get('element-source-json'),
-							])}
-						</ClayAlert>
-					)}
-
-					<div
-						className={getCN('edit-title', {
-							disabled,
-							'has-error': hasError,
-						})}
-					>
-						<ClayLocalizedInput
-							autoFocus={modalFieldFocus === 'title'}
-							disabled={disabled}
-							id="title"
-							label={_getTitleLabel()}
-							locales={localesForSelector}
-							onBlur={_handleBlur}
-							onSelectedLocaleChange={_handleSelectedLocaleChange(
-								titleInputRef
-							)}
-							onTranslationsChange={setTitle}
-							placeholder=""
-							ref={titleInputRef}
-							selectedLocale={selectedLocale}
-							translations={disabled ? {} : title}
-						/>
-
-						{hasError && (
-							<ClayForm.FeedbackGroup>
-								<ClayForm.FeedbackItem>
-									<ClayForm.FeedbackIndicator symbol="exclamation-full" />
-
-									{sub(
-										Liferay.Language.get(
-											'please-enter-a-valid-title-for-the-default-language-x'
-										),
-										[defaultLocaleBCP47]
-									)}
-								</ClayForm.FeedbackItem>
-							</ClayForm.FeedbackGroup>
-						)}
-					</div>
-
-					<div
-						className={getCN('edit-description', {
-							disabled,
-						})}
-					>
-						<ClayLocalizedInput
-							autoFocus={modalFieldFocus === 'description'}
-							component="textarea"
-							disabled={disabled}
-							id="description"
-							label={Liferay.Language.get('description')}
-							locales={localesForSelector}
-							onSelectedLocaleChange={_handleSelectedLocaleChange(
-								descriptionInputRef
-							)}
-							onTranslationsChange={setDescription}
-							placeholder=""
-							ref={descriptionInputRef}
-							selectedLocale={selectedLocale}
-							translations={disabled ? {} : description}
-						/>
-					</div>
-				</ClayModal.Body>
-
-				<ClayModal.Footer
-					last={
-						<ClayButton.Group spaced>
-							<ClayButton
-								displayType="secondary"
-								onClick={onClose}
-							>
-								{Liferay.Language.get('cancel')}
-							</ClayButton>
-
-							<ClayButton
-								disabled={disabled}
-								displayType="primary"
-								type="submit"
-							>
-								{Liferay.Language.get('done')}
-							</ClayButton>
-						</ClayButton.Group>
-					}
-				/>
-			</ClayForm>
-		</ClayModal>
-	);
-}
-
 export default function PageToolbar({
 	children,
 	description,
+	descriptionI18n,
 	disableTitleAndDescriptionModal = false,
+	entityId,
+	externalReferenceCode,
 	isSubmitting,
 	onCancel,
 	onChangeTab,
+	onExternalReferenceCodeChange,
 	onSubmit,
 	onTitleAndDescriptionChange,
 	readOnly = false,
 	tab,
 	tabs,
 	title,
+	titleAndDescriptionEdited,
+	titleI18n,
 }) {
-	const {availableLanguages, defaultLocale, locale} = useContext(
+	const {availableLanguages, defaultLocale, locale, sxpType} = useContext(
 		ThemeContext
 	);
 
@@ -295,7 +91,7 @@ export default function PageToolbar({
 	});
 
 	const displayLocale = getDisplayLocale(
-		title,
+		titleI18n,
 		locale,
 		defaultLocale,
 		availableLanguages
@@ -315,13 +111,14 @@ export default function PageToolbar({
 			>
 				<ClayLayout.ContainerFluid>
 					<ClayToolbar.Nav>
-						<ClayToolbar.Item className="text-left" expand>
+						<ClayToolbar.Item className="border-right c-mr-3 c-pr-3 text-left title-description-toolbar-item">
 							{modalVisible && (
 								<EditTitleModal
 									disabled={disableTitleAndDescriptionModal}
-									initialDescription={description}
-									initialTitle={title}
-									modalFieldFocus={modalFieldFocus}
+									displayLocale={displayLocale}
+									fieldFocus={modalFieldFocus}
+									initialDescriptionI18n={descriptionI18n}
+									initialTitleI18n={titleI18n}
 									observer={observer}
 									onClose={onClose}
 									onSubmit={onTitleAndDescriptionChange}
@@ -331,22 +128,29 @@ export default function PageToolbar({
 							{readOnly ? (
 								<div>
 									<div className="entry-title text-truncate">
-										{title[displayLocale] || (
-											<span className="entry-title-blank">
-												{Liferay.Language.get(
-													'untitled'
+										<ClayTooltipProvider>
+											<span
+												data-tooltip-align="bottom"
+												title={title}
+											>
+												{title || (
+													<span className="entry-title-blank">
+														{Liferay.Language.get(
+															'untitled'
+														)}
+													</span>
 												)}
 											</span>
-										)}
+										</ClayTooltipProvider>
 									</div>
 
 									<ClayTooltipProvider>
 										<div
 											className="entry-description text-truncate"
 											data-tooltip-align="bottom"
-											title={description[displayLocale]}
+											title={description}
 										>
-											{description[displayLocale] || (
+											{description || (
 												<span className="entry-description-blank">
 													{Liferay.Language.get(
 														'no-description'
@@ -367,20 +171,37 @@ export default function PageToolbar({
 										monospaced={false}
 										onClick={_handleClickEdit('title')}
 									>
-										<div className="entry-title text-truncate">
-											{title[displayLocale] || (
-												<span className="entry-title-blank">
-													{Liferay.Language.get(
-														'untitled'
+										<ClayTooltipProvider>
+											<span
+												data-tooltip-align="bottom"
+												title={
+													!titleAndDescriptionEdited
+														? title
+														: titleI18n[
+																displayLocale
+														  ]
+												}
+											>
+												<div className="entry-title text-truncate">
+													{(!titleAndDescriptionEdited
+														? title
+														: titleI18n[
+																displayLocale
+														  ]) || (
+														<span className="entry-title-blank">
+															{Liferay.Language.get(
+																'untitled'
+															)}
+														</span>
 													)}
-												</span>
-											)}
 
-											<ClayIcon
-												className="entry-heading-edit-icon"
-												symbol="pencil"
-											/>
-										</div>
+													<ClayIcon
+														className="entry-heading-edit-icon"
+														symbol="pencil"
+													/>
+												</div>
+											</span>
+										</ClayTooltipProvider>
 									</ClayButton>
 
 									<ClayButton
@@ -399,10 +220,18 @@ export default function PageToolbar({
 												className="entry-description text-truncate"
 												data-tooltip-align="bottom"
 												title={
-													description[displayLocale]
+													!titleAndDescriptionEdited
+														? description
+														: descriptionI18n[
+																displayLocale
+														  ]
 												}
 											>
-												{description[displayLocale] || (
+												{(!titleAndDescriptionEdited
+													? description
+													: descriptionI18n[
+															displayLocale
+													  ]) || (
 													<span className="entry-description-blank">
 														{Liferay.Language.get(
 															'no-description'
@@ -419,6 +248,75 @@ export default function PageToolbar({
 									</ClayButton>
 								</div>
 							)}
+						</ClayToolbar.Item>
+
+						<ClayToolbar.Item
+							className="text-3 text-left text-truncate-inline"
+							expand
+						>
+							<div className="text-truncate">
+								<span className="c-mr-1 text-secondary">
+									{Liferay.Language.get('id')}:
+								</span>
+
+								<strong className="text-dark">
+									{entityId}
+								</strong>
+							</div>
+
+							<EditERCModal
+								disabled={readOnly}
+								externalReferenceCode={externalReferenceCode}
+								onSubmit={onExternalReferenceCodeChange}
+							>
+								<div className="entry-heading-edit-button text-truncate">
+									<span className="c-mr-1 text-secondary">
+										{Liferay.Language.get('erc')}:
+									</span>
+
+									<ClayTooltipProvider>
+										<span
+											className="font-weight-semi-bold text-dark"
+											data-tooltip-align="bottom-left"
+											title={externalReferenceCode}
+										>
+											{externalReferenceCode}
+										</span>
+									</ClayTooltipProvider>
+
+									<ClayTooltipProvider>
+										<span
+											data-tooltip-align="bottom-left"
+											title={sub(
+												Liferay.Language.get(
+													'unique-key-for-referencing-the-x'
+												),
+												[
+													sxpType === 'sxpBlueprint'
+														? Liferay.Language.get(
+																'blueprint'
+														  )
+														: Liferay.Language.get(
+																'element'
+														  ),
+												]
+											)}
+										>
+											<ClayIcon
+												className="c-ml-2 text-secondary"
+												symbol="question-circle"
+											/>
+										</span>
+									</ClayTooltipProvider>
+
+									{!readOnly && (
+										<ClayIcon
+											className="c-ml-2 entry-heading-edit-icon text-secondary"
+											symbol="pencil"
+										/>
+									)}
+								</div>
+							</EditERCModal>
 						</ClayToolbar.Item>
 
 						{children}
@@ -489,15 +387,21 @@ export default function PageToolbar({
 }
 
 PageToolbar.propTypes = {
-	description: PropTypes.object,
+	description: PropTypes.string,
+	descriptionI18n: PropTypes.object,
 	disableTitleAndDescriptionModal: PropTypes.bool,
+	entityId: PropTypes.string,
+	externalReferenceCode: PropTypes.string,
 	isSubmitting: PropTypes.bool,
 	onCancel: PropTypes.string.isRequired,
 	onChangeTab: PropTypes.func,
+	onExternalReferenceCodeChange: PropTypes.func,
 	onSubmit: PropTypes.func.isRequired,
 	onTitleAndDescriptionChange: PropTypes.func,
 	readOnly: PropTypes.bool,
 	tab: PropTypes.string,
 	tabs: PropTypes.object,
-	title: PropTypes.object,
+	title: PropTypes.string,
+	titleAndDescriptionEdited: PropTypes.bool,
+	titleI18n: PropTypes.object,
 };

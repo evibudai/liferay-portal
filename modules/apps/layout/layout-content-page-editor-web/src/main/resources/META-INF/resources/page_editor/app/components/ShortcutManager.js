@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useEffect, useRef, useState} from 'react';
@@ -18,16 +9,16 @@ import {CONTENT_DISPLAY_OPTIONS} from '../config/constants/contentDisplayOptions
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
 import {
-	ARROW_DOWN_KEYCODE,
-	ARROW_LEFT_KEYCODE,
-	ARROW_RIGHT_KEYCODE,
-	ARROW_UP_KEYCODE,
-	BACKSPACE_KEYCODE,
-	D_KEYCODE,
-	PERIOID_KEYCODE,
-	S_KEYCODE,
-	Z_KEYCODE,
-} from '../config/constants/keycodes';
+	ARROW_DOWN_KEY_CODE,
+	ARROW_LEFT_KEY_CODE,
+	ARROW_RIGHT_KEY_CODE,
+	ARROW_UP_KEY_CODE,
+	BACKSPACE_KEY_CODE,
+	D_KEY_CODE,
+	PERIOD_KEY_CODE,
+	S_KEY_CODE,
+	Z_KEY_CODE,
+} from '../config/constants/keyboardCodes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {MOVE_ITEM_DIRECTIONS} from '../config/constants/moveItemDirections';
 import {
@@ -115,8 +106,8 @@ export default function ShortcutManager() {
 		const currentPosition = parentItem.children.indexOf(itemId);
 
 		const direction =
-			event.keyCode === ARROW_UP_KEYCODE ||
-			event.keyCode === ARROW_LEFT_KEYCODE
+			event.code === ARROW_UP_KEY_CODE ||
+			event.code === ARROW_LEFT_KEY_CODE
 				? MOVE_ITEM_DIRECTIONS.UP
 				: MOVE_ITEM_DIRECTIONS.DOWN;
 
@@ -221,7 +212,7 @@ export default function ShortcutManager() {
 					widgets
 				),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) && event.keyCode === D_KEYCODE,
+				ctrlOrMeta(event) && event.code === D_KEY_CODE,
 		},
 		hideSidebar: {
 			action: hideSidebar,
@@ -233,7 +224,7 @@ export default function ShortcutManager() {
 			isKeyCombination: (event) =>
 				ctrlOrMeta(event) &&
 				event.shiftKey &&
-				event.keyCode === PERIOID_KEYCODE,
+				event.code === PERIOD_KEY_CODE,
 		},
 		move: {
 			action: move,
@@ -256,14 +247,14 @@ export default function ShortcutManager() {
 					CONTENT_DISPLAY_OPTIONS.flexRow
 				) {
 					return (
-						event.keyCode === ARROW_RIGHT_KEYCODE ||
-						event.keyCode === ARROW_LEFT_KEYCODE
+						event.code === ARROW_RIGHT_KEY_CODE ||
+						event.code === ARROW_LEFT_KEY_CODE
 					);
 				}
 
 				return (
-					event.keyCode === ARROW_UP_KEYCODE ||
-					event.keyCode === ARROW_DOWN_KEYCODE
+					event.code === ARROW_UP_KEY_CODE ||
+					event.code === ARROW_DOWN_KEY_CODE
 				);
 			},
 		},
@@ -282,7 +273,7 @@ export default function ShortcutManager() {
 				!!layoutData.items[activeItemId] &&
 				canBeRemoved(layoutData.items[activeItemId], layoutData) &&
 				!isInteractiveElement(event.target),
-			isKeyCombination: (event) => event.keyCode === BACKSPACE_KEYCODE,
+			isKeyCombination: (event) => event.code === BACKSPACE_KEY_CODE,
 		},
 		save: {
 			action: save,
@@ -291,7 +282,7 @@ export default function ShortcutManager() {
 				!!layoutData.items[activeItemId] &&
 				canBeSaved(layoutData.items[activeItemId], layoutData),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) && event.keyCode === S_KEYCODE,
+				ctrlOrMeta(event) && event.code === S_KEY_CODE,
 		},
 		selectParent: {
 			action: selectParent,
@@ -308,9 +299,7 @@ export default function ShortcutManager() {
 				!isWithinIframe() &&
 				!isEditingEditableField(),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) &&
-				event.keyCode === Z_KEYCODE &&
-				!event.altKey,
+				ctrlOrMeta(event) && event.code === Z_KEY_CODE && !event.altKey,
 		},
 	};
 

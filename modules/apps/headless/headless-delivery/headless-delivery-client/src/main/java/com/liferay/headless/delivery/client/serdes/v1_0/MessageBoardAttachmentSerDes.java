@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
@@ -55,6 +46,16 @@ public class MessageBoardAttachmentSerDes {
 
 		sb.append("{");
 
+		if (messageBoardAttachment.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(messageBoardAttachment.getActions()));
+		}
+
 		if (messageBoardAttachment.getContentUrl() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -93,6 +94,21 @@ public class MessageBoardAttachmentSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(messageBoardAttachment.getEncodingFormat()));
+
+			sb.append("\"");
+		}
+
+		if (messageBoardAttachment.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(messageBoardAttachment.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -166,6 +182,14 @@ public class MessageBoardAttachmentSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (messageBoardAttachment.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put(
+				"actions", String.valueOf(messageBoardAttachment.getActions()));
+		}
+
 		if (messageBoardAttachment.getContentUrl() == null) {
 			map.put("contentUrl", null);
 		}
@@ -191,6 +215,16 @@ public class MessageBoardAttachmentSerDes {
 			map.put(
 				"encodingFormat",
 				String.valueOf(messageBoardAttachment.getEncodingFormat()));
+		}
+
+		if (messageBoardAttachment.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					messageBoardAttachment.getExternalReferenceCode()));
 		}
 
 		if (messageBoardAttachment.getFileExtension() == null) {
@@ -246,7 +280,14 @@ public class MessageBoardAttachmentSerDes {
 			MessageBoardAttachment messageBoardAttachment,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "contentUrl")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					messageBoardAttachment.setActions(
+						(Map)MessageBoardAttachmentSerDes.toMap(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "contentUrl")) {
 				if (jsonParserFieldValue != null) {
 					messageBoardAttachment.setContentUrl(
 						(String)jsonParserFieldValue);
@@ -261,6 +302,14 @@ public class MessageBoardAttachmentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "encodingFormat")) {
 				if (jsonParserFieldValue != null) {
 					messageBoardAttachment.setEncodingFormat(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					messageBoardAttachment.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}

@@ -13,15 +13,15 @@ definition {
 
 		selenium.clickAt();
 
-		selenium.pause("1000");
+		selenium.pause(1000);
 
 		selenium.type();
 
-		selenium.pause("1000");
+		selenium.pause(1000);
 
 		selenium.clickAt();
 
-		selenium.pause("1000");
+		selenium.pause(1000);
 
 		selenium.assertJavaScriptErrors();
 
@@ -62,8 +62,6 @@ definition {
 
 	function sendKeysApplicationSearch {
 		WaitForSPARefresh();
-
-		selenium.waitForElementPresent("//script[contains(@src,'/autocomplete-filters/autocomplete-filters')]");
 
 		selenium.waitForEditable();
 
@@ -132,40 +130,6 @@ definition {
 		selenium.assertLiferayErrors();
 	}
 
-	function typeCKEditor {
-		WaitForSPARefresh();
-
-		selenium.waitForVisible();
-
-		selenium.waitForEditable();
-
-		selenium.mouseOver();
-
-		selenium.typeCKEditor();
-
-		selenium.assertJavaScriptErrors();
-
-		selenium.assertLiferayErrors();
-	}
-
-	function typeCKEditorWaitForCKEditor {
-		WaitForSPARefresh();
-
-		selenium.waitForVisible("//a[contains(@class,'cke_button__source') and contains(@class,'cke_button_off')]");
-
-		selenium.pause("1000");
-
-		selenium.waitForEditable();
-
-		Type.typeCKEditor();
-
-		selenium.pause("1000");
-
-		selenium.assertJavaScriptErrors();
-
-		selenium.assertLiferayErrors();
-	}
-
 	function typeClickAt {
 		WaitForSPARefresh();
 
@@ -210,6 +174,32 @@ definition {
 		selenium.assertLiferayErrors();
 	}
 
+	function typeEditorWaitForEditor {
+		WaitForSPARefresh();
+
+		selenium.waitForVisible("//a[contains(@class,'cke_button__source') and contains(@class,'cke_button_off')]");
+
+		selenium.pause(1000);
+
+		selenium.waitForEditable();
+
+		Type.typeEditor();
+
+		selenium.pause(1000);
+
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
+	function typeKeys {
+		selenium.typeKeys();
+
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
 	function typeNoMouseOver {
 		WaitForSPARefresh();
 
@@ -236,6 +226,16 @@ definition {
 		selenium.assertLiferayErrors();
 	}
 
+	function typeNotVisibleNoMouseOverNoError {
+		WaitForSPARefresh();
+
+		selenium.waitForEditable();
+
+		selenium.click();
+
+		selenium.type();
+	}
+
 	function typePause {
 		WaitForSPARefresh();
 
@@ -247,7 +247,7 @@ definition {
 
 		selenium.type();
 
-		selenium.pause("5000");
+		selenium.pause(5000);
 
 		selenium.assertJavaScriptErrors();
 

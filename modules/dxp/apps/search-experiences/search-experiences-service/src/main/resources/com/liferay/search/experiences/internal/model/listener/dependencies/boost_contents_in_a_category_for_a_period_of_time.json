@@ -1,7 +1,6 @@
 {
 	"description_i18n": {
-		"en_US": "Boost contents in a category for the given period of time.",
-		"ja_JP": "指定期間でカテゴリ内のコンテンツをブーストする"
+		"en_US": "boost-contents-in-a-category-for-a-period-of-time-description"
 	},
 	"elementDefinition": {
 		"category": "conditional",
@@ -41,12 +40,12 @@
 				{
 					"fields": [
 						{
-							"label": "Asset Category ID",
+							"label": "asset-category-name-id",
 							"name": "asset_category_id",
 							"type": "number"
 						},
 						{
-							"label": "Date: From",
+							"label": "date-from",
 							"name": "start_date",
 							"type": "date",
 							"typeOptions": {
@@ -54,7 +53,7 @@
 							}
 						},
 						{
-							"label": "Date: To",
+							"label": "date-to",
 							"name": "end_date",
 							"type": "date",
 							"typeOptions": {
@@ -63,7 +62,7 @@
 						},
 						{
 							"defaultValue": 10,
-							"label": "Boost",
+							"label": "boost",
 							"name": "boost",
 							"type": "number",
 							"typeOptions": {
@@ -77,7 +76,6 @@
 	},
 	"externalReferenceCode": "BOOST_CONTENTS_IN_A_CATEGORY_FOR_A_PERIOD_OF_TIME",
 	"title_i18n": {
-		"en_US": "Boost Contents in a Category for a Period of Time",
-		"ja_JP": "一定期間内のカテゴリ内コンテンツをブーストする"
+		"en_US": "boost-contents-in-a-category-for-a-period-of-time"
 	}
 }

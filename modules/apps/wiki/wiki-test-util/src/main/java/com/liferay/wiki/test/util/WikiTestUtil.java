@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.test.util;
@@ -26,6 +17,8 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.wiki.constants.WikiPageConstants;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
@@ -144,7 +137,6 @@ public class WikiTestUtil {
 			serviceContext = (ServiceContext)serviceContext.clone();
 
 			serviceContext.setCommand(Constants.ADD);
-
 			serviceContext.setWorkflowAction(
 				WorkflowConstants.ACTION_SAVE_DRAFT);
 
@@ -410,21 +402,26 @@ public class WikiTestUtil {
 			Class<?> clazz)
 		throws Exception {
 
-		byte[] fileBytes = FileUtil.getBytes(
-			clazz, "dependencies/OSX_Test.docx");
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"org.apache.xmlbeans.impl.common.SAXHelper",
+				LoggerTestUtil.WARN)) {
 
-		File file = null;
+			byte[] fileBytes = FileUtil.getBytes(
+				clazz, "dependencies/OSX_Test.docx");
 
-		if (ArrayUtil.isNotEmpty(fileBytes)) {
-			file = FileUtil.createTempFile(fileBytes);
+			File file = null;
+
+			if (ArrayUtil.isNotEmpty(fileBytes)) {
+				file = FileUtil.createTempFile(fileBytes);
+			}
+
+			String mimeType = MimeTypesUtil.getExtensionContentType("docx");
+
+			WikiPageLocalServiceUtil.addPageAttachment(
+				userId, nodeId, title, fileName, file, mimeType);
+
+			return file;
 		}
-
-		String mimeType = MimeTypesUtil.getExtensionContentType("docx");
-
-		WikiPageLocalServiceUtil.addPageAttachment(
-			userId, nodeId, title, fileName, file, mimeType);
-
-		return file;
 	}
 
 	public static WikiPage copyPage(

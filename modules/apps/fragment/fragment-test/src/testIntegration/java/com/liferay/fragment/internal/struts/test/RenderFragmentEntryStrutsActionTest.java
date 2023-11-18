@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.struts.test;
@@ -28,7 +19,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -38,8 +28,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 
 import java.net.URL;
-
-import java.nio.charset.StandardCharsets;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -95,32 +83,28 @@ public class RenderFragmentEntryStrutsActionTest {
 		PipingServletResponse pipingServletResponse = new PipingServletResponse(
 			mockHttpServletResponse, unsyncStringWriter);
 
+		mockHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
 		mockHttpServletRequest.setParameter(
 			"groupId", String.valueOf(_group.getGroupId()));
 
 		URL htmlURL = _bundle.getEntry(
 			_RESOURCES_PATH + "fragments/card/index.html");
 
-		String html = StringUtil.read(htmlURL.openStream());
-
 		mockHttpServletRequest.setParameter(
-			"html", Base64.encode(html.getBytes(StandardCharsets.UTF_8)));
+			"html", StringUtil.read(htmlURL.openStream()));
 
 		URL cssURL = _bundle.getEntry(
 			_RESOURCES_PATH + "fragments/card/index.css");
 
-		String css = StringUtil.read(cssURL.openStream());
-
 		mockHttpServletRequest.setParameter(
-			"css", Base64.encode(css.getBytes(StandardCharsets.UTF_8)));
+			"css", StringUtil.read(cssURL.openStream()));
 
 		URL jsURL = _bundle.getEntry(
 			_RESOURCES_PATH + "fragments/card/index.js");
 
-		String js = StringUtil.read(jsURL.openStream());
-
 		mockHttpServletRequest.setParameter(
-			"js", Base64.encode(js.getBytes(StandardCharsets.UTF_8)));
+			"js", StringUtil.read(jsURL.openStream()));
 
 		_processEvents(mockHttpServletRequest, mockHttpServletResponse, _user);
 
@@ -202,7 +186,6 @@ public class RenderFragmentEntryStrutsActionTest {
 
 		mockHttpServletRequest.setAttribute(
 			WebKeys.CURRENT_URL, "/portal/fragment/render_fragment_entry");
-
 		mockHttpServletRequest.setAttribute(WebKeys.USER, user);
 
 		EventsProcessorUtil.process(
@@ -227,7 +210,9 @@ public class RenderFragmentEntryStrutsActionTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
-	@Inject(filter = "component.name=*.RenderFragmentEntryStrutsAction")
+	@Inject(
+		filter = "component.name=com.liferay.fragment.web.internal.struts.RenderFragmentEntryStrutsAction"
+	)
 	private StrutsAction _renderFragmentEntryStrutsAction;
 
 	@DeleteAfterTestRun

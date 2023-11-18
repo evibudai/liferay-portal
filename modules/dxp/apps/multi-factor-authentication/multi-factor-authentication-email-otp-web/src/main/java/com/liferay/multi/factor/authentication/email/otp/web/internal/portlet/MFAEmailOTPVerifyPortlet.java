@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.email.otp.web.internal.portlet;
 
 import com.liferay.multi.factor.authentication.email.otp.web.internal.constants.MFAEmailOTPPortletKeys;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.security.auth.InterruptedPortletRequestWhitelistUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.security.auth.InterruptedPortletRequestWhitelistUtil;
 import com.liferay.portal.util.PropsValues;
 
 import javax.portlet.Portlet;
@@ -26,7 +17,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Tomas Polesovsky
@@ -58,7 +48,7 @@ public class MFAEmailOTPVerifyPortlet extends MVCPortlet {
 			PropsValues.PORTLET_INTERRUPTED_REQUEST_WHITELIST,
 			MFAEmailOTPPortletKeys.MFA_EMAIL_OTP_VERIFY);
 
-		_interruptedPortletRequestWhitelistUtil.
+		InterruptedPortletRequestWhitelistUtil.
 			resetPortletInvocationWhitelist();
 	}
 
@@ -68,12 +58,8 @@ public class MFAEmailOTPVerifyPortlet extends MVCPortlet {
 			PropsValues.PORTLET_INTERRUPTED_REQUEST_WHITELIST,
 			MFAEmailOTPPortletKeys.MFA_EMAIL_OTP_VERIFY);
 
-		_interruptedPortletRequestWhitelistUtil.
+		InterruptedPortletRequestWhitelistUtil.
 			resetPortletInvocationWhitelist();
 	}
-
-	@Reference
-	private InterruptedPortletRequestWhitelistUtil
-		_interruptedPortletRequestWhitelistUtil;
 
 }

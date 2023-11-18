@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.redirect.button;
@@ -27,9 +18,8 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -84,32 +74,34 @@ public class RedirectButtonDDMFormFieldTemplateContextContributor
 					RequestBackedPortletURLFactoryUtil.create(
 						ddmFormFieldRenderingContext.getHttpServletRequest());
 
+				Map<String, String[]> parameters = new HashMap<>();
+
+				for (Object object :
+						(Object[])ddmFormField.getProperty("parameters")) {
+
+					String parameter = (String)object;
+
+					String[] parameterPair = parameter.split(StringPool.EQUAL);
+
+					parameters.put(
+						parameterPair[0], new String[] {parameterPair[1]});
+				}
+
+				parameters.put(
+					"mvcRenderCommandName",
+					new String[] {
+						GetterUtil.getString(
+							((Object[])ddmFormField.getProperty(
+								"mvcRenderCommandName"))[0])
+					});
+
 				return PortletURLBuilder.create(
 					requestBackedPortletURLFactory.createActionURL(
 						GetterUtil.getString(
 							((Object[])ddmFormField.getProperty("portletId"))
 								[0]))
 				).setParameters(
-					HashMapBuilder.put(
-						"mvcRenderCommandName",
-						new String[] {
-							GetterUtil.getString(
-								((Object[])ddmFormField.getProperty(
-									"mvcRenderCommandName"))[0])
-						}
-					).putAll(
-						Stream.of(
-							(Object[])ddmFormField.getProperty("parameters")
-						).map(
-							String.class::cast
-						).map(
-							parameter -> parameter.split(StringPool.EQUAL)
-						).collect(
-							Collectors.toMap(
-								keyValue -> keyValue[0],
-								keyValue -> new String[] {keyValue[1]})
-						)
-					).build()
+					parameters
 				).buildString();
 			}
 		).put(

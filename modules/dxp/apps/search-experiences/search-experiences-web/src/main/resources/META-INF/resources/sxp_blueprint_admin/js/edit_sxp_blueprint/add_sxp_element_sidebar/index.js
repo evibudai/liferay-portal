@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -35,10 +29,14 @@ import {
 	CUSTOM_JSON_SXP_ELEMENT,
 	DEFAULT_SXP_ELEMENT_ICON,
 } from '../../utils/data';
-import {addParams, fetchData} from '../../utils/fetch';
-import {getLocalizedText} from '../../utils/language';
-import {setStorageAddSXPElementSidebar} from '../../utils/sessionStorage';
-import {isElementInactiveFromNonCompanyIndex} from '../../utils/utils';
+import addParams from '../../utils/fetch/add_params';
+import fetchData from '../../utils/fetch/fetch_data';
+import {
+	SIDEBAR_STATE,
+	setStorageAddSXPElementSidebar,
+} from '../../utils/sessionStorage';
+import getSXPElementTitleAndDescription from '../../utils/sxp_element/get_sxp_element_title_and_description';
+import isElementInactiveFromNonCompanyIndex from '../../utils/sxp_element/is_element_inactive_from_noncompany_index';
 
 const DEFAULT_CATEGORY = 'other';
 const DEFAULT_EXPANDED_LIST = ['match'];
@@ -68,6 +66,11 @@ const SXPElementList = ({
 		<>
 			{!!category && (
 				<ClayButton
+					aria-label={
+						showList
+							? Liferay.Language.get('collapse')
+							: Liferay.Language.get('expand')
+					}
 					className="panel-header sidebar-dt"
 					displayType="unstyled"
 					onClick={() => setShowList(!showList)}
@@ -85,12 +88,11 @@ const SXPElementList = ({
 			{showList && (
 				<ClayList>
 					{sxpElements.map((sxpElement, index) => {
-						const description = getLocalizedText(
-							sxpElement.description_i18n,
-							locale
-						);
-						const title = getLocalizedText(
-							sxpElement.title_i18n,
+						const [
+							title,
+							description,
+						] = getSXPElementTitleAndDescription(
+							sxpElement,
 							locale
 						);
 
@@ -244,8 +246,8 @@ function AddSXPElement({
 		(value) => {
 			const newSXPElements = sxpElements.filter((sxpElement) => {
 				if (value) {
-					const sxpElementTitle = getLocalizedText(
-						sxpElement.title_i18n,
+					const [sxpElementTitle] = getSXPElementTitleAndDescription(
+						sxpElement,
 						locale
 					);
 
@@ -311,7 +313,6 @@ function AddSXPElementSidebar({
 	onClose,
 	visible,
 }) {
-	const {defaultLocale} = useContext(ThemeContext);
 	const isMounted = useIsMounted();
 
 	const [querySXPElements, setQuerySXPElements] = useState(null);
@@ -324,25 +325,7 @@ function AddSXPElementSidebar({
 		)
 			.then((responseContent) => {
 				if (isMounted()) {
-					setQuerySXPElements(
-						responseContent.items.map(
-							({
-								description,
-								description_i18n,
-								title,
-								title_i18n,
-								...props
-							}) => ({
-								...props,
-								description_i18n: description_i18n || {
-									[defaultLocale]: description,
-								},
-								title_i18n: title_i18n || {
-									[defaultLocale]: title,
-								},
-							})
-						)
-					);
+					setQuerySXPElements(responseContent.items);
 				}
 			})
 			.catch(() => {
@@ -357,7 +340,7 @@ function AddSXPElementSidebar({
 	}
 
 	const _handleClose = () => {
-		setStorageAddSXPElementSidebar('closed');
+		setStorageAddSXPElementSidebar(SIDEBAR_STATE.CLOSED);
 
 		onClose();
 	};

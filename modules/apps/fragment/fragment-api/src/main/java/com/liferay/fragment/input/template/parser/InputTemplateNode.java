@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.input.template.parser;
@@ -30,13 +21,14 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 
 	public InputTemplateNode(
 		String errorMessage, String helpText, String label, String name,
-		boolean required, boolean showHelpText, boolean showLabel, String type,
-		String value) {
+		boolean readOnly, boolean required, boolean showHelpText,
+		boolean showLabel, String type, String value) {
 
 		_errorMessage = errorMessage;
 		_helpText = helpText;
 		_label = label;
 		_name = name;
+		_readOnly = readOnly;
 		_required = required;
 		_showHelpText = showHelpText;
 		_showLabel = showLabel;
@@ -47,6 +39,7 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 		put("helpText", helpText);
 		put("label", label);
 		put("name", name);
+		put("readOnly", readOnly);
 		put("required", required);
 		put("showHelpText", showHelpText);
 		put("showLabel", showLabel);
@@ -86,6 +79,10 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 		return _type;
 	}
 
+	public boolean isReadOnly() {
+		return _readOnly;
+	}
+
 	public boolean isRequired() {
 		return _required;
 	}
@@ -119,6 +116,8 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 			"label", HtmlUtil.escapeJS(_label)
 		).put(
 			"name", _name
+		).put(
+			"readOnly", _readOnly
 		).put(
 			"required", _required
 		).put(
@@ -166,6 +165,7 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 	private final String _helpText;
 	private final String _label;
 	private final String _name;
+	private final boolean _readOnly;
 	private final boolean _required;
 	private final boolean _showHelpText;
 	private final boolean _showLabel;

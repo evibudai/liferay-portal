@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.servlet.filters.etag;
@@ -38,14 +29,18 @@ public class ETagUtil {
 			return false;
 		}
 
-		int hashCode = _hashCode(
-			byteBuffer.array(), byteBuffer.position(), byteBuffer.limit());
+		String eTag = httpServletResponse.getHeader(HttpHeaders.ETAG);
 
-		String eTag = StringBundler.concat(
-			StringPool.QUOTE, StringUtil.toHexString(hashCode),
-			StringPool.QUOTE);
+		if (eTag == null) {
+			int hashCode = _hashCode(
+				byteBuffer.array(), byteBuffer.position(), byteBuffer.limit());
 
-		httpServletResponse.setHeader(HttpHeaders.ETAG, eTag);
+			eTag = StringBundler.concat(
+				StringPool.QUOTE, StringUtil.toHexString(hashCode),
+				StringPool.QUOTE);
+
+			httpServletResponse.setHeader(HttpHeaders.ETAG, eTag);
+		}
 
 		String ifNoneMatch = httpServletRequest.getHeader(
 			HttpHeaders.IF_NONE_MATCH);

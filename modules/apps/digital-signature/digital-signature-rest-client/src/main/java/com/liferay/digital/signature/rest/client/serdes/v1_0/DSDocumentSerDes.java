@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.digital.signature.rest.client.serdes.v1_0;
@@ -52,6 +43,20 @@ public class DSDocumentSerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		if (dsDocument.getAssignTabsToDSRecipientId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assignTabsToDSRecipientId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(dsDocument.getAssignTabsToDSRecipientId()));
+
+			sb.append("\"");
+		}
 
 		if (dsDocument.getData() != null) {
 			if (sb.length() > 1) {
@@ -123,6 +128,16 @@ public class DSDocumentSerDes {
 			sb.append("\"");
 		}
 
+		if (dsDocument.getTransformPDFFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"transformPDFFields\": ");
+
+			sb.append(dsDocument.getTransformPDFFields());
+		}
+
 		if (dsDocument.getUri() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -154,6 +169,15 @@ public class DSDocumentSerDes {
 		}
 
 		Map<String, String> map = new TreeMap<>();
+
+		if (dsDocument.getAssignTabsToDSRecipientId() == null) {
+			map.put("assignTabsToDSRecipientId", null);
+		}
+		else {
+			map.put(
+				"assignTabsToDSRecipientId",
+				String.valueOf(dsDocument.getAssignTabsToDSRecipientId()));
+		}
 
 		if (dsDocument.getData() == null) {
 			map.put("data", null);
@@ -193,6 +217,15 @@ public class DSDocumentSerDes {
 			map.put("name", String.valueOf(dsDocument.getName()));
 		}
 
+		if (dsDocument.getTransformPDFFields() == null) {
+			map.put("transformPDFFields", null);
+		}
+		else {
+			map.put(
+				"transformPDFFields",
+				String.valueOf(dsDocument.getTransformPDFFields()));
+		}
+
 		if (dsDocument.getUri() == null) {
 			map.put("uri", null);
 		}
@@ -221,7 +254,15 @@ public class DSDocumentSerDes {
 			DSDocument dsDocument, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "data")) {
+			if (Objects.equals(
+					jsonParserFieldName, "assignTabsToDSRecipientId")) {
+
+				if (jsonParserFieldValue != null) {
+					dsDocument.setAssignTabsToDSRecipientId(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "data")) {
 				if (jsonParserFieldValue != null) {
 					dsDocument.setData((String)jsonParserFieldValue);
 				}
@@ -248,6 +289,14 @@ public class DSDocumentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					dsDocument.setName((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "transformPDFFields")) {
+
+				if (jsonParserFieldValue != null) {
+					dsDocument.setTransformPDFFields(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "uri")) {

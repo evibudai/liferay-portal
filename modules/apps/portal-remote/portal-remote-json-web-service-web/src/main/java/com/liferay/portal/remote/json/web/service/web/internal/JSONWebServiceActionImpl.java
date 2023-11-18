@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.remote.json.web.service.web.internal;
@@ -363,47 +354,46 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 			return _generifyMap(map, genericParameterTypes);
 		}
-		else {
-			Object parameterValue = null;
 
-			try {
-				parameterValue = _convertType(value, parameterType);
-			}
-			catch (Exception exception1) {
-				if (value instanceof Map) {
-					try {
-						parameterValue = _createDefaultParameterValue(
-							null, parameterType);
-					}
-					catch (Exception exception2) {
-						ClassCastException classCastException =
-							new ClassCastException(exception1.getMessage());
+		Object parameterValue = null;
 
-						classCastException.addSuppressed(exception2);
-
-						throw classCastException;
-					}
-
-					BeanCopy beanCopy = new BeanCopy(value, parameterValue);
-
-					beanCopy.copy();
-				}
-				else {
-					String valueString = value.toString();
-
-					valueString = valueString.trim();
-
-					if (!valueString.startsWith(StringPool.OPEN_CURLY_BRACE)) {
-						throw new ClassCastException(exception1.getMessage());
-					}
-
-					parameterValue = JSONFactoryUtil.looseDeserialize(
-						valueString, parameterType);
-				}
-			}
-
-			return parameterValue;
+		try {
+			parameterValue = _convertType(value, parameterType);
 		}
+		catch (Exception exception1) {
+			if (value instanceof Map) {
+				try {
+					parameterValue = _createDefaultParameterValue(
+						null, parameterType);
+				}
+				catch (Exception exception2) {
+					ClassCastException classCastException =
+						new ClassCastException(exception1.getMessage());
+
+					classCastException.addSuppressed(exception2);
+
+					throw classCastException;
+				}
+
+				BeanCopy beanCopy = new BeanCopy(value, parameterValue);
+
+				beanCopy.copy();
+			}
+			else {
+				String valueString = value.toString();
+
+				valueString = valueString.trim();
+
+				if (!valueString.startsWith(StringPool.OPEN_CURLY_BRACE)) {
+					throw new ClassCastException(exception1.getMessage());
+				}
+
+				parameterValue = JSONFactoryUtil.looseDeserialize(
+					valueString, parameterType);
+			}
+		}
+
+		return parameterValue;
 	}
 
 	private Object _createDefaultParameterValue(

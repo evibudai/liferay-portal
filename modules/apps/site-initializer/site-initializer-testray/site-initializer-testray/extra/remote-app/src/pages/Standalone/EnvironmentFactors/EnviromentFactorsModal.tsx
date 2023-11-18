@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -18,13 +9,13 @@ import {useForm} from 'react-hook-form';
 
 import Form from '../../../components/Form';
 import DualListBox, {Boxes} from '../../../components/Form/DualListBox';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {useFetch} from '../../../hooks/useFetch';
 import useFormActions from '../../../hooks/useFormActions';
 import i18n from '../../../i18n';
 import yupSchema, {yupResolver} from '../../../schema/yup';
 import {APIResponse, TestrayFactor} from '../../../services/rest';
 import {testrayFactorRest} from '../../../services/rest/TestrayFactor';
-import {searchUtil} from '../../../util/search';
 import FactorsToOptions from './FactorsToOptions';
 
 type EnvironmentFactorsModalProps = {
@@ -54,9 +45,16 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 		form: {onSuccess, submitting},
 	} = useFormActions();
 
-	const {handleSubmit, register, setValue} = useForm<FactorEnviroment>({
+	const {
+		formState: {isSubmitting},
+		handleSubmit,
+		register,
+		setValue,
+	} = useForm<FactorEnviroment>({
 		resolver: yupResolver(yupSchema.enviroment),
 	});
+
+	const isLoading = isSubmitting || submitting;
 
 	const [state, setState] = useState<State>([[], []]);
 	const [step, setStep] = useState(0);
@@ -66,11 +64,14 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 	>(`/factorcategories`);
 
 	const {data: factorResponse, mutate} = useFetch<APIResponse<TestrayFactor>>(
-		`${testrayFactorRest.resource}&filter=${searchUtil.eq(
-			'routineId',
-			routineId
-		)}`,
-		(response) => testrayFactorRest.transformDataFromList(response)
+		testrayFactorRest.resource,
+		{
+			params: {
+				filter: SearchBuilder.eq('routineId', routineId),
+			},
+			transformData: (response) =>
+				testrayFactorRest.transformDataFromList(response),
+		}
 	);
 
 	const factors = useMemo(() => factorResponse?.items || [], [
@@ -97,8 +98,7 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 
 	useEffect(() => {
 		getCategoryDualBox();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [getCategoryDualBox]);
 
 	const lastStep = step === 1;
 
@@ -180,9 +180,10 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 						onClose={() => (lastStep ? setStep(0) : onCloseModal())}
 						onSubmit={handleSubmit(_onSubmit)}
 						primaryButtonProps={{
-							disabled: lastStep
-								? submitting
-								: !selectedEnvironmentFactors.length,
+							disabled:
+								submitting ||
+								!selectedEnvironmentFactors.length,
+							loading: isLoading,
 							title: i18n.translate(lastStep ? 'save' : 'next'),
 						}}
 						secondaryButtonProps={{

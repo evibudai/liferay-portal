@@ -1,17 +1,16 @@
 definition {
 
-	@summary = "Select a content type and subtype when adding a display page. These locators should not be needed to be reused."
 	macro _selectMappingTypes {
 		if (isSet(contentType)) {
 			Select(
 				locator1 = "//div[contains(.,'Content Type')]/select",
-				value1 = "${contentType}");
+				value1 = ${contentType});
 		}
 
 		if (isSet(subType)) {
 			Select(
 				locator1 = "//div[contains(.,'Subtype')]/select",
-				value1 = "${subType}");
+				value1 = ${subType});
 		}
 	}
 
@@ -19,17 +18,17 @@ definition {
 		LexiconEntry.gotoAdd();
 
 		if (isSet(masterLayoutName)) {
-			LexiconCard.clickCard(card = "${masterLayoutName}");
+			LexiconCard.clickCard(card = ${masterLayoutName});
 		}
 		else {
 			LexiconCard.clickCard(card = "Blank");
 		}
 
-		PortletEntry.inputName(name = "${displayPageName}");
+		PortletEntry.inputName(name = ${displayPageName});
 
 		DisplayPageTemplatesAdmin._selectMappingTypes(
-			contentType = "${contentType}",
-			subType = "${subType}");
+			contentType = ${contentType},
+			subType = ${subType});
 
 		Button.clickSave();
 
@@ -38,10 +37,10 @@ definition {
 
 	macro deleteDisplayPage {
 		LexiconCard.clickEllipsisItem(
-			card = "${displayPageName}",
+			card = ${displayPageName},
 			item = "Delete");
 
-		if ("${defaultDisplayPageTemplate}" == "true") {
+		if (${defaultDisplayPageTemplate} == "true") {
 			AssertTextEquals(
 				locator1 = "Modal#BODY",
 				value1 = "Are you sure you want to delete the default display page template? All related display pages will be deleted.");
@@ -58,7 +57,7 @@ definition {
 	}
 
 	macro gotoDisplayPage {
-		LexiconCard.clickCardTitleLink(card = "${displayPageName}");
+		LexiconCard.clickCardTitleLink(card = ${displayPageName});
 
 		PageEditor.assertFragmentSidebarLoaded();
 	}
@@ -67,8 +66,8 @@ definition {
 		WaitForPageLoad();
 
 		LexiconCard.clickEllipsisItem(
-			card = "${displayPageName}",
-			item = "${item}");
+			card = ${displayPageName},
+			item = ${item});
 	}
 
 	macro importDisplayPageTemplateFromTempFolder {
@@ -76,28 +75,40 @@ definition {
 
 		MenuItem.click(menuItem = "Import");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		WaitForPageLoad();
 
 		var displayPageTemplateZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "display-page-template-*.zip");
 
-		UploadTempFile(
+		UploadTempFile.uploadTempFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${displayPageTemplateZipFileName}");
+			value1 = ${displayPageTemplateZipFileName});
 
 		Button.clickImport();
 
-		Alert.viewSuccessMessage();
+		if (isSet(importOption)) {
+			WaitForVisible(locator1 = "Modal#HEADER");
 
-		IFrame.closeFrame();
+			Check.checkNotVisible(
+				locator1 = "Radio#ANY",
+				radioLabel = ${importOption});
+
+			Click(
+				key_text = "Import",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		AssertVisible(locator1 = "Message#SUCCESS_IMPORT");
+
+		Button.clickDone();
 	}
 
 	macro markDisplayPageAsDefault {
 		DisplayPageTemplatesAdmin.gotoDisplayPageEllipsisItem(
-			displayPageName = "${displayPageName}",
+			displayPageName = ${displayPageName},
 			item = "Mark as Default");
 
 		LexiconCard.viewCardSticker(
-			card = "${displayPageName}",
+			card = ${displayPageName},
 			icon = "check-circle");
 	}
 
@@ -105,62 +116,43 @@ definition {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=display-page-templates");
 	}
 
-	@summary = "You can use this navigation when you need to access the configuration quickly without checking the UI."
-	macro openToDisplayPageTemplateConfiguration {
-		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
-
-		var plid = JSONLayoutpagetemplateSetter.setDisplayPageTemplatePlid(
-			displayPageTemplateEntryName = "${displayPageTemplateEntryName}",
-			groupId = "${groupId}");
-
-		if ("${navItem}" == "Open Graph") {
-			var screenNavigationEntryKey = "open-graph";
-		}
-
-		if ("${navItem}" == "SEO") {
-			var screenNavigationEntryKey = "seo";
-		}
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_mvcRenderCommandName=%2Flayout_admin%2Fedit_layout&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_portletResource=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&p_r_p_selPlid=${plid}&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_screenNavigationCategoryKey=general&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_screenNavigationEntryKey=${screenNavigationEntryKey}");
-	}
-
 	macro renameDisplayPage {
 		DisplayPageTemplatesAdmin.gotoDisplayPageEllipsisItem(
-			displayPageName = "${displayPageName}",
+			displayPageName = ${displayPageName},
 			item = "Rename");
 
-		PortletEntry.inputName(name = "${newDisplayPageName}");
+		PortletEntry.inputName(name = ${newDisplayPageName});
 
 		Modal.save();
 	}
 
 	macro viewDisplayPageNotPresent {
-		LexiconCard.viewCardNotPresent(card = "${displayPageName}");
+		LexiconCard.viewCardNotPresent(card = ${displayPageName});
 	}
 
 	macro viewDisplayPagePresent {
-		LexiconCard.viewCardPresent(card = "${displayPageName}");
+		LexiconCard.viewCardPresent(card = ${displayPageName});
 	}
 
 	macro viewPGViaAP {
-		var key_assetContent = "${webContentContent}";
-		var key_assetTitle = "${webContentTitle}";
+		var key_assetContent = ${webContentContent};
+		var key_assetTitle = ${webContentTitle};
 
 		AssertTextEquals(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${webContentTitle}");
+			value1 = ${webContentTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
-			value1 = "${webContentContent}");
+			value1 = ${webContentContent});
 
 		AssertClick(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${webContentTitle}");
+			value1 = ${webContentTitle});
 
-		for (var content : list "${contentList}") {
+		for (var content : list ${contentList}) {
 			AssertElementPresent(
-				key_text = "${content}",
+				key_text = ${content},
 				locator1 = "Fragment#EDITABLE_FIELD_CONTENT");
 		}
 	}

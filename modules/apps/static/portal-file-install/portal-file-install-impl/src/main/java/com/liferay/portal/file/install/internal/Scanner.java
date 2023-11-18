@@ -1,23 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.file.install.internal;
 
 import com.liferay.petra.reflect.ReflectionUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -37,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 /**
@@ -49,27 +35,11 @@ public class Scanner {
 	public static final String SUBDIR_MODE_RECURSE = "recurse";
 
 	public Scanner(
-		List<File> dirs, final String filterString, String subdirMode) {
+		List<File> dirs, FilenameFilter filenameFilter, String subdirMode) {
 
-		_watchedDirs = _canononize(dirs);
+		_filenameFilter = filenameFilter;
 
-		if (!Validator.isBlank(filterString)) {
-			_filenameFilter = new FilenameFilter() {
-
-				@Override
-				public boolean accept(File dir, String name) {
-					Matcher matcher = _pattern.matcher(name);
-
-					return matcher.matches();
-				}
-
-				private final Pattern _pattern = Pattern.compile(filterString);
-
-			};
-		}
-		else {
-			_filenameFilter = (dir, name) -> true;
-		}
+		_watchedDirs = dirs;
 
 		_recurseSubdir = SUBDIR_MODE_RECURSE.equals(subdirMode);
 	}
@@ -117,7 +87,7 @@ public class Scanner {
 
 		if (file.isFile()) {
 			_checksum(file.canWrite() ? 1000L : -1000L, crc32);
-			_checksum(file.lastModified(), crc32);
+			_checksum(file.lastModified() / 1000, crc32);
 			_checksum(file.length(), crc32);
 		}
 		else if (file.isDirectory()) {
@@ -137,25 +107,6 @@ public class Scanner {
 
 			l >>= 8;
 		}
-	}
-
-	private List<File> _canononize(List<File> files) {
-		List<File> canonicalFiles = new ArrayList<>(files.size());
-
-		for (File file : files) {
-			try {
-				canonicalFiles.add(file.getCanonicalFile());
-			}
-			catch (IOException ioException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(ioException);
-				}
-
-				canonicalFiles.add(file);
-			}
-		}
-
-		return canonicalFiles;
 	}
 
 	private File[] _list() {
@@ -260,8 +211,6 @@ public class Scanner {
 
 		return files;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(Scanner.class);
 
 	private final FilenameFilter _filenameFilter;
 	private final Map<File, Long> _lastChecksums = new HashMap<>();

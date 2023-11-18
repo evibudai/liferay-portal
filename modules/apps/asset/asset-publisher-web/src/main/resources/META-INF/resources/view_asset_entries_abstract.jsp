@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -30,7 +21,7 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 
 <%
 for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
-	AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassNameId(assetEntry.getClassNameId());
+	AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(assetEntry.getClassName());
 
 	if (assetRendererFactory == null) {
 		continue;
@@ -109,7 +100,7 @@ for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
 						<clay:content-col
 							cssClass="asset-avatar inline-item-before mr-3 pt-1"
 						>
-							<liferay-ui:user-portrait
+							<liferay-user:user-portrait
 								userId="<%= assetRenderer.getUserId() %>"
 							/>
 						</clay:content-col>
@@ -130,21 +121,21 @@ for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
 						if (assetPublisherDisplayContext.isShowCreateDate() && (assetEntry.getCreateDate() != null)) {
 							sb.append(LanguageUtil.get(request, "created"));
 							sb.append(StringPool.SPACE);
-							sb.append(dateFormatDate.format(assetEntry.getCreateDate()));
+							sb.append(dateFormat.format(assetEntry.getCreateDate()));
 							sb.append(" - ");
 						}
 
 						if (assetPublisherDisplayContext.isShowPublishDate() && (assetEntry.getPublishDate() != null)) {
 							sb.append(LanguageUtil.get(request, "published"));
 							sb.append(StringPool.SPACE);
-							sb.append(dateFormatDate.format(assetEntry.getPublishDate()));
+							sb.append(dateFormat.format(assetEntry.getPublishDate()));
 							sb.append(" - ");
 						}
 
 						if (assetPublisherDisplayContext.isShowExpirationDate() && (assetEntry.getExpirationDate() != null)) {
 							sb.append(LanguageUtil.get(request, "expired"));
 							sb.append(StringPool.SPACE);
-							sb.append(dateFormatDate.format(assetEntry.getExpirationDate()));
+							sb.append(dateFormat.format(assetEntry.getExpirationDate()));
 							sb.append(" - ");
 						}
 
@@ -275,44 +266,40 @@ for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
 						>
 
 							<%
-							String id = assetEntry.getEntryId() + StringUtil.randomId();
 							String label = LanguageUtil.format(request, "print-x", HtmlUtil.escape(title));
+
+							String printPageURL = PortletURLBuilder.createRenderURL(
+								renderResponse
+							).setMVCPath(
+								"/view_content.jsp"
+							).setParameter(
+								"assetEntryId", assetEntry.getEntryId()
+							).setParameter(
+								"languageId", LanguageUtil.getLanguageId(request)
+							).setParameter(
+								"type", assetRendererFactory.getType()
+							).setParameter(
+								"viewMode", Constants.PRINT
+							).setWindowState(
+								LiferayWindowState.POP_UP
+							).buildString();
 							%>
 
 							<clay:button
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"printPageURL", printPageURL
+									).build()
+								%>'
 								aria-label="<%= label %>"
-								cssClass="btn btn-outline-borderless btn-outline-secondary btn-sm lfr-portal-tooltip"
+								borderless="<%= true %>"
 								displayType="secondary"
 								icon="print"
-								onClick='<%= "javascript:" + liferayPortletResponse.getNamespace() + "printPage_" + id + "();" %>'
+								propsTransformer="js/printPageButtonPropsTransformer"
+								small="<%= true %>"
 								title="<%= label %>"
 								type="button"
 							/>
-
-							<aui:script>
-								function <portlet:namespace />printPage_<%= id %>() {
-									window.open(
-										'<%=
-										PortletURLBuilder.createRenderURL(
-											renderResponse
-										).setMVCPath(
-											"/view_content.jsp"
-										).setParameter(
-											"assetEntryId", assetEntry.getEntryId()
-										).setParameter(
-											"languageId", LanguageUtil.getLanguageId(request)
-										).setParameter(
-											"type", assetRendererFactory.getType()
-										).setParameter(
-											"viewMode", Constants.PRINT
-										).setWindowState(
-											LiferayWindowState.POP_UP
-										).buildPortletURL() %>',
-										'',
-										'directories=0,height=480,left=80,location=1,menubar=1,resizable=1,scrollbars=yes,status=0,toolbar=0,top=180,width=640'
-									);
-								}
-							</aui:script>
 						</clay:content-col>
 					</c:if>
 

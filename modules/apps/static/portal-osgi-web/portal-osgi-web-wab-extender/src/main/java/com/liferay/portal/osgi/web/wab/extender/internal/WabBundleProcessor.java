@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.wab.extender.internal;
@@ -18,6 +9,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Plugin;
+import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,6 +30,7 @@ import com.liferay.portal.osgi.web.wab.extender.internal.adapter.ServletExceptio
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.FilterRegistrationImpl;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ListenerServiceRegistrationComparator;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ServletRegistrationImpl;
+import com.liferay.portal.plugin.PluginPackageUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -53,6 +47,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -546,6 +541,13 @@ public class WabBundleProcessor {
 
 		boolean registeredPortletContextLoaderListener = false;
 
+		PluginPackage pluginPackage =
+			PluginPackageUtil.readPluginPackageServletContext(servletContext);
+
+		if (_themeTypes.equals(pluginPackage.getTypes())) {
+			registeredPortletContextLoaderListener = true;
+		}
+
 		for (ListenerDefinition listenerDefinition : listenerDefinitions) {
 			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
@@ -900,6 +902,9 @@ public class WabBundleProcessor {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		WabBundleProcessor.class);
+
+	private static final List<String> _themeTypes = Arrays.asList(
+		Plugin.TYPE_THEME);
 
 	private final Bundle _bundle;
 	private final ClassLoader _bundleClassLoader;

@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.mail.messaging;
 
 import com.liferay.mail.internal.MailEngine;
 import com.liferay.mail.kernel.model.MailMessage;
-import com.liferay.mail.util.HookFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +14,6 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.security.auth.EmailAddressGenerator;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.security.auth.EmailAddressGeneratorFactory;
@@ -101,22 +90,9 @@ public class MailMessageListener extends BaseMessageListener {
 		}
 	}
 
-	protected void doMethodHandler(MethodHandler methodHandler)
-		throws Exception {
-
-		methodHandler.invoke(HookFactory.getInstance());
-	}
-
 	@Override
 	protected void doReceive(Message message) throws Exception {
-		Object payload = message.getPayload();
-
-		if (payload instanceof MailMessage) {
-			doMailMessage((MailMessage)payload);
-		}
-		else if (payload instanceof MethodHandler) {
-			doMethodHandler((MethodHandler)payload);
-		}
+		doMailMessage((MailMessage)message.getPayload());
 	}
 
 	protected InternetAddress filterInternetAddress(

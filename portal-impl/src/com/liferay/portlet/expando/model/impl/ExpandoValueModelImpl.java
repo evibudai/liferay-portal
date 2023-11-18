@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.expando.model.impl;
@@ -241,72 +232,92 @@ public class ExpandoValueModelImpl
 	public Map<String, Function<ExpandoValue, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ExpandoValue, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ExpandoValue, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ExpandoValue, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ExpandoValue, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<ExpandoValue, Object>>();
-		Map<String, BiConsumer<ExpandoValue, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ExpandoValue, ?>>();
+		private static final Map<String, Function<ExpandoValue, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ExpandoValue::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", ExpandoValue::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setCtCollectionId);
-		attributeGetterFunctions.put("valueId", ExpandoValue::getValueId);
-		attributeSetterBiConsumers.put(
-			"valueId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setValueId);
-		attributeGetterFunctions.put("companyId", ExpandoValue::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setCompanyId);
-		attributeGetterFunctions.put("tableId", ExpandoValue::getTableId);
-		attributeSetterBiConsumers.put(
-			"tableId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setTableId);
-		attributeGetterFunctions.put("columnId", ExpandoValue::getColumnId);
-		attributeSetterBiConsumers.put(
-			"columnId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setColumnId);
-		attributeGetterFunctions.put("rowId", ExpandoValue::getRowId);
-		attributeSetterBiConsumers.put(
-			"rowId", (BiConsumer<ExpandoValue, Long>)ExpandoValue::setRowId);
-		attributeGetterFunctions.put(
-			"classNameId", ExpandoValue::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setClassNameId);
-		attributeGetterFunctions.put("classPK", ExpandoValue::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<ExpandoValue, Long>)ExpandoValue::setClassPK);
-		attributeGetterFunctions.put("data", ExpandoValue::getData);
-		attributeSetterBiConsumers.put(
-			"data", (BiConsumer<ExpandoValue, String>)ExpandoValue::setData);
+		static {
+			Map<String, Function<ExpandoValue, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap<String, Function<ExpandoValue, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ExpandoValue::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", ExpandoValue::getCtCollectionId);
+			attributeGetterFunctions.put("valueId", ExpandoValue::getValueId);
+			attributeGetterFunctions.put(
+				"companyId", ExpandoValue::getCompanyId);
+			attributeGetterFunctions.put("tableId", ExpandoValue::getTableId);
+			attributeGetterFunctions.put("columnId", ExpandoValue::getColumnId);
+			attributeGetterFunctions.put("rowId", ExpandoValue::getRowId);
+			attributeGetterFunctions.put(
+				"classNameId", ExpandoValue::getClassNameId);
+			attributeGetterFunctions.put("classPK", ExpandoValue::getClassPK);
+			attributeGetterFunctions.put("data", ExpandoValue::getData);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ExpandoValue, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ExpandoValue, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ExpandoValue, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<ExpandoValue, Long>)
+					ExpandoValue::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"valueId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setValueId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"tableId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setTableId);
+			attributeSetterBiConsumers.put(
+				"columnId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setColumnId);
+			attributeSetterBiConsumers.put(
+				"rowId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setRowId);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<ExpandoValue, Long>)ExpandoValue::setClassPK);
+			attributeSetterBiConsumers.put(
+				"data",
+				(BiConsumer<ExpandoValue, String>)ExpandoValue::setData);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -832,8 +843,9 @@ public class ExpandoValueModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<ExpandoValue, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<ExpandoValue, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

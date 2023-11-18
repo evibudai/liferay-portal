@@ -13,6 +13,10 @@ definition {
 	}
 
 	macro addRootTopic {
+		WaitForElementPresent(
+			key_text = "New Topic",
+			locator1 = "Button#ANY");
+
 		if (IsElementPresent(key_text = "New Topic", locator1 = "Button#ANY")) {
 			Click(
 				key_text = "New Topic",
@@ -27,23 +31,23 @@ definition {
 		Type(
 			key_text = "Topic Name",
 			locator1 = "TextInput#ANY",
-			value1 = "${rootTopicName}");
+			value1 = ${rootTopicName});
 
 		Type(
 			key_label = "Description",
 			locator1 = "TextArea#ANY_LABELED",
-			value1 = "${rootTopicDescription}");
+			value1 = ${rootTopicDescription});
 
 		Button.click(button = "Create");
 
-		if ("${invalidCharacters}" == "Topic") {
+		if (${invalidCharacters} == "Topic") {
 			Alert.viewErrorMessage(errorMessage = "The Topic Name cannot contain the following invalid characters");
 		}
 		else {
 			AssertTextEquals(
-				key_card = "${rootTopicName}",
+				key_card = ${rootTopicName},
 				locator1 = "Card#CARD_TITLE",
-				value1 = "${rootTopicName}");
+				value1 = ${rootTopicName});
 		}
 	}
 
@@ -53,25 +57,25 @@ definition {
 		Type(
 			key_text = "Topic Name",
 			locator1 = "TextInput#ANY",
-			value1 = "${subTopicName}");
+			value1 = ${subTopicName});
 
 		Type(
 			key_label = "Description",
 			locator1 = "TextArea#ANY_LABELED",
-			value1 = "${subTopicDescription}");
+			value1 = ${subTopicDescription});
 
 		Button.click(button = "Create");
 
 		AssertTextEquals(
-			key_topicName = "${subTopicName}",
+			key_topicName = ${subTopicName},
 			locator1 = "Questions#QUESTIONS_BREADCRUMB_ACTIVE_SUBTOPIC",
-			value1 = "${subTopicName}");
+			value1 = ${subTopicName});
 	}
 
 	macro addTags {
 		Type(
 			locator1 = "Questions#ASK_QUESTION_TAG_FIELD",
-			value1 = "${tagLocator}");
+			value1 = ${tagLocator});
 
 		KeyPress(
 			locator1 = "Questions#ASK_QUESTION_TAG_FIELD",
@@ -79,7 +83,25 @@ definition {
 	}
 
 	macro answerQuestion {
-		CKEditor.addContent(content = "${contentField}");
+		WaitForElementPresent(
+			key_text = "Add Answer",
+			locator1 = "Button#ANY");
+
+		Click(
+			key_text = "Add Answer",
+			locator1 = "Button#ANY");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = ${contentField});
+
+		SelectFrame(value1 = "relative-top");
+
+		ScrollWebElementIntoView(
+			key_text = "Post Answer",
+			locator1 = "Button#ANY");
 
 		Click(
 			key_text = "Post Answer",
@@ -92,16 +114,16 @@ definition {
 		}
 
 		AssertVisible(
-			key_answerBodyContent = "${contentField}",
+			key_answerBodyContent = ${contentField},
 			locator1 = "Questions#ANSWER_BODY");
 	}
 
 	macro askQuestionFillingTheMandatoryFields {
 		if (isSet(siteURLKey)) {
 			Questions._openToAddQuestion(
-				layoutName = "${layoutName}",
-				siteURLKey = "${siteURLKey}",
-				topicName = "${topicName}");
+				layoutName = ${layoutName},
+				siteURLKey = ${siteURLKey},
+				topicName = ${topicName});
 		}
 		else {
 			Click(locator1 = "Questions#ASK_QUESTION_BUTTON");
@@ -110,23 +132,23 @@ definition {
 		if (isSet(anonymousUser)) {
 			Type(
 				locator1 = "TextInput#EMAIL_ADDRESS",
-				value1 = "${userEmailAddress}");
+				value1 = ${userEmailAddress});
 
 			Type(
 				locator1 = "TextInput#PASSWORD",
-				value1 = "${password}");
+				value1 = ${password});
 
 			Click(locator1 = "Button#SIGN_IN");
 		}
 
 		Type(
 			locator1 = "Questions#ASK_QUESTION_TITLE_FIELD",
-			value1 = "${titleField}");
+			value1 = ${titleField});
 
-		CKEditor.addContent(content = "${contentField}");
+		CKEditor.addContent(content = ${contentField});
 
 		if (isSet(imageFileName)) {
-			var key_imageFileName = "${imageFileName}";
+			var key_imageFileName = ${imageFileName};
 
 			ItemSelector.gotoItemSelectorViaCKEditor();
 
@@ -143,15 +165,15 @@ definition {
 					locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
 					value1 = "Asset Library");
 
-				LexiconCard.clickCard(card = "${depotName}");
+				LexiconCard.clickCard(card = ${depotName});
 			}
 
 			Click(locator1 = "ItemSelector#SELECT_FILE_IMAGE_CARD");
 		}
 
 		if (isSet(tagLocatorList)) {
-			for (var tagLocator : list "${tagLocatorList}") {
-				Questions.addTags(tagLocator = "${tagLocator}");
+			for (var tagLocator : list ${tagLocatorList}) {
+				Questions.addTags(tagLocator = ${tagLocator});
 			}
 		}
 
@@ -159,7 +181,7 @@ definition {
 
 		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
 
-		if ("${invalidCharacters}" == "Tag") {
+		if (${invalidCharacters} == "Tag") {
 			Alert.viewErrorMessage(errorMessage = "The Tag cannot contain the following invalid characters");
 		}
 	}
@@ -167,32 +189,32 @@ definition {
 	macro assertCanonicalURL {
 		var html = '''<link href="''';
 		var html2 = '''" rel="canonical" data-react-helmet="true">''';
-		var portalURL = "${portalURL}/web/guest";
-		var pageName = StringUtil.lowerCase("${pageName}");
+		var portalURL = ${portalURL};
+		var pageName = StringUtil.lowerCase(${pageName});
 
-		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var pageNameURL = StringUtil.replace(${pageName}, " ", "-");
 
-		var pageSource = StringUtil.add("${html}", "${portalURL}/${pageNameURL}/questions/${category}/${title}${html2}", "");
+		var pageSource = StringUtil.add(${html}, "${portalURL}/${pageNameURL}/questions/${category}/${title}${html2}", "");
 
-		AssertHTMLSourceTextPresent(value1 = "${pageSource}");
+		AssertHTMLSourceTextPresent(value1 = ${pageSource});
 	}
 
 	macro changeDisplayStyle {
 		Click(locator1 = "Questions#CREATE_QUESTIONS_DISPLAY_STYLE_SELECTOR");
 
-		MenuItem.click(menuItem = StringUtil.upperCaseFirstLetter("${displayStyle}"));
+		MenuItem.click(menuItem = StringUtil.upperCaseFirstLetter(${displayStyle}));
 	}
 
 	macro changePagination {
 		Click(locator1 = "Questions#ITEMS_PER_PAGE_SELECT");
 
-		var key_itemsPerPage = "${itemsPerPage}";
+		var key_itemsPerPage = ${itemsPerPage};
 
-		MenuItem.click(menuItem = "${itemsPerPage}");
+		MenuItem.click(menuItem = ${itemsPerPage});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Questions#ITEMS_PER_PAGE_SELECT",
-			value1 = "${itemsPerPage}");
+			value1 = ${itemsPerPage});
 	}
 
 	macro changeTopic {
@@ -201,12 +223,12 @@ definition {
 				Click(locator1 = "Questions#QUESTIONS_BREADCRUMB_ELLIPSIS");
 
 				Click(
-					key_topicName = "${gotoParentTopic}",
+					key_topicName = ${gotoParentTopic},
 					locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_OPTION");
 			}
 			else {
 				Click(
-					key_topicName = "${gotoParentTopic}",
+					key_topicName = ${gotoParentTopic},
 					locator1 = "Questions#QUESTIONS_BREADCRUMB_PARENT_TOPIC_BUTTON");
 			}
 		}
@@ -216,33 +238,51 @@ definition {
 			}
 			else {
 				Click(
-					key_topicName = "${parentTopicName}",
+					key_topicName = ${parentTopicName},
 					locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_TOGGLE");
 			}
 
 			Click(
-				key_topicName = "${subTopicName}",
+				key_topicName = ${subTopicName},
 				locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_OPTION");
 
 			AssertTextEquals(
-				key_topicName = "${subTopicName}",
+				key_topicName = ${subTopicName},
 				locator1 = "Questions#QUESTIONS_BREADCRUMB_ACTIVE_SUBTOPIC",
-				value1 = "${subTopicName}");
+				value1 = ${subTopicName});
 		}
 	}
 
 	macro clearSearchResults {
-		Click(locator1 = "Questions#SEARCH_RESULTS_CLEAR_BUTTON");
+		Button.click(button = "Clear");
 
 		AssertElementNotPresent(locator1 = "Search#SEARCH_INFO");
 
-		AssertElementNotPresent(locator1 = "Questions#SEARCH_RESULTS_CLEAR_BUTTON");
+		AssertElementNotPresent(
+			key_text = "Clear",
+			locator1 = "Button#ANY");
+	}
+
+	macro clickFilterAndOrderBy {
+		Click(
+			key_text = "Filter and Order",
+			locator1 = "Button#ANY");
+
+		Click(
+			key_option = ${option},
+			locator1 = "Questions#QUESTIONS_SELECT_FILTER");
+
+		Button.click(button = "Apply");
 	}
 
 	macro configureFilter {
+		WaitForElementPresent(
+			locator1 = "Questions#QUESTIONS_SELECT_FILTER",
+			value1 = ${filterBy});
+
 		Select(
 			locator1 = "Questions#QUESTIONS_SELECT_FILTER",
-			value1 = "${filterBy}");
+			value1 = ${filterBy});
 	}
 
 	macro configureLandingPageTopicNavigation {
@@ -252,13 +292,13 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		if ("${toggleValue}" == "enable") {
+		if (${toggleValue} == "enable") {
 			Check(
 				checkboxName = "Show Cards for Topic Navigation",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
-		if ("${toggleValue}" == "disable") {
+		if (${toggleValue} == "disable") {
 			Uncheck(
 				checkboxName = "Show Cards for Topic Navigation",
 				locator1 = "Checkbox#ANY_CHECKBOX");
@@ -285,15 +325,15 @@ definition {
 			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_LINK");
 
 		if (isSet(subCategoryName)) {
-			LexiconTable.clickTableEntryTitle(tableEntry = "${parentCategoryName}");
+			LexiconTable.clickTableEntryTitle(tableEntry = ${parentCategoryName});
 
 			Click(
-				key_categoryName = "${subCategoryName}",
+				key_categoryName = ${subCategoryName},
 				locator1 = "Questions#SElECT_CATEGORY");
 		}
 		else {
 			Click(
-				key_categoryName = "${categoryName}",
+				key_categoryName = ${categoryName},
 				locator1 = "Questions#SElECT_CATEGORY");
 		}
 
@@ -305,12 +345,12 @@ definition {
 
 		if (isSet(subCategoryName)) {
 			AssertElementPresent(
-				key_categoryName = "${subCategoryName}",
+				key_categoryName = ${subCategoryName},
 				locator1 = "Questions#ROOT_TOPIC_ID_VALUE");
 		}
 		else {
 			AssertElementPresent(
-				key_categoryName = "${categoryName}",
+				key_categoryName = ${categoryName},
 				locator1 = "Questions#ROOT_TOPIC_ID_VALUE");
 		}
 	}
@@ -318,21 +358,38 @@ definition {
 	macro configureTagsFilter {
 		Select(
 			locator1 = "Questions#QUESTIONS_TAGS_SELECT_FILTER",
-			value1 = "${filterBy}");
+			value1 = ${filterBy});
 	}
 
 	macro createSomethingInMessageBoards {
 		LexiconEntry.gotoAdd();
 
-		MenuItem.click(menuItem = "${menuItem}");
+		MenuItem.click(menuItem = ${menuItem});
 
-		Questions.fillName(nameField = "${nameField}");
+		Questions.fillName(nameField = ${nameField});
 
-		Questions.changeDisplayStyle(displayStyle = "${displayStyleOption}");
+		Questions.changeDisplayStyle(displayStyle = ${displayStyleOption});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
+	}
+
+	macro definePermissionsToCreatedRole {
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_message_boards_web_portlet_MBAdminPortlet",
+			roleTitle = ${roleTitle});
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.message.boards",
+			roleTitle = ${roleTitle});
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.message.boards.model.MBCategory",
+			roleTitle = ${roleTitle});
 	}
 
 	macro deleteAnswer {
@@ -346,7 +403,7 @@ definition {
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
 
 			AssertVisible(
-				key_answerBodyContent = "${contentField}",
+				key_answerBodyContent = ${contentField},
 				locator1 = "Questions#ANSWER_BODY");
 		}
 		else {
@@ -355,7 +412,7 @@ definition {
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
 
 			AssertElementNotPresent(
-				key_answerBodyContent = "${contentField}",
+				key_answerBodyContent = ${contentField},
 				locator1 = "Questions#ANSWER_BODY");
 		}
 	}
@@ -371,7 +428,7 @@ definition {
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
 
 			AssertVisible(
-				key_replyBodyContent = "${commentReply}",
+				key_replyBodyContent = ${commentReply},
 				locator1 = "Questions#REPLY_BODY");
 		}
 		else {
@@ -380,25 +437,44 @@ definition {
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
 
 			AssertElementNotPresent(
-				key_replyBodyContent = "${commentReply}",
+				key_replyBodyContent = ${commentReply},
 				locator1 = "Questions#REPLY_BODY");
 		}
 	}
 
 	macro deleteQuestion {
-		Click(locator1 = "Icon#DELETE");
-
 		if (isSet(cancel)) {
+			Click.waitForMenuToggleJSClick(
+				key_questionTitle = ${questionTitle},
+				locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
+
+			Click(
+				key_text = "Delete",
+				locator1 = "Questions#DROPDOWN_ITEM_BUTTON");
+
 			Click(
 				key_text = "Cancel",
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
 
-			AssertTextEquals(
-				key_questionTitle = "${questionTitle}",
+			WaitForElementPresent(
+				key_questionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_DETAILS_TITLE",
-				value1 = "${questionTitle}");
+				value1 = ${questionTitle});
+
+			AssertTextEquals(
+				key_questionTitle = ${questionTitle},
+				locator1 = "Questions#QUESTIONS_DETAILS_TITLE",
+				value1 = ${questionTitle});
 		}
 		else if (isSet(deleteInActivity)) {
+			Click.waitForMenuToggleJSClick(
+				key_questionTitle = ${questionTitle},
+				locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
+
+			Click(
+				key_text = "Delete",
+				locator1 = "Questions#DROPDOWN_ITEM_BUTTON");
+
 			Click(
 				key_text = "Delete",
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
@@ -408,6 +484,14 @@ definition {
 				locator1 = "Questions#EMPTY_STATE_MESSAGE");
 		}
 		else {
+			Click.waitForMenuToggleJSClick(
+				key_questionTitle = ${questionTitle},
+				locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
+
+			Click(
+				key_text = "Delete",
+				locator1 = "Questions#DROPDOWN_ITEM_BUTTON");
+
 			Click(
 				key_text = "Delete",
 				locator1 = "Questions#MODAL_ITEM_BUTTON");
@@ -425,7 +509,7 @@ definition {
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${contentField}");
+			value1 = ${contentField});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -434,26 +518,48 @@ definition {
 			locator1 = "Button#ANY");
 
 		AssertVisible(
-			key_answerBodyContent = "${contentField}",
+			key_answerBodyContent = ${contentField},
 			locator1 = "Questions#ANSWER_BODY");
 	}
 
-	macro editQuestion {
-		Questions.gotoDetails(
-			questionTabField = "Questions",
-			questionTitle = "${questionTitle}");
-
-		Click(locator1 = "Button#EDIT");
-
-		Type(
-			locator1 = "Questions#ASK_QUESTION_TITLE_FIELD",
-			value1 = "${titleFieldEdit}");
+	macro editComment {
+		Click(locator1 = "Questions#EDIT_COMMENT");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${contentFieldEdit}");
+			value1 = ${contentField});
+
+		SelectFrame(value1 = "relative=top");
+
+		Click(
+			key_text = "Update Your Comment",
+			locator1 = "Button#ANY");
+	}
+
+	macro editQuestion {
+		Questions.gotoDetails(
+			questionTabField = "Questions",
+			questionTitle = ${questionTitle});
+
+		Click.waitForMenuToggleJSClick(
+			key_questionTitle = ${questionTitle},
+			locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
+
+		Click(
+			key_text = "Edit",
+			locator1 = "Questions#DROPDOWN_ITEM_BUTTON");
+
+		Type(
+			locator1 = "Questions#ASK_QUESTION_TITLE_FIELD",
+			value1 = ${titleFieldEdit});
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = ${contentFieldEdit});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -464,26 +570,26 @@ definition {
 		Refresh();
 
 		AssertVisible(
-			key_questionTitle = "${titleFieldEdit}",
+			key_questionTitle = ${titleFieldEdit},
 			locator1 = "Questions#QUESTIONS_DETAILS_TITLE");
 	}
 
 	macro editRootTopic {
 		if (isSet(siteURLKey)) {
 			MessageboardsCategory.openToEditCategory(
-				categoryName = "${categoryName}",
-				groupName = "${groupName}",
-				siteURLKey = "${siteURLKey}");
+				categoryName = ${categoryName},
+				groupName = ${groupName},
+				siteURLKey = ${siteURLKey});
 		}
 		else {
-			var key_categoryName = "${categoryName}";
+			var key_categoryName = ${categoryName};
 
-			LexiconEntry.openEntryMenu(rowEntry = "${categoryName}");
+			LexiconEntry.openEntryMenu(rowEntry = ${categoryName});
 
 			MenuItem.click(menuItem = "Edit");
 		}
 
-		PortletEntry.inputName(name = "${categoryNameEdit}");
+		PortletEntry.inputName(name = ${categoryNameEdit});
 
 		Click(
 			locator1 = "Button#SAVE",
@@ -504,6 +610,8 @@ definition {
 		FormFields.viewCheckboxChecked(fieldName = "enableAnonymousRead");
 
 		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			Button.clickUpdate();
+
 			Button.clickUpdate();
 		}
 		else {
@@ -539,57 +647,75 @@ definition {
 
 		Type(
 			locator1 = "Questions#CREATE_QUESTIONS_NAME_FIELD",
-			value1 = "${nameField}");
+			value1 = ${nameField});
 	}
 
 	macro gotoCategory {
+		WaitForElementPresent(
+			key_card = ${categoryName},
+			locator1 = "Card#CARD_TITLE");
+
 		Click(
-			key_card = "${categoryName}",
+			key_card = ${categoryName},
 			locator1 = "Card#CARD_TITLE");
 
 		AssertElementPresent(locator1 = "Questions#QUESTIONS_HOME_ICON");
 
 		AssertVisible(
-			key_categoryTitle = "${categoryName}",
+			key_categoryTitle = ${categoryName},
 			locator1 = "Questions#QUESTIONS_CATEGORY_TITLE");
 	}
 
 	macro gotoDetails {
 		if (isSet(duplicatedQuestions)) {
 			Click(
-				key_lastQuestionTitle = "${questionTitle}",
+				key_lastQuestionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_TITLE_LAST");
 		}
 		else {
+			WaitForElementPresent(
+				key_questionTitle = ${questionTitle},
+				locator1 = "Questions#QUESTIONS_TITLE");
+
 			Click(
-				key_questionTitle = "${questionTitle}",
+				key_questionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_TITLE");
 		}
 
 		AssertTextEquals(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_DETAILS_TITLE",
-			value1 = "${questionTitle}");
+			value1 = ${questionTitle});
 	}
 
 	macro gotoTab {
 		Click(
-			key_questionTabField = "${questionTabField}",
+			key_questionTabField = ${questionTabField},
 			locator1 = "Questions#QUESTIONS_LIST_TAB_FIELD");
 
 		AssertVisible(
-			key_questionTabField = "${questionTabField}",
+			key_questionTabField = ${questionTabField},
 			locator1 = "Questions#QUESTIONS_LIST_ACTIVE_TAB_FIELD");
 	}
 
-	macro openToConfigInSystemSettings {
-		var baseURL = PropsUtil.get("portal.url");
+	macro openQuestionFromActivity {
+		Click.waitForMenuToggleJSClick(
+			key_questionTitle = ${questionTitle},
+			locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
 
-		if ("${portlet}" == "Message Boards Moderation Workflow") {
+		Click(
+			key_text = "View Question",
+			locator1 = "Questions#DROPDOWN_ITEM_BUTTON");
+	}
+
+	macro openToConfigInSystemSettings {
+		var baseURL = JSONCompany.getPortalURL();
+
+		if (${portlet} == "Message Boards Moderation Workflow") {
 			var portletId = "com.liferay.message.boards.moderation.configuration.MBModerationGroupConfiguration";
 		}
 
-		if ("${portlet}" == "Questions") {
+		if (${portlet} == "Questions") {
 			var portletId = "com.liferay.questions.web.internal.configuration.QuestionsConfiguration";
 		}
 
@@ -614,10 +740,14 @@ definition {
 
 	macro openToQuestionsTopic {
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/${siteURLKey}/${layoutName}#/questions/${topicName}");
+
+		WaitForPageLoad();
 	}
 
 	macro openToTagsTab {
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/${siteURLKey}/${layoutName}#/tags");
+
+		WaitForPageLoad();
 	}
 
 	macro removeRootTopicConfiguration {
@@ -642,7 +772,7 @@ definition {
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${commentReply}");
+			value1 = ${commentReply});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -658,7 +788,7 @@ definition {
 		}
 
 		AssertVisible(
-			key_replyBodyContent = "${commentReply}",
+			key_replyBodyContent = ${commentReply},
 			locator1 = "Questions#REPLY_BODY");
 	}
 
@@ -666,12 +796,20 @@ definition {
 		if (isSet(searchTag)) {
 			Type(
 				locator1 = "Questions#SEARCH_QUESTION_FIELD",
-				value1 = "${searchKey}");
+				value1 = ${searchKey});
 		}
 		else {
 			Type(
 				locator1 = "Questions#SEARCH_QUESTION_FIELD",
-				value1 = "${searchKey}");
+				value1 = ${searchKey});
+
+			WaitForElementPresent(
+				key_placeHolder = "Search",
+				locator1 = "TextInput#ANY_PLACEHOLDER");
+
+			KeyPress(
+				locator1 = "Questions#SEARCH_QUESTION_FIELD",
+				value1 = "\ENTER");
 
 			if (isSet(noQuestionsResults)) {
 				AssertElementPresent(
@@ -682,14 +820,26 @@ definition {
 				AssertTextEquals(
 					key_resultsInfo = '''${resultsInfo}''',
 					locator1 = "Questions#SEARCH_INFO",
-					value1 = "${resultsInfo}");
+					value1 = ${resultsInfo});
 
-				AssertVisible(locator1 = "Questions#SEARCH_RESULTS_CLEAR_BUTTON");
+				AssertVisible(
+					key_text = "Clear",
+					locator1 = "Button#ANY");
 			}
 		}
 	}
 
+	macro subscribeFromQuestion {
+		Click.waitForMenuToggleJSClick(
+			key_questionTitle = ${questionTitle},
+			locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
+
+		MenuItem.clickNoError(menuItem = "Subscribe");
+	}
+
 	macro subscribeFromTag {
+		WaitForElementPresent(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
+
 		Click(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 
 		AssertElementPresent(locator1 = "Questions#QUESTIONS_UNSUBSCRIBE");
@@ -700,11 +850,9 @@ definition {
 	}
 
 	macro subscribeTopic {
-		AssertClick(
-			locator1 = "Button#SUBSCRIBE",
-			value1 = "Subscribe");
+		AssertElementPresent(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 
-		AssertElementPresent(locator1 = "Questions#QUESTIONS_SUBSCRIBED_BUTTON");
+		Click(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 	}
 
 	macro tearDown {
@@ -717,7 +865,7 @@ definition {
 
 	macro unsubscribeFromQuestion {
 		Click.waitForMenuToggleJSClick(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
 
 		MenuItem.clickNoError(menuItem = "Unsubscribe");
@@ -737,7 +885,7 @@ definition {
 
 	macro unsubscribeFromTopic {
 		LexiconCard.clickEllipsisItem(
-			card = "${topicName}",
+			card = ${topicName},
 			item = "Unsubscribe");
 	}
 
@@ -750,73 +898,74 @@ definition {
 
 	macro viewDetailsTitle {
 		AssertTextEquals(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_DETAILS_TITLE",
-			value1 = "${questionTitle}");
+			value1 = ${questionTitle});
 	}
 
 	macro viewFilterResults {
 		AssertTextEquals(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_TITLE",
-			value1 = "${questionTitle}");
+			value1 = ${questionTitle});
 
 		AssertTextEquals(
-			key_lastQuestionTitle = "${lastQuestionTitle}",
+			key_lastQuestionTitle = ${lastQuestionTitle},
 			locator1 = "Questions#QUESTIONS_TITLE_LAST",
-			value1 = "${lastQuestionTitle}");
+			value1 = ${lastQuestionTitle});
 	}
 
 	macro viewHomeTopicsList {
+		Refresh();
+
 		Click(locator1 = "Questions#QUESTIONS_BREADCRUMB_HOME_DROPDOWN_TOGGLE");
 
-		for (var topicName : list "${topicsName}") {
-			AssertTextEquals(
-				key_topicName = "${topicName}",
-				locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_OPTION",
-				value1 = "${topicName}");
+		for (var topicName : list ${topicsName}) {
+			AssertElementPresent(
+				key_topicName = ${topicName},
+				locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_OPTION");
 		}
 	}
 
 	macro viewImageInQuestion {
 		AssertVisible(
-			key_imageFileName = "${imageFileName}",
+			key_imageFileName = ${imageFileName},
 			locator1 = "Questions#QUESTIONS_IMAGE_NAME");
 	}
 
 	macro viewList {
 		if (isSet(unlistedQuestions)) {
-			for (var unlistedQuestion : list "${unlistedQuestions}") {
+			for (var unlistedQuestion : list ${unlistedQuestions}) {
 				AssertElementNotPresent(
-					key_questionTitle = "${unlistedQuestions}",
+					key_questionTitle = ${unlistedQuestions},
 					locator1 = "Questions#QUESTIONS_TITLE");
 			}
 		}
 
 		if (isSet(listedQuestions)) {
-			for (var listedQuestion : list "${listedQuestions}") {
+			for (var listedQuestion : list ${listedQuestions}) {
 				AssertTextEquals(
-					key_questionTitle = "${listedQuestion}",
+					key_questionTitle = ${listedQuestion},
 					locator1 = "Questions#QUESTIONS_TITLE",
-					value1 = "${listedQuestion}");
+					value1 = ${listedQuestion});
 			}
 		}
 	}
 
 	macro viewLockedQuestion {
 		AssertElementPresent(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_LOCKED_ICON");
 
 		for (var caretName : list "caret-top,caret-bottom") {
 			AssertElementPresent(
-				key_caretName = "${caretName}",
+				key_caretName = ${caretName},
 				locator1 = "Questions#VOTE_BUTTON_DISABLED");
 		}
 
 		AssertElementNotPresent(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
 
-		AssertElementNotPresent(locator1 = "Icon#MOVE_TO_RECYCLE_BIN");
+		AssertNotVisible(locator1 = "Icon#MOVE_TO_RECYCLE_BIN");
 
 		AssertElementNotPresent(locator1 = "Button#EDIT");
 
@@ -824,11 +973,15 @@ definition {
 
 		for (var text : list "Delete,Mark as answer") {
 			AssertElementNotPresent(
-				key_text = "${text}",
+				key_text = ${text},
 				locator1 = "Button#ANY");
 		}
 
 		if (isSet(lockedStatus)) {
+			Click(
+				key_text = "Add Answer",
+				locator1 = "Button#ANY");
+
 			AssertElementPresent(locator1 = "Questions#QUESTIONS_LOCKED_ANSWER_TEXT");
 		}
 	}
@@ -868,88 +1021,86 @@ definition {
 	}
 
 	macro viewNoSearchResults {
-		for (var questionTitle : list "${questionsList}") {
+		for (var questionTitle : list ${questionsList}) {
 			AssertElementNotPresent(
-				key_questionTitle = "${questionTitle}",
+				key_questionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_TITLE");
 		}
 	}
 
 	macro viewNoTags {
-		for (var tagName : list "${tagsList}") {
+		for (var tagName : list ${tagsList}) {
 			AssertElementNotPresent(
-				key_tagName = "${tagName}",
+				key_tagName = ${tagName},
 				locator1 = "Questions#TAGS_LIST_TAB_NAMES");
 		}
 	}
 
 	macro viewNoTopicDropdownToggle {
 		AssertElementNotPresent(
-			key_topicName = "${topicName}",
+			key_topicName = ${topicName},
 			locator1 = "Questions#QUESTIONS_BREADCRUMB_TOPIC_DROPDOWN_TOGGLE");
 	}
 
 	macro viewPaginationResults {
 		AssertTextEquals(
 			locator1 = "Questions#PAGINATION_RESULTS",
-			value1 = "${results}");
+			value1 = ${results});
+	}
+
+	macro viewQuestionPage {
+		var baseURL = JSONCompany.getPortalURL();
+
+		AssertLocation(value1 = "${baseURL}/web/guest/questions-page/questions/${topicName}");
 	}
 
 	macro viewQuestionViaTag {
 		Click(
-			key_tagName = "${tagName}",
+			key_tagName = ${tagName},
 			locator1 = "Questions#TAGS_LIST_TAB_NAMES");
 
 		AssertElementPresent(
-			key_titleField = "${questionTitle}",
+			key_titleField = ${questionTitle},
 			locator1 = "Questions#ASK_QUESTION_SEARCH_QUESTION");
 	}
 
 	macro viewSearchField {
-		if (isSet(noQuestion)) {
-			AssertElementNotPresent(locator1 = "Questions#SEARCH_QUESTION_FIELD");
-		}
-		else {
-			AssertElementPresent(locator1 = "Questions#SEARCH_QUESTION_FIELD");
-		}
+		AssertElementPresent(locator1 = "Questions#SEARCH_QUESTION_FIELD");
 	}
 
 	macro viewSearchResults {
-		for (var questionTitle : list "${questionsList}") {
+		for (var questionTitle : list ${questionsList}) {
 			AssertTextEquals(
-				key_questionTitle = "${questionTitle}",
+				key_questionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_TITLE",
-				value1 = "${questionTitle}");
+				value1 = ${questionTitle});
 		}
 	}
 
 	macro viewSelectFilter {
-		if (isSet(noQuestion)) {
-			AssertElementNotPresent(locator1 = "Questions#QUESTIONS_SELECT_FILTER");
-		}
-		else {
-			AssertElementPresent(locator1 = "Questions#QUESTIONS_SELECT_FILTER");
-		}
+		AssertElementPresent(
+			key_text = "Filter and Order",
+			locator1 = "Button#ANY");
 	}
 
 	macro viewStatistics {
 		MouseOver(
-			key_userName = "${userName}",
+			key_userName = ${userName},
 			locator1 = "Questions#QUESTIONS_STATISTICS_USER_NAME");
 
 		AssertElementPresent(
-			key_headerName = "${headerName}",
+			key_headerName = ${headerName},
 			locator1 = "Questions#QUESTIONS_STATISTICS_HEADER");
 
-		for (var itemNameList : list "${itemNameList}") {
+		for (var itemNameList : list ${itemNameList}) {
 			AssertElementPresent(
-				key_itemName = "${itemNameList}",
+				key_itemName = ${itemNameList},
 				locator1 = "Questions#QUESTIONS_STATISTICS_ITEM");
 		}
 	}
 
 	macro viewStatus {
-		if ("${status}" == "pending") {
+		if (${status} == "pending") {
 			AssertVisible(
 				key_status = "pending",
 				locator1 = "Questions#WORKFLOW_STATUS");
@@ -966,9 +1117,9 @@ definition {
 	macro viewSubscribedQuestion {
 		if (isSet(subscribedQuestion)) {
 			AssertTextEquals(
-				key_questionTitle = "${subscribedQuestion}",
+				key_questionTitle = ${subscribedQuestion},
 				locator1 = "Questions#QUESTIONS_TITLE",
-				value1 = "${subscribedQuestion}");
+				value1 = ${subscribedQuestion});
 		}
 		else if (isSet(noSubscribedQuestion)) {
 			AssertTextEquals(
@@ -979,10 +1130,9 @@ definition {
 
 	macro viewSubscribedTag {
 		if (isSet(subscribedTag)) {
-			AssertTextEquals(
-				key_subscribedTag = "${subscribedTag}",
-				locator1 = "Questions#SUBSCRIBED_TAG",
-				value1 = "${subscribedTag}");
+			AssertElementPresent(
+				key_subscribedTag = ${subscribedTag},
+				locator1 = "Questions#SUBSCRIBED_TAG");
 		}
 		else if (isSet(noSubscribedTag)) {
 			AssertTextEquals(
@@ -994,9 +1144,9 @@ definition {
 	macro viewSubscribedTopic {
 		if (isSet(subscribedTopic)) {
 			AssertTextEquals(
-				key_subscribedTopic = "${subscribedTopic}",
+				key_subscribedTopic = ${subscribedTopic},
 				locator1 = "Questions#QUESTIONS_SUBSCRIBED_TOPIC",
-				value1 = "${subscribedTopic}");
+				value1 = ${subscribedTopic});
 		}
 		else if (isSet(noSubscribedTopic)) {
 			AssertTextEquals(
@@ -1023,33 +1173,33 @@ definition {
 		}
 		else {
 			AssertElementPresent(
-				key_tagName = "${tagName}",
+				key_tagName = ${tagName},
 				locator1 = "Questions#TAGS_LIST_TAB_NAMES");
 		}
 
 		if (isSet(amountOfUsedTimes)) {
 			AssertElementPresent(
-				key_amountOfUsedTimes = "${amountOfUsedTimes}",
-				key_tagName = "${tagName}",
+				key_amountOfUsedTimes = ${amountOfUsedTimes},
+				key_tagName = ${tagName},
 				locator1 = "Questions#TAGS_LIST_TAB_USED_TIMES");
 		}
 	}
 
 	macro viewTagsFilterResults {
 		AssertTextEquals.assertPartialText(
-			key_position = "${position}",
+			key_position = ${position},
 			locator1 = "Questions#TAGS_POSITION",
-			value1 = "${tagName}");
+			value1 = ${tagName});
 
 		if (isSet(usedTimes)) {
 			AssertTextEquals.assertPartialText(
-				key_position = "${position}",
+				key_position = ${position},
 				locator1 = "Questions#TAGS_POSITION",
-				value1 = "${usedTimes}");
+				value1 = ${usedTimes});
 		}
 		else {
 			AssertTextEquals.assertPartialText(
-				key_position = "${position}",
+				key_position = ${position},
 				locator1 = "Questions#TAGS_POSITION",
 				value1 = "Created");
 		}
@@ -1066,11 +1216,11 @@ definition {
 			Click(locator1 = "Questions#QUESTIONS_HOME_ICON");
 		}
 
-		for (var topicName : list "${topicNameList}") {
+		for (var topicName : list ${topicNameList}) {
 			AssertTextEquals(
-				key_card = "${topicName}",
+				key_card = ${topicName},
 				locator1 = "Card#CARD_TITLE",
-				value1 = "${topicName}");
+				value1 = ${topicName});
 		}
 
 		AssertElementNotPresent(locator1 = "Questions#QUESTIONS_HOME_ICON");
@@ -1078,16 +1228,18 @@ definition {
 
 	macro viewUnlockedQuestion {
 		AssertElementNotPresent(
-			key_questionTitle = "${questionTitle}",
+			key_questionTitle = ${questionTitle},
 			locator1 = "Questions#QUESTIONS_LOCKED_ICON");
 
 		for (var caretName : list "caret-top,caret-bottom") {
 			AssertVisible(
-				key_caretName = "${caretName}",
+				key_caretName = ${caretName},
 				locator1 = "Questions#VOTE_BUTTON");
 		}
 
-		AssertVisible(locator1 = "Questions#QUESTIONS_BELL_BUTTON");
+		Click.waitForMenuToggleJSClick(
+			key_questionTitle = ${questionTitle},
+			locator1 = "Questions#QUESTIONS_ELLIPSIS_ICON");
 
 		AssertVisible(locator1 = "Icon#MOVE_TO_RECYCLE_BIN");
 
@@ -1095,7 +1247,7 @@ definition {
 
 		for (var text : list "Add Comment,Delete,Mark as Answer") {
 			AssertVisible(
-				key_text = "${text}",
+				key_text = ${text},
 				locator1 = "Button#ANY");
 		}
 	}
@@ -1103,30 +1255,30 @@ definition {
 	macro viewVotedResult {
 		if (isSet(answersList)) {
 			AssertTextEquals(
-				key_votedResult = "${votedCount}",
+				key_votedResult = ${votedCount},
 				locator1 = "Questions#VOTED_RESULT_ANSWER",
-				value1 = "${votedCount}");
+				value1 = ${votedCount});
 		}
 		else if (isSet(questionTitle)) {
 			AssertTextEquals(
-				key_questionTitle = "${questionTitle}",
+				key_questionTitle = ${questionTitle},
 				locator1 = "Questions#QUESTIONS_VOTED_COUNT",
-				value1 = "${votedCount}");
+				value1 = ${votedCount});
 		}
 		else {
 			AssertTextEquals(
-				key_count = "${votedCount}",
-				key_text = "${votedCaret}",
+				key_count = ${votedCount},
+				key_text = ${votedCaret},
 				locator1 = "Questions#QUESTIONS_LIST_VOTED_COUNT",
-				value1 = "${votedCount}");
+				value1 = ${votedCount});
 		}
 	}
 
 	macro voteAnswer {
 		AssertTextEquals(
-			key_votedResult = "${currentVotedCount}",
+			key_votedResult = ${currentVotedCount},
 			locator1 = "Questions#VOTED_RESULT_ANSWER",
-			value1 = "${currentVotedCount}");
+			value1 = ${currentVotedCount});
 
 		if (isSet(voteUp)) {
 			Click(
@@ -1136,9 +1288,9 @@ definition {
 			var newVotedCount = ${currentVotedCount} + 1;
 
 			AssertTextEquals(
-				key_votedResult = "${newVotedCount}",
+				key_votedResult = ${newVotedCount},
 				locator1 = "Questions#VOTED_RESULT_ANSWER",
-				value1 = "${newVotedCount}");
+				value1 = ${newVotedCount});
 		}
 
 		if (isSet(voteDown)) {
@@ -1149,17 +1301,17 @@ definition {
 			var newVotedCount = ${currentVotedCount} - 1;
 
 			AssertTextEquals(
-				key_votedResult = "${newVotedCount}",
+				key_votedResult = ${newVotedCount},
 				locator1 = "Questions#VOTED_RESULT_ANSWER",
-				value1 = "${newVotedCount}");
+				value1 = ${newVotedCount});
 		}
 	}
 
 	macro voteQuestion {
 		AssertTextEquals(
-			key_votedResult = "${currentVotedCount}",
+			key_votedResult = ${currentVotedCount},
 			locator1 = "Questions#VOTED_RESULT",
-			value1 = "${currentVotedCount}");
+			value1 = ${currentVotedCount});
 
 		if (isSet(voteUp)) {
 			Click(
@@ -1169,9 +1321,9 @@ definition {
 			var newVotedCount = ${currentVotedCount} + 1;
 
 			AssertTextEquals(
-				key_votedResult = "${newVotedCount}",
+				key_votedResult = ${newVotedCount},
 				locator1 = "Questions#VOTED_RESULT",
-				value1 = "${newVotedCount}");
+				value1 = ${newVotedCount});
 		}
 
 		if (isSet(voteDown)) {
@@ -1182,9 +1334,9 @@ definition {
 			var newVotedCount = ${currentVotedCount} - 1;
 
 			AssertTextEquals(
-				key_votedResult = "${newVotedCount}",
+				key_votedResult = ${newVotedCount},
 				locator1 = "Questions#VOTED_RESULT",
-				value1 = "${newVotedCount}");
+				value1 = ${newVotedCount});
 		}
 	}
 

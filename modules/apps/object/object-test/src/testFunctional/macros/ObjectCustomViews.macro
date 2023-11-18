@@ -5,13 +5,13 @@ definition {
 
 		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
-		for (var columnsOptions : list "${addColumns}") {
+		for (var columnsOptions : list ${addColumns}) {
 			Click.clickAtNotVisible(
-				key_columnOption = "${columnsOptions}",
+				key_columnOption = ${columnsOptions},
 				locator1 = "ObjectCustomViews#CHECKBOX_COLUMN_OPTION");
 		}
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		SelectFrame(locator1 = "IFrame#IFRAME");
 	}
@@ -27,18 +27,57 @@ definition {
 		Click(locator1 = "ObjectCustomViews#SELECT_AUTO_COMPLETE");
 
 		Click(
-			key_columnOption = "${columnOption}",
+			key_columnOption = ${columnOption},
 			locator1 = "ObjectCustomViews#SELECT_AUTO_COMPLETE_OPTION");
 
 		Click(locator1 = "ObjectCustomViews#SELECT_SORTING_ON_DEFAULT_SORT");
 
 		Click(
-			key_sortOption = "${sortOption}",
+			key_sortOption = ${sortOption},
 			locator1 = "ObjectCustomViews#SORT_OPTION");
 
 		Click(
 			key_tab = "Save",
 			locator1 = "Button#TAB_SUBMIT_BTN");
+	}
+
+	macro addNewAggregationFilterViaUI {
+		Click(locator1 = "ObjectCustomViews#ADD_BUTTON_FILTERS");
+
+		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		Click(
+			key_picklistOption = ${filterBy},
+			locator1 = "ObjectCustomViews#FIELD_VIEW_FILTER_DROPDOWN_OPTION");
+
+		Click(
+			key_filterLabel = "Filter Type",
+			locator1 = "ObjectCustomViews#SELECT_FILTER_GENERIC");
+
+		Click(
+			key_fieldType = ${filterType},
+			locator1 = "ObjectField#TYPE_OPTION");
+
+		if (${filterType} == "Range") {
+			var dateIndex = 1;
+
+			for (var dateValue : list ${dateValueList}) {
+				Type(
+					key_dateIndex = ${dateIndex},
+					locator1 = "ObjectCustomViews#FIELD_VIEW_FILTER_DATE_INPUT",
+					value1 = ${dateValue});
+
+				var dateIndex = ${dateIndex} + 1;
+			}
+		}
+		else {
+			Type(
+				key_text = "Value",
+				locator1 = "TextInput#ANY",
+				value1 = ${filterValue});
+		}
+
+		ObjectCustomViews.clickSaveOnModal();
 	}
 
 	macro addNewDefaultSort {
@@ -50,9 +89,7 @@ definition {
 
 		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
-		Click(
-			key_picklistOption = "${filterBy}",
-			locator1 = "Picklist#PICKLIST_KEBAB_MENU_OPTION");
+		MenuItem.clickNoError(menuItem = ${filterBy});
 
 		if (isSet(filterType)) {
 			Click(
@@ -60,7 +97,7 @@ definition {
 				locator1 = "ObjectCustomViews#SELECT_FILTER_GENERIC");
 
 			Click(
-				key_fieldType = "${filterType}",
+				key_fieldType = ${filterType},
 				locator1 = "ObjectField#TYPE_OPTION");
 		}
 
@@ -69,9 +106,9 @@ definition {
 				key_filterLabel = "Value",
 				locator1 = "ObjectCustomViews#SELECT_FILTER_GENERIC");
 
-			for (var filterValueList : list "${filterValue}") {
+			for (var filterValueList : list ${filterValue}) {
 				Click.clickAtNotVisible(
-					key_columnOption = "${filterValueList}",
+					key_columnOption = ${filterValueList},
 					locator1 = "ObjectCustomViews#CHECKBOX_COLUMN_OPTION");
 			}
 		}
@@ -84,68 +121,28 @@ definition {
 
 		Type(
 			locator1 = "ObjectCustomViews#ADD_VIEW_NAME",
-			value1 = "${viewName}");
+			value1 = ${viewName});
 
-		Button.clickSave();
-
-		WaitForPageLoad();
-	}
-
-	macro assertColumnLabelPresent {
-		AssertElementPresent(
-			key_columnLabel = "${columnLabel}",
-			locator1 = "ObjectCustomViews#BUILDER_SEARCH_RESULT_COLUMN_LABEL");
-	}
-
-	macro assertColumnNotPresent {
-		AssertElementNotPresent(
-			key_columnName = "${columnName}",
-			locator1 = "ObjectCustomViews#VIEW_BUILDER_SEARCH_RESULT");
-	}
-
-	macro assertColumnNotPresentOnAddColumnModal {
-		AssertElementNotPresent(
-			key_columnName = "${columnOption}",
-			locator1 = "ObjectCustomViews#ADD_COLUMNS_COLUMN_LABEL");
-	}
-
-	macro assertColumnNotPresentOnDefaultSort {
-		AssertElementNotPresent(
-			key_columnName = "${columnName}",
-			locator1 = "ObjectCustomViews#DEFAULT_SORT_SEARCH_RESULT");
-	}
-
-	macro assertColumnPresent {
-		AssertElementPresent(
-			key_columnName = "${columnName}",
-			locator1 = "ObjectCustomViews#VIEW_BUILDER_SEARCH_RESULT");
+		PortletEntry.save();
 	}
 
 	macro assertColumnPresentOnDefaultSort {
 		AssertElementPresent(
-			key_columnName = "${columnName}",
+			key_columnName = ${columnName},
 			locator1 = "ObjectCustomViews#DEFAULT_SORT_SEARCH_RESULT");
 
 		AssertTextEquals(
-			key_sortingLabel = "${sortingLabel}",
+			key_sortingLabel = ${sortingLabel},
 			locator1 = "ObjectCustomViews#DEFAULT_SORT_SORTING_LABEL",
-			value1 = "${sortingLabel}");
+			value1 = ${sortingLabel});
 	}
 
 	macro assertColumnVisibleOnAddColumnModal {
 		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
 		AssertVisible(
-			key_columnName = "${columnOption}",
+			key_columnName = ${columnOption},
 			locator1 = "ObjectCustomViews#ADD_COLUMNS_COLUMN_LABEL");
-	}
-
-	macro assertEmptyStateTextOnViewBuilder {
-		SelectFrame(locator1 = "ObjectCustomViews#CUSTOM_VIEW_MODAL");
-
-		AssertElementPresent(
-			key_text = "${text}",
-			locator1 = "ObjectCustomViews#VIEW_BUILDER_EMPTY_STATE_TEXT");
 	}
 
 	macro assertFilterPresent {
@@ -154,8 +151,8 @@ definition {
 		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
 		AssertElementPresent(
-			key_picklistOption = "${filterBy}",
-			locator1 = "Picklist#PICKLIST_KEBAB_MENU_OPTION");
+			key_menuItem = ${filterBy},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
 	macro assertNoColumnPresentInDefaultSort {
@@ -167,32 +164,20 @@ definition {
 	}
 
 	macro assertObjectView {
-		var key_viewLabel = "${viewLabel}";
+		var key_viewLabel = ${viewLabel};
 
 		AssertElementPresent(locator1 = "ObjectCustomViews#OBJECT_VIEW_LABEL");
 	}
 
-	macro assertObjectViewName {
-		AssertElementPresent(
-			locator1 = "ObjectCustomViews#OBJECT_VIEWS_NAME",
-			value1 = "${name}");
-	}
-
-	macro assertObjectViewNotPresent {
-		var key_viewLabel = "${viewLabel}";
-
-		AssertElementNotPresent(locator1 = "ObjectCustomViews#OBJECT_VIEW_LABEL");
-	}
-
 	macro assertPresentEntriesOnFilters {
 		AssertElementPresent(
-			key_columnName = "${filterBy}",
+			key_columnName = ${filterBy},
 			locator1 = "ObjectCustomViews#VIEW_BUILDER_SEARCH_RESULT");
 
 		if (isSet(filterValue)) {
-			for (var filterValueList : list "${filterValue}") {
+			for (var filterValueList : list ${filterValue}) {
 				AssertElementPresent(
-					key_columnLabel = "${filterValueList}",
+					key_columnLabel = ${filterValueList},
 					locator1 = "ObjectCustomViews#BUILDER_SEARCH_RESULT_COLUMN_LABEL");
 			}
 		}
@@ -217,16 +202,16 @@ definition {
 
 		Type(
 			locator1 = "ObjectCustomViews#SEARCH_DROPDOWN_MENU_FILTER",
-			value1 = "${filterName}");
+			value1 = ${filterName});
 
 		Click(
-			key_fieldName = "${filterName}",
+			key_fieldName = ${filterName},
 			locator1 = "FormViewBuilder#OBJECT_FIELD_BUTTON_DROPDOWN");
 
 		Type(
 			key_fieldName = "yyyy-mm-dd",
 			locator1 = "ObjectCustomViews#FROM_DATE_INPUT",
-			value1 = "${displayDate}");
+			value1 = ${displayDate});
 
 		Click(
 			key_text = "Add Filter",
@@ -235,7 +220,7 @@ definition {
 
 	macro deleteObjectCustomViewViaUI {
 		Click(
-			key_objectCustomViewLabel = "${viewLabel}",
+			key_objectCustomViewLabel = ${viewLabel},
 			locator1 = "ObjectCustomViews#OBJECT_VIEW_KEBAB_MENU");
 
 		MenuItem.clickNoError(menuItem = "Delete");
@@ -243,7 +228,7 @@ definition {
 
 	macro deleteSpecificColumn {
 		Click(
-			key_columnName = "${columnName}",
+			key_columnName = ${columnName},
 			locator1 = "ObjectCustomViews#VIEW_BUILDER_DROPDOWN_SPECIFIC_COLUMN");
 
 		DropdownMenuItem.click(menuItem = "Delete");
@@ -251,7 +236,7 @@ definition {
 
 	macro duplicateObjectCustomView {
 		Click(
-			key_objectCustomViewLabel = "${viewLabel}",
+			key_objectCustomViewLabel = ${viewLabel},
 			locator1 = "ObjectCustomViews#OBJECT_VIEW_KEBAB_MENU");
 
 		MenuItem.clickNoError(menuItem = "Duplicate");
@@ -260,7 +245,7 @@ definition {
 	macro editName {
 		Type(
 			locator1 = "ObjectCustomViews#OBJECT_VIEWS_NAME",
-			value1 = "${name}");
+			value1 = ${name});
 	}
 
 	macro editSortingType {
@@ -271,11 +256,11 @@ definition {
 		DropdownMenuItem.click(menuItem = "Edit");
 
 		Click(
-			key_sorting = "${actualSort}",
+			key_sorting = ${actualSort},
 			locator1 = "ObjectCustomViews#EDIT_SORTING");
 
 		Click(
-			key_sortOption = "${newSortOption}",
+			key_sortOption = ${newSortOption},
 			locator1 = "ObjectCustomViews#SORT_OPTION");
 
 		Click(
@@ -285,7 +270,7 @@ definition {
 
 	macro editSpecificColumn {
 		Click(
-			key_columnName = "${columnName}",
+			key_columnName = ${columnName},
 			locator1 = "ObjectCustomViews#VIEW_BUILDER_DROPDOWN_SPECIFIC_COLUMN");
 
 		DropdownMenuItem.click(menuItem = "Edit");
@@ -301,7 +286,7 @@ definition {
 
 	macro gotoPermissions {
 		Click(
-			key_objectLabel = "${entryName}",
+			key_objectLabel = ${entryName},
 			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
 
 		MenuItem.click(menuItem = "Permissions");
@@ -317,7 +302,7 @@ definition {
 
 	macro goToViewsDetails {
 		Click(
-			key_label = "${label}",
+			key_label = ${label},
 			locator1 = "ObjectCustomViews#SELECT_OBJECT_VIEWS");
 
 		SelectFrame(locator1 = "IFrame#IFRAME");
@@ -344,12 +329,12 @@ definition {
 
 		Type(
 			locator1 = "ObjectPortlet#COLUMN_SEARCH_FIELD",
-			value1 = "${columnName}");
+			value1 = ${columnName});
 
 		Click(locator1 = "ObjectCustomViews#VIEW_DROPDOWN_MENU_ON_MODAL_DEFAULT_SORT");
 
 		AssertElementPresent(
-			key_columnName = "${columnName}",
+			key_columnName = ${columnName},
 			locator1 = "ObjectCustomViews#VIEW_FIELDS_ON_DROPDOWN_ITEM");
 	}
 
@@ -360,7 +345,7 @@ definition {
 
 		Type(
 			locator1 = "ObjectCustomViews#ADD_COLUMNS_SEARCH_BAR",
-			value1 = "${columnName}");
+			value1 = ${columnName});
 	}
 
 	macro searchOnDefaultSort {
@@ -368,7 +353,7 @@ definition {
 
 		Type(
 			locator1 = "ObjectCustomViews#DEFAULT_SORT_SEARCH_BAR",
-			value1 = "${columnName}");
+			value1 = ${columnName});
 	}
 
 	macro searchOnViewBuilder {
@@ -376,70 +361,70 @@ definition {
 
 		Type(
 			locator1 = "ObjectCustomViews#VIEW_BUILDER_SEARCH_BAR",
-			value1 = "${columnName}");
+			value1 = ${columnName});
 	}
 
 	macro selectAnyPermissions {
-		for (var permissionsName : list "${permissionsList}") {
+		for (var permissionsName : list ${permissionsList}) {
 			if (isSet(analyticsAdministrator)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "analytics-administrator",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(guest)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "guest",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(owner)) {
-				Click(
-					key_permissionName = "${permissionsName}",
+				Click.clickAtNotVisible(
+					key_permissionName = ${permissionsName},
 					key_roleName = "owner",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(powerUser)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "power-user",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(portalContentReviewer)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "portal-content-reviewer",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(publicationsUser)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "publications-user",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(siteContentReviewer)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "site-content-reviewer",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(siteMember)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "site-member",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
 
 			if (isSet(user)) {
 				Click(
-					key_permissionName = "${permissionsName}",
+					key_permissionName = ${permissionsName},
 					key_roleName = "user",
 					locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 			}
@@ -447,62 +432,34 @@ definition {
 	}
 
 	macro selectPermissionToRegularRole {
-		for (var permissionsName : list "${permissionsList}") {
+		for (var permissionsName : list ${permissionsList}) {
 			Click.clickAtNotVisible(
-				key_permissionName = "${permissionsName}",
+				key_permissionName = ${permissionsName},
 				locator1 = "ObjectCustomViews#SELECT_PERMISSIONS_TO_REGULAR_ROLE");
 		}
 	}
 
-	macro viewColumnOrderOnDefaultSort {
-		AssertElementPresent(
-			key_columnName1 = "${columnName}",
-			key_position = "${position}",
-			locator1 = "ObjectCustomViews#VIEW_LIST_COLUMNS_BY_POSITION_ON_DEFAULT_SORT");
-	}
-
-	macro viewColumnsOrder {
-		AssertElementPresent(
-			key_columnName = "${columnName}",
-			key_position = "${position}",
-			locator1 = "ObjectCustomViews#VIEW_COLUMN_ENTRIES");
-	}
-
-	macro viewFieldsEntryByPosition {
-		AssertElementPresent(
-			key_entryName = "${entryName}",
-			key_position = "${position}",
-			locator1 = "ObjectCustomViews#VIEW_FIELDS_ENTRY_BY_POSITION");
-	}
-
-	macro viewFieldsNameByPosition {
-		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_position = "${position}",
-			locator1 = "ObjectCustomViews#VIEW_FIELD_NAME_BY_POSITION");
-	}
-
 	macro viewOptionNotPresentInKebabMenu {
-		if (IsElementPresent(key_objectLabel = "${entryName}", locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU")) {
+		if (IsElementPresent(key_objectLabel = ${entryName}, locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU")) {
 			Click(
-				key_objectLabel = "${entryName}",
+				key_objectLabel = ${entryName},
 				locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
 
 			AssertElementNotPresent(
-				key_menuItem = "${menuItem}",
+				key_menuItem = ${menuItem},
 				locator1 = "MenuItem#ANY_MENU_ITEM");
 		}
 		else {
 			AssertElementNotPresent(
-				key_objectCustomViewLabel = "${entryName}",
+				key_objectCustomViewLabel = ${entryName},
 				locator1 = "ObjectCustomViews#OBJECT_VIEW_KEBAB_MENU");
 		}
 	}
 
 	macro viewOrdersOfTheColumns {
 		AssertVisible(
-			key_columnName1 = "${columnName}",
-			key_position = "${position}",
+			key_columnName1 = ${columnName},
+			key_position = ${position},
 			locator1 = "ObjectCustomViews#VIEW_LIST_COLUMNS_BY_POSITION");
 	}
 

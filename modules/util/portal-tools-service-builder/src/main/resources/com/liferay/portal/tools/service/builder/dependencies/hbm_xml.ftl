@@ -15,7 +15,9 @@
 				<#list entity.PKEntityColumns as entityColumn>
 					<key-property
 
-					<#if serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						access="com.liferay.portal.dao.orm.hibernate.PublicFieldPropertyAccessor"
+					<#elseif serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
 						access="com.liferay.portal.dao.orm.hibernate.CamelCasePropertyAccessor"
 					<#elseif serviceBuilder.isVersionGTE_7_1_0()>
 						access="com.liferay.portal.dao.orm.hibernate.LiferayPropertyAccessor"
@@ -42,7 +44,9 @@
 			<#assign entityColumn = entity.PKEntityColumns?first />
 
 			<id
-				<#if serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor"
+				<#elseif serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
 					access="com.liferay.portal.dao.orm.hibernate.CamelCasePropertyAccessor"
 				<#elseif serviceBuilder.isVersionGTE_7_1_0()>
 					access="com.liferay.portal.dao.orm.hibernate.LiferayPropertyAccessor"
@@ -71,7 +75,11 @@
 					class="${class}"
 
 					<#if stringUtil.equals(class, "sequence")>
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							><param name="sequence_name">${entityColumn.idParam}</param>
+						<#else>
 							><param name="sequence">${entityColumn.idParam}</param>
+						</#if>
 						</generator>
 					<#else>
 						/>
@@ -80,14 +88,22 @@
 		</#if>
 
 		<#if entity.isMvccEnabled()>
-			<version access="com.liferay.portal.dao.orm.hibernate.PrivatePropertyAccessor" name="mvccVersion" type="long" />
+			<version
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					access="com.liferay.portal.dao.orm.hibernate.PrivateFieldPropertyAccessor"
+				<#else>
+					access="com.liferay.portal.dao.orm.hibernate.PrivatePropertyAccessor"
+				</#if>
+				name="mvccVersion" type="long" />
 		</#if>
 
 		<#list entity.databaseRegularEntityColumns as entityColumn>
 			<#if !entityColumn.isPrimary() && !entityColumn.entityName?? && (!stringUtil.equals(entityColumn.type, "Blob") || (stringUtil.equals(entityColumn.type, "Blob") && !entityColumn.lazy)) && !stringUtil.equals(entityColumn.name, "mvccVersion")>
 				<property
 
-				<#if !entityColumn.isInterfaceColumn()>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					access="com.liferay.portal.dao.orm.hibernate.MethodPropertyAccessor"
+				<#elseif !entityColumn.isInterfaceColumn()>
 					access="com.liferay.portal.dao.orm.hibernate.PrivatePropertyAccessor"
 				<#elseif serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
 					access="com.liferay.portal.dao.orm.hibernate.CamelCasePropertyAccessor"
@@ -123,7 +139,13 @@
 					<#assign constrained = "true" />
 				</#if>
 
-				<one-to-one access="com.liferay.portal.dao.orm.hibernate.PrivatePropertyAccessor" cascade="save-update" class="${apiPackagePath}.model.${entity.name}${entityColumn.methodName}BlobModel" constrained="${constrained}" name="${entityColumn.name}BlobModel" outer-join="false" />
+				<one-to-one
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						access="com.liferay.portal.dao.orm.hibernate.PrivateFieldPropertyAccessor"
+					<#else>
+						access="com.liferay.portal.dao.orm.hibernate.PrivatePropertyAccessor"
+					</#if>
+					cascade="save-update" class="${apiPackagePath}.model.${entity.name}${entityColumn.methodName}BlobModel" constrained="${constrained}" name="${entityColumn.name}BlobModel" outer-join="false" />
 			</#if>
 		</#list>
 	</class>
@@ -144,7 +166,9 @@
 						<#list entity.PKEntityColumns as entityColumn>
 							<key-property
 
-							<#if serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
+							<#if serviceBuilder.isVersionGTE_7_4_0()>
+								access="com.liferay.portal.dao.orm.hibernate.PublicFieldPropertyAccessor"
+							<#elseif serviceBuilder.isHBMCamelCasePropertyAccessor(entityColumn.name)>
 								access="com.liferay.portal.dao.orm.hibernate.CamelCasePropertyAccessor"
 							<#elseif serviceBuilder.isVersionGTE_7_1_0()>
 								access="com.liferay.portal.dao.orm.hibernate.LiferayPropertyAccessor"

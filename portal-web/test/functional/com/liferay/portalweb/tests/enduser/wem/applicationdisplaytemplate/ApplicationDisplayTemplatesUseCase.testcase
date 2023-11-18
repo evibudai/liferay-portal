@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content and Application Templates";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -23,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -34,7 +35,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Asset Publisher widget."
-	@priority = "3"
+	@priority = 3
 	test ViewWidgetTemplateAppliedToAssetPublisher {
 		property portal.acceptance = "true";
 		property testray.component.names = "Asset Publisher,Content and Application Templates";
@@ -58,21 +59,21 @@ definition {
 ''';
 			var script = TestCase.getFileContent(fileName = "adt_asset_publisher_rich_summary.ftl");
 
-			var script = StringUtil.regexReplaceAll("${script}", "${newLine}", "%0A");
+			var script = StringUtil.regexReplaceAll(${script}, ${newLine}, "%0A");
 
-			var script = StringUtil.regexReplaceAll("${script}", " ", "%20");
+			var script = StringUtil.regexReplaceAll(${script}, " ", "%20");
 
-			var script = StringUtil.regexReplaceAll("${script}", "	", "%09");
+			var script = StringUtil.regexReplaceAll(${script}, "	", "%09");
 
-			var script = StringUtil.regexReplaceAll("${script}", "&", "%26");
+			var script = StringUtil.regexReplaceAll(${script}, "&", "%26");
 
-			var script = StringUtil.regexReplaceAll("${script}", "\+", "%2B");
+			var script = StringUtil.regexReplaceAll(${script}, "\+", "%2B");
 
 			JSONDDMtemplate.addWidgetTemplate(
 				groupName = "Test Site Name",
 				itemType = "Asset Publisher Template",
 				name = "Asset Publisher Test ADT",
-				script = "${script}");
+				script = ${script});
 		}
 
 		task ("Configure the display setttings of Asset Publisher") {
@@ -109,7 +110,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Breadcrumb widget."
-	@priority = "5"
+	@priority = 5
 	test ViewWidgetTemplateAppliedToBreadcrumb {
 		property portal.acceptance = "true";
 		property testray.component.names = "Breadcrumb,Content and Application Templates";
@@ -145,7 +146,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Categories Navigation widget."
-	@priority = "5"
+	@priority = 5
 	test ViewWidgetTemplateAppliedToCategoriesNavigation {
 		property portal.acceptance = "true";
 		property testray.component.names = "Categories,Content and Application Templates";
@@ -217,7 +218,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to RSS Publisher widget."
-	@priority = "5"
+	@priority = 5
 	test ViewWidgetTemplateAppliedToRSSPublisher {
 		property portal.acceptance = "true";
 		property testray.component.names = "Content and Application Templates,RSS";
@@ -235,7 +236,7 @@ definition {
 				siteName = "Test Site Name");
 
 			RSSPortlet.addFeed(
-				feedRowIndexNumber = "0",
+				feedRowIndexNumber = 0,
 				feedTitle = "Latimes > Technology News",
 				feedType = "file",
 				feedURLLink = "rss2.0.xml");
@@ -271,7 +272,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Site Map widget."
-	@priority = "3"
+	@priority = 3
 	test ViewWidgetTemplateAppliedToSiteMap {
 		property testray.component.names = "Content and Application Templates,Sitemap";
 
@@ -331,7 +332,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Tags Navigation widget."
-	@priority = "5"
+	@priority = 5
 	test ViewWidgetTemplateAppliedToTagsNavigation {
 		property portal.acceptance = "true";
 		property testray.component.names = "Content and Application Templates,Tags";
@@ -420,7 +421,7 @@ definition {
 	}
 
 	@description = "View the widget template applied to Wiki widget."
-	@priority = "3"
+	@priority = 3
 	test ViewWidgetTemplateAppliedToWiki {
 		property app.server.types = "tomcat,websphere";
 		property testray.component.names = "Content and Application Templates,Wiki";
@@ -472,7 +473,7 @@ definition {
 	}
 
 	@description = "View the widget template based on script file applied to RSS Publisher widget."
-	@priority = "3"
+	@priority = 3
 	test ViewWidgetTemplateBasedOnScriptFileAppliedToRSSPublisher {
 		property testray.component.names = "Content and Application Templates,RSS";
 
@@ -489,7 +490,7 @@ definition {
 				siteName = "Test Site Name");
 
 			RSSPortlet.addFeed(
-				feedRowIndexNumber = "0",
+				feedRowIndexNumber = 0,
 				feedTitle = "Technology",
 				feedType = "file",
 				feedURLLink = "Technology.xml");
@@ -523,9 +524,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-71944."
-	@priority = "5"
+	@priority = 5
 	test ViewWidgetTemplateEmbeddedWidgetAppliedToAssetPublisher {
-		property test.name.skip.portal.instance = "ApplicationDisplayTemplatesUseCase#ADTChangeTemplatePortletPreferencesMethodContracts";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Asset Publisher,Content and Application Templates";
 
 		task ("Execute reindex all search indexes") {
@@ -549,7 +552,7 @@ definition {
 		portletProviderClassName="com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry"/>
 					''';
 
-			ApplicationDisplayTemplates.editADTScript(adtScript = "${script}");
+			ApplicationDisplayTemplates.editADTScript(adtScript = ${script});
 		}
 
 		task ("Add an Asset Publisher to page") {
@@ -585,7 +588,7 @@ definition {
 	}
 
 	@description = "View the widget template with corrupt script applied to RSS Publisher widget."
-	@priority = "3"
+	@priority = 3
 	test ViewWidgetTemplateWithCorruptScriptAppliedToRSSPublisher {
 		property testray.component.names = "Content and Application Templates,RSS";
 
@@ -602,7 +605,7 @@ definition {
 				siteName = "Test Site Name");
 
 			RSSPortlet.addFeed(
-				feedRowIndexNumber = "0",
+				feedRowIndexNumber = 0,
 				feedTitle = "Latimes > Technology News",
 				feedType = "file",
 				feedURLLink = "rss2.0.xml");

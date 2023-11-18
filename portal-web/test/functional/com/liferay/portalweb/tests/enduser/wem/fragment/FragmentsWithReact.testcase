@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +30,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-122082 and LPS-122641. Can not edit and export react fragment. View react fragment has a visual marker in vertical card."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test CannotEditAndExportReactFragment {
 		property portal.acceptance = "true";
@@ -72,7 +73,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-122082. Can not export react fragment with collection."
-	@priority = "4"
+	@priority = 4
 	test CannotExportReactFragmentWithCollection {
 		task ("Navigate to fragments admin") {
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
@@ -101,7 +102,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "New Site Name");
+			HeadlessSite.addSite(siteName = "New Site Name");
 		}
 
 		task ("Navigate to fragments admin in the new site") {
@@ -109,7 +110,19 @@ definition {
 		}
 
 		task ("Import the fragment collection into the new site") {
-			FragmentsAdmin.importCollectionFromTempFolder();
+			FragmentsAdminNavigator.gotoImportCollection();
+
+			WaitForPageLoad();
+
+			var collectionsZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "collections-*.zip");
+
+			UploadTempFile.uploadTempFileHiddenNoMouseOver(
+				locator1 = "TextInput#FILE",
+				value1 = ${collectionsZipFileName});
+
+			Button.clickImport();
+
+			Alert.viewInfoMessageSpecific(infoMessage = "No new items were imported.");
 		}
 
 		task ("Navigate to the fragment collection in the new site") {
@@ -122,7 +135,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-129182. View react fragment is rendered correctly in page."
-	@priority = "5"
+	@priority = 5
 	test ViewReactFragmentInPage {
 		property portal.acceptance = "true";
 

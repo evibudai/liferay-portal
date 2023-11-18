@@ -6,7 +6,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "Account Subscription Groups");
 
-		CustomerPortal.viewObjectInfo(index = "3");
+		CustomerPortal.viewObjectInfo(index = 3);
 
 		CP2AnalyticsCloudSetup.typeSetupAnalyticsCloudInfoFields(
 			label = "activationStatus",
@@ -28,29 +28,19 @@ definition {
 	}
 
 	macro assertFieldExtraIsNotVisible {
-		var key_index = "${position}";
+		var key_index = ${position};
 
 		AssertElementNotPresent(
-			label = "${field}",
+			label = ${field},
 			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 	}
 
 	macro assertFieldExtraIsVisible {
-		var key_index = "${position}";
+		var key_index = ${position};
 
 		AssertVisible(
-			label = "${field}",
+			label = ${field},
 			locator1 = "CustomerPortalSite#SETUP_FIELDS");
-	}
-
-	macro clearAndDeleteCloudEntries {
-		CustomerPortal.clearActivationStatus(
-			position = "${position}",
-			status = "${status}");
-
-		CP2DXPCloudSetup.deleteEntryCloudEnvironments(
-			entry = "${entry}",
-			portlet = "Analytics Cloud Workspaces");
 	}
 
 	macro clickOnWorkspaceLink {
@@ -60,7 +50,7 @@ definition {
 	macro typeAllSetupAnalyticsCloudExtraInfo {
 		CP2AnalyticsCloudSetup.typeSetupAnalyticsCloudInfoFields(
 			label = "email",
-			position = "2",
+			position = 2,
 			value = "test.user1@liferay.com");
 	}
 
@@ -78,7 +68,7 @@ definition {
 			value1 = "Sao Paulo, Brazil");
 
 		CP2AnalyticsCloudSetup.typeSetupAnalyticsCloudInfoFields(
-			label = "workspaceURL",
+			label = "workspaceFriendlyUrl",
 			value = "/mytest");
 
 		CP2AnalyticsCloudSetup.typeSetupAnalyticsCloudInfoFields(
@@ -92,18 +82,20 @@ definition {
 		CP2AnalyticsCloudSetup.typeSetupAnalyticsCloudInfoFields(
 			label = "email",
 			value = "test@liferay.com");
+
+		CustomerPortal.assertButtonIsActive(text = "Submit");
 	}
 
 	macro typeSetupAnalyticsCloudInfoFields {
 		if (!(isSet(position))) {
-			var position = "1";
+			var position = 1;
 		}
 
-		var key_index = "${position}";
+		var key_index = ${position};
 
 		Type(
 			locator1 = "CustomerPortalSite#SETUP_FIELDS",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
 }

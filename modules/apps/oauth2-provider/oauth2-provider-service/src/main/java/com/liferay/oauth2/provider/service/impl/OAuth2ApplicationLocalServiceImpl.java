@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.service.impl;
@@ -27,7 +18,6 @@ import com.liferay.oauth2.provider.exception.OAuth2ApplicationHomePageURLSchemeE
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationNameException;
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationPrivacyPolicyURLException;
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationPrivacyPolicyURLSchemeException;
-import com.liferay.oauth2.provider.exception.OAuth2ApplicationRedirectURIException;
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationRedirectURIFragmentException;
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationRedirectURIMissingException;
 import com.liferay.oauth2.provider.exception.OAuth2ApplicationRedirectURIPathException;
@@ -35,17 +25,19 @@ import com.liferay.oauth2.provider.exception.OAuth2ApplicationRedirectURISchemeE
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.model.OAuth2ApplicationScopeAliases;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
+import com.liferay.oauth2.provider.redirect.OAuth2RedirectURIInterpolator;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
 import com.liferay.oauth2.provider.service.base.OAuth2ApplicationLocalServiceBaseImpl;
 import com.liferay.oauth2.provider.util.OAuth2SecureRandomGenerator;
 import com.liferay.oauth2.provider.util.builder.OAuth2ScopeBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageTool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.model.Group;
@@ -75,9 +67,6 @@ import java.awt.image.RenderedImage;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -558,8 +547,7 @@ public class OAuth2ApplicationLocalServiceImpl
 			serviceContext);
 
 		Folder folder = _portletFileRepository.addPortletFolder(
-			_userLocalService.getDefaultUserId(
-				oAuth2Application.getCompanyId()),
+			_userLocalService.getGuestUserId(oAuth2Application.getCompanyId()),
 			repository.getRepositoryId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "icons",
 			serviceContext);
@@ -568,7 +556,7 @@ public class OAuth2ApplicationLocalServiceImpl
 			new UnsyncByteArrayOutputStream();
 
 		try {
-			ImageBag imageBag = _imageTool.read(inputStream);
+			ImageBag imageBag = ImageToolUtil.read(inputStream);
 
 			RenderedImage renderedImage = imageBag.getRenderedImage();
 
@@ -576,9 +564,9 @@ public class OAuth2ApplicationLocalServiceImpl
 				throw new ImageTypeException("Unable to read icon");
 			}
 
-			renderedImage = _imageTool.scale(renderedImage, 160, 160);
+			renderedImage = ImageToolUtil.scale(renderedImage, 160, 160);
 
-			_imageTool.write(
+			ImageToolUtil.write(
 				renderedImage, imageBag.getType(), unsyncByteArrayOutputStream);
 		}
 		catch (IOException ioException) {
@@ -867,32 +855,40 @@ public class OAuth2ApplicationLocalServiceImpl
 		}
 
 		for (String redirectURI : redirectURIsList) {
-			try {
-				URI uri = new URI(redirectURI);
+			int index = redirectURI.indexOf(StringPool.POUND);
 
-				if (uri.getFragment() != null) {
-					throw new OAuth2ApplicationRedirectURIFragmentException(
-						redirectURI);
-				}
+			if (index != -1) {
+				throw new OAuth2ApplicationRedirectURIFragmentException(
+					redirectURI);
+			}
 
-				String scheme = uri.getScheme();
+			index = redirectURI.indexOf(Http.PROTOCOL_DELIMITER);
 
-				if (scheme == null) {
-					throw new OAuth2ApplicationRedirectURISchemeException(
-						redirectURI);
-				}
+			if (index == -1) {
+				throw new OAuth2ApplicationRedirectURISchemeException(
+					redirectURI);
+			}
 
-				scheme = StringUtil.toLowerCase(scheme);
+			String scheme = StringUtil.toLowerCase(
+				redirectURI.substring(0, index));
 
-				if (!Objects.equals(scheme, Http.HTTP) &&
-					!Objects.equals(scheme, Http.HTTPS) &&
-					_ianaRegisteredUriSchemes.contains(scheme)) {
+			if (!Objects.equals(
+					scheme, OAuth2RedirectURIInterpolator.TOKEN_PROTOCOL) &&
+				!Objects.equals(scheme, Http.HTTP) &&
+				!Objects.equals(scheme, Http.HTTPS) &&
+				_ianaRegisteredUriSchemes.contains(scheme)) {
 
-					throw new OAuth2ApplicationHomePageURLSchemeException(
-						redirectURI);
-				}
+				throw new OAuth2ApplicationHomePageURLSchemeException(
+					redirectURI);
+			}
 
-				String path = uri.getPath();
+			String domainAndPath = redirectURI.substring(
+				index + Http.PROTOCOL_DELIMITER.length());
+
+			index = domainAndPath.indexOf(StringPool.SLASH);
+
+			if (index > -1) {
+				String path = domainAndPath.substring(index);
 
 				String normalizedPath = HttpComponentsUtil.normalizePath(path);
 
@@ -900,10 +896,6 @@ public class OAuth2ApplicationLocalServiceImpl
 					throw new OAuth2ApplicationRedirectURIPathException(
 						redirectURI);
 				}
-			}
-			catch (URISyntaxException uriSyntaxException) {
-				throw new OAuth2ApplicationRedirectURIException(
-					redirectURI, uriSyntaxException);
 			}
 		}
 	}
@@ -961,9 +953,6 @@ public class OAuth2ApplicationLocalServiceImpl
 
 	@Reference
 	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private ImageTool _imageTool;
 
 	@Reference(
 		target = "(indexer.class.name=com.liferay.document.library.kernel.model.DLFileEntry)"

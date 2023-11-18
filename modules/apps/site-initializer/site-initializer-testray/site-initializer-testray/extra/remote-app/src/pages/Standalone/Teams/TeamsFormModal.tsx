@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useCallback, useState} from 'react';
@@ -18,6 +9,7 @@ import {useForm} from 'react-hook-form';
 import Form from '../../../components/Form';
 import DualListBox, {Boxes} from '../../../components/Form/DualListBox';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -29,7 +21,6 @@ import {
 	testrayComponentImpl,
 	testrayTeamImpl,
 } from '../../../services/rest';
-import {searchUtil} from '../../../util/search';
 
 type TeamForm = typeof yupSchema.team.__outputType;
 
@@ -51,8 +42,6 @@ export type SelectComponentsProps = {
 	teamId: number;
 };
 
-const UNASSIGNED_TEAM_ID = 0;
-
 const SelectComponents: React.FC<SelectComponentsProps> = ({
 	projectId,
 	setState,
@@ -60,20 +49,27 @@ const SelectComponents: React.FC<SelectComponentsProps> = ({
 }) => {
 	const {data: unassigned, isValidating} = useFetch<
 		APIResponse<TestrayComponent>
-	>(
-		`/components?filter=${searchUtil.eq(
-			'projectId',
-			projectId
-		)} and ${searchUtil.eq('teamId', UNASSIGNED_TEAM_ID)}`
-	);
+	>('/components', {
+		params: {
+			filter: new SearchBuilder()
+				.eq('projectId', projectId)
+				.and()
+				.eq('teamId', testrayComponentImpl.UNASSIGNED_TEAM_ID)
+				.build(),
+		},
+	});
 
 	const {data: current} = useFetch<APIResponse<TestrayComponent>>(
-		teamId && !isValidating
-			? `/components?filter=${searchUtil.eq(
-					'projectId',
-					projectId
-			  )} and ${searchUtil.eq('teamId', teamId)}`
-			: null
+		teamId && !isValidating ? '/components' : null,
+		{
+			params: {
+				filter: new SearchBuilder()
+					.eq('projectId', projectId)
+					.and()
+					.eq('teamId', teamId)
+					.build(),
+			},
+		}
 	);
 
 	const getComponentsDualBox = useCallback(() => {
@@ -97,6 +93,7 @@ const SelectComponents: React.FC<SelectComponentsProps> = ({
 		/>
 	);
 };
+
 export type State = Boxes<{teamId: number}>;
 
 const TeamFormModal: React.FC<TeamProps> = ({
@@ -105,7 +102,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 }) => {
 	const [state, setState] = useState<State>([]);
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 	} = useForm<TeamForm>({
@@ -113,7 +110,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 		resolver: yupResolver(yupSchema.team),
 	});
 
-	const _onSubmit = (teamForm: TeamForm) => {
+	const _onSubmit = (teamForm: TeamForm) =>
 		onSubmit(
 			{id: teamForm.id, name: teamForm.name, projectId},
 			{
@@ -129,7 +126,6 @@ const TeamFormModal: React.FC<TeamProps> = ({
 			)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	return (
 		<Modal
@@ -137,6 +133,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

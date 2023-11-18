@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -61,26 +52,27 @@ const getValue = (value) => {
 	return JSON.stringify(value);
 };
 
-function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
+function transformFileEntryProperties({fileEntryTitle, value}) {
 	if (value && typeof value === 'string') {
 		try {
 			const fileEntry = JSON.parse(value);
 
 			fileEntryTitle = fileEntry.title;
-
-			if (fileEntry.url) {
-				fileEntryURL = fileEntry.url;
-			}
 		}
 		catch (error) {
 			console.warn('Unable to parse JSON', value);
 		}
 	}
 
-	return value ? [fileEntryTitle, fileEntryURL] : [];
+	return value && fileEntryTitle !== ''
+		? [fileEntryTitle]
+		: fileEntryTitle === ''
+		? [value.title]
+		: [];
 }
 
 const DocumentLibrary = ({
+	accessibleProps,
 	editingLanguageId,
 	fileEntryTitle = '',
 	fileEntryURL = '',
@@ -93,27 +85,27 @@ const DocumentLibrary = ({
 	readOnly,
 	value,
 }) => {
-	const [transformedFileEntryTitle, transformedFileEntryURL] = useMemo(
+	const [transformedFileEntryTitle] = useMemo(
 		() =>
 			transformFileEntryProperties({
 				fileEntryTitle,
-				fileEntryURL,
 				value,
 			}),
-		[fileEntryTitle, fileEntryURL, value]
+		[fileEntryTitle, value]
 	);
 
 	return (
 		<div className="liferay-ddm-form-field-document-library">
-			{transformedFileEntryURL && readOnly ? (
+			{transformedFileEntryTitle && readOnly ? (
 				<CardItem
 					fileEntryTitle={transformedFileEntryTitle}
-					fileEntryURL={transformedFileEntryURL}
+					fileEntryURL={fileEntryURL}
 				/>
 			) : (
 				<ClayInput.Group>
 					<ClayInput.GroupItem prepend>
 						<ClayInput
+							{...accessibleProps}
 							aria-label={Liferay.Language.get('file')}
 							className="bg-light field"
 							dir={Liferay.Language.direction[editingLanguageId]}
@@ -170,7 +162,6 @@ const DocumentLibrary = ({
 
 const GuestUploadFile = ({
 	fileEntryTitle = '',
-	fileEntryURL = '',
 	id,
 	message,
 	name,
@@ -185,10 +176,9 @@ const GuestUploadFile = ({
 		() =>
 			transformFileEntryProperties({
 				fileEntryTitle,
-				fileEntryURL,
 				value,
 			}),
-		[fileEntryTitle, fileEntryURL, value]
+		[fileEntryTitle, value]
 	);
 
 	return (
@@ -560,7 +550,6 @@ const Main = ({
 			{allowGuestUsers && !isSignedIn ? (
 				<GuestUploadFile
 					fileEntryTitle={fileEntryTitle}
-					fileEntryURL={fileEntryURL}
 					id={id}
 					message={message}
 					name={name}
@@ -593,6 +582,9 @@ const Main = ({
 				/>
 			) : (
 				<DocumentLibrary
+					accessibleProps={{
+						'aria-required': otherProps.required,
+					}}
 					editingLanguageId={editingLanguageId}
 					fileEntryTitle={fileEntryTitle}
 					fileEntryURL={fileEntryURL}

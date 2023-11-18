@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.article.dynamic.data.mapping.form.field.type.internal.journal.article;
@@ -32,7 +23,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
-import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -52,12 +42,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pavel Savinov
  */
 @Component(
-	immediate = true,
 	property = "ddm.form.field.type.name=" + JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE,
-	service = {
-		DDMFormFieldTemplateContextContributor.class,
-		JournalArticleDDMFormFieldTemplateContextContributor.class
-	}
+	service = DDMFormFieldTemplateContextContributor.class
 )
 public class JournalArticleDDMFormFieldTemplateContextContributor
 	implements DDMFormFieldTemplateContextContributor {
@@ -117,33 +103,16 @@ public class JournalArticleDDMFormFieldTemplateContextContributor
 
 		infoItemItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new JournalArticleItemSelectorReturnType());
+		infoItemItemSelectorCriterion.setRefererClassPK(
+			_getRefererClassPK(httpServletRequest));
+		infoItemItemSelectorCriterion.setStatus(WorkflowConstants.STATUS_ANY);
 
-		return PortletURLBuilder.create(
+		return String.valueOf(
 			_itemSelector.getItemSelectorURL(
 				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
 				ddmFormFieldRenderingContext.getPortletNamespace() +
 					"selectJournalArticle",
-				infoItemItemSelectorCriterion)
-		).setParameter(
-			"refererClassPK",
-			() -> {
-				long articleId = ParamUtil.getLong(
-					httpServletRequest, "articleId");
-
-				if (articleId <= 0) {
-					return 0;
-				}
-
-				long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
-
-				JournalArticle journalArticle =
-					_journalArticleLocalService.fetchLatestArticle(
-						groupId, String.valueOf(articleId),
-						WorkflowConstants.STATUS_APPROVED);
-
-				return journalArticle.getResourcePrimKey();
-			}
-		).buildString();
+				infoItemItemSelectorCriterion));
 	}
 
 	private String _getMessage(Locale defaultLocale, String value) {
@@ -188,6 +157,25 @@ public class JournalArticleDDMFormFieldTemplateContextContributor
 
 			return StringPool.BLANK;
 		}
+	}
+
+	private long _getRefererClassPK(HttpServletRequest httpServletRequest) {
+		String articleId = ParamUtil.getString(httpServletRequest, "articleId");
+
+		if (Validator.isNull(articleId)) {
+			return 0;
+		}
+
+		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
+
+		JournalArticle journalArticle =
+			_journalArticleLocalService.fetchArticle(groupId, articleId);
+
+		if (journalArticle == null) {
+			return 0;
+		}
+
+		return journalArticle.getResourcePrimKey();
 	}
 
 	private String _getValue(String value) {

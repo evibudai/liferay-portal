@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-139472 - Verify that 'Allow Multiple Selections' option is not available for Select From List field when a form is mapped to an object"
-	@priority = "4"
+	@priority = 4
 	test AllowMultipleSelectionsNotAvailable {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -68,7 +68,7 @@ definition {
 	}
 
 	@description = "LPS-139464 - Verify that it is possible to delete a form mapped to an object after adding entries on it"
-	@priority = "4"
+	@priority = 4
 	test CanDeleteFormMappedToObject {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 208",
@@ -107,7 +107,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "Entry Test");
 
-		Button.clickSubmitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -121,8 +121,11 @@ definition {
 	}
 
 	@description = "LPS-143064 - Verify that, when using objects as storage type, the user must be able to map to this field type to Rich Text Field and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewEntriesForRichTextField {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 151597",
 			objectName = "CustomObject151597",
@@ -160,9 +163,7 @@ definition {
 			content = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.",
 			fieldLabel = "Rich Text");
 
-		Button.clickSubmitForPublication();
-
-		WaitForSPARefresh();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -172,7 +173,7 @@ definition {
 	}
 
 	@description = "LPS-142659 - Verify if it's possible to map an Object field of Clob type and view its entries (Multiple Lines)"
-	@priority = "4"
+	@priority = 4
 	test CanMapClobTypeAndViewEntriesMultipleLines {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 209",
@@ -211,7 +212,7 @@ definition {
 
 		FormViewBuilder.editClobText(fieldLong = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.");
 
-		Button.clickSubmitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -221,7 +222,7 @@ definition {
 	}
 
 	@description = "LPS-142659 - Verify if it's possible to map an Object field of Clob type and view its entries (Single Line)"
-	@priority = "4"
+	@priority = 4
 	test CanMapClobTypeAndViewEntriesSingleLine {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 210",
@@ -260,7 +261,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.");
 
-		Button.clickSubmitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -270,7 +271,7 @@ definition {
 	}
 
 	@description = "LPS-136456 - Verify that workflows cannot be added to forms that are mapped to an object"
-	@priority = "4"
+	@priority = 4
 	test CannotAddWorkflow {
 		FormsAdmin.addForm();
 
@@ -286,7 +287,7 @@ definition {
 	}
 
 	@description = "LPS-138495 - Verify that Picklist entries cannot be edited in the Forms Sidebar"
-	@priority = "4"
+	@priority = 4
 	test CannotEditPicklistEntries {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -326,11 +327,13 @@ definition {
 
 		Form.gotoBasicTab();
 
-		ObjectPortlet.assertEntryDetailsLabelNotPresent(entryLabel = "Create List");
+		AssertNotVisible(
+			key_entryLabel = "Create List",
+			locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_LABEL");
 	}
 
 	@description = "LPS-137316 - Verify it is not possible to select an unpublished Object"
-	@priority = "4"
+	@priority = 4
 	test CannotSelectUnpublishedObject {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 212",
@@ -343,13 +346,16 @@ definition {
 
 		PopulateObjectFormsConfiguration.selectObject(label = "Object");
 
-		PopulateObjectFormsConfiguration.viewDisplaySelectOptionNotPresent(label = "Custom Object 212");
+		AssertElementNotPresent(
+			key_label = "Custom Object 212",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 	}
 
 	@description = "LPS-135429 - It is possible to retrieve objects data from Data Providers and use in a Select from List field in Forms"
-	@priority = "4"
+	@priority = 4
 	test CanRetrieveDataProvidersOnSelectFromListField {
-		property test.name.skip.portal.instance = "ObjectForms#CanRetrieveDataProvidersOnSelectFromListField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 213",
@@ -371,13 +377,9 @@ definition {
 			objectName = "CustomObject213",
 			value = "Entry Test");
 
-		FormsAdminNavigator.enableLocalNetworkDataProvider();
+		FormsAdmin.enableLocalNetworkDataProvider();
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		Navigator.gotoNavItem(navItem = "Data Providers");
-
-		FormsAdminNavigator.gotoAddDataProvider();
+		FormsAdminNavigator.gotoRESTDataProvider();
 
 		FormsAdmin.editDataProvider(
 			name = "Object Entries",
@@ -389,15 +391,11 @@ definition {
 			url = "http://localhost:8080/o/c/customobject213s",
 			username = "test@liferay.com");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		WaitForSPARefresh();
 
-		Navigator.openURL();
-
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
@@ -423,9 +421,10 @@ definition {
 	}
 
 	@description = "LPS-135429 - It is possible to retrieve objects data from Data Providers and use in a Text field in Form"
-	@priority = "4"
+	@priority = 4
 	test CanRetrieveDataProvidersOnTextField {
-		property test.name.skip.portal.instance = "ObjectForms#CanRetrieveDataProvidersOnTextField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 214",
@@ -447,13 +446,9 @@ definition {
 			objectName = "CustomObject214",
 			value = "Entry Test");
 
-		FormsAdminNavigator.enableLocalNetworkDataProvider();
+		FormsAdmin.enableLocalNetworkDataProvider();
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		Navigator.gotoNavItem(navItem = "Data Providers");
-
-		FormsAdminNavigator.gotoAddDataProvider();
+		FormsAdminNavigator.gotoRESTDataProvider();
 
 		FormsAdmin.editDataProvider(
 			name = "Object Entries",
@@ -465,15 +460,9 @@ definition {
 			url = "http://localhost:8080/o/c/customobject214s",
 			username = "test@liferay.com");
 
-		Button.clickSave();
+		PortletEntry.save();
 
-		WaitForSPARefresh();
-
-		Navigator.openURL();
-
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
@@ -511,7 +500,7 @@ definition {
 	}
 
 	@description = "LPS-139692 - Verify that 'Select Object' field is required"
-	@priority = "4"
+	@priority = 4
 	test SelectObjectFieldRequired {
 		FormsAdmin.addForm();
 

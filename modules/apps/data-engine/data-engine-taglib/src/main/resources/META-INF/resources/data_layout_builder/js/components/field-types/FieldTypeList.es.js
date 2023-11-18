@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayEmptyState from '@clayui/empty-state';
@@ -78,6 +69,7 @@ const FieldTypeList = ({
 	keywords,
 	onClick,
 	onDelete,
+	searchClicked,
 	showEmptyState = true,
 }) => {
 	const {fieldTypes} = useConfig();
@@ -95,6 +87,47 @@ const FieldTypeList = ({
 			return regex.test(description) || regex.test(label);
 		})
 		.sort(({displayOrder: a}, {displayOrder: b}) => a - b);
+
+	const screenReaderSearchResult = document.getElementById(
+		'screenReaderSearchResult'
+	);
+
+	if (screenReaderSearchResult) {
+		if (keywords !== '' && searchClicked) {
+			if (filteredFieldTypes.length) {
+				screenReaderSearchResult.innerText = sub(
+					Liferay.Language.get(
+						'x-results-returned-for-the-search-term-x'
+					),
+					[filteredFieldTypes.length, keywords]
+				);
+			}
+			else {
+				screenReaderSearchResult.innerText = sub(
+					Liferay.Language.get(
+						`${sub(
+							Liferay.Language.get(
+								'there-are-no-results-for-the-search-term-x'
+							),
+							[keywords]
+						)} ${Liferay.Language.get(
+							'check-your-spelling-or-search-for-a-different-term'
+						)}`
+					),
+					[filteredFieldTypes.length, keywords]
+				);
+			}
+		}
+		else if (searchClicked) {
+			screenReaderSearchResult.innerText = sub(
+				Liferay.Language.get('search-field-is-empty'),
+				[filteredFieldTypes.length, keywords]
+			);
+		}
+		else {
+			screenReaderSearchResult.innerText = '';
+		}
+	}
 
 	if (showEmptyState && !filteredFieldTypes.length) {
 		return (

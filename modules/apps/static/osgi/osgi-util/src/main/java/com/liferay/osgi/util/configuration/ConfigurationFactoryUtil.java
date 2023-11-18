@@ -1,23 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osgi.util.configuration;
 
 import com.liferay.osgi.util.StringPlus;
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -33,6 +27,21 @@ import org.osgi.framework.Constants;
  * @author Raymond Augé
  */
 public class ConfigurationFactoryUtil {
+
+	public static <E extends Throwable> void executeAsCompany(
+			CompanyLocalService companyLocalService,
+			Map<String, Object> properties,
+			UnsafeConsumer<Long, E> unsafeConsumer)
+		throws E {
+
+		long companyId = getCompanyId(companyLocalService, properties);
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+
+			unsafeConsumer.accept(companyId);
+		}
+	}
 
 	public static long getCompanyId(
 			CompanyLocalService companyLocalService,
@@ -72,10 +81,10 @@ public class ConfigurationFactoryUtil {
 			Map<String, Object> properties)
 		throws IllegalStateException {
 
-		String serviceFactoryPid = GetterUtil.getString(
+		String factoryPid = GetterUtil.getString(
 			properties.get("service.factoryPid"));
 
-		if (Validator.isNull(serviceFactoryPid)) {
+		if (Validator.isNull(factoryPid)) {
 			throw new IllegalStateException("Service factory PID is null");
 		}
 
@@ -86,16 +95,44 @@ public class ConfigurationFactoryUtil {
 			throw new IllegalStateException("Service PID is null");
 		}
 
-		String servicePid = servicePids.get(0);
+		return getExternalReferenceCode(factoryPid, servicePids);
+	}
 
-		if (!servicePid.startsWith(serviceFactoryPid)) {
-			throw new IllegalStateException(
-				StringBundler.concat(
-					"Service PID (", servicePid, ") does not start with ",
-					"service factory PID (", serviceFactoryPid, ")"));
+	public static String getExternalReferenceCode(
+			String factoryPid, List<String> servicePids)
+		throws IllegalStateException {
+
+		for (String servicePid : servicePids) {
+			if (servicePid.startsWith(factoryPid)) {
+				String externalReferenceCode = servicePid.substring(
+					factoryPid.length() + 1);
+
+				// LPS-172217
+
+				int index = externalReferenceCode.indexOf('/');
+
+				if (index != -1) {
+					externalReferenceCode = externalReferenceCode.substring(
+						0, index);
+				}
+
+				return externalReferenceCode;
+			}
 		}
 
-		return servicePid.substring(serviceFactoryPid.length() + 1);
+		throw new IllegalStateException(
+			StringBundler.concat(
+				"No service PID starts with factory PID (", factoryPid, ")"));
+	}
+
+	public static String getFactoryPidFromPid(String pid) {
+		int index = pid.indexOf('~');
+
+		if (index != -1) {
+			return pid.substring(0, index);
+		}
+
+		return null;
 	}
 
 }

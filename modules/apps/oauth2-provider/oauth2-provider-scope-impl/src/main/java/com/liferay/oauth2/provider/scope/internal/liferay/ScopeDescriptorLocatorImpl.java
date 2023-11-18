@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.scope.internal.liferay;
 
 import com.liferay.oauth2.provider.scope.internal.constants.OAuth2ProviderScopeConstants;
-import com.liferay.oauth2.provider.scope.liferay.ScopedServiceTrackerMap;
-import com.liferay.oauth2.provider.scope.liferay.ScopedServiceTrackerMapFactory;
 import com.liferay.oauth2.provider.scope.liferay.spi.ScopeDescriptorLocator;
 import com.liferay.oauth2.provider.scope.spi.scope.descriptor.ScopeDescriptor;
+import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMapFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -73,7 +64,7 @@ public class ScopeDescriptorLocatorImpl implements ScopeDescriptorLocator {
 				(serviceReference, emitter) -> emitter.emit(
 					GetterUtil.getLong(
 						serviceReference.getProperty("companyId"))));
-		_scopedServiceTrackerMap = _scopedServiceTrackerMapFactory.create(
+		_scopedServiceTrackerMap = ScopedServiceTrackerMapFactory.create(
 			bundleContext, ScopeDescriptor.class,
 			OAuth2ProviderScopeConstants.OSGI_JAXRS_NAME,
 			() -> _defaultScopeDescriptor);
@@ -91,8 +82,5 @@ public class ScopeDescriptorLocatorImpl implements ScopeDescriptorLocator {
 	private ServiceTrackerMap<Long, ScopeDescriptor>
 		_scopeDescriptorServiceTrackerMap;
 	private ScopedServiceTrackerMap<ScopeDescriptor> _scopedServiceTrackerMap;
-
-	@Reference
-	private ScopedServiceTrackerMapFactory _scopedServiceTrackerMapFactory;
 
 }

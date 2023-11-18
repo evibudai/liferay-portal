@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.servlet.filters.language;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -21,16 +13,22 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
+import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
 import javax.portlet.PortletConfig;
@@ -39,6 +37,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -76,11 +75,15 @@ public class LanguageFilter extends BasePortalFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
+		httpServletResponse.setHeader(
+			HttpHeaders.CACHE_CONTROL, "private, no-cache");
+
 		BufferCacheServletResponse bufferCacheServletResponse =
 			new BufferCacheServletResponse(httpServletResponse);
 
 		processFilter(
-			LanguageFilter.class.getName(), httpServletRequest,
+			LanguageFilter.class.getName(),
+			new NoCacheHttpServletRequestWrapper(httpServletRequest),
 			bufferCacheServletResponse, filterChain);
 
 		if (_log.isDebugEnabled()) {
@@ -93,6 +96,21 @@ public class LanguageFilter extends BasePortalFilter {
 		String content = bufferCacheServletResponse.getString();
 
 		content = translateResponse(httpServletRequest, content);
+
+		String eTag =
+			StringPool.QUOTE + DigesterUtil.digest("SHA-1", content) +
+				StringPool.QUOTE;
+
+		httpServletResponse.setHeader(HttpHeaders.ETAG, eTag);
+
+		String ifNoneMatch = httpServletRequest.getHeader(
+			HttpHeaders.IF_NONE_MATCH);
+
+		if ((ifNoneMatch != null) && ifNoneMatch.equals(eTag)) {
+			httpServletResponse.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+
+			return;
+		}
 
 		ServletResponseUtil.write(httpServletResponse, content);
 	}
@@ -122,5 +140,105 @@ public class LanguageFilter extends BasePortalFilter {
 	private static final Log _log = LogFactoryUtil.getLog(LanguageFilter.class);
 
 	private PortletConfig _portletConfig;
+
+	private static class NoCacheHttpServletRequestWrapper
+		extends HttpServletRequestWrapper {
+
+		public NoCacheHttpServletRequestWrapper(
+			HttpServletRequest httpServletRequest) {
+
+			super(httpServletRequest);
+
+			_httpServletRequest = httpServletRequest;
+		}
+
+		public long getDateHeader(String name) {
+			if (StringUtil.equalsIgnoreCase(name, "If-Modified-Since") ||
+				StringUtil.equalsIgnoreCase(name, "If-None-Match")) {
+
+				return -1;
+			}
+
+			return _httpServletRequest.getDateHeader(name);
+		}
+
+		public String getHeader(String name) {
+			if (StringUtil.equalsIgnoreCase(name, "If-Modified-Since") ||
+				StringUtil.equalsIgnoreCase(name, "If-None-Match")) {
+
+				return null;
+			}
+
+			return _httpServletRequest.getHeader(name);
+		}
+
+		public Enumeration<String> getHeaderNames() {
+			List<String> headerNames = new ArrayList<>();
+
+			Enumeration<String> enumeration =
+				_httpServletRequest.getHeaderNames();
+
+			while (enumeration.hasMoreElements()) {
+				String name = enumeration.nextElement();
+
+				if (StringUtil.equalsIgnoreCase(name, "If-Modified-Since") ||
+					StringUtil.equalsIgnoreCase(name, "If-None-Match")) {
+
+					continue;
+				}
+
+				headerNames.add(name);
+			}
+
+			return new Enumeration<String>() {
+
+				@Override
+				public boolean hasMoreElements() {
+					if (_nextIndex < headerNames.size()) {
+						return true;
+					}
+
+					return false;
+				}
+
+				@Override
+				public String nextElement() {
+					if (!hasMoreElements()) {
+						throw new NoSuchElementException();
+					}
+
+					_nextIndex++;
+
+					return headerNames.get(_nextIndex - 1);
+				}
+
+				private int _nextIndex;
+
+			};
+		}
+
+		public Enumeration<String> getHeaders(String name) {
+			if (StringUtil.equalsIgnoreCase(name, "If-Modified-Since") ||
+				StringUtil.equalsIgnoreCase(name, "If-None-Match")) {
+
+				return null;
+			}
+
+			return _httpServletRequest.getHeaders(name);
+		}
+
+		public int getIntHeader(String name) {
+			if (StringUtil.equalsIgnoreCase(name, "If-Modified-Since") ||
+				StringUtil.equalsIgnoreCase(name, "If-None-Match")) {
+
+				return -1;
+			}
+
+			return _httpServletRequest.getIntHeader(name);
+		}
+
+		private final HttpServletRequest _httpServletRequest;
+
+	}
 
 }

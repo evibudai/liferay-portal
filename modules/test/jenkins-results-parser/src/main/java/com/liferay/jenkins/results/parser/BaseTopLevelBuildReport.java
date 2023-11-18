@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -328,12 +319,14 @@ public abstract class BaseTopLevelBuildReport
 		JSONObject buildReportJSONObject = new JSONObject();
 
 		buildReportJSONObject.put(
-			"batches", _getBatchesJSONArray(buildResultJSONObject));
-		buildReportJSONObject.put("buildURL", String.valueOf(getBuildURL()));
-		buildReportJSONObject.put(
-			"duration", buildResultJSONObject.get("duration"));
-		buildReportJSONObject.put(
-			"result", buildResultJSONObject.get("result"));
+			"batches", _getBatchesJSONArray(buildResultJSONObject)
+		).put(
+			"buildURL", String.valueOf(getBuildURL())
+		).put(
+			"duration", buildResultJSONObject.get("duration")
+		).put(
+			"result", buildResultJSONObject.get("result")
+		);
 
 		long startTime = buildResultJSONObject.optLong("startTime", 0L);
 
@@ -360,11 +353,13 @@ public abstract class BaseTopLevelBuildReport
 			startTime = stopWatchRecord.getStartTimestamp();
 		}
 
-		buildReportJSONObject.put("startTime", startTime);
-
-		buildReportJSONObject.put("status", "completed");
 		buildReportJSONObject.put(
-			"stopWatchRecords", buildResultJSONObject.get("stopWatchRecords"));
+			"startTime", startTime
+		).put(
+			"status", "completed"
+		).put(
+			"stopWatchRecords", buildResultJSONObject.get("stopWatchRecords")
+		);
 
 		String testSuiteName = _getTestSuiteNameFromBuildResult(
 			buildResultJSONObject);
@@ -453,10 +448,15 @@ public abstract class BaseTopLevelBuildReport
 
 				JSONObject buildJSONObject = new JSONObject();
 
-				buildJSONObject.put("axisName", jsonObject.opt("axisName"));
-				buildJSONObject.put("buildURL", jsonObject.get("buildURL"));
-				buildJSONObject.put("duration", jsonObject.get("duration"));
-				buildJSONObject.put("result", jsonObject.get("result"));
+				buildJSONObject.put(
+					"axisName", jsonObject.opt("axisName")
+				).put(
+					"buildURL", jsonObject.get("buildURL")
+				).put(
+					"duration", jsonObject.get("duration")
+				).put(
+					"result", jsonObject.get("result")
+				);
 
 				long startTime = jsonObject.optLong("startTime", 0L);
 
@@ -479,12 +479,15 @@ public abstract class BaseTopLevelBuildReport
 					startTime = stopWatchRecord.getStartTimestamp();
 				}
 
-				buildJSONObject.put("startTime", startTime);
-
-				buildJSONObject.put("status", "completed");
 				buildJSONObject.put(
-					"stopWatchRecords", jsonObject.get("stopWatchRecords"));
-				buildJSONObject.put("testResults", new JSONArray());
+					"startTime", startTime
+				).put(
+					"status", "completed"
+				).put(
+					"stopWatchRecords", jsonObject.get("stopWatchRecords")
+				).put(
+					"testResults", new JSONArray()
+				);
 
 				buildsJSONArray.put(buildJSONObject);
 			}

@@ -1,6 +1,8 @@
 {
 	"description": "",
-	"name": "Quote Retrieve Notification Template",
+	"editorType": "richText",
+	"externalReferenceCode": "D2C-QUOTE-RETRIEVE-NOTIFICATION-TEMPLATE",
+	"name": "D2C Quote Retrieve Notification Template",
 	"recipientType": "email",
 	"recipients": [
 		{
@@ -11,12 +13,12 @@
 				"en-US": "Raylife"
 			},
 			"to": {
-				"en-US": "[%RETRIEVEEMAIL%]"
+				"en-US": "[%QUOTERETRIEVE_RETRIEVEEMAIL%]"
 			}
 		}
 	],
 	"subject": {
-		"en_US": "Continue your Raylife [%PRODUCTNAME%] quote"
+		"en_US": "Continue your Raylife [%QUOTERETRIEVE_PRODUCTNAME%] quote"
 	},
 	"type": "email"
 }

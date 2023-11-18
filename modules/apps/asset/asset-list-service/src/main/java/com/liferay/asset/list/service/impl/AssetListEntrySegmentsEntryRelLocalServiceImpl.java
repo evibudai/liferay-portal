@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.service.impl;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.Date;
 import java.util.List;
@@ -45,7 +37,7 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 
 	@Override
 	public AssetListEntrySegmentsEntryRel addAssetListEntrySegmentsEntryRel(
-			long userId, long groupId, long assetListEntryId,
+			long userId, long groupId, long assetListEntryId, int priority,
 			long segmentsEntryId, String typeSettings,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -66,14 +58,27 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 		assetListEntrySegmentsEntryRel.setCreateDate(new Date());
 		assetListEntrySegmentsEntryRel.setModifiedDate(new Date());
 		assetListEntrySegmentsEntryRel.setAssetListEntryId(assetListEntryId);
-		assetListEntrySegmentsEntryRel.setPriority(
-			assetListEntrySegmentsEntryRelPersistence.countByAssetListEntryId(
-				assetListEntryId));
+		assetListEntrySegmentsEntryRel.setPriority(priority);
 		assetListEntrySegmentsEntryRel.setSegmentsEntryId(segmentsEntryId);
 		assetListEntrySegmentsEntryRel.setTypeSettings(typeSettings);
 
 		return assetListEntrySegmentsEntryRelPersistence.update(
 			assetListEntrySegmentsEntryRel);
+	}
+
+	@Override
+	public AssetListEntrySegmentsEntryRel addAssetListEntrySegmentsEntryRel(
+			long userId, long groupId, long assetListEntryId,
+			long segmentsEntryId, String typeSettings,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return assetListEntrySegmentsEntryRelLocalService.
+			addAssetListEntrySegmentsEntryRel(
+				userId, groupId, assetListEntryId,
+				assetListEntrySegmentsEntryRelPersistence.
+					countByAssetListEntryId(assetListEntryId),
+				segmentsEntryId, typeSettings, serviceContext);
 	}
 
 	@Override
@@ -150,10 +155,10 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 	@Override
 	public List<AssetListEntrySegmentsEntryRel>
 		fetchAssetListEntrySegmentsEntryRels(
-			long assetListEntryId, long[] segmentsEntryId) {
+			long assetListEntryId, long[] segmentsEntryIds) {
 
 		return assetListEntrySegmentsEntryRelPersistence.findByA_S_C(
-			assetListEntryId, segmentsEntryId);
+			assetListEntryId, segmentsEntryIds);
 	}
 
 	@Override
@@ -172,6 +177,17 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 
 		return assetListEntrySegmentsEntryRelPersistence.findByAssetListEntryId(
 			assetListEntryId, start, end);
+	}
+
+	@Override
+	public List<AssetListEntrySegmentsEntryRel>
+		getAssetListEntrySegmentsEntryRels(
+			long assetListEntryId, long[] segmentsEntryIds, int start, int end,
+			OrderByComparator<AssetListEntrySegmentsEntryRel>
+				orderByComparator) {
+
+		return assetListEntrySegmentsEntryRelPersistence.findByA_S_C(
+			assetListEntryId, segmentsEntryIds, start, end, orderByComparator);
 	}
 
 	@Override

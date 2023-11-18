@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.serdes.v1_0;
@@ -149,6 +140,20 @@ public class ObjectActionSerDes {
 			sb.append(_toJSON(objectAction.getErrorMessage()));
 		}
 
+		if (objectAction.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectAction.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (objectAction.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -231,6 +236,16 @@ public class ObjectActionSerDes {
 			sb.append(String.valueOf(objectAction.getStatus()));
 		}
 
+		if (objectAction.getSystem() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"system\": ");
+
+			sb.append(objectAction.getSystem());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -310,6 +325,15 @@ public class ObjectActionSerDes {
 				"errorMessage", String.valueOf(objectAction.getErrorMessage()));
 		}
 
+		if (objectAction.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(objectAction.getExternalReferenceCode()));
+		}
+
 		if (objectAction.getId() == null) {
 			map.put("id", null);
 		}
@@ -361,6 +385,13 @@ public class ObjectActionSerDes {
 		}
 		else {
 			map.put("status", String.valueOf(objectAction.getStatus()));
+		}
+
+		if (objectAction.getSystem() == null) {
+			map.put("system", null);
+		}
+		else {
+			map.put("system", String.valueOf(objectAction.getSystem()));
 		}
 
 		return map;
@@ -428,6 +459,14 @@ public class ObjectActionSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					objectAction.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					objectAction.setId(
@@ -473,6 +512,11 @@ public class ObjectActionSerDes {
 				if (jsonParserFieldValue != null) {
 					objectAction.setStatus(
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "system")) {
+				if (jsonParserFieldValue != null) {
+					objectAction.setSystem((Boolean)jsonParserFieldValue);
 				}
 			}
 		}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.recommendation.test;
@@ -30,14 +21,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,14 +57,14 @@ public class FrequentPatternCommerceMLRecommendationManagerTest {
 		throws Exception {
 
 		FrequentPatternCommerceMLRecommendation
-			frequentPatternCommerceMLRecommendation =
+			randomFrequentPatternCommerceMLRecommendation =
 				_frequentPatternCommerceMLRecommendations.get(
 					RandomTestUtil.randomInt(
 						0,
 						_frequentPatternCommerceMLRecommendations.size() - 1));
 
 		List<Long> antecedentIdList = ListUtil.fromArray(
-			frequentPatternCommerceMLRecommendation.getAntecedentIds());
+			randomFrequentPatternCommerceMLRecommendation.getAntecedentIds());
 
 		Collections.shuffle(antecedentIdList);
 
@@ -84,34 +73,35 @@ public class FrequentPatternCommerceMLRecommendationManagerTest {
 
 		long[] antecedentIds = ArrayUtil.toLongArray(antecedentIdList);
 
-		Stream<FrequentPatternCommerceMLRecommendation>
-			frequentPatternCommerceMLRecommendationStream =
-				_frequentPatternCommerceMLRecommendations.stream();
-
 		Map<Long, FrequentPatternCommerceMLRecommendation>
-			expectedFrequentPatternCommerceMLRecommendationsMap =
-				frequentPatternCommerceMLRecommendationStream.filter(
-					recommendation ->
-						_filterFrequentPatternCommerceMLRecommendation(
-							recommendation, antecedentIds)
-				).sorted(
-					new FrequentPatternCommerceMLRecommendationComparator(
-						antecedentIds)
-				).collect(
-					Collectors.toMap(
-						FrequentPatternCommerceMLRecommendation::
-							getRecommendedEntryClassPK,
-						Function.identity(), (item1, item2) -> item1,
-						LinkedHashMap::new)
-				);
+			expectedFrequentPatternCommerceMLRecommendations =
+				new LinkedHashMap<>();
+
+		for (FrequentPatternCommerceMLRecommendation
+				curFrequentPatternCommerceMLRecommendation :
+					ListUtil.sort(
+						ListUtil.filter(
+							_frequentPatternCommerceMLRecommendations,
+							frequentPatternCommerceMLRecommendation ->
+								_filterFrequentPatternCommerceMLRecommendation(
+									frequentPatternCommerceMLRecommendation,
+									antecedentIds)),
+						new FrequentPatternCommerceMLRecommendationComparator(
+							antecedentIds))) {
+
+			expectedFrequentPatternCommerceMLRecommendations.putIfAbsent(
+				curFrequentPatternCommerceMLRecommendation.
+					getRecommendedEntryClassPK(),
+				curFrequentPatternCommerceMLRecommendation);
+		}
 
 		IdempotentRetryAssert.retryAssert(
 			5, TimeUnit.SECONDS, 1, TimeUnit.SECONDS,
 			() -> {
 				_assetResultEquals(
 					antecedentIds,
-					new ArrayList(
-						expectedFrequentPatternCommerceMLRecommendationsMap.
+					new ArrayList<>(
+						expectedFrequentPatternCommerceMLRecommendations.
 							values()));
 
 				return null;
@@ -126,13 +116,13 @@ public class FrequentPatternCommerceMLRecommendationManagerTest {
 			frequentPatternCommerceMLRecommendations = new ArrayList<>();
 
 		for (int i = 0; i < _PRODUCT_COUNT; i++) {
-			Set<Long> antecedentIds = Stream.generate(
-				RandomTestUtil::randomLong
-			).limit(
-				RandomTestUtil.randomInt(1, _MAX_ANTECEDENT_COUNT)
-			).collect(
-				Collectors.toSet()
-			);
+			Set<Long> antecedentIds = new HashSet<>();
+
+			for (int j = 0;
+				 j < RandomTestUtil.randomInt(1, _MAX_ANTECEDENT_COUNT); j++) {
+
+				antecedentIds.add(RandomTestUtil.randomLong());
+			}
 
 			for (int j = 0; j < _RECOMMENDATION_COUNT; j++) {
 				float score = 1.0F - (j / 10.0F);

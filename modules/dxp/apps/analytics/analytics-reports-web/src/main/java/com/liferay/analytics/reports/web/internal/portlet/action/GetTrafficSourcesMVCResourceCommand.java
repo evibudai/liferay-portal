@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.portlet.action;
@@ -19,6 +10,7 @@ import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReports
 import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
 import com.liferay.analytics.reports.web.internal.model.TrafficChannel;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -33,6 +25,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -44,7 +37,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -78,7 +70,9 @@ public class GetTrafficSourcesMVCResourceCommand
 
 		try {
 			AnalyticsReportsDataProvider analyticsReportsDataProvider =
-				new AnalyticsReportsDataProvider(_http);
+				new AnalyticsReportsDataProvider(
+					_analyticsSettingsManager, _http);
+
 			String canonicalURL = ParamUtil.getString(
 				resourceRequest, "canonicalURL");
 
@@ -115,8 +109,9 @@ public class GetTrafficSourcesMVCResourceCommand
 	}
 
 	private List<TrafficChannel> _getTrafficChannels(
-		AnalyticsReportsDataProvider analyticsReportsDataProvider,
-		String canonicalURL, long companyId, TimeRange timeRange) {
+			AnalyticsReportsDataProvider analyticsReportsDataProvider,
+			String canonicalURL, long companyId, TimeRange timeRange)
+		throws Exception {
 
 		Map<TrafficChannel.Type, TrafficChannel> emptyMap = HashMapBuilder.put(
 			TrafficChannel.Type.DIRECT,
@@ -184,32 +179,35 @@ public class GetTrafficSourcesMVCResourceCommand
 	}
 
 	private JSONArray _getTrafficSourcesJSONArray(
-		AnalyticsReportsDataProvider analyticsReportsDataProvider,
-		String canonicalURL, long companyId,
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse, TimeRange timeRange,
-		ResourceBundle resourceBundle) {
+			AnalyticsReportsDataProvider analyticsReportsDataProvider,
+			String canonicalURL, long companyId,
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse, TimeRange timeRange,
+			ResourceBundle resourceBundle)
+		throws Exception {
 
 		List<TrafficChannel> trafficChannels = _getTrafficChannels(
 			analyticsReportsDataProvider, canonicalURL, companyId, timeRange);
 
-		Stream<TrafficChannel> stream = trafficChannels.stream();
-
 		Comparator<TrafficChannel> comparator = Comparator.comparing(
 			TrafficChannel::getTrafficShare);
 
-		return JSONUtil.putAll(
-			stream.sorted(
-				comparator.reversed()
-			).map(
-				trafficChannel -> trafficChannel.toJSONObject(
-					liferayPortletRequest, liferayPortletResponse,
-					resourceBundle)
-			).toArray());
+		trafficChannels = ListUtil.copy(trafficChannels);
+
+		trafficChannels.sort(comparator.reversed());
+
+		return JSONUtil.toJSONArray(
+			trafficChannels,
+			trafficChannel -> trafficChannel.toJSONObject(
+				liferayPortletRequest, liferayPortletResponse, resourceBundle),
+			_log);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GetTrafficSourcesMVCResourceCommand.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private Http _http;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.testray;
@@ -41,11 +32,11 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 		_testrayRoutine = testrayRoutine;
 		_jsonObject = jsonObject;
 
-		_testrayProject = _testrayRoutine.getTestrayProject();
-		_testrayServer = _testrayRoutine.getTestrayServer();
+		_testrayProject = testrayRoutine.getTestrayProject();
+		_testrayServer = testrayRoutine.getTestrayServer();
 
 		_testrayProductVersion = _testrayProject.getTestrayProductVersionByID(
-			_jsonObject.getInt("testrayProductVersionId"));
+			jsonObject.getLong("testrayProductVersionId"));
 	}
 
 	@Override
@@ -54,7 +45,7 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 			throw new NullPointerException("Testray build is null");
 		}
 
-		Integer id = testrayBuild.getID();
+		Long id = testrayBuild.getID();
 
 		return id.compareTo(getID());
 	}
@@ -63,8 +54,8 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 		return _jsonObject.getString("description");
 	}
 
-	public int getID() {
-		return _jsonObject.getInt("testrayBuildId");
+	public long getID() {
+		return _jsonObject.getLong("testrayBuildId");
 	}
 
 	public String getName() {
@@ -337,7 +328,7 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 
 			_testrayProductVersion =
 				_testrayProject.getTestrayProductVersionByID(
-					_jsonObject.getInt("testrayProductVersionId"));
+					_jsonObject.getLong("testrayProductVersionId"));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);

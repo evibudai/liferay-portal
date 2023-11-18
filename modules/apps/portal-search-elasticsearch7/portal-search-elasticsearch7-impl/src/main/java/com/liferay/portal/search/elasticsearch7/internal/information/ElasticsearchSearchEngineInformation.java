@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.information;
@@ -45,8 +36,6 @@ import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.http.util.EntityUtils;
 
@@ -316,27 +305,36 @@ public class ElasticsearchSearchEngineInformation
 			List<NodeInformation> nodeInformations =
 				connectionInformation.getNodeInformationList();
 
-			Stream<NodeInformation> stream = nodeInformations.stream();
+			StringBundler sb = new StringBundler(
+				(nodeInformations.size() * 6) + 4);
 
-			return StringBundler.concat(
-				clusterName, StringPool.COLON, StringPool.SPACE,
-				StringPool.OPEN_BRACKET,
-				stream.map(
-					nodeInfo -> StringBundler.concat(
-						nodeInfo.getName(), StringPool.SPACE,
-						StringPool.OPEN_PARENTHESIS, nodeInfo.getVersion(),
-						StringPool.CLOSE_PARENTHESIS)
-				).collect(
-					Collectors.joining(StringPool.COMMA_AND_SPACE)
-				),
-				StringPool.CLOSE_BRACKET);
+			sb.append(clusterName);
+			sb.append(StringPool.COLON);
+			sb.append(StringPool.SPACE);
+			sb.append(StringPool.OPEN_BRACKET);
+
+			for (NodeInformation nodeInformation : nodeInformations) {
+				sb.append(nodeInformation.getName());
+				sb.append(StringPool.SPACE);
+				sb.append(StringPool.OPEN_PARENTHESIS);
+				sb.append(nodeInformation.getVersion());
+				sb.append(StringPool.CLOSE_PARENTHESIS);
+
+				sb.append(StringPool.COMMA_AND_SPACE);
+			}
+
+			sb.setIndex(sb.index() - 1);
+
+			sb.append(StringPool.CLOSE_BRACKET);
+
+			return sb.toString();
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn("Unable to get node information", exception);
 			}
 
-			return StringBundler.concat("(Error: ", exception.toString(), ")");
+			return StringBundler.concat("(Error: ", exception, ")");
 		}
 	}
 

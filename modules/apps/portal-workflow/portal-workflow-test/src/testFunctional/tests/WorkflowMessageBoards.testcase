@@ -14,8 +14,6 @@ definition {
 
 		User.firstLoginPG();
 
-		Navigator.openURL();
-
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Site Administration",
@@ -25,29 +23,25 @@ definition {
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Message Boards Message");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Message Boards Page");
 
-		PagesAdmin.addPage(
-			pageName = "Message Boards Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Message Boards Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Message Boards Page",
-			sitePageType = "Widget Page");
-
-		Navigator.gotoPage(pageName = "Message Boards Page");
-
-		Portlet.addPG(portletName = "Message Boards");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Message Boards Page",
+			widgetName = "Message Boards");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -65,8 +59,7 @@ definition {
 		}
 	}
 
-	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test ApproveMessageBoardsThreadPG {
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -78,8 +71,7 @@ definition {
 
 		MessageboardsThread.viewWithWorkflowPG(
 			threadBody = "MB Thread Body",
-			threadSubject = "MB Thread Subject",
-			workflowTask = "Review");
+			threadSubject = "MB Thread Subject");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -87,16 +79,6 @@ definition {
 			workflowAssetTitle = "MB Thread Subject",
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
-
-		Navigator.gotoPage(pageName = "Message Boards Page");
-
-		MessageboardsThread.viewWithWorkflowPG(
-			pageName = "Message Boards Page",
-			threadBody = "MB Thread Body",
-			threadSubject = "MB Thread Subject",
-			workflowTask = "Review");
-
-		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
 		Workflow.approveTaskByActions(
 			workflowAssetTitle = "MB Thread Subject",
@@ -107,7 +89,7 @@ definition {
 
 		MessageboardsThread.gotoPG(
 			lastPostUserName = "Test Test",
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Body",
 			threadSubject = "MB Thread Subject");
 
@@ -133,12 +115,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69700. Verify that the user can approve a thread."
-	@priority = "4"
+	@priority = 4
 	test CanApproveAThread {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -156,21 +135,15 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Approved");
 	}
 
 	@description = "This is a test for LRQA-70151. Verify that the user cannot reply to a Pending Thread."
-	@priority = "3"
+	@priority = 3
 	test CannotReplyToPendingThread {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -186,12 +159,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69701. Verify that the user can reject a thread."
-	@priority = "4"
+	@priority = 4
 	test CanRejectAThread {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -209,21 +179,15 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Pending");
 	}
 
 	@description = "This is a test for LRQA-69703. Verify that user can reply to an approved thread."
-	@priority = "5"
+	@priority = 5
 	test CanReplyToApprovedThread {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -241,10 +205,7 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Approved");
 
@@ -254,18 +215,15 @@ definition {
 			threadReplyBody = "Message Boards Body Reply",
 			threadSubject = "Thread Message Subject");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Workflow.viewWorkflowStatus(status = "Pending");
 	}
 
 	@description = "This is a test for LRQA-70153. Verify that the user can review the thread through My Workflow Tasks."
-	@priority = "3"
+	@priority = 3
 	test CanReviewThreadThroughMyWorkflowTasks {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -285,10 +243,10 @@ definition {
 			titleMessageBoard = "Thread Message Subject");
 	}
 
-	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test RejectMessageBoardsThreadPG {
-		property test.name.skip.portal.instance = "WorkflowadminPGMessageboards#RejectMessageBoardsThreadPG";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -322,17 +280,13 @@ definition {
 		MessageboardsThread.viewWithWorkflowPG(
 			pageName = "Message Boards Page",
 			threadBody = "MB Thread Body",
-			threadSubject = "MB Thread Subject",
-			workflowTask = "Update");
+			threadSubject = "MB Thread Subject");
 	}
 
 	@description = "This is a test for LRQA-70152. Verify that the reply to a thread has workflow associated."
-	@priority = "4"
+	@priority = 4
 	test ReplyHasWorkflow {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -350,10 +304,7 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Approved");
 
@@ -363,7 +314,7 @@ definition {
 			threadReplyBody = "Message Boards Body Reply",
 			threadSubject = "Thread Message Subject");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Workflow.viewWorkflowStatus(status = "Pending");
 
@@ -379,10 +330,7 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Approved");
 
@@ -392,12 +340,9 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-70150. Verify that the user can edit an approved thread and the status returns to Pending."
-	@priority = "3"
+	@priority = 3
 	test StatusReturnstoPendingWhenApprovedThreadIsEdited {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",
@@ -415,29 +360,24 @@ definition {
 			workflowAssetType = "Message Boards Message",
 			workflowTask = "Review");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		Workflow.viewWorkflowStatus(status = "Approved");
 
 		MessageboardsThread.editCP(
+			key_listEntry = "Thread Message Subject",
 			threadBodyEdit = "Thread Message Body Edit",
 			threadSubjectEdit = "Thread Message Subject Edit");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Workflow.viewWorkflowStatus(status = "Pending");
 	}
 
 	@description = "This is a test for LRQA-69694. Verify that the process status is Pending when the user creates a new thread with workflow associated."
-	@priority = "4"
+	@priority = 4
 	test WorkflowPendingForMessageBoard {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Message Boards");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.addWithWorkflowCP(
 			threadBody = "Thread Message Body",

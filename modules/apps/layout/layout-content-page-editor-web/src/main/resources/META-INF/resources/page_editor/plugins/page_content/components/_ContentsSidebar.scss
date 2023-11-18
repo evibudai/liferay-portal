@@ -1,0 +1,46 @@
+@import 'cadmin-variables';
+
+$selector: '.page-editor__page-contents';
+
+html#{$cadmin-selector} .cadmin #{$selector} {
+	&__button {
+		opacity: 0;
+
+		&:focus {
+			opacity: 1;
+		}
+	}
+
+	&__page-content {
+		font-size: 12px;
+		padding-left: 12px;
+
+		.editable-hovered {
+			cursor: pointer;
+		}
+
+		&:focus-within,
+		&--mapped-item-hovered {
+			background-color: $cadmin-gray-100;
+			border-radius: 4px;
+			transition: background-color ease 0.3s;
+
+			#{$selector}__button:not(:disabled) {
+				opacity: 1;
+			}
+		}
+
+		.lexicon-icon {
+			font-size: 14px;
+		}
+	}
+
+	&__content-filter__help {
+		color: $cadmin-gray-600;
+		font-size: 12px;
+	}
+
+	&__content-list {
+		border-top: 1px solid $secondary-l3;
+	}
+}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -174,8 +165,8 @@ public class UserNotificationEventLocalServiceUtil {
 			userNotificationEventId);
 	}
 
-	public static void deleteUserNotificationEvent(
-		String uuid, long companyId) {
+	public static void deleteUserNotificationEvent(String uuid, long companyId)
+		throws PortalException {
 
 		getService().deleteUserNotificationEvent(uuid, companyId);
 	}
@@ -197,12 +188,15 @@ public class UserNotificationEventLocalServiceUtil {
 	}
 
 	public static void deleteUserNotificationEvents(
-		java.util.Collection<String> uuids, long companyId) {
+			java.util.Collection<String> uuids, long companyId)
+		throws PortalException {
 
 		getService().deleteUserNotificationEvents(uuids, companyId);
 	}
 
-	public static void deleteUserNotificationEvents(long userId) {
+	public static void deleteUserNotificationEvents(long userId)
+		throws PortalException {
+
 		getService().deleteUserNotificationEvents(userId);
 	}
 
@@ -660,6 +654,14 @@ public class UserNotificationEventLocalServiceUtil {
 			userId, deliveryType, start, end);
 	}
 
+	public static List<UserNotificationEvent> getUserNotificationEvents(
+		long userId, int start, int end,
+		OrderByComparator<UserNotificationEvent> orderByComparator) {
+
+		return getService().getUserNotificationEvents(
+			userId, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of user notification events.
 	 *
@@ -775,6 +777,10 @@ public class UserNotificationEventLocalServiceUtil {
 
 	public static UserNotificationEventLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(UserNotificationEventLocalService service) {
+		_service = service;
 	}
 
 	private static volatile UserNotificationEventLocalService _service;

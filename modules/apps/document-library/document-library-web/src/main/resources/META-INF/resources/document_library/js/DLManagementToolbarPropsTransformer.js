@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -26,12 +17,16 @@ import {collectDigitalSignature} from './digital-signature/DigitalSignatureUtil'
 
 export default function propsTransformer({
 	additionalProps: {
+		bulkCopyURL,
 		bulkPermissionsConfiguration: {defaultModelClassName, permissionsURLs},
 		collectDigitalSignaturePortlet,
 		downloadEntryURL,
 		editEntryURL,
 		folderConfiguration,
 		openViewMoreFileEntryTypesURL,
+		selectAssetCategoriesURL,
+		selectAssetTagsURL,
+		selectExtensionURL,
 		selectFileEntryTypeURL,
 		selectFolderURL,
 		trashEnabled,
@@ -112,6 +107,17 @@ export default function propsTransformer({
 		});
 	};
 
+	const copy = () => {
+		const dlObjectIds = getAllSelectedElements().get('value');
+
+		const url = addParams(
+			`${portletNamespace}dlObjectIds=${dlObjectIds.join(',')}`,
+			bulkCopyURL
+		);
+
+		navigate(url);
+	};
+
 	const deleteEntries = () => {
 		if (trashEnabled) {
 			processAction('move_to_trash', editEntryURL);
@@ -174,6 +180,108 @@ export default function propsTransformer({
 				);
 			}
 		);
+	};
+
+	const filterByCategory = (categoriesFilterURL) => {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('apply'),
+			height: '70vh',
+			iframeBodyCssClass: '',
+			multiple: true,
+			onSelect: (selectedItems) => {
+				if (selectedItems) {
+					const assetCategories = Object.keys(selectedItems).filter(
+						(key) => !selectedItems[key].unchecked
+					);
+
+					let url = selectAssetCategoriesURL;
+
+					assetCategories.forEach((assetCategory) => {
+						url = addParams(
+							`${portletNamespace}assetCategoryId=${assetCategory}`,
+							url
+						);
+					});
+
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectedAssetCategory`,
+			size: 'md',
+			title: Liferay.Language.get('filter-by-categories'),
+			url: categoriesFilterURL,
+		});
+	};
+
+	const filterByDocumentType = () => {
+		openSelectionModal({
+			onSelect(selectedItem) {
+				if (selectedItem) {
+					const url = addParams(
+						`${portletNamespace}fileEntryTypeId=${selectedItem.value}`,
+						viewFileEntryTypeURL
+					);
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectFileEntryType`,
+			title: Liferay.Language.get('filter-by-type'),
+			url: selectFileEntryTypeURL,
+		});
+	};
+
+	const filterByExtension = (extensionsFilterURL) => {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('apply'),
+			height: '70vh',
+			multiple: true,
+			onSelect(selectedItem) {
+				if (selectedItem) {
+					const url = selectedItem.reduce(
+						(acc, item) =>
+							addParams(
+								`${portletNamespace}extension=${item}`,
+								acc
+							),
+						selectExtensionURL
+					);
+
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectedFileExtension`,
+			size: 'md',
+			title: Liferay.Language.get('filter-by-extension'),
+			url: extensionsFilterURL,
+		});
+	};
+
+	const filterByTag = (tagsFilterURL) => {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('select'),
+			height: '70vh',
+			multiple: true,
+			onSelect: (selectedItem) => {
+				if (selectedItem) {
+					const url = selectedItem.reduce(
+						(acc, item) =>
+							addParams(
+								`${portletNamespace}assetTagId=${
+									JSON.parse(item.value)?.tagName
+								}`,
+								acc
+							),
+						selectAssetTagsURL
+					);
+
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectedAssetTag`,
+			size: 'lg',
+			title: Liferay.Language.get('filter-by-tags'),
+			url: tagsFilterURL,
+		});
 	};
 
 	const move = () => {
@@ -298,6 +406,9 @@ export default function propsTransformer({
 					collectDigitalSignaturePortlet
 				);
 			}
+			else if (action === 'copy') {
+				copy();
+			}
 			else if (action === 'deleteEntries') {
 				deleteEntries();
 			}
@@ -318,21 +429,17 @@ export default function propsTransformer({
 			}
 		},
 		onFilterDropdownItemClick(event, {item}) {
-			if (item?.data?.action === 'openDocumentTypesSelector') {
-				openSelectionModal({
-					onSelect(selectedItem) {
-						if (selectedItem) {
-							const url = addParams(
-								`${portletNamespace}fileEntryTypeId=${selectedItem.value}`,
-								viewFileEntryTypeURL
-							);
-							navigate(url);
-						}
-					},
-					selectEventName: `${portletNamespace}selectFileEntryType`,
-					title: Liferay.Language.get('select-document-type'),
-					url: selectFileEntryTypeURL,
-				});
+			if (item?.data?.action === 'openCategoriesSelector') {
+				filterByCategory(item?.data?.categoriesFilterURL);
+			}
+			else if (item?.data?.action === 'openDocumentTypesSelector') {
+				filterByDocumentType();
+			}
+			else if (item?.data?.action === 'openExtensionSelector') {
+				filterByExtension(item?.data?.extensionsFilterURL);
+			}
+			else if (item?.data?.action === 'openTagsSelector') {
+				filterByTag(item?.data?.tagsFilterURL);
 			}
 		},
 		onShowMoreButtonClick() {

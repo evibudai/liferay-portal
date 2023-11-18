@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.model.impl;
@@ -81,7 +72,7 @@ public class NotificationQueueEntryModelImpl
 		{"notificationTemplateId", Types.BIGINT}, {"body", Types.CLOB},
 		{"classNameId", Types.BIGINT}, {"classPK", Types.BIGINT},
 		{"priority", Types.DOUBLE}, {"sentDate", Types.TIMESTAMP},
-		{"subject", Types.VARCHAR}, {"type_", Types.VARCHAR},
+		{"subject", Types.CLOB}, {"type_", Types.VARCHAR},
 		{"status", Types.INTEGER}
 	};
 
@@ -102,13 +93,13 @@ public class NotificationQueueEntryModelImpl
 		TABLE_COLUMNS_MAP.put("classPK", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("sentDate", Types.TIMESTAMP);
-		TABLE_COLUMNS_MAP.put("subject", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("subject", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("type_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table NotificationQueueEntry (mvccVersion LONG default 0 not null,notificationQueueEntryId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,notificationTemplateId LONG,body TEXT null,classNameId LONG,classPK LONG,priority DOUBLE,sentDate DATE null,subject VARCHAR(75) null,type_ VARCHAR(75) null,status INTEGER)";
+		"create table NotificationQueueEntry (mvccVersion LONG default 0 not null,notificationQueueEntryId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,notificationTemplateId LONG,body TEXT null,classNameId LONG,classPK LONG,priority DOUBLE,sentDate DATE null,subject TEXT null,type_ VARCHAR(75) null,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table NotificationQueueEntry";
@@ -247,131 +238,149 @@ public class NotificationQueueEntryModelImpl
 	public Map<String, Function<NotificationQueueEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<NotificationQueueEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<NotificationQueueEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<NotificationQueueEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<NotificationQueueEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<NotificationQueueEntry, Object>>();
-		Map<String, BiConsumer<NotificationQueueEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<NotificationQueueEntry, ?>>();
+		private static final Map
+			<String, Function<NotificationQueueEntry, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", NotificationQueueEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"notificationQueueEntryId",
-			NotificationQueueEntry::getNotificationQueueEntryId);
-		attributeSetterBiConsumers.put(
-			"notificationQueueEntryId",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setNotificationQueueEntryId);
-		attributeGetterFunctions.put(
-			"companyId", NotificationQueueEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", NotificationQueueEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setUserId);
-		attributeGetterFunctions.put(
-			"userName", NotificationQueueEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<NotificationQueueEntry, String>)
-				NotificationQueueEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", NotificationQueueEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<NotificationQueueEntry, Date>)
-				NotificationQueueEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", NotificationQueueEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<NotificationQueueEntry, Date>)
-				NotificationQueueEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"notificationTemplateId",
-			NotificationQueueEntry::getNotificationTemplateId);
-		attributeSetterBiConsumers.put(
-			"notificationTemplateId",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setNotificationTemplateId);
-		attributeGetterFunctions.put("body", NotificationQueueEntry::getBody);
-		attributeSetterBiConsumers.put(
-			"body",
-			(BiConsumer<NotificationQueueEntry, String>)
-				NotificationQueueEntry::setBody);
-		attributeGetterFunctions.put(
-			"classNameId", NotificationQueueEntry::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setClassNameId);
-		attributeGetterFunctions.put(
-			"classPK", NotificationQueueEntry::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<NotificationQueueEntry, Long>)
-				NotificationQueueEntry::setClassPK);
-		attributeGetterFunctions.put(
-			"priority", NotificationQueueEntry::getPriority);
-		attributeSetterBiConsumers.put(
-			"priority",
-			(BiConsumer<NotificationQueueEntry, Double>)
-				NotificationQueueEntry::setPriority);
-		attributeGetterFunctions.put(
-			"sentDate", NotificationQueueEntry::getSentDate);
-		attributeSetterBiConsumers.put(
-			"sentDate",
-			(BiConsumer<NotificationQueueEntry, Date>)
-				NotificationQueueEntry::setSentDate);
-		attributeGetterFunctions.put(
-			"subject", NotificationQueueEntry::getSubject);
-		attributeSetterBiConsumers.put(
-			"subject",
-			(BiConsumer<NotificationQueueEntry, String>)
-				NotificationQueueEntry::setSubject);
-		attributeGetterFunctions.put("type", NotificationQueueEntry::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<NotificationQueueEntry, String>)
-				NotificationQueueEntry::setType);
-		attributeGetterFunctions.put(
-			"status", NotificationQueueEntry::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<NotificationQueueEntry, Integer>)
-				NotificationQueueEntry::setStatus);
+		static {
+			Map<String, Function<NotificationQueueEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<NotificationQueueEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", NotificationQueueEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"notificationQueueEntryId",
+				NotificationQueueEntry::getNotificationQueueEntryId);
+			attributeGetterFunctions.put(
+				"companyId", NotificationQueueEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", NotificationQueueEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", NotificationQueueEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", NotificationQueueEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", NotificationQueueEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"notificationTemplateId",
+				NotificationQueueEntry::getNotificationTemplateId);
+			attributeGetterFunctions.put(
+				"body", NotificationQueueEntry::getBody);
+			attributeGetterFunctions.put(
+				"classNameId", NotificationQueueEntry::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", NotificationQueueEntry::getClassPK);
+			attributeGetterFunctions.put(
+				"priority", NotificationQueueEntry::getPriority);
+			attributeGetterFunctions.put(
+				"sentDate", NotificationQueueEntry::getSentDate);
+			attributeGetterFunctions.put(
+				"subject", NotificationQueueEntry::getSubject);
+			attributeGetterFunctions.put(
+				"type", NotificationQueueEntry::getType);
+			attributeGetterFunctions.put(
+				"status", NotificationQueueEntry::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<NotificationQueueEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<NotificationQueueEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<NotificationQueueEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"notificationQueueEntryId",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setNotificationQueueEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<NotificationQueueEntry, String>)
+					NotificationQueueEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<NotificationQueueEntry, Date>)
+					NotificationQueueEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<NotificationQueueEntry, Date>)
+					NotificationQueueEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"notificationTemplateId",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setNotificationTemplateId);
+			attributeSetterBiConsumers.put(
+				"body",
+				(BiConsumer<NotificationQueueEntry, String>)
+					NotificationQueueEntry::setBody);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<NotificationQueueEntry, Long>)
+					NotificationQueueEntry::setClassPK);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<NotificationQueueEntry, Double>)
+					NotificationQueueEntry::setPriority);
+			attributeSetterBiConsumers.put(
+				"sentDate",
+				(BiConsumer<NotificationQueueEntry, Date>)
+					NotificationQueueEntry::setSentDate);
+			attributeSetterBiConsumers.put(
+				"subject",
+				(BiConsumer<NotificationQueueEntry, String>)
+					NotificationQueueEntry::setSubject);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<NotificationQueueEntry, String>)
+					NotificationQueueEntry::setType);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<NotificationQueueEntry, Integer>)
+					NotificationQueueEntry::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1076,7 +1085,8 @@ public class NotificationQueueEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<NotificationQueueEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

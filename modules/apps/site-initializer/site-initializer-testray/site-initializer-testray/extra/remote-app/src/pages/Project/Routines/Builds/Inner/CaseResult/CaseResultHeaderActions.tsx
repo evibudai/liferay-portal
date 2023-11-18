@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -53,27 +44,31 @@ const CaseResultHeaderActions: React.FC<{
 	].includes(caseResult.dueStatus.key as CaseResultStatuses);
 
 	const workflowDisabled = assignedUserId <= 0 || assignedUserId !== userId;
-
 	const buttonValidations = {
 		completeTest:
 			workflowDisabled ||
 			caseResult.dueStatus.key !== CaseResultStatuses.IN_PROGRESS,
+
 		editValidation: assignedUserId > 0 && assignedUserId !== userId,
+
 		reopenTest: workflowDisabled || isReopened,
-		startTest:
-			workflowDisabled ||
-			caseResult.dueStatus.key !== CaseResultStatuses.UNTESTED,
 	};
+
+	const hasCaseResultEditPermission = !!caseResult.actions?.update;
 
 	return (
 		<>
 			<AssignModal modal={modal} />
 
-			<ClayButton.Group className="mb-3 ml-3" spaced>
+			<ClayButton.Group
+				className="mb-3 ml-3"
+				hidden={!hasCaseResultEditPermission}
+				spaced
+			>
 				<ClayButton
-					disabled={isCaseResultAssignedToMe}
+					disabled={!buttonValidations.completeTest}
 					displayType={
-						isCaseResultAssignedToMe ? 'unstyled' : undefined
+						!buttonValidations.completeTest ? 'unstyled' : undefined
 					}
 					onClick={() => modal.open()}
 				>
@@ -81,7 +76,12 @@ const CaseResultHeaderActions: React.FC<{
 				</ClayButton>
 
 				<ClayButton
-					displayType="secondary"
+					disabled={!buttonValidations.completeTest}
+					displayType={
+						buttonValidations.completeTest
+							? 'secondary'
+							: 'unstyled'
+					}
 					onClick={() =>
 						(isCaseResultAssignedToMe
 							? testrayCaseResultImpl.removeAssign(caseResult)
@@ -96,12 +96,7 @@ const CaseResultHeaderActions: React.FC<{
 					)}
 				</ClayButton>
 
-				<ClayButton
-					disabled={buttonValidations.startTest}
-					displayType={
-						buttonValidations.startTest ? 'unstyled' : 'primary'
-					}
-				>
+				<ClayButton disabled displayType="unstyled">
 					{i18n.translate('start-test')}
 				</ClayButton>
 
@@ -130,9 +125,13 @@ const CaseResultHeaderActions: React.FC<{
 				</ClayButton>
 
 				<ClayButton
-					disabled={buttonValidations.editValidation}
+					disabled={
+						buttonValidations.editValidation ||
+						!buttonValidations.completeTest
+					}
 					displayType={
-						buttonValidations.editValidation
+						buttonValidations.editValidation ||
+						!buttonValidations.completeTest
 							? 'unstyled'
 							: 'secondary'
 					}

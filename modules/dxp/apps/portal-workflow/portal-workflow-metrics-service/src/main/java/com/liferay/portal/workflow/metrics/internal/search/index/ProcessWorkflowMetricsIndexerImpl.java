@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
@@ -43,6 +34,10 @@ public class ProcessWorkflowMetricsIndexerImpl
 
 	@Override
 	public void addDocument(Document document) {
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
+
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		bulkDocumentRequest.addBulkableDocumentRequest(
@@ -51,12 +46,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 					document.getLong("companyId")),
 				_createWorkflowMetricsInstanceDocument(
 					document.getLong("companyId"),
-					document.getLong("processId"))) {
-
-				{
-					setType(_instanceWorkflowMetricsIndex.getIndexType());
-				}
-			});
+					document.getLong("processId"))));
 
 		bulkDocumentRequest.addBulkableDocumentRequest(
 			new IndexDocumentRequest(
@@ -64,25 +54,13 @@ public class ProcessWorkflowMetricsIndexerImpl
 					document.getLong("companyId")),
 				_slaInstanceResultWorkflowMetricsIndexer.creatDefaultDocument(
 					document.getLong("companyId"),
-					document.getLong("processId"))) {
-
-				{
-					setType(
-						_slaInstanceResultWorkflowMetricsIndexer.
-							getIndexType());
-				}
-			});
+					document.getLong("processId"))));
 
 		bulkDocumentRequest.addBulkableDocumentRequest(
 			new IndexDocumentRequest(
 				_processWorkflowMetricsIndex.getIndexName(
 					document.getLong("companyId")),
-				document) {
-
-				{
-					setType(_processWorkflowMetricsIndex.getIndexType());
-				}
-			});
+				document));
 
 		if (PortalRunMode.isTestMode()) {
 			bulkDocumentRequest.setRefresh(true);
@@ -166,6 +144,10 @@ public class ProcessWorkflowMetricsIndexerImpl
 	@Override
 	public Document updateProcess(UpdateProcessRequest updateProcessRequest) {
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return documentBuilder.build();
+		}
 
 		if (updateProcessRequest.getActive() != null) {
 			documentBuilder.setValue(

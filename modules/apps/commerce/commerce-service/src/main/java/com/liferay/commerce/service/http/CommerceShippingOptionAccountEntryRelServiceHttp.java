@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.http;
@@ -182,6 +173,131 @@ public class CommerceShippingOptionAccountEntryRelServiceHttp {
 
 	public static
 		com.liferay.commerce.model.CommerceShippingOptionAccountEntryRel
+				getCommerceShippingOptionAccountEntryRel(
+					HttpPrincipal httpPrincipal,
+					long commerceShippingOptionAccountEntryRelId)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CommerceShippingOptionAccountEntryRelServiceUtil.class,
+				"getCommerceShippingOptionAccountEntryRel",
+				_getCommerceShippingOptionAccountEntryRelParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, commerceShippingOptionAccountEntryRelId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.commerce.model.
+				CommerceShippingOptionAccountEntryRel)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.commerce.model.CommerceShippingOptionAccountEntryRel>
+				getCommerceShippingOptionAccountEntryRels(
+					HttpPrincipal httpPrincipal, long accountEntryId)
+			throws Exception {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CommerceShippingOptionAccountEntryRelServiceUtil.class,
+				"getCommerceShippingOptionAccountEntryRels",
+				_getCommerceShippingOptionAccountEntryRelsParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof Exception) {
+					throw (Exception)exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List
+				<com.liferay.commerce.model.
+					CommerceShippingOptionAccountEntryRel>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static int getCommerceShippingOptionAccountEntryRelsCount(
+			HttpPrincipal httpPrincipal, long accountEntryId)
+		throws Exception {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CommerceShippingOptionAccountEntryRelServiceUtil.class,
+				"getCommerceShippingOptionAccountEntryRelsCount",
+				_getCommerceShippingOptionAccountEntryRelsCountParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof Exception) {
+					throw (Exception)exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static
+		com.liferay.commerce.model.CommerceShippingOptionAccountEntryRel
 				updateCommerceShippingOptionAccountEntryRel(
 					HttpPrincipal httpPrincipal,
 					long commerceShippingOptionAccountEntryRelId,
@@ -193,7 +309,7 @@ public class CommerceShippingOptionAccountEntryRelServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				CommerceShippingOptionAccountEntryRelServiceUtil.class,
 				"updateCommerceShippingOptionAccountEntryRel",
-				_updateCommerceShippingOptionAccountEntryRelParameterTypes3);
+				_updateCommerceShippingOptionAccountEntryRelParameterTypes6);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, commerceShippingOptionAccountEntryRelId,
@@ -242,7 +358,17 @@ public class CommerceShippingOptionAccountEntryRelServiceHttp {
 		_fetchCommerceShippingOptionAccountEntryRelParameterTypes2 =
 			new Class[] {long.class, long.class};
 	private static final Class<?>[]
-		_updateCommerceShippingOptionAccountEntryRelParameterTypes3 =
+		_getCommerceShippingOptionAccountEntryRelParameterTypes3 = new Class[] {
+			long.class
+		};
+	private static final Class<?>[]
+		_getCommerceShippingOptionAccountEntryRelsParameterTypes4 =
+			new Class[] {long.class};
+	private static final Class<?>[]
+		_getCommerceShippingOptionAccountEntryRelsCountParameterTypes5 =
+			new Class[] {long.class};
+	private static final Class<?>[]
+		_updateCommerceShippingOptionAccountEntryRelParameterTypes6 =
 			new Class[] {long.class, String.class, String.class};
 
 }

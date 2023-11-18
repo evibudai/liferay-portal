@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -59,6 +50,7 @@ export function ModalAddDefaultSortColumn({
 }: IProps) {
 	const [
 		{
+			creationLanguageId,
 			objectFields,
 			objectView: {objectViewColumns, objectViewSortColumns},
 		},
@@ -71,11 +63,14 @@ export function ModalAddDefaultSortColumn({
 
 	useEffect(() => {
 		const newAvailableViewColumns = objectViewColumns.filter(
-			(objectViewColumn) =>
-				!objectViewColumn.defaultSort &&
-				objectViewColumn.objectFieldBusinessType !== 'Aggregation' &&
-				objectViewColumn.objectFieldBusinessType !== 'Formula' &&
-				objectViewColumn.objectFieldBusinessType !== 'Relationship'
+			({defaultSort, objectFieldBusinessType}) =>
+				!defaultSort &&
+				objectFieldBusinessType !== 'Aggregation' &&
+				objectFieldBusinessType !== 'Attachment' &&
+				objectFieldBusinessType !== 'Encrypted' &&
+				objectFieldBusinessType !== 'Formula' &&
+				objectFieldBusinessType !== 'Relationship' &&
+				objectFieldBusinessType !== 'RichText'
 		);
 
 		setAvailableViewColumns(newAvailableViewColumns);
@@ -88,7 +83,11 @@ export function ModalAddDefaultSortColumn({
 	const [query, setQuery] = useState<string>('');
 
 	const filteredObjectSortColumn = useMemo(() => {
-		return filterArrayByQuery(availableViewColumns, 'fieldLabel', query);
+		return filterArrayByQuery({
+			array: availableViewColumns,
+			query,
+			str: 'fieldLabel',
+		});
 	}, [availableViewColumns, query]);
 
 	const onSubmit = (event: FormEvent) => {
@@ -112,6 +111,7 @@ export function ModalAddDefaultSortColumn({
 		else {
 			dispatch({
 				payload: {
+					creationLanguageId,
 					objectFieldName: objectFieldName!,
 					objectFields,
 					objectViewSortColumns,
@@ -135,8 +135,13 @@ export function ModalAddDefaultSortColumn({
 							emptyStateMessage={Liferay.Language.get(
 								'there-are-no-columns-added-in-this-view-yet'
 							)}
+							id="objectViewModalAddDefaultSortColumn"
 							items={filteredObjectSortColumn}
 							label={Liferay.Language.get('columns')}
+							onActive={(item) =>
+								item.objectFieldName ===
+								selectedObjectSortColumn?.objectFieldName
+							}
 							onChangeQuery={setQuery}
 							onSelectItem={(item) => {
 								setSelectedObjectSortColumn(item);

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import classNames from 'classnames';
@@ -50,7 +41,7 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 
 	return (
 		<>
-			<div className="testray-progress-bar">
+			<div className="tr-progress-bar">
 				{items.map((item, index) => {
 					const [label, value] = item;
 
@@ -65,7 +56,7 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 					return (
 						<div
 							className={classNames(
-								'progress-bar-item',
+								'tr-progress-bar__item',
 								taskbarClassNames[label]
 							)}
 							key={index}
@@ -77,7 +68,7 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 			</div>
 
 			{legend && (
-				<div className="d-flex testray-progress-bar">
+				<div className="tr-progress-bar">
 					{displayTotalCompleted && (
 						<div className="justify-content-between mr-5">
 							<div className="align-items-center d-flex">
@@ -92,7 +83,7 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 								</span>
 							</div>
 
-							<span className="font-family-sans-serif legend-item-label text-neutral-6">
+							<span className="tr-progress-bar__legend-item-label">
 								{i18n.translate('total-completed')}
 							</span>
 						</div>
@@ -108,11 +99,14 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 						const percentTitle = `${percentLabel} (${value})`;
 
 						return (
-							<div className="d-flex flex-column" key={index}>
+							<div
+								className="d-flex flex-column mr-3"
+								key={index}
+							>
 								<div className="align-items-center d-flex mr-5">
 									<div
 										className={classNames(
-											'legend-bar-item font-family-sans-serif',
+											'tr-progress-bar__legend-bar-item',
 											taskbarClassNames[label]
 										)}
 										title={percentTitle}
@@ -126,7 +120,7 @@ const TaskbarProgress: React.FC<TaskbarProgress> = ({
 									</span>
 								</div>
 
-								<span className="legend-item-label mt-1 text-neutral-6">
+								<span className="tr-progress-bar__legend-item-label">
 									{label.toUpperCase()}
 								</span>
 							</div>

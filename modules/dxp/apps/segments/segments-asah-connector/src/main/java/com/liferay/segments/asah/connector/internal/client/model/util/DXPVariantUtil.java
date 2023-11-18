@@ -1,23 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.client.model.util;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.asah.connector.internal.client.model.DXPVariant;
 import com.liferay.segments.asah.connector.internal.client.model.DXPVariants;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperimentRel;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +24,9 @@ import java.util.Locale;
 public class DXPVariantUtil {
 
 	public static DXPVariant toDXPVariant(
-			Locale locale, SegmentsExperimentRel segmentsExperimentRel)
+			Locale locale,
+			SegmentsExperienceLocalService segmentsExperienceLocalService,
+			SegmentsExperimentRel segmentsExperimentRel)
 		throws PortalException {
 
 		DXPVariant dxpVariant = new DXPVariant();
@@ -37,7 +34,8 @@ public class DXPVariantUtil {
 		dxpVariant.setChanges(0);
 		dxpVariant.setControl(segmentsExperimentRel.isControl());
 		dxpVariant.setDXPVariantId(
-			segmentsExperimentRel.getSegmentsExperienceKey());
+			_getSegmentsExperienceKey(
+				segmentsExperienceLocalService, segmentsExperimentRel));
 		dxpVariant.setDXPVariantName(segmentsExperimentRel.getName(locale));
 		dxpVariant.setTrafficSplit(segmentsExperimentRel.getSplit() * 100);
 
@@ -45,7 +43,9 @@ public class DXPVariantUtil {
 	}
 
 	public static List<DXPVariant> toDXPVariantList(
-			Locale locale, List<SegmentsExperimentRel> segmentsExperimentRels)
+			Locale locale,
+			SegmentsExperienceLocalService segmentsExperienceLocalService,
+			List<SegmentsExperimentRel> segmentsExperimentRels)
 		throws PortalException {
 
 		List<DXPVariant> dxpVariants = new ArrayList<>();
@@ -53,18 +53,48 @@ public class DXPVariantUtil {
 		for (SegmentsExperimentRel segmentsExperimentRel :
 				segmentsExperimentRels) {
 
-			dxpVariants.add(toDXPVariant(locale, segmentsExperimentRel));
+			dxpVariants.add(
+				toDXPVariant(
+					locale, segmentsExperienceLocalService,
+					segmentsExperimentRel));
 		}
 
 		return dxpVariants;
 	}
 
 	public static DXPVariants toDXPVariants(
-			Locale locale, List<SegmentsExperimentRel> segmentsExperimentRels)
+			Locale locale,
+			SegmentsExperienceLocalService segmentsExperienceLocalService,
+			List<SegmentsExperimentRel> segmentsExperimentRels)
 		throws PortalException {
 
 		return new DXPVariants(
-			toDXPVariantList(locale, segmentsExperimentRels));
+			toDXPVariantList(
+				locale, segmentsExperienceLocalService,
+				segmentsExperimentRels));
+	}
+
+	private static String _getSegmentsExperienceKey(
+			SegmentsExperienceLocalService segmentsExperienceLocalService,
+			SegmentsExperimentRel segmentsExperimentRel)
+		throws PortalException {
+
+		SegmentsExperience segmentsExperience =
+			segmentsExperienceLocalService.getSegmentsExperience(
+				segmentsExperimentRel.getSegmentsExperienceId());
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			segmentsExperience.getTypeSettingsUnicodeProperties();
+
+		String segmentsExperimentSegmentsExperienceKey =
+			typeSettingsUnicodeProperties.get(
+				"segmentsExperimentSegmentsExperienceKey");
+
+		if (Validator.isNotNull(segmentsExperimentSegmentsExperienceKey)) {
+			return segmentsExperimentSegmentsExperienceKey;
+		}
+
+		return segmentsExperience.getSegmentsExperienceKey();
 	}
 
 	private DXPVariantUtil() {

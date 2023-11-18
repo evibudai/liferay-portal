@@ -32,11 +32,20 @@ const persistedTab = (function () {
 
 	return {
 		getId() {
-			return Number(sessionStorage.getItem(persistedTabKey));
+			return Number(
+				Liferay.Util.SessionStorage.getItem(
+					persistedTabKey,
+					Liferay.Util.SessionStorage.TYPES.PERSONALIZATION
+				)
+			);
 		},
 
 		setId(id) {
-			sessionStorage.setItem(persistedTabKey, id);
+			Liferay.Util.SessionStorage.setItem(
+				persistedTabKey,
+				id,
+				Liferay.Util.SessionStorage.TYPES.PERSONALIZATION
+			);
 		},
 	};
 })();
@@ -113,6 +122,8 @@ function openTabPanel(event, i) {
 		activeTab(currentTarget, i);
 		activeTabPanel(tabPanelItems[i]);
 		persistedTab.setId(i);
+
+		Liferay.fire('tabsFragment:activePanel', {panel: tabPanelItems[i]});
 	}
 }
 

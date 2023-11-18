@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -36,8 +27,8 @@ public class PrettyDateFormat extends DateFormat {
 		_locale = locale;
 		_timeZone = timeZone;
 
-		_todayString = LanguageUtil.get(_locale, "today");
-		_yesterdayString = LanguageUtil.get(_locale, "yesterday");
+		_todayString = LanguageUtil.get(locale, "today");
+		_yesterdayString = LanguageUtil.get(locale, "yesterday");
 	}
 
 	@Override
@@ -57,27 +48,26 @@ public class PrettyDateFormat extends DateFormat {
 
 		Date yesterday = cal.getTime();
 
-		Format dateFormatDate = FastDateFormatFactoryUtil.getDate(
+		Format dateFormat = FastDateFormatFactoryUtil.getDate(
 			_locale, _timeZone);
-		Format dateFormatTime = FastDateFormatFactoryUtil.getTime(
+		Format timeFormat = FastDateFormatFactoryUtil.getTime(
 			_locale, _timeZone);
 
-		dateString = dateFormatDate.format(date);
+		dateString = dateFormat.format(date);
 
-		if (dateString.equals(dateFormatDate.format(today))) {
+		if (dateString.equals(dateFormat.format(today))) {
 			dateString =
-				_todayString + StringPool.SPACE + dateFormatTime.format(date);
+				_todayString + StringPool.SPACE + timeFormat.format(date);
 		}
-		else if (dateString.equals(dateFormatDate.format(yesterday))) {
+		else if (dateString.equals(dateFormat.format(yesterday))) {
 			dateString =
-				_yesterdayString + StringPool.SPACE +
-					dateFormatTime.format(date);
+				_yesterdayString + StringPool.SPACE + timeFormat.format(date);
 		}
 		else {
-			Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
+			Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
 				_locale, _timeZone);
 
-			dateString = dateFormatDateTime.format(date);
+			dateString = dateTimeFormat.format(date);
 		}
 
 		return sb.append(dateString);
@@ -85,7 +75,7 @@ public class PrettyDateFormat extends DateFormat {
 
 	@Override
 	public Date parse(String source, ParsePosition pos) {
-		Format dateFormatDate = FastDateFormatFactoryUtil.getDate(
+		Format dateFormat = FastDateFormatFactoryUtil.getDate(
 			_locale, _timeZone);
 		DateFormat dateFormatDateTime = DateFormatFactoryUtil.getDateTime(
 			_locale, _timeZone);
@@ -96,7 +86,7 @@ public class PrettyDateFormat extends DateFormat {
 
 		if (dateString.startsWith(_todayString)) {
 			dateString = dateString.replaceFirst(
-				_todayString, dateFormatDate.format(today));
+				_todayString, dateFormat.format(today));
 		}
 		else if (dateString.startsWith(_yesterdayString)) {
 			Calendar cal = Calendar.getInstance(_timeZone, _locale);
@@ -107,7 +97,7 @@ public class PrettyDateFormat extends DateFormat {
 			Date yesterday = cal.getTime();
 
 			dateString = dateString.replaceFirst(
-				_todayString, dateFormatDate.format(yesterday));
+				_todayString, dateFormat.format(yesterday));
 		}
 
 		return dateFormatDateTime.parse(dateString, new ParsePosition(0));

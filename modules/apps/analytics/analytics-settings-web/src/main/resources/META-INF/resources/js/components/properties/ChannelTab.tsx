@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React from 'react';
@@ -32,12 +23,11 @@ const columns: TColumn[] = [
 		label: Liferay.Language.get('channel-name'),
 	},
 	{
-		expanded: true,
 		id: EColumn.SiteName,
 		label: Liferay.Language.get('related-site'),
+		sortable: false,
 	},
 	{
-		expanded: true,
 		id: EColumn.ChannelName,
 		label: Liferay.Language.get('assigned-property'),
 		sortable: false,
@@ -57,14 +47,14 @@ const ChannelTab: React.FC<IChannelTabProps> = ({
 }) => (
 	<Tab
 		columns={columns.map(({id}) => id) as Array<keyof TRawItem>}
-		description={Liferay.Language.get(
-			'analytics-cloud-assign-commerce-channel-help'
-		)}
-		emptyStateTitle={Liferay.Language.get('there-are-no-channels')}
+		description={Liferay.Language.get('channels-tab-description')}
+		emptyState={{
+			noResultsTitle: Liferay.Language.get('no-channels-were-found'),
+			title: Liferay.Language.get('there-are-no-channels'),
+		}}
 		enableCheckboxs={!!property.commerceSyncEnabled}
 		header={columns}
 		initialIds={initialIds}
-		noResultsTitle={Liferay.Language.get('no-channels-were-found')}
 		onItemsChange={onChannelsChange}
 		property={property}
 		requestFn={fetchChannels}

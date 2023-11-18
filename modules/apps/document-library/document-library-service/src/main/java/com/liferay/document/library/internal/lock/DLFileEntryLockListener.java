@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.lock;
 
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
-import com.liferay.document.library.kernel.service.DLFileEntryService;
+import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.portal.kernel.lock.BaseLockListener;
 import com.liferay.portal.kernel.lock.LockListener;
 import com.liferay.portal.kernel.log.Log;
@@ -45,7 +36,7 @@ public class DLFileEntryLockListener extends BaseLockListener {
 
 		try {
 			if (PropsValues.DL_FILE_ENTRY_LOCK_POLICY == 1) {
-				_dlFileEntryService.checkInFileEntry(
+				_dlAppService.checkInFileEntry(
 					fileEntryId, DLVersionNumberIncrease.fromMajorVersion(true),
 					"Automatic timeout checkin", new ServiceContext());
 
@@ -54,7 +45,7 @@ public class DLFileEntryLockListener extends BaseLockListener {
 				}
 			}
 			else {
-				_dlFileEntryService.cancelCheckOut(fileEntryId);
+				_dlAppService.cancelCheckOut(fileEntryId);
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
@@ -72,6 +63,6 @@ public class DLFileEntryLockListener extends BaseLockListener {
 		DLFileEntryLockListener.class);
 
 	@Reference
-	private DLFileEntryService _dlFileEntryService;
+	private DLAppService _dlAppService;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
@@ -27,8 +18,8 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -50,9 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP,
-	service = {
-		ObjectFieldBusinessType.class, RelationshipObjectFieldBusinessType.class
-	}
+	service = ObjectFieldBusinessType.class
 )
 public class RelationshipObjectFieldBusinessType
 	implements ObjectFieldBusinessType {
@@ -83,15 +72,18 @@ public class RelationshipObjectFieldBusinessType
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray(
 			ObjectFieldSettingConstants.NAME_OBJECT_DEFINITION_1_SHORT_NAME,
 			ObjectFieldSettingConstants.
-				NAME_OBJECT_RELATIONSHIP_ERC_FIELD_NAME);
+				NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME);
 	}
 
 	@Override
-	public Object getValue(ObjectField objectField, Map<String, Object> values)
+	public Object getValue(
+			ObjectField objectField, long userId, Map<String, Object> values)
 		throws PortalException {
 
 		if (!Objects.equals(
@@ -102,16 +94,18 @@ public class RelationshipObjectFieldBusinessType
 			return values.get(objectField.getName());
 		}
 
-		String objectRelationshipERCFieldName = ObjectFieldSettingUtil.getValue(
-			ObjectFieldSettingConstants.NAME_OBJECT_RELATIONSHIP_ERC_FIELD_NAME,
-			objectField);
+		String objectRelationshipERCObjectFieldName =
+			ObjectFieldSettingUtil.getValue(
+				ObjectFieldSettingConstants.
+					NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
+				objectField);
 
-		if (!values.containsKey(objectRelationshipERCFieldName)) {
+		if (!values.containsKey(objectRelationshipERCObjectFieldName)) {
 			return null;
 		}
 
 		String externalReferenceCode = GetterUtil.getString(
-			values.get(objectRelationshipERCFieldName));
+			values.get(objectRelationshipERCObjectFieldName));
 
 		if (Validator.isNull(externalReferenceCode)) {
 			return 0;
@@ -126,14 +120,14 @@ public class RelationshipObjectFieldBusinessType
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId1());
 
-		if (objectDefinition.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
 			BaseModel<?> baseModel =
-				systemObjectDefinitionMetadata.
+				systemObjectDefinitionManager.
 					getBaseModelByExternalReferenceCode(
 						externalReferenceCode, objectDefinition.getCompanyId());
 
@@ -144,11 +138,6 @@ public class RelationshipObjectFieldBusinessType
 			externalReferenceCode, objectDefinition.getObjectDefinitionId());
 
 		return objectEntry.getObjectEntryId();
-	}
-
-	@Override
-	public boolean isVisible() {
-		return true;
 	}
 
 	@Reference
@@ -164,7 +153,7 @@ public class RelationshipObjectFieldBusinessType
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

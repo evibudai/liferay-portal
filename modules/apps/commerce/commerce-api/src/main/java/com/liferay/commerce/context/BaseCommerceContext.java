@@ -1,42 +1,33 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.context;
 
-import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.service.CommerceAccountService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.comparator.CommerceCurrencyPriorityComparator;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 
 import java.util.List;
@@ -49,9 +40,9 @@ public class BaseCommerceContext implements CommerceContext {
 
 	public BaseCommerceContext(
 		long companyId, long commerceChannelGroupId, long orderId,
-		long commerceAccountId, CommerceAccountHelper commerceAccountHelper,
-		CommerceAccountLocalService commerceAccountLocalService,
-		CommerceAccountService commerceAccountService,
+		long commerceAccountId,
+		AccountEntryLocalService accountEntryLocalService,
+		AccountGroupLocalService accountGroupLocalService,
 		CommerceChannelAccountEntryRelLocalService
 			commerceChannelAccountEntryRelLocalService,
 		CommerceChannelLocalService commerceChannelLocalService,
@@ -63,9 +54,8 @@ public class BaseCommerceContext implements CommerceContext {
 		_commerceChannelGroupId = commerceChannelGroupId;
 		_orderId = orderId;
 		_commerceAccountId = commerceAccountId;
-		_commerceAccountHelper = commerceAccountHelper;
-		_commerceAccountLocalService = commerceAccountLocalService;
-		_commerceAccountService = commerceAccountService;
+		_accountEntryLocalService = accountEntryLocalService;
+		_accountGroupLocalService = accountGroupLocalService;
 		_commerceChannelAccountEntryRelLocalService =
 			commerceChannelAccountEntryRelLocalService;
 		_commerceChannelLocalService = commerceChannelLocalService;
@@ -79,12 +69,28 @@ public class BaseCommerceContext implements CommerceContext {
 						CommerceAccountGroupServiceConfiguration.class,
 						new GroupServiceSettingsLocator(
 							_commerceChannelGroupId,
-							CommerceAccountConstants.SERVICE_NAME));
+							CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 			}
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
 		}
+	}
+
+	@Override
+	public AccountEntry getAccountEntry() throws PortalException {
+		if (_accountEntry != null) {
+			return _accountEntry;
+		}
+
+		if (_commerceAccountId <= 0) {
+			return _accountEntryLocalService.getGuestAccountEntry(_companyId);
+		}
+
+		_accountEntry = _accountEntryLocalService.getAccountEntry(
+			_commerceAccountId);
+
+		return _accountEntry;
 	}
 
 	@Override
@@ -100,37 +106,19 @@ public class BaseCommerceContext implements CommerceContext {
 	}
 
 	@Override
-	public CommerceAccount getCommerceAccount() throws PortalException {
-		if (_commerceAccount != null) {
-			return _commerceAccount;
-		}
-
-		if (_commerceAccountId == CommerceAccountConstants.ACCOUNT_ID_GUEST) {
-			return _commerceAccountLocalService.getGuestCommerceAccount(
-				_companyId);
-		}
-
-		_commerceAccount = _commerceAccountService.getCommerceAccount(
-			_commerceAccountId);
-
-		return _commerceAccount;
-	}
-
-	@Override
 	public long[] getCommerceAccountGroupIds() throws PortalException {
 		if (_commerceAccountGroupIds != null) {
 			return _commerceAccountGroupIds.clone();
 		}
 
-		CommerceAccount commerceAccount = getCommerceAccount();
+		AccountEntry accountEntry = getAccountEntry();
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			return new long[0];
 		}
 
-		_commerceAccountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceAccount.getCommerceAccountId());
+		_commerceAccountGroupIds = _accountGroupLocalService.getAccountGroupIds(
+			accountEntry.getAccountEntryId());
 
 		return _commerceAccountGroupIds.clone();
 	}
@@ -163,13 +151,13 @@ public class BaseCommerceContext implements CommerceContext {
 			_commerceChannelLocalService.getCommerceChannelByGroupId(
 				_commerceChannelGroupId);
 
-		CommerceAccount commerceAccount = getCommerceAccount();
+		AccountEntry accountEntry = getAccountEntry();
 
-		if (commerceAccount != null) {
+		if (accountEntry != null) {
 			CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
 				_commerceChannelAccountEntryRelLocalService.
 					fetchCommerceChannelAccountEntryRel(
-						commerceAccount.getCommerceAccountId(),
+						accountEntry.getAccountEntryId(),
 						commerceChannel.getCommerceChannelId(),
 						CommerceChannelAccountEntryRelConstants.TYPE_CURRENCY);
 
@@ -193,16 +181,25 @@ public class BaseCommerceContext implements CommerceContext {
 	}
 
 	@Override
-	public CommerceOrder getCommerceOrder() throws PortalException {
-		_commerceOrder = _commerceOrderService.fetchCommerceOrder(_orderId);
+	public CommerceOrder getCommerceOrder() {
+		try {
+			_commerceOrder = _commerceOrderService.fetchCommerceOrder(_orderId);
 
-		return _commerceOrder;
+			return _commerceOrder;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
 	public int getCommerceSiteType() {
 		if (_commerceAccountGroupServiceConfiguration == null) {
-			return CommerceAccountConstants.SITE_TYPE_B2C;
+			return CommerceChannelConstants.SITE_TYPE_B2C;
 		}
 
 		return _commerceAccountGroupServiceConfiguration.commerceSiteType();
@@ -251,15 +248,14 @@ public class BaseCommerceContext implements CommerceContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseCommerceContext.class);
 
+	private AccountEntry _accountEntry;
 	private String[] _accountEntryAllowedTypes;
-	private CommerceAccount _commerceAccount;
+	private final AccountEntryLocalService _accountEntryLocalService;
+	private final AccountGroupLocalService _accountGroupLocalService;
 	private long[] _commerceAccountGroupIds;
 	private CommerceAccountGroupServiceConfiguration
 		_commerceAccountGroupServiceConfiguration;
-	private final CommerceAccountHelper _commerceAccountHelper;
 	private final long _commerceAccountId;
-	private final CommerceAccountLocalService _commerceAccountLocalService;
-	private final CommerceAccountService _commerceAccountService;
 	private final CommerceChannelAccountEntryRelLocalService
 		_commerceChannelAccountEntryRelLocalService;
 	private final long _commerceChannelGroupId;

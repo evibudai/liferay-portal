@@ -1,7 +1,6 @@
 {
 	"description_i18n": {
-		"en_US": "Boost contents in a category based on the time of day.",
-		"ja_JP": "時間帯に応じてカテゴリー内のコンテンツをブーストします。"
+		"en_US": "boost-contents-in-a-category-for-the-time-of-day-description"
 	},
 	"elementDefinition": {
 		"category": "conditional",
@@ -39,12 +38,12 @@
 				{
 					"fields": [
 						{
-							"label": "Asset Category ID",
+							"label": "asset-category-name-id",
 							"name": "asset_category_id",
 							"type": "number"
 						},
 						{
-							"label": "Time of Day",
+							"label": "time-of-day",
 							"name": "time_of_day",
 							"type": "select",
 							"typeOptions": {
@@ -70,7 +69,7 @@
 						},
 						{
 							"defaultValue": 20,
-							"label": "Boost",
+							"label": "boost",
 							"name": "boost",
 							"type": "number",
 							"typeOptions": {
@@ -84,7 +83,6 @@
 	},
 	"externalReferenceCode": "BOOST_CONTENTS_IN_A_CATEGORY_FOR_THE_TIME_OF_DAY",
 	"title_i18n": {
-		"en_US": "Boost Contents in a Category for the Time of Day",
-		"ja_JP": "時間帯によるカテゴリーでのコンテンツのブースト"
+		"en_US": "boost-contents-in-a-category-for-the-time-of-day"
 	}
 }

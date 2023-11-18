@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.taglib.aui;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -39,7 +29,10 @@ import javax.servlet.jsp.JspWriter;
  * @author Jorge Ferrer
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *             com.liferay.frontend.taglib.clay.servlet.taglib.LinkTag}
  */
+@Deprecated
 public class ATag extends BaseATag {
 
 	@Override
@@ -47,7 +40,9 @@ public class ATag extends BaseATag {
 		JspWriter jspWriter = pageContext.getOut();
 
 		if (Validator.isNotNull(getHref())) {
-			if (AUIUtil.isOpensNewWindow(getTarget())) {
+			if (AUIUtil.isOpensNewWindow(getTarget()) &&
+				Validator.isNull(getIcon())) {
+
 				HttpServletRequest httpServletRequest = getRequest();
 
 				ThemeDisplay themeDisplay =
@@ -58,7 +53,7 @@ public class ATag extends BaseATag {
 				jspWriter.write("<svg class=\"lexicon-icon ");
 				jspWriter.write("lexicon-icon-shortcut\" focusable=\"false\" ");
 				jspWriter.write("role=\"img\"><use href=\"");
-				jspWriter.write(FrontendIconsUtil.getSpritemap(themeDisplay));
+				jspWriter.write(themeDisplay.getPathThemeSpritemap());
 				jspWriter.write("#shortcut\" /><span ");
 				jspWriter.write("class=\"sr-only\">");
 

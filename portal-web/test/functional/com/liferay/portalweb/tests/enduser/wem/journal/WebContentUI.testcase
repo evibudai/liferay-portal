@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Administration";
@@ -10,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +26,7 @@ definition {
 	}
 
 	@description = "Test that the UI for adding a WC folder works."
-	@priority = "5"
+	@priority = 5
 	test AddFolder {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training,Web Content Administration";
@@ -38,7 +39,7 @@ definition {
 	}
 
 	@description = "Test that the UI for adding a WC works."
-	@priority = "4"
+	@priority = 4
 	test AddWebContent {
 		property testray.component.names = "Web Content Administration";
 
@@ -62,7 +63,7 @@ definition {
 	}
 
 	@description = "Test that the UI for saving a WC as a draft works."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentDraft {
 		property testray.component.names = "Web Content Administration";
 
@@ -89,7 +90,7 @@ definition {
 	}
 
 	@description = "Test that the UI for adding multiple WC works."
-	@priority = "3"
+	@priority = 3
 	test AddWebContentMultiple {
 		property testray.component.names = "Web Content Administration";
 
@@ -149,7 +150,7 @@ definition {
 	}
 
 	@description = "Test that the UI for editing WC localization works."
-	@priority = "4"
+	@priority = 4
 	test EditWCAddLocalization {
 		property testray.component.names = "Localization,Web Content Administration";
 
@@ -186,7 +187,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151948. The Filter by Status is available to the Versions tab."
-	@priority = "4"
+	@priority = 4
 	test ViewFilterByStatusAvailableToVersionsTab {
 		task ("Given a site designer has a draft web content") {
 			JSONWebcontent.addWebContent(
@@ -205,14 +206,16 @@ definition {
 		task ("Then the site designer could filter search results by status in Versions panel") {
 			Navigator.gotoNavTab(navTab = "Versions (1)");
 
+			WaitForPageLoad();
+
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
 			MenuItem.viewVisible(menuItem = "Filter by Status");
 		}
 	}
 
-	@description = "This is a test for LPS-153323. View kebab icon of web content visible."
-	@priority = "4"
+	@description = "This is a test for LPS-153323 and LPS-155805. View kebab icon of web content visible and retainable."
+	@priority = 4
 	test ViewKebabIconOfWebContentVisible {
 		property testray.component.names = "Web Content Administration";
 
@@ -223,8 +226,12 @@ definition {
 				title = "Web Content Title");
 		}
 
-		task ("Check kebab icon of the web content visible") {
+		task ("Check kebab icon of the web content visible and retainable") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			// We need this pause to view if kebab icon of the web content exists to test LPS-155805
+
+			Pause(locator1 = 3000);
 
 			AssertCssValue(
 				locator1 = "//dd//button[contains(@class, 'dropdown-toggle')]",
@@ -234,7 +241,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-131307. View the order of web content actions."
-	@priority = "5"
+	@priority = 5
 	test ViewOrderOfWebContentActions {
 		property portal.acceptance = "true";
 
@@ -301,7 +308,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-146458. View the available status filters of Web Content admin."
-	@priority = "5"
+	@priority = 5
 	test ViewStatusFiltersOfWebContentAdmin {
 		property portal.acceptance = "true";
 
@@ -315,14 +322,16 @@ definition {
 		task ("View the available status filters of Web Content admin") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
+			WaitForPageLoad();
+
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
 			for (var filterName : list "Draft,With Scheduled Versions,With Approved Versions,With Expired Versions") {
-				MenuItem.viewVisible(menuItem = "${filterName}");
+				MenuItem.viewVisible(menuItem = ${filterName});
 			}
 
 			for (var filterName : list "Denied,Pending") {
-				MenuItem.viewNotPresent(menuItem = "${filterName}");
+				MenuItem.viewNotPresent(menuItem = ${filterName});
 			}
 		}
 
@@ -337,10 +346,12 @@ definition {
 		task ("View the available status filters of Web Content admin") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
+			WaitForPageLoad();
+
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
 			for (var filterName : list "Draft,Denied,Pending,With Scheduled Versions,With Approved Versions,With Expired Versions") {
-				MenuItem.viewVisible(menuItem = "${filterName}");
+				MenuItem.viewVisible(menuItem = ${filterName});
 			}
 		}
 	}

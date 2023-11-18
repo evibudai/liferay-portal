@@ -1,30 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.menu.web.internal.exportimport.portlet.preferences.processor;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.site.navigation.constants.SiteNavigationConstants;
-import com.liferay.site.navigation.menu.web.internal.constants.SiteNavigationMenuPortletKeys;
+import com.liferay.site.navigation.constants.SiteNavigationMenuPortletKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 
@@ -62,6 +58,14 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences)
 		throws PortletDataException {
+
+		if (!MapUtil.getBoolean(
+				portletDataContext.getParameterMap(),
+				PortletDataHandlerKeys.PORTLET_DATA) &&
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
+			return portletPreferences;
+		}
 
 		try {
 			portletDataContext.addPortletPermissions(
@@ -115,6 +119,68 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 				"Unable to import portlet permissions", portalException);
 		}
 
+		if (!MapUtil.getBoolean(
+				portletDataContext.getParameterMap(),
+				PortletDataHandlerKeys.PORTLET_DATA) &&
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
+			long siteNavigationMenuId = 0;
+
+			long originalPlid = MapUtil.getLong(
+				portletDataContext.getParameterMap(), "portletPreferencePlid");
+
+			List<com.liferay.portal.kernel.model.PortletPreferences>
+				serviceBuilderPortletPreferencesList = null;
+
+			if (originalPlid == PortletKeys.PREFS_PLID_SHARED) {
+				serviceBuilderPortletPreferencesList =
+					_portletPreferencesLocalService.getPortletPreferences(
+						PortletKeys.PREFS_PLID_SHARED,
+						portletDataContext.getPortletId());
+			}
+			else {
+				serviceBuilderPortletPreferencesList =
+					_portletPreferencesLocalService.getPortletPreferences(
+						portletDataContext.getPlid(),
+						portletDataContext.getPortletId());
+			}
+
+			if (!serviceBuilderPortletPreferencesList.isEmpty()) {
+				for (com.liferay.portal.kernel.model.PortletPreferences
+						serviceBuilderPortletPreferences :
+							serviceBuilderPortletPreferencesList) {
+
+					if (serviceBuilderPortletPreferences.getCompanyId() !=
+							portletDataContext.getCompanyId()) {
+
+						continue;
+					}
+
+					PortletPreferences originalPortletPreferences =
+						_portletPreferenceValueLocalService.getPreferences(
+							serviceBuilderPortletPreferences);
+
+					siteNavigationMenuId = GetterUtil.getLong(
+						originalPortletPreferences.getValue(
+							"siteNavigationMenuId", "0"));
+				}
+			}
+
+			try {
+				portletPreferences.setValue(
+					"siteNavigationMenuId",
+					String.valueOf(siteNavigationMenuId));
+			}
+			catch (ReadOnlyException readOnlyException) {
+				PortletDataException portletDataException =
+					new PortletDataException(readOnlyException);
+
+				throw portletDataException;
+			}
+
+			return portletPreferences;
+		}
+
 		long importedSiteNavigationMenuId = GetterUtil.getLong(
 			portletPreferences.getValue("siteNavigationMenuId", null));
 
@@ -154,6 +220,13 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 
 	@Reference(target = "(name=PortletDisplayTemplateImporter)")
 	private Capability _importCapability;
+
+	@Reference(unbind = "-")
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference(unbind = "-")
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 	@Reference(unbind = "-")
 	private SiteNavigationMenuLocalService _siteNavigationMenuLocalService;

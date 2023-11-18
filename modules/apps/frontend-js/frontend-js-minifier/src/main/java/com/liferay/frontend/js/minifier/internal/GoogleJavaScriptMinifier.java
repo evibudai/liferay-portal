@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.js.minifier.internal;
@@ -118,9 +109,9 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 	private static final Set<String> _ignoredErrors = new HashSet<>(
 		Arrays.asList(
 			"JSC_BAD_JSDOC_ANNOTATION", "JSC_DUPLICATE_OBJECT_KEY",
-			"JSC_GOOG_MODULE_IN_NON_MODULE", "JSC_INVALID_PARAM",
-			"JSC_JSDOC_IN_BLOCK_COMMENT", "JSC_JSDOC_MISSING_BRACES_WARNING",
-			"JSC_MISPLACED_ANNOTATION"));
+			"JSC_GOOG_MODULE_IN_NON_MODULE", "JSC_INVALID_CLOSURE_CALL_ERROR",
+			"JSC_INVALID_PARAM", "JSC_JSDOC_IN_BLOCK_COMMENT",
+			"JSC_JSDOC_MISSING_BRACES_WARNING", "JSC_MISPLACED_ANNOTATION"));
 
 	private Method _clearThreadTraceMethod;
 
@@ -131,8 +122,9 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 			DiagnosticType diagnosticType = jsError.getType();
 
 			return String.format(
-				"(%s:%d): %s [%s]", jsError.sourceName, jsError.lineNumber,
-				jsError.description, diagnosticType.key);
+				"(%s:%d): %s [%s]", jsError.getSourceName(),
+				jsError.getLineno(), jsError.getDescription(),
+				diagnosticType.key);
 		}
 
 		@Override

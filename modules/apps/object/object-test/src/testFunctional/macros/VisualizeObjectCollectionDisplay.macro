@@ -2,38 +2,23 @@ definition {
 
 	macro addFieldForCollectionDisplay {
 		DragAndDrop.javaScriptDragAndDropToUp(
-			key_fragment = "${fragmentName}",
+			key_fragment = ${fragmentName},
 			locator1 = "VisualizeObjectCollectionDisplay#FRAGMENT_SIDEBAR",
 			locator2 = "VisualizeObjectCollectionDisplay#FRAGMENT_COLLECTION");
 	}
 
 	macro addFieldInsideCollectionDisplay {
-		Click(
-			key_label = "${label}",
-			locator1 = "VisualizeObjectCollectionDisplay#EXPAND_BUTTON");
+		Click(locator1 = "VisualizeObjectCollectionDisplay#EXPAND_BUTTON");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
-			key_fragmentName = "${fragmentName}",
 			locator1 = "VisualizeObjectCollectionDisplay#SELECT_HEADING",
 			locator2 = "VisualizeObjectCollectionDisplay#SELECT_COLLECTION_ITEM");
-	}
-
-	macro assertTableEntriesNotPresent {
-		AssertElementNotPresent(
-			key_entries = "${entries}",
-			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
-	}
-
-	macro assertTableEntriesPresent {
-		AssertElementPresent(
-			key_entries = "${entries}",
-			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 	}
 
 	macro mapFragment {
 		Select(
 			locator1 = "VisualizeObjectCollectionDisplay#MAP_FRAGMENT",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
 	macro openHeading {
@@ -46,12 +31,6 @@ definition {
 		Navigator.openSpecificURL(url = "/group/guest/~/control_panel/manage?p_p_id=com_liferay_asset_list_web_portlet_AssetListPortlet&_com_liferay_asset_list_web_portlet_AssetListPortlet_mvcPath=%2Fview_info_collection_providers.jsp");
 	}
 
-	macro viewEntriesFragment {
-		AssertElementPresent(
-			key_entries = "${entries}",
-			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_FRAGMENT");
-	}
-
 	macro viewEntryPreviewOnPageTemplate {
 		Click(locator1 = "ControlMenu#DISPLAY_PAGE_PREVIEW_ITEM_SELECTOR");
 
@@ -59,19 +38,13 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconList.viewListEntryTitle(listEntry = "${entryTitle}");
+		LexiconList.viewListEntryTitle(listEntry = ${entryTitle});
 	}
 
 	macro viewMappedFragment {
 		AssertSelectedLabel(
 			locator1 = "VisualizeObjectCollectionDisplay#MAP_FRAGMENT",
-			value1 = "${fieldLabel}");
-	}
-
-	macro viewObjectCollectionProvider {
-		AssertElementPresent(
-			key_labelName = "${labelName}",
-			locator1 = "VisualizeObjectCollectionDisplay#VIEW_OBJECT_COLLECTION_DISPLAY");
+			value1 = ${fieldLabel});
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.mule.internal.operation;
@@ -31,10 +22,7 @@ import java.io.InputStream;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
 import org.mule.runtime.api.util.MultiMap;
@@ -433,19 +421,18 @@ public class LiferayBatchOperations {
 		MultiMap<String, String> queryParams = new MultiMap<>();
 
 		if (!fieldNameMappings.isEmpty()) {
-			Set<Map.Entry<String, String>> fieldNameMappingsEntries =
-				fieldNameMappings.entrySet();
+			StringBuilder sb = new StringBuilder();
 
-			Stream<Map.Entry<String, String>> fieldNameMappingsStream =
-				fieldNameMappingsEntries.stream();
+			for (Map.Entry<String, String> entry :
+					fieldNameMappings.entrySet()) {
 
-			queryParams.put(
-				"fieldNameMappings",
-				fieldNameMappingsStream.map(
-					entry -> entry.getKey() + "=" + entry.getValue()
-				).collect(
-					Collectors.joining(",")
-				));
+				sb.append(entry.getKey() + "=" + entry.getValue());
+				sb.append(",");
+			}
+
+			sb.setLength(sb.length() - 1);
+
+			queryParams.put("fieldNameMappings", sb.toString());
 		}
 
 		HttpResponse httpResponse = connection.post(

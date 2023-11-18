@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.provider;
 
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -40,7 +32,6 @@ import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -66,15 +57,10 @@ public abstract class BaseSegmentsEntryProvider
 			segmentsEntry, Criteria.Type.MODEL);
 
 		if (Validator.isNull(filterString)) {
-			List<SegmentsEntryRel> segmentsEntryRels =
+			return TransformUtil.transformToLongArray(
 				segmentsEntryRelLocalService.getSegmentsEntryRels(
-					segmentsEntryId, start, end, null);
-
-			Stream<SegmentsEntryRel> stream = segmentsEntryRels.stream();
-
-			return stream.mapToLong(
-				SegmentsEntryRel::getClassPK
-			).toArray();
+					segmentsEntryId, start, end, null),
+				SegmentsEntryRel::getClassPK);
 		}
 
 		ODataRetriever<BaseModel<?>> oDataRetriever =
@@ -84,15 +70,11 @@ public abstract class BaseSegmentsEntryProvider
 			return new long[0];
 		}
 
-		List<BaseModel<?>> results = oDataRetriever.getResults(
-			segmentsEntry.getCompanyId(), filterString, LocaleUtil.getDefault(),
-			start, end);
-
-		Stream<BaseModel<?>> stream = results.stream();
-
-		return stream.mapToLong(
-			baseModel -> (Long)baseModel.getPrimaryKeyObj()
-		).toArray();
+		return TransformUtil.transformToLongArray(
+			oDataRetriever.getResults(
+				segmentsEntry.getCompanyId(), filterString,
+				LocaleUtil.getDefault(), start, end),
+			baseModel -> (Long)baseModel.getPrimaryKeyObj());
 	}
 
 	@Override
@@ -149,19 +131,22 @@ public abstract class BaseSegmentsEntryProvider
 			return new long[0];
 		}
 
-		Stream<SegmentsEntry> stream = segmentsEntries.stream();
+		return TransformUtil.transformToLongArray(
+			segmentsEntries,
+			segmentsEntry -> {
+				if ((!ArrayUtil.isEmpty(filterSegmentsEntryIds) &&
+					 !ArrayUtil.contains(
+						 filterSegmentsEntryIds,
+						 segmentsEntry.getSegmentsEntryId())) ||
+					!isMember(
+						className, classPK, context, segmentsEntry,
+						segmentsEntryIds)) {
 
-		return stream.filter(
-			segmentsEntry ->
-				ArrayUtil.isEmpty(filterSegmentsEntryIds) ||
-				ArrayUtil.contains(
-					filterSegmentsEntryIds, segmentsEntry.getSegmentsEntryId())
-		).filter(
-			segmentsEntry -> isMember(
-				className, classPK, context, segmentsEntry, segmentsEntryIds)
-		).mapToLong(
-			SegmentsEntry::getSegmentsEntryId
-		).toArray();
+					return null;
+				}
+
+				return segmentsEntry.getSegmentsEntryId();
+			});
 	}
 
 	protected Criteria.Conjunction getConjunction(
@@ -238,11 +223,11 @@ public abstract class BaseSegmentsEntryProvider
 			segmentsEntry, Criteria.Type.MODEL);
 
 		if (context != null) {
-			boolean defaultUser = !GetterUtil.getBoolean(
+			boolean guestUser = !GetterUtil.getBoolean(
 				context.get(Context.SIGNED_IN), true);
 
 			if (contextConjunction.equals(Criteria.Conjunction.AND) &&
-				defaultUser && Validator.isNotNull(modelFilterString)) {
+				guestUser && Validator.isNotNull(modelFilterString)) {
 
 				return false;
 			}
@@ -273,7 +258,7 @@ public abstract class BaseSegmentsEntryProvider
 				}
 			}
 
-			if (defaultUser) {
+			if (guestUser) {
 				return matchesContext;
 			}
 		}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
@@ -20,6 +11,7 @@ import {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 } from 'react';
 import {KeyedMutator} from 'swr';
 
@@ -30,12 +22,16 @@ import ListViewContextProvider, {
 	ListViewContextProviderProps,
 	ListViewTypes,
 } from '../../context/ListViewContext';
+import SearchBuilder from '../../core/SearchBuilder';
 import {useFetch} from '../../hooks/useFetch';
 import i18n from '../../i18n';
+import {
+	FilterSchema as FilterSchemaType,
+	filterSchema as filterSchemas,
+} from '../../schema/filter';
 import {APIResponse} from '../../services/rest';
 import {SortDirection} from '../../types';
 import {PAGINATION} from '../../util/constants';
-import {SearchBuilder} from '../../util/search';
 import EmptyState from '../EmptyState';
 import Loading from '../Loading';
 import ManagementToolbar, {ManagementToolbarProps} from '../ManagementToolbar';
@@ -84,7 +80,7 @@ const ListView: React.FC<ListViewProps> = ({
 	resource,
 	tableProps,
 	transformData,
-	variables: _variables,
+	variables,
 	pagination = {displayTop: true},
 }) => {
 	const [listViewContext, dispatch] = useContext(ListViewContext);
@@ -96,53 +92,66 @@ const ListView: React.FC<ListViewProps> = ({
 		sort,
 	} = listViewContext;
 
+	const filterSchemaName = managementToolbarProps.filterSchema ?? '';
+
+	const filterSchema = (filterSchemas as any)[
+		filterSchemaName
+	] as FilterSchemaType;
+
+	const onContextChangeRef = useRef<
+		((context: ListViewContextState) => void) | undefined
+	>(onContextChange);
+
+	const onApplyFilterMemo = useMemo(
+		() => filterSchema?.onApply?.bind(filterSchema),
+		[filterSchema]
+	);
+
+	const filterVariables = useMemo(
+		() => ({
+			appliedFilter: filters.filter,
+			defaultFilter: variables?.filter,
+			filterSchema,
+		}),
+		[filters.filter, variables?.filter, filterSchema]
+	);
+
 	const getURLSearchParams = useCallback(
-		(url: string) => {
-			const urlSearchParams = new URLSearchParams();
-
-			urlSearchParams.set(
-				'sort',
-				sort.key ? `${sort.key}:${sort.direction.toLowerCase()}` : ''
-			);
-			urlSearchParams.set('page', listViewContext.page.toString());
-			urlSearchParams.set(
-				'pageSize',
-				listViewContext.pageSize.toString()
-			);
-			urlSearchParams.set(
-				'filter',
-				SearchBuilder.createFilter(
-					filters.filter,
-					_variables?.filter
-				) || ''
-			);
-
-			if (forceRefetch) {
-				urlSearchParams.set('ts', forceRefetch.toString());
-			}
-
-			const operator = url.includes('?') ? '&' : '?';
-
-			return `${url}${operator}${urlSearchParams.toString()}`;
-		},
-		[
+		() => ({
+			filter: onApplyFilterMemo
+				? onApplyFilterMemo(filterVariables)
+				: SearchBuilder.createFilter(filterVariables) || '',
 			forceRefetch,
-			_variables?.filter,
-			filters.filter,
+			page: listViewContext.page,
+			pageSize: listViewContext.pageSize,
+			sort: sort.key ? `${sort.key}:${sort.direction.toLowerCase()}` : '',
+		}),
+		[
+			onApplyFilterMemo,
+			filterVariables,
+			forceRefetch,
 			listViewContext.page,
 			listViewContext.pageSize,
-			sort.direction,
 			sort.key,
+			sort.direction,
 		]
 	);
 
-	const {data: response, error, loading, mutate} = useFetch(
-		getURLSearchParams(resource),
-		transformData
-	);
+	const {data: response, error, loading, mutate} = useFetch(resource, {
+		params: getURLSearchParams(),
+		transformData,
+	});
 
-	const {actions = {}, items = [], page, pageSize, totalCount = 0} =
-		response || {};
+	const {
+		actions = {},
+		items = [],
+		page = 1,
+		pageSize,
+		totalCount = 0,
+		lastPage = 1,
+	} = response || {};
+
+	const itemsMemoized = useMemo(() => items, [items]);
 
 	const columns = useMemo(
 		() =>
@@ -178,31 +187,40 @@ const ListView: React.FC<ListViewProps> = ({
 		[dispatch]
 	);
 
-	const contextString = JSON.stringify(listViewContext);
-
 	const onSelectAllRows = useCallback(() => {
-		onSelectRow(items.map(({id}) => id));
-	}, [items, onSelectRow]);
+		onSelectRow(itemsMemoized.map(({id}) => id));
+	}, [itemsMemoized, onSelectRow]);
 
 	useEffect(() => {
-		if (onContextChange) {
-			onContextChange(JSON.parse(contextString));
+		const shouldCurrentPageBeChanged =
+			!loading &&
+			!itemsMemoized.length &&
+			lastPage > 1 &&
+			page === lastPage;
+
+		if (shouldCurrentPageBeChanged) {
+			dispatch({payload: page - 1, type: ListViewTypes.SET_PAGE});
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [contextString]);
+	}, [dispatch, itemsMemoized.length, lastPage, loading, page]);
+
+	const listViewContextString = JSON.stringify(listViewContext);
+
+	useEffect(() => {
+		if (onContextChangeRef.current) {
+			onContextChangeRef.current(JSON.parse(listViewContextString));
+		}
+	}, [listViewContextString]);
 
 	useEffect(() => {
 		if (tableProps.rowSelectable) {
 			dispatch({
-				payload: items.every(({id}) => selectedRows.includes(id)),
+				payload: itemsMemoized.every(({id}) =>
+					selectedRows.includes(id)
+				),
 				type: ListViewTypes.SET_CHECKED_ALL_ROWS,
 			});
 		}
-	}, [items, tableProps, selectedRows, dispatch]);
-
-	if (error) {
-		return <span>{error.message}</span>;
-	}
+	}, [itemsMemoized, tableProps, selectedRows, dispatch]);
 
 	if (loading) {
 		return <Loading />;
@@ -237,11 +255,16 @@ const ListView: React.FC<ListViewProps> = ({
 					{...managementToolbarProps}
 					actions={actions}
 					tableProps={tableProps}
-					totalItems={items.length}
+					totalItems={itemsMemoized.length}
 				/>
 			)}
 
-			{!items.length && <EmptyState />}
+			{!itemsMemoized.length && (
+				<EmptyState
+					description={error?.message}
+					type={error ? 'EMPTY_SEARCH' : 'EMPTY_STATE'}
+				/>
+			)}
 
 			{children &&
 				children(response as APIResponse, {
@@ -260,7 +283,7 @@ const ListView: React.FC<ListViewProps> = ({
 						{...tableProps}
 						allRowsChecked={listViewContext.checkAll}
 						columns={columns}
-						items={items}
+						items={itemsMemoized}
 						mutate={mutate}
 						onSelectAllRows={onSelectAllRows}
 						onSelectRow={onSelectRow}
@@ -283,7 +306,7 @@ const ListViewWithContext: React.FC<
 		initialContext?: ListViewContextProviderProps;
 	}
 > = ({initialContext, ...otherProps}) => (
-	<ListViewContextProvider {...initialContext}>
+	<ListViewContextProvider {...initialContext} id={otherProps.resource}>
 		<ListViewMemoized {...otherProps} />
 	</ListViewContextProvider>
 );

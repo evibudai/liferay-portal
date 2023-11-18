@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useEffect, useState} from 'react';
@@ -15,8 +9,9 @@ import useClipboardJS from '../hooks/useClipboardJS';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import ThemeContext from '../shared/ThemeContext';
 import {COPY_BUTTON_CSS_CLASS} from '../utils/constants';
-import {fetchData} from '../utils/fetch';
-import {renameKeys, transformLocale} from '../utils/language';
+import fetchData from '../utils/fetch/fetch_data';
+import renameKeys from '../utils/language/rename_keys';
+import transformLocale from '../utils/language/transform_locale';
 import {openInitialSuccessToast} from '../utils/toasts';
 import EditSXPBlueprintForm from './EditSXPBlueprintForm';
 
@@ -62,6 +57,7 @@ export default function ({
 				locale,
 				namespace,
 				redirectURL,
+				sxpType: 'sxpBlueprint',
 			}}
 		>
 			<div className="edit-sxp-blueprint-root">
@@ -69,12 +65,17 @@ export default function ({
 					<EditSXPBlueprintForm
 						entityJSON={resource.entityJSON}
 						initialConfiguration={resource.configuration}
-						initialDescription={renameKeys(
+						initialDescription={resource.description}
+						initialDescriptionI18n={renameKeys(
 							resource.description_i18n,
 							transformLocale
 						)}
+						initialExternalReferenceCode={
+							resource.externalReferenceCode
+						}
 						initialSXPElementInstances={resource.elementInstances}
-						initialTitle={renameKeys(
+						initialTitle={resource.title}
+						initialTitleI18n={renameKeys(
 							resource.title_i18n,
 							transformLocale
 						)}

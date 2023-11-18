@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.display.context;
 
-import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
+import com.liferay.change.tracking.model.CTEntry;
+import com.liferay.change.tracking.model.CTEntryTable;
+import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -27,16 +20,91 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.searcher.Searcher;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * @author Samuel Trong Tran
  */
 public class DisplayContextUtil {
+
+	public static Map<Long, String> getSiteNames(
+		long ctCollectionId, ThemeDisplay themeDisplay) {
+
+		Map<Long, String> siteNames = new HashMap<>();
+
+		Searcher searcher = _searcherSnapshot.get();
+
+		SearchRequestBuilderFactory searchRequestBuilderFactory =
+			_searchRequestBuilderFactorySnapshot.get();
+
+		SearchRequestBuilder searchRequestBuilder =
+			searchRequestBuilderFactory.builder(
+			).companyId(
+				themeDisplay.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).fields(
+				Field.GROUP_ID, "groupName"
+			).modelIndexerClasses(
+				CTEntry.class
+			).withSearchContext(
+				searchContext -> searchContext.setAttribute(
+					"ctCollectionId", ctCollectionId)
+			);
+
+		SearchResponse searchResponse = searcher.search(
+			searchRequestBuilder.build());
+
+		for (Document document : searchResponse.getDocuments()) {
+			siteNames.put(
+				document.getLong(Field.GROUP_ID),
+				document.getString("groupName"));
+		}
+
+		return siteNames;
+	}
+
+	public static Map<Long, String> getTypeNames(
+		long ctCollectionId,
+		CTDisplayRendererRegistry ctDisplayRendererRegistry,
+		ThemeDisplay themeDisplay) {
+
+		List<Long> classNameIds = ClassNameLocalServiceUtil.dslQuery(
+			DSLQueryFactoryUtil.selectDistinct(
+				CTEntryTable.INSTANCE.modelClassNameId
+			).from(
+				CTEntryTable.INSTANCE
+			).where(
+				CTEntryTable.INSTANCE.ctCollectionId.eq(ctCollectionId)
+			));
+
+		Map<Long, String> typeNames = new HashMap<>();
+
+		for (long classNameId : classNameIds) {
+			String typeName = ctDisplayRendererRegistry.getTypeName(
+				themeDisplay.getLocale(), classNameId);
+
+			typeName = typeName.substring(typeName.lastIndexOf(".") + 1);
+
+			typeNames.put(classNameId, typeName);
+		}
+
+		return typeNames;
+	}
 
 	public static JSONObject getTypeNamesJSONObject(
 		Set<Long> classNameIds,
@@ -102,5 +170,11 @@ public class DisplayContextUtil {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DisplayContextUtil.class);
+
+	private static final Snapshot<Searcher> _searcherSnapshot = new Snapshot<>(
+		DisplayContextUtil.class, Searcher.class);
+	private static final Snapshot<SearchRequestBuilderFactory>
+		_searchRequestBuilderFactorySnapshot = new Snapshot<>(
+			DisplayContextUtil.class, SearchRequestBuilderFactory.class);
 
 }

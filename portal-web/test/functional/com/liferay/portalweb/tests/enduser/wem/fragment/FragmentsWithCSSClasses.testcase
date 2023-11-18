@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a content page") {
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,8 +37,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-152105. The page creator could add CSS class to fragment."
-	@priority = "5"
+	@priority = 5
 	test AddCSSClassToFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a page creator has a content page with a Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -68,8 +71,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-152105. The page creator could add multiple CSS classes to fragment."
-	@priority = "5"
+	@priority = 5
 	test AddMultipleCSSClassesToFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a page creator has a content page with a Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -108,7 +113,7 @@ definition {
 				TestUtils.assertPartialAttributeValue(
 					attribute = "class",
 					element = "//div[@aria-label='Heading']//div[contains(@class,'page-editor__fragment-content')]",
-					value = "${cssClass}");
+					value = ${cssClass});
 			}
 		}
 	}

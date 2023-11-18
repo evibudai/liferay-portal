@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.info.item.provider;
@@ -19,15 +10,14 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.info.field.converter.DDMFormFieldInfoFieldConverter;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFieldValuesProvider;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldOptions;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.LocalizedValue;
-import com.liferay.dynamic.data.mapping.kernel.Value;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
@@ -42,14 +32,20 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.sanitizer.Sanitizer;
 import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.text.DateFormat;
@@ -62,9 +58,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -79,22 +72,17 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 	public List<InfoFieldValue<InfoLocalizedValue<Object>>> getInfoFieldValues(
 		GroupedModel groupedModel, DDMFormValues ddmFormValues) {
 
-		List<DDMFormFieldValue> ddmFormFieldValues =
-			ddmFormValues.getDDMFormFieldValues();
+		List<InfoFieldValue<InfoLocalizedValue<Object>>> infoFieldValues =
+			new ArrayList<>();
 
-		Stream<DDMFormFieldValue> stream = ddmFormFieldValues.stream();
+		for (DDMFormFieldValue ddmFormFieldValue :
+				ddmFormValues.getDDMFormFieldValues()) {
 
-		return stream.flatMap(
-			ddmFormFieldValue -> {
-				List<InfoFieldValue<InfoLocalizedValue<Object>>>
-					infoFieldValues = _getInfoFieldValues(
-						groupedModel, ddmFormFieldValue);
+			infoFieldValues.addAll(
+				_getInfoFieldValues(groupedModel, ddmFormFieldValue));
+		}
 
-				return infoFieldValues.stream();
-			}
-		).collect(
-			Collectors.toList()
-		);
+		return infoFieldValues;
 	}
 
 	private void _addDDMFormFieldValue(
@@ -103,11 +91,8 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 		_addNestedFields(groupedModel, ddmFormFieldValue, infoFieldValues);
 
-		_getInfoFieldValue(
-			groupedModel, ddmFormFieldValue
-		).map(
-			infoFieldValues::add
-		);
+		infoFieldValues.add(
+			_getInfoFieldValue(groupedModel, ddmFormFieldValue));
 	}
 
 	private void _addNestedFields(
@@ -128,34 +113,31 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 		}
 	}
 
-	private Optional<InfoFieldValue<InfoLocalizedValue<Object>>>
-		_getInfoFieldValue(
-			GroupedModel groupedModel, DDMFormFieldValue ddmFormFieldValue) {
+	private InfoFieldValue<InfoLocalizedValue<Object>> _getInfoFieldValue(
+		GroupedModel groupedModel, DDMFormFieldValue ddmFormFieldValue) {
 
 		Value value = ddmFormFieldValue.getValue();
 
-		if (value == null) {
-			return Optional.empty();
+		if ((value == null) || (ddmFormFieldValue.getDDMFormField() == null)) {
+			return null;
 		}
 
-		return Optional.of(
-			new InfoFieldValue<>(
-				_ddmFormFieldInfoFieldConverter.convert(
-					_ddmBeanTranslator.translate(
-						ddmFormFieldValue.getDDMFormField())),
-				InfoLocalizedValue.builder(
-				).defaultLocale(
-					value.getDefaultLocale()
-				).value(
-					consumer -> {
-						for (Locale locale : value.getAvailableLocales()) {
-							consumer.accept(
-								locale,
-								_sanitizeDDMFormFieldValue(
-									groupedModel, ddmFormFieldValue, locale));
-						}
+		return new InfoFieldValue<>(
+			_ddmFormFieldInfoFieldConverter.convert(
+				ddmFormFieldValue.getDDMFormField()),
+			InfoLocalizedValue.builder(
+			).defaultLocale(
+				value.getDefaultLocale()
+			).value(
+				consumer -> {
+					for (Locale locale : value.getAvailableLocales()) {
+						consumer.accept(
+							locale,
+							_sanitizeDDMFormFieldValue(
+								groupedModel, ddmFormFieldValue, locale));
 					}
-				).build()));
+				}
+			).build());
 	}
 
 	private List<InfoFieldValue<InfoLocalizedValue<Object>>>
@@ -280,7 +262,9 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 			if (Objects.equals(
 					ddmFormFieldValue.getType(), DDMFormFieldType.DATE) ||
-				Objects.equals(ddmFormFieldValue.getType(), "date")) {
+				Objects.equals(
+					ddmFormFieldValue.getType(),
+					DDMFormFieldTypeConstants.DATE)) {
 
 				if (Validator.isNull(valueString)) {
 					return null;
@@ -297,6 +281,22 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 					"yyyy-MM-dd", valueString, locale);
 
 				return dateFormat.format(date);
+			}
+
+			if (Objects.equals(
+					ddmFormFieldValue.getType(),
+					DDMFormFieldTypeConstants.DATE_TIME)) {
+
+				if (Validator.isNull(valueString)) {
+					return null;
+				}
+
+				if (locale.equals(LocaleUtil.ROOT)) {
+					locale = LocaleUtil.getSiteDefault();
+				}
+
+				return DateUtil.parseDate(
+					"yyyy-MM-dd hh:mm", valueString, locale);
 			}
 
 			if (Objects.equals(
@@ -326,9 +326,48 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 			if (Objects.equals(
 					ddmFormFieldValue.getType(), DDMFormFieldType.IMAGE) ||
-				Objects.equals(ddmFormFieldValue.getType(), "image")) {
+				Objects.equals(
+					ddmFormFieldValue.getType(),
+					DDMFormFieldTypeConstants.IMAGE)) {
 
 				return _getWebImage(_jsonFactory.createJSONObject(valueString));
+			}
+
+			if (Objects.equals(
+					ddmFormFieldValue.getType(),
+					DDMFormFieldTypeConstants.LINK_TO_LAYOUT)) {
+
+				if (Validator.isNull(valueString)) {
+					return StringPool.BLANK;
+				}
+
+				JSONObject jsonObject = _jsonFactory.createJSONObject(
+					valueString);
+
+				Layout layout = _layoutLocalService.fetchLayout(
+					jsonObject.getLong("groupId"),
+					jsonObject.getBoolean("privateLayout"),
+					jsonObject.getLong("layoutId"));
+
+				if (layout == null) {
+					return StringPool.BLANK;
+				}
+
+				ServiceContext serviceContext =
+					ServiceContextThreadLocal.getServiceContext();
+
+				if (serviceContext == null) {
+					return StringPool.BLANK;
+				}
+
+				ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+				if (themeDisplay == null) {
+					return StringPool.BLANK;
+				}
+
+				return _portal.getLayoutFriendlyURL(
+					layout, themeDisplay, locale);
 			}
 
 			if (Objects.equals(
@@ -381,9 +420,6 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 		DDMFormValuesInfoFieldValuesProviderImpl.class);
 
 	@Reference
-	private DDMBeanTranslator _ddmBeanTranslator;
-
-	@Reference
 	private DDMFormFieldInfoFieldConverter _ddmFormFieldInfoFieldConverter;
 
 	@Reference
@@ -394,5 +430,11 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

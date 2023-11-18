@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -23,6 +14,7 @@ import {
 	MultipleSelect,
 	SingleSelect,
 	filterArrayByQuery,
+	getLocalizableLabel,
 } from '@liferay/object-js-components-web';
 import React, {
 	FormEvent,
@@ -33,16 +25,19 @@ import React, {
 } from 'react';
 
 import {
-	getCheckedPickListItems,
-	getCheckedRelationshipItems,
+	getCheckedListTypeEntries,
+	getCheckedObjectRelationshipItems,
 	getCheckedWorkflowStatusItems,
-	getSystemFieldLabelFromEntry,
+	getSystemObjectFieldLabelFromObjectEntry,
 } from '../utils/filter';
 
 import './ModalAddFilter.scss';
+
 interface IProps {
 	aggregationFilter?: boolean;
+	creationLanguageId?: Liferay.Language.Locale;
 	currentFilters: CurrentFilter[];
+	disableAutoClose?: boolean;
 	disableDateValues?: boolean;
 	editingFilter: boolean;
 	editingObjectFieldName: string;
@@ -119,11 +114,11 @@ type AttachmentEntry = {
 	name: string;
 };
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 export function ModalAddFilter({
 	aggregationFilter,
+	creationLanguageId,
 	currentFilters,
+	disableAutoClose = false,
 	disableDateValues,
 	editingFilter,
 	editingObjectFieldName,
@@ -155,8 +150,13 @@ export function ModalAddFilter({
 	const [filterEndDate, setFilterEndDate] = useState('');
 
 	const filteredAvailableFields = useMemo(() => {
-		return filterArrayByQuery(objectFields, 'label', query);
-	}, [objectFields, query]);
+		return filterArrayByQuery({
+			array: objectFields,
+			creationLanguageId: creationLanguageId as Liferay.Language.Locale,
+			query,
+			str: 'label',
+		});
+	}, [creationLanguageId, objectFields, query]);
 
 	const setEditingFilterType = () => {
 		const currentFilterColumn = currentFilters.find((filterColumn) => {
@@ -193,13 +193,13 @@ export function ModalAddFilter({
 			) {
 				const makeFetch = async () => {
 					if (objectField.listTypeDefinitionId) {
-						const items = await API.getPickListItems(
+						const items = await API.getListTypeDefinitionListTypeEntries(
 							objectField.listTypeDefinitionId
 						);
 
 						if (editingFilter) {
 							setItems(
-								getCheckedPickListItems(
+								getCheckedListTypeEntries(
 									items,
 									setEditingFilterType
 								)
@@ -257,55 +257,68 @@ export function ModalAddFilter({
 						`filter=name eq '${value}'`
 					);
 
-					const titleField = objectFields.find(
+					const titleObjectField = objectFields.find(
 						(objectField) =>
 							objectField.name === titleObjectFieldName
 					) as ObjectField;
 
-					const relatedEntries = await API.getList<ObjectEntry>(
+					const relatedObjectEntries = await API.getList<ObjectEntry>(
 						`${restContextPath}`
 					);
 
+					if (!relatedObjectEntries) {
+						setItems([]);
+
+						return;
+					}
+
 					if (editingFilter) {
 						setItems(
-							getCheckedRelationshipItems(
-								relatedEntries,
-								titleField.name,
-								titleField.system as boolean,
+							getCheckedObjectRelationshipItems(
+								relatedObjectEntries,
+								titleObjectField.name,
+								titleObjectField.system as boolean,
 								system,
 								setEditingFilterType
 							)
 						);
 					}
 					else {
-						const newItems = relatedEntries.map((entry) => {
-							const newItemsObject = {
-								value: system
-									? String(entry.id)
-									: entry.externalReferenceCode,
-							} as LabelValueObject;
+						const newItems = relatedObjectEntries.map(
+							(objectEntry) => {
+								const newItemsObject = {
+									value: system
+										? String(objectEntry.id)
+										: objectEntry.externalReferenceCode,
+								} as LabelValueObject;
 
-							if (titleField.system) {
-								return getSystemFieldLabelFromEntry(
-									titleField.name,
-									entry,
-									newItemsObject
-								) as LabelValueObject;
+								if (titleObjectField.system) {
+									return getSystemObjectFieldLabelFromObjectEntry(
+										titleObjectField.name,
+										objectEntry,
+										newItemsObject
+									) as LabelValueObject;
+								}
+
+								let label = objectEntry[
+									titleObjectField?.name
+								] as string;
+
+								if (
+									titleObjectField.businessType ===
+									'Attachment'
+								) {
+									label = (objectEntry as {
+										[key: string]: AttachmentEntry;
+									})[titleObjectField.name].name;
+								}
+
+								return {
+									...newItemsObject,
+									label,
+								};
 							}
-
-							let label = entry[titleField?.name] as string;
-
-							if (titleField.businessType === 'Attachment') {
-								label = (entry as {
-									[key: string]: AttachmentEntry;
-								})[titleField.name].name;
-							}
-
-							return {
-								...newItemsObject,
-								label,
-							};
-						});
+						);
 
 						setItems(newItems);
 					}
@@ -437,7 +450,11 @@ export function ModalAddFilter({
 			selectedFilterBy?.businessType === 'Relationship');
 
 	return (
-		<ClayModal observer={observer}>
+		<ClayModal
+			center
+			disableAutoClose={disableAutoClose}
+			observer={observer}
+		>
 			<ClayModal.Header>{header}</ClayModal.Header>
 
 			<ClayModal.Body>
@@ -447,8 +464,12 @@ export function ModalAddFilter({
 							'there-are-no-columns-available'
 						)}
 						error={errors.selectedFilterBy}
+						id="modalAddFilterBy"
 						items={filteredAvailableFields}
 						label={Liferay.Language.get('filter-by')}
+						onActive={(item) =>
+							item.name === selectedFilterBy?.name
+						}
 						onChangeQuery={setQuery}
 						onSelectItem={(item) => {
 							const userRelationship = !!item.objectFieldSettings?.find(
@@ -475,11 +496,20 @@ export function ModalAddFilter({
 						}}
 						query={query}
 						required
-						value={selectedFilterBy?.label[defaultLanguageId]}
+						value={getLocalizableLabel(
+							creationLanguageId as Liferay.Language.Locale,
+							selectedFilterBy?.label
+						)}
 					>
-						{({label}) => (
+						{({label, name}) => (
 							<div className="d-flex justify-content-between">
-								<div>{label[defaultLanguageId]}</div>
+								<div>
+									{getLocalizableLabel(
+										creationLanguageId as Liferay.Language.Locale,
+										label,
+										name
+									)}
+								</div>
 							</div>
 						)}
 					</AutoComplete>
@@ -567,6 +597,7 @@ export function ModalAddFilter({
 										setFilterStartDate(value);
 									}}
 									required
+									type="Date"
 									value={filterStartDate}
 								/>
 							</div>
@@ -589,6 +620,7 @@ export function ModalAddFilter({
 										setFilterEndDate(value);
 									}}
 									required
+									type="Date"
 									value={filterEndDate}
 								/>
 							</div>

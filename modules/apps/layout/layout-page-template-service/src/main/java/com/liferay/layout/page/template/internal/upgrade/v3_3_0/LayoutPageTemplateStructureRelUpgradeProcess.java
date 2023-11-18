@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.internal.upgrade.v3_3_0;
@@ -30,6 +21,7 @@ import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -40,8 +32,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Eudaldo Alonso
@@ -70,21 +60,19 @@ public class LayoutPageTemplateStructureRelUpgradeProcess
 		List<PortletPreferences> portletPreferencesList =
 			_portletPreferencesLocalService.getPortletPreferencesByPlid(plid);
 
-		Stream<PortletPreferences> stream = portletPreferencesList.stream();
+		_portletPreferencesMap.put(
+			plid,
+			ListUtil.filter(
+				portletPreferencesList,
+				portletPreferences -> {
+					String portletId = portletPreferences.getPortletId();
 
-		portletPreferencesList = stream.filter(
-			portletPreferences -> {
-				String portletId = portletPreferences.getPortletId();
-
-				return portletId.contains(_INSTANCE_SEPARATOR) &&
-					   (portletId.contains(_SEGMENTS_EXPERIENCE_SEPARATOR_1) ||
-						portletId.contains(_SEGMENTS_EXPERIENCE_SEPARATOR_2));
-			}
-		).collect(
-			Collectors.toList()
-		);
-
-		_portletPreferencesMap.put(plid, portletPreferencesList);
+					return portletId.contains(_INSTANCE_SEPARATOR) &&
+						   (portletId.contains(
+							   _SEGMENTS_EXPERIENCE_SEPARATOR_1) ||
+							portletId.contains(
+								_SEGMENTS_EXPERIENCE_SEPARATOR_2));
+				}));
 
 		return _portletPreferencesMap.get(plid);
 	}
@@ -93,10 +81,9 @@ public class LayoutPageTemplateStructureRelUpgradeProcess
 		String newNamespace, String oldNamespace, long plid,
 		long segmentsExperienceId) {
 
-		List<PortletPreferences> portletPreferencesList =
-			_getPortletPreferencesByPlid(plid);
+		for (PortletPreferences portletPreferences :
+				_getPortletPreferencesByPlid(plid)) {
 
-		for (PortletPreferences portletPreferences : portletPreferencesList) {
 			String portletId = portletPreferences.getPortletId();
 
 			if (!portletId.contains(oldNamespace) ||
@@ -109,18 +96,17 @@ public class LayoutPageTemplateStructureRelUpgradeProcess
 				continue;
 			}
 
-			String newPortletId = StringUtil.replace(
-				portletId,
-				new String[] {
-					oldNamespace,
-					_SEGMENTS_EXPERIENCE_SEPARATOR_1 + segmentsExperienceId,
-					_SEGMENTS_EXPERIENCE_SEPARATOR_2 + segmentsExperienceId
-				},
-				new String[] {
-					newNamespace, StringPool.BLANK, StringPool.BLANK
-				});
-
-			portletPreferences.setPortletId(newPortletId);
+			portletPreferences.setPortletId(
+				StringUtil.replace(
+					portletId,
+					new String[] {
+						oldNamespace,
+						_SEGMENTS_EXPERIENCE_SEPARATOR_1 + segmentsExperienceId,
+						_SEGMENTS_EXPERIENCE_SEPARATOR_2 + segmentsExperienceId
+					},
+					new String[] {
+						newNamespace, StringPool.BLANK, StringPool.BLANK
+					}));
 
 			_portletPreferencesLocalService.updatePortletPreferences(
 				portletPreferences);
@@ -161,8 +147,9 @@ public class LayoutPageTemplateStructureRelUpgradeProcess
 						fragmentEntryLink.getEditableValues(),
 						segmentsExperienceId));
 
-				_fragmentEntryLinkLocalService.updateFragmentEntryLink(
-					fragmentEntryLink);
+				fragmentEntryLink =
+					_fragmentEntryLinkLocalService.updateFragmentEntryLink(
+						fragmentEntryLink);
 
 				continue;
 			}

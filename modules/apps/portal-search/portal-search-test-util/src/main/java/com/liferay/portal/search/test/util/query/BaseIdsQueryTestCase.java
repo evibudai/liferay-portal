@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.query;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
@@ -32,7 +24,6 @@ import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -110,20 +101,15 @@ public abstract class BaseIdsQueryTestCase extends BaseIndexingTestCase {
 		SearchSearchResponse searchSearchResponse = searchEngineAdapter.execute(
 			searchSearchRequest);
 
-		Stream<Document> stream = getDocumentsStream(
-			searchSearchResponse.getSearchHits());
-
 		DocumentsAssert.assertValues(
-			searchSearchResponse.getSearchRequestString(), stream,
-			Field.USER_NAME, expected);
+			searchSearchResponse.getSearchRequestString(),
+			getDocuments(searchSearchResponse.getSearchHits()), Field.USER_NAME,
+			expected);
 	}
 
-	protected Stream<Document> getDocumentsStream(SearchHits searchHits) {
-		List<SearchHit> list = searchHits.getSearchHits();
-
-		Stream<SearchHit> stream = list.stream();
-
-		return stream.map(SearchHit::getDocument);
+	protected List<Document> getDocuments(SearchHits searchHits) {
+		return TransformUtil.transform(
+			searchHits.getSearchHits(), SearchHit::getDocument);
 	}
 
 	protected SearchSearchRequest getSearchSearchRequest(Query query) {

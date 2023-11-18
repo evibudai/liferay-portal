@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.proxy.internal;
@@ -24,12 +15,15 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ReflectionUtilTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DelegateProxyFactory;
+import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -75,6 +69,10 @@ public class ASMDelegateProxyFactoryTest {
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testClassInitializationFailure() throws Exception {
+		Class.forName(
+			SystemProperties.class.getName(), true,
+			SystemProperties.class.getClassLoader());
+
 		SecurityException securityException = new SecurityException();
 
 		try (SwappableSecurityManager swappableSecurityManager =
@@ -93,6 +91,38 @@ public class ASMDelegateProxyFactoryTest {
 		catch (ExceptionInInitializerError eiie) {
 			Assert.assertSame(securityException, eiie.getCause());
 		}
+	}
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testConcurrentCreate() throws Exception {
+		DelegateProxyFactory delegateProxyFactory =
+			new ASMDelegateProxyFactory();
+
+		Map<Object, Object> map = ReflectionTestUtil.getFieldValue(
+			ASMDelegateProxyFactory.class, "_classReferencesMap");
+
+		ReflectionTestUtil.setFieldValue(
+			ASMDelegateProxyFactory.class, "_classReferencesMap",
+			ProxyUtil.newDelegateProxyInstance(
+				ClassLoader.getSystemClassLoader(), Map.class,
+				new Object() {
+
+					public Object putIfAbsent(Object key, Object value) {
+						map.put(key, value);
+
+						return map.putIfAbsent(key, value);
+					}
+
+				},
+				map));
+
+		delegateProxyFactory.newDelegateProxyInstance(
+			TestInterface.class.getClassLoader(), TestInterface.class,
+			new TestDelegate(), new TestDefault());
+
+		ReflectionTestUtil.setFieldValue(
+			ASMDelegateProxyFactory.class, "_classReferencesMap", map);
 	}
 
 	@Test
@@ -175,6 +205,20 @@ public class ASMDelegateProxyFactoryTest {
 			Assert.assertEquals(
 				Object.class + " is not an interface",
 				illegalArgumentException.getMessage());
+		}
+
+		SecurityException securityException = new SecurityException();
+
+		try (SwappableSecurityManager swappableSecurityManager =
+				ReflectionUtilTestUtil.throwForSuppressAccessChecks(
+					securityException)) {
+
+			delegateProxyFactory.newDelegateProxyInstance(
+				TestInterface.class.getClassLoader(), TestInterface.class,
+				new TestDelegate(), new TestDefault());
+		}
+		catch (RuntimeException runtimeException) {
+			Assert.assertSame(securityException, runtimeException.getCause());
 		}
 	}
 

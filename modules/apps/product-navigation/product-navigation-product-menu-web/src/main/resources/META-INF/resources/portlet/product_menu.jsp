@@ -1,32 +1,25 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/portlet/init.jsp" %>
 
 <c:if test="<%= productMenuDisplayContext.isShowProductMenu() %>">
-	<div aria-multiselectable="true" class="panel-group" data-qa-id="productMenuBody" id="<portlet:namespace />Accordion" role="tablist">
 
-		<%
-		List<PanelCategory> childPanelCategories = productMenuDisplayContext.getChildPanelCategories();
+	<%
+	List<PanelCategory> childPanelCategories = productMenuDisplayContext.getChildPanelCategories();
 
-		request.setAttribute("product_menu.jsp-childPanelCategoriesSize", childPanelCategories.size());
-		%>
+	request.setAttribute("product_menu.jsp-childPanelCategoriesSize", childPanelCategories.size());
 
+	boolean singleChildCategory = childPanelCategories.size() == 1;
+	%>
+
+	<div class="panel-group" data-qa-id="productMenuBody" id="<portlet:namespace />Accordion" role="<%= singleChildCategory ? StringPool.BLANK : "tablist" %>">
 		<c:choose>
-			<c:when test="<%= childPanelCategories.size() > 1 %>">
+			<c:when test="<%= !singleChildCategory %>">
 
 				<%
 				for (PanelCategory childPanelCategory : childPanelCategories) {
@@ -44,9 +37,15 @@
 									<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(childPanelCategory.getKey()) %>Collapse" aria-expanded="<%= Objects.equals(childPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) %>" class="collapse-icon collapse-icon-middle panel-toggler panel-header-link <%= Objects.equals(childPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) ? StringPool.BLANK : "collapsed" %>" data-parent="#<portlet:namespace />Accordion" data-qa-id="productMenu<%= childPanelCategoryClass.getSimpleName() %>" data-toggle="liferay-collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(childPanelCategory.getKey()) %>Collapse" role="button">
 										<%@ include file="/portlet/product_menu_title.jspf" %>
 
-										<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+										<clay:icon
+											cssClass="collapse-icon-closed"
+											symbol="angle-right"
+										/>
 
-										<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
+										<clay:icon
+											cssClass="collapse-icon-open"
+											symbol="angle-down"
+										/>
 									</a>
 								</c:if>
 							</div>
@@ -80,7 +79,7 @@
 				%>
 
 				<div class="panel panel-secondary">
-					<div class="panel-header panel-heading" id="<portlet:namespace /><%= AUIUtil.normalizeId(childPanelCategory.getKey()) %>Heading" role="tab">
+					<div class="panel-header panel-heading" id="<portlet:namespace /><%= AUIUtil.normalizeId(childPanelCategory.getKey()) %>Heading">
 						<div class="panel-title">
 							<c:if test="<%= !childPanelCategory.includeHeader(request, PipingServletResponseFactory.createPipingServletResponse(pageContext)) %>">
 

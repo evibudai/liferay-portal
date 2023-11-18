@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth.client.persistence.model.impl;
@@ -238,109 +229,130 @@ public class OAuthClientEntryModelImpl
 	public Map<String, Function<OAuthClientEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<OAuthClientEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<OAuthClientEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<OAuthClientEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<OAuthClientEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<OAuthClientEntry, Object>>();
-		Map<String, BiConsumer<OAuthClientEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<OAuthClientEntry, ?>>();
+		private static final Map<String, Function<OAuthClientEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", OAuthClientEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<OAuthClientEntry, Long>)
-				OAuthClientEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"oAuthClientEntryId", OAuthClientEntry::getOAuthClientEntryId);
-		attributeSetterBiConsumers.put(
-			"oAuthClientEntryId",
-			(BiConsumer<OAuthClientEntry, Long>)
-				OAuthClientEntry::setOAuthClientEntryId);
-		attributeGetterFunctions.put(
-			"companyId", OAuthClientEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<OAuthClientEntry, Long>)OAuthClientEntry::setCompanyId);
-		attributeGetterFunctions.put("userId", OAuthClientEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<OAuthClientEntry, Long>)OAuthClientEntry::setUserId);
-		attributeGetterFunctions.put("userName", OAuthClientEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", OAuthClientEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<OAuthClientEntry, Date>)
-				OAuthClientEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", OAuthClientEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<OAuthClientEntry, Date>)
-				OAuthClientEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"authRequestParametersJSON",
-			OAuthClientEntry::getAuthRequestParametersJSON);
-		attributeSetterBiConsumers.put(
-			"authRequestParametersJSON",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setAuthRequestParametersJSON);
-		attributeGetterFunctions.put(
-			"authServerWellKnownURI",
-			OAuthClientEntry::getAuthServerWellKnownURI);
-		attributeSetterBiConsumers.put(
-			"authServerWellKnownURI",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setAuthServerWellKnownURI);
-		attributeGetterFunctions.put("clientId", OAuthClientEntry::getClientId);
-		attributeSetterBiConsumers.put(
-			"clientId",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setClientId);
-		attributeGetterFunctions.put("infoJSON", OAuthClientEntry::getInfoJSON);
-		attributeSetterBiConsumers.put(
-			"infoJSON",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setInfoJSON);
-		attributeGetterFunctions.put(
-			"oidcUserInfoMapperJSON",
-			OAuthClientEntry::getOIDCUserInfoMapperJSON);
-		attributeSetterBiConsumers.put(
-			"oidcUserInfoMapperJSON",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setOIDCUserInfoMapperJSON);
-		attributeGetterFunctions.put(
-			"tokenRequestParametersJSON",
-			OAuthClientEntry::getTokenRequestParametersJSON);
-		attributeSetterBiConsumers.put(
-			"tokenRequestParametersJSON",
-			(BiConsumer<OAuthClientEntry, String>)
-				OAuthClientEntry::setTokenRequestParametersJSON);
+		static {
+			Map<String, Function<OAuthClientEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<OAuthClientEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", OAuthClientEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"oAuthClientEntryId", OAuthClientEntry::getOAuthClientEntryId);
+			attributeGetterFunctions.put(
+				"companyId", OAuthClientEntry::getCompanyId);
+			attributeGetterFunctions.put("userId", OAuthClientEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", OAuthClientEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", OAuthClientEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", OAuthClientEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"authRequestParametersJSON",
+				OAuthClientEntry::getAuthRequestParametersJSON);
+			attributeGetterFunctions.put(
+				"authServerWellKnownURI",
+				OAuthClientEntry::getAuthServerWellKnownURI);
+			attributeGetterFunctions.put(
+				"clientId", OAuthClientEntry::getClientId);
+			attributeGetterFunctions.put(
+				"infoJSON", OAuthClientEntry::getInfoJSON);
+			attributeGetterFunctions.put(
+				"oidcUserInfoMapperJSON",
+				OAuthClientEntry::getOIDCUserInfoMapperJSON);
+			attributeGetterFunctions.put(
+				"tokenRequestParametersJSON",
+				OAuthClientEntry::getTokenRequestParametersJSON);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<OAuthClientEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<OAuthClientEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<OAuthClientEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<OAuthClientEntry, Long>)
+					OAuthClientEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"oAuthClientEntryId",
+				(BiConsumer<OAuthClientEntry, Long>)
+					OAuthClientEntry::setOAuthClientEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<OAuthClientEntry, Long>)
+					OAuthClientEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<OAuthClientEntry, Long>)
+					OAuthClientEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<OAuthClientEntry, Date>)
+					OAuthClientEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<OAuthClientEntry, Date>)
+					OAuthClientEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"authRequestParametersJSON",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setAuthRequestParametersJSON);
+			attributeSetterBiConsumers.put(
+				"authServerWellKnownURI",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setAuthServerWellKnownURI);
+			attributeSetterBiConsumers.put(
+				"clientId",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setClientId);
+			attributeSetterBiConsumers.put(
+				"infoJSON",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setInfoJSON);
+			attributeSetterBiConsumers.put(
+				"oidcUserInfoMapperJSON",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setOIDCUserInfoMapperJSON);
+			attributeSetterBiConsumers.put(
+				"tokenRequestParametersJSON",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setTokenRequestParametersJSON);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -998,7 +1010,8 @@ public class OAuthClientEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<OAuthClientEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

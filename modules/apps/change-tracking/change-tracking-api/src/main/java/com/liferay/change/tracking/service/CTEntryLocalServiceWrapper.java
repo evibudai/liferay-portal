@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link CTEntryLocalService}.
@@ -53,13 +45,15 @@ public class CTEntryLocalServiceWrapper
 
 	@Override
 	public com.liferay.change.tracking.model.CTEntry addCTEntry(
-			long ctCollectionId, long modelClassNameId,
+			String externalReferenceCode, long ctCollectionId,
+			long modelClassNameId,
 			com.liferay.portal.kernel.model.change.tracking.CTModel<?> ctModel,
 			long userId, int changeType)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ctEntryLocalService.addCTEntry(
-			ctCollectionId, modelClassNameId, ctModel, userId, changeType);
+			externalReferenceCode, ctCollectionId, modelClassNameId, ctModel,
+			userId, changeType);
 	}
 
 	/**
@@ -252,6 +246,30 @@ public class CTEntryLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.change.tracking.model.CTEntry
+		fetchCTEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return _ctEntryLocalService.fetchCTEntryByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct entry with the matching UUID and company.
+	 *
+	 * @param uuid the ct entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct entry, or <code>null</code> if a matching ct entry could not be found
+	 */
+	@Override
+	public com.liferay.change.tracking.model.CTEntry
+		fetchCTEntryByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _ctEntryLocalService.fetchCTEntryByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -333,6 +351,33 @@ public class CTEntryLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.change.tracking.model.CTEntry
+			getCTEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctEntryLocalService.getCTEntryByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct entry with the matching UUID and company.
+	 *
+	 * @param uuid the ct entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct entry
+	 * @throws PortalException if a matching ct entry could not be found
+	 */
+	@Override
+	public com.liferay.change.tracking.model.CTEntry
+			getCTEntryByUuidAndCompanyId(String uuid, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctEntryLocalService.getCTEntryByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	@Override
 	public long getCTRowCTCollectionId(
 			com.liferay.change.tracking.model.CTEntry ctEntry)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -346,6 +391,16 @@ public class CTEntryLocalServiceWrapper
 
 		return _ctEntryLocalService.getExclusiveModelClassPKs(
 			ctCollectionId, modelClassNameId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _ctEntryLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -405,6 +460,19 @@ public class CTEntryLocalServiceWrapper
 		com.liferay.change.tracking.model.CTEntry ctEntry) {
 
 		return _ctEntryLocalService.updateCTEntry(ctEntry);
+	}
+
+	@Override
+	public com.liferay.change.tracking.model.CTEntry updateModelMvccVersion(
+		long ctEntryId, long modelMvccVersion) {
+
+		return _ctEntryLocalService.updateModelMvccVersion(
+			ctEntryId, modelMvccVersion);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _ctEntryLocalService.getBasePersistence();
 	}
 
 	@Override

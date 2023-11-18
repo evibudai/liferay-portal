@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.var.type;
@@ -24,19 +15,19 @@ import java.util.regex.Pattern;
  */
 public class DefaultTable implements Table {
 
-	public DefaultTable(List<List<String>> table) {
-		this(table, false, false);
+	public DefaultTable(List<List<String>> rows) {
+		this(rows, false, false);
 	}
 
 	public DefaultTable(
-		List<List<String>> table, boolean hasRowNames, boolean hasColumnNames) {
+		List<List<String>> rows, boolean hasRowNames, boolean hasColumnNames) {
 
 		if (hasColumnNames && hasRowNames) {
 			throw new IllegalArgumentException(
 				"Table must contain either row names or column names");
 		}
 
-		_table = table;
+		_rows = rows;
 		_hasRowNames = hasRowNames;
 		_hasColumnNames = hasColumnNames;
 	}
@@ -55,8 +46,8 @@ public class DefaultTable implements Table {
 	public List<String> getColumnByIndex(int index) {
 		List<String> columnCellValues = new ArrayList<>();
 
-		for (List<String> cellValues : _table) {
-			columnCellValues.add(cellValues.get(index));
+		for (List<String> row : _rows) {
+			columnCellValues.add(row.get(index));
 		}
 
 		return columnCellValues;
@@ -65,7 +56,7 @@ public class DefaultTable implements Table {
 	@Override
 	public List<String> getColumnByName(String columnName) {
 		if (_hasColumnNames) {
-			List<String> columnNames = _table.get(0);
+			List<String> columnNames = _rows.get(0);
 
 			if (!columnNames.contains(columnName)) {
 				throw new RuntimeException(
@@ -83,7 +74,7 @@ public class DefaultTable implements Table {
 
 	@Override
 	public List<String> getRowByIndex(int index) {
-		return _table.get(index);
+		return _rows.get(index);
 	}
 
 	@Override
@@ -91,8 +82,8 @@ public class DefaultTable implements Table {
 		if (_hasRowNames) {
 			int index = 0;
 
-			for (List<String> cellValues : _table) {
-				if (rowName.equals(cellValues.get(0))) {
+			for (List<String> row : _rows) {
+				if (rowName.equals(row.get(0))) {
 					return _getListWithoutTitle(getRowByIndex(index), rowName);
 				}
 
@@ -104,6 +95,10 @@ public class DefaultTable implements Table {
 		}
 
 		throw new RuntimeException("Table does not contain row names");
+	}
+
+	public List<List<String>> getRows() {
+		return _rows;
 	}
 
 	@Override
@@ -118,7 +113,7 @@ public class DefaultTable implements Table {
 	}
 
 	public int getTableSize() {
-		return _table.size();
+		return _rows.size();
 	}
 
 	@Override
@@ -188,6 +183,6 @@ public class DefaultTable implements Table {
 
 	private boolean _hasColumnNames;
 	private boolean _hasRowNames;
-	private List<List<String>> _table;
+	private List<List<String>> _rows;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.odata.entity;
@@ -40,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
@@ -141,12 +131,12 @@ public class EntityModelFieldMapper {
 				resourceBundle);
 		}
 
-		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional =
-			_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizerOptional(
+		SegmentsFieldCustomizer segmentsFieldCustomizer =
+			_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizer(
 				entityModel.getName(), entityField.getName());
 
 		if ((entityFieldType == EntityField.Type.ID) &&
-			!segmentsFieldCustomizerOptional.isPresent()) {
+			(segmentsFieldCustomizer == null)) {
 
 			return Collections.emptyList();
 		}
@@ -154,8 +144,7 @@ public class EntityModelFieldMapper {
 		return Collections.singletonList(
 			_getField(
 				entityField.getName(), _getType(entityField.getType()),
-				portletRequest, resourceBundle,
-				segmentsFieldCustomizerOptional));
+				portletRequest, resourceBundle, segmentsFieldCustomizer));
 	}
 
 	private List<Field> _getComplexFields(
@@ -171,14 +160,12 @@ public class EntityModelFieldMapper {
 
 		entityFieldsMap.forEach(
 			(entityFieldName, entityField) -> {
-				Optional<SegmentsFieldCustomizer>
-					segmentsFieldCustomizerOptional =
-						_segmentsFieldCustomizerRegistry.
-							getSegmentsFieldCustomizerOptional(
-								entityModelName, entityField.getName());
+				SegmentsFieldCustomizer segmentsFieldCustomizer =
+					_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizer(
+						entityModelName, entityField.getName());
 
 				if ((entityField.getType() == EntityField.Type.ID) &&
-					!segmentsFieldCustomizerOptional.isPresent()) {
+					(segmentsFieldCustomizer == null)) {
 
 					return;
 				}
@@ -187,7 +174,7 @@ public class EntityModelFieldMapper {
 					_getField(
 						"customContext/" + entityField.getName(),
 						_getType(entityField.getType()), portletRequest,
-						resourceBundle, segmentsFieldCustomizerOptional));
+						resourceBundle, segmentsFieldCustomizer));
 			});
 
 		return complexFields;
@@ -280,14 +267,11 @@ public class EntityModelFieldMapper {
 	private Field _getField(
 		String fieldName, String fieldType, PortletRequest portletRequest,
 		ResourceBundle resourceBundle,
-		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional) {
+		SegmentsFieldCustomizer segmentsFieldCustomizer) {
 
-		if (segmentsFieldCustomizerOptional.isPresent()) {
-			SegmentsFieldCustomizer segmentsFieldCustomizer =
-				segmentsFieldCustomizerOptional.get();
-
+		if (segmentsFieldCustomizer != null) {
 			return new Field(
-				fieldName,
+				segmentsFieldCustomizer.getIcon(), fieldName,
 				segmentsFieldCustomizer.getLabel(
 					fieldName, resourceBundle.getLocale()),
 				fieldType,

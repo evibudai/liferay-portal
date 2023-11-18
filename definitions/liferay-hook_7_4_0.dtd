@@ -81,7 +81,6 @@ login.form.navigation.post
 login.form.navigation.pre
 logout.events.post
 logout.events.pre
-mail.hook.impl
 my.sites.show.private.sites.with.no.layouts
 my.sites.show.public.sites.with.no.layouts
 my.sites.show.user.private.sites.with.no.layouts
@@ -130,7 +129,6 @@ theme.portlet.decorate.default
 theme.portlet.sharing.default
 theme.shortcut.icon
 time.zones
-upgrade.processes
 user.notification.event.confirmation.enabled
 users.email.address.generator
 users.email.address.required

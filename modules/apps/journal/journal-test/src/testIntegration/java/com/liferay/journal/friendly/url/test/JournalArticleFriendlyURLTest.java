@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.friendly.url.test;
@@ -103,6 +94,42 @@ public class JournalArticleFriendlyURLTest {
 
 		Assert.assertEquals(
 			friendlyURLMap.toString(), 3, friendlyURLMap.size());
+	}
+
+	@Test
+	public void testFriendlyURLAfterUpdate() throws Exception {
+		JournalArticle article = _addJournalArticleWithTitleMap(
+			_getLocalizedMap(
+				RandomTestUtil.randomString(),
+				new Locale[] {LocaleUtil.FRANCE, LocaleUtil.US}));
+
+		Map<Locale, String> friendlyURLMap = article.getFriendlyURLMap();
+
+		friendlyURLMap.put(
+			LocaleUtil.US, friendlyURLMap.get(LocaleUtil.US) + "-edited");
+
+		JournalArticle updatedArticle =
+			_journalArticleLocalService.updateArticle(
+				article.getUserId(), _group.getGroupId(), article.getFolderId(),
+				article.getArticleId(), article.getVersion(),
+				article.getTitleMap(), article.getDescriptionMap(),
+				friendlyURLMap, article.getContent(),
+				article.getDDMTemplateKey(), article.getLayoutUuid(), 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true,
+				article.isIndexable(), article.isSmallImage(), 0,
+				article.getSmallImageSource(), article.getSmallImageURL(), null,
+				null, null,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(friendlyURLMap, updatedArticle.getFriendlyURLMap());
+
+		updatedArticle = _journalArticleLocalService.updateArticle(
+			updatedArticle.getUserId(), updatedArticle.getGroupId(),
+			updatedArticle.getFolderId(), updatedArticle.getArticleId(),
+			updatedArticle.getVersion(), updatedArticle.getContent(),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(friendlyURLMap, updatedArticle.getFriendlyURLMap());
 	}
 
 	@Test

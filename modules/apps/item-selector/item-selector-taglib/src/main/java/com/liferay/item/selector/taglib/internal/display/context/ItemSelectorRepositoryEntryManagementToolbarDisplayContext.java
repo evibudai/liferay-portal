@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.item.selector.taglib.internal.display.context;
 
+import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.display.context.DLUIItemKeys;
-import com.liferay.document.library.portlet.toolbar.contributor.DLPortletToolbarContributor;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
@@ -23,18 +16,24 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.item.selector.taglib.internal.document.library.portlet.toolbar.contributor.DLPortletToolbarContributorRegistryUtil;
 import com.liferay.item.selector.taglib.servlet.taglib.RepositoryEntryBrowserTag;
 import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -69,15 +68,13 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 			repositoryEntryBrowserDisplayContext) {
 
 		_httpServletRequest = httpServletRequest;
-
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_repositoryEntryBrowserDisplayContext =
 			repositoryEntryBrowserDisplayContext;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
-			_liferayPortletRequest, _liferayPortletResponse);
-
+			liferayPortletRequest, liferayPortletResponse);
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
 			liferayPortletRequest);
 	}
@@ -91,9 +88,15 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() {
-		DLPortletToolbarContributor dlPortletToolbarContributor =
-			DLPortletToolbarContributorRegistryUtil.
-				getDLPortletToolbarContributor();
+		PortletToolbarContributor dlPortletToolbarContributor =
+			_dlPortletToolbarContributorSnapshot.get();
+
+		Folder folder = _getFolder();
+
+		if (folder != null) {
+			_liferayPortletRequest.setAttribute(
+				WebKeys.DOCUMENT_LIBRARY_FOLDER, folder);
+		}
 
 		List<Menu> menus = dlPortletToolbarContributor.getPortletTitleMenus(
 			_liferayPortletRequest, _liferayPortletResponse);
@@ -189,8 +192,9 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 						_httpServletRequest, "filter-by-location"));
 			}
 		).addGroup(
+			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
 			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
@@ -224,6 +228,40 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 						_getScopeLabel(scope)));
 			}
 		).build();
+	}
+
+	public List<DropdownItem> getOrderByDropdownItems() {
+		return new DropdownItemList() {
+			{
+				Map<String, String> orderColumnsMap = HashMapBuilder.put(
+					"modifiedDate", "modified-date"
+				).put(
+					"size", "size"
+				).put(
+					"title", "title"
+				).build();
+
+				for (Map.Entry<String, String> orderByColEntry :
+						orderColumnsMap.entrySet()) {
+
+					add(
+						dropdownItem -> {
+							String orderByCol = orderByColEntry.getKey();
+
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setHref(
+								getCurrentSortingURL(), "orderByCol",
+								orderByCol);
+
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									orderByColEntry.getValue()));
+						});
+				}
+			}
+		};
 	}
 
 	public String getOrderByType() {
@@ -342,6 +380,27 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 		return RepositoryEntryBrowserTag.DISPLAY_STYLES;
 	}
 
+	private Folder _getFolder() {
+		long folderId = GetterUtil.getLong(
+			_httpServletRequest.getAttribute(
+				"liferay-item-selector:repository-entry-browser:folderId"));
+
+		if (folderId == DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			return null;
+		}
+
+		Folder folder = null;
+
+		try {
+			folder = DLAppLocalServiceUtil.getFolder(folderId);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return folder;
+	}
+
 	private String _getOrderByCol() {
 		if (_orderByCol != null) {
 			return _orderByCol;
@@ -351,40 +410,6 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 			_httpServletRequest, _portalPreferences);
 
 		return _orderByCol;
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				Map<String, String> orderColumnsMap = HashMapBuilder.put(
-					"modifiedDate", "modified-date"
-				).put(
-					"size", "size"
-				).put(
-					"title", "title"
-				).build();
-
-				for (Map.Entry<String, String> orderByColEntry :
-						orderColumnsMap.entrySet()) {
-
-					add(
-						dropdownItem -> {
-							String orderByCol = orderByColEntry.getKey();
-
-							dropdownItem.setActive(
-								orderByCol.equals(_getOrderByCol()));
-							dropdownItem.setHref(
-								getCurrentSortingURL(), "orderByCol",
-								orderByCol);
-
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest,
-									orderByColEntry.getValue()));
-						});
-				}
-			}
-		};
 	}
 
 	private PortletURL _getPortletURL() {
@@ -412,6 +437,15 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 
 		return _showScopeFilter;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ItemSelectorRepositoryEntryManagementToolbarDisplayContext.class);
+
+	private static final Snapshot<PortletToolbarContributor>
+		_dlPortletToolbarContributorSnapshot = new Snapshot<>(
+			ItemSelectorRepositoryEntryManagementToolbarDisplayContext.class,
+			PortletToolbarContributor.class,
+			"(javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY + ")");
 
 	private final PortletURL _currentURLObj;
 	private final HttpServletRequest _httpServletRequest;

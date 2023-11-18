@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.exportimport.data.handler.test;
@@ -74,6 +65,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -81,7 +73,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
+import com.liferay.portal.kernel.zip.ZipReaderFactory;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -93,7 +85,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -337,23 +328,17 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 				Element missingReferencesElement =
 					missingReferencesElements.get(0);
 
-				List<Element> missingReferenceElements =
-					missingReferencesElement.elements("missing-reference");
-
-				Stream<Element> elementStream =
-					missingReferenceElements.stream();
-
 				Assert.assertEquals(
 					1,
-					elementStream.filter(
+					ListUtil.count(
+						missingReferencesElement.elements("missing-reference"),
 						element ->
 							Objects.equals(
 								element.attributeValue("class-name"),
 								ExportImportClassedModelUtil.getClassName(
 									dlFileEntry)) &&
 							(Long.valueOf(element.attributeValue("class-pk")) ==
-								dlFileEntry.getPrimaryKey())
-					).count());
+								dlFileEntry.getPrimaryKey())));
 			}
 			else {
 				Assert.assertNotNull(fileEntry);
@@ -482,10 +467,14 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		Assert.assertNotNull(dependentDDMTemplate);
 
 		Assert.assertEquals(
-			article.getDDMStructureKey(),
-			dependentDDMStructure.getStructureKey());
+			groupArticle.getDDMStructureId(),
+			dependentDDMStructure.getStructureId());
 		Assert.assertEquals(
 			article.getDDMTemplateKey(), dependentDDMTemplate.getTemplateKey());
+		Assert.assertEquals(
+			companyScopeDependencies,
+			Objects.equals(
+				article.getDDMStructureId(), groupArticle.getDDMStructureId()));
 		Assert.assertEquals(
 			dependentDDMTemplate.getClassPK(),
 			dependentDDMStructure.getStructureId());
@@ -579,7 +568,7 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 			group.getCompanyId(), importedGroup.getGroupId(), parameterMap,
 			ExportImportHelperUtil.getUserIdStrategy(
 				TestPropsValues.getUserId(), userIdStrategyString),
-			ZipReaderFactoryUtil.getZipReader(larFile));
+			_zipReaderFactory.getZipReader(larFile));
 	}
 
 	@Override
@@ -688,5 +677,8 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 	@Inject
 	private JSONFactory _jsonFactory;
+
+	@Inject
+	private ZipReaderFactory _zipReaderFactory;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.opener.onedrive.web.internal.servlet;
@@ -30,8 +21,6 @@ import java.io.IOException;
 
 import java.net.SocketException;
 
-import java.util.Optional;
-
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +33,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Cristina González
  */
 @Component(
-	immediate = true,
 	property = {
 		"osgi.http.whiteboard.servlet.name=com.liferay.document.library.opener.onedrive.web.internal.servlet.OneDriveOAuth2Servlet",
 		"osgi.http.whiteboard.servlet.pattern=/document_library/onedrive/oauth2",
@@ -60,13 +48,13 @@ public class OneDriveOAuth2Servlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Optional<OAuth2State> oAuth2StateOptional =
-			OAuth2StateUtil.getOAuth2StateOptional(
-				_portal.getOriginalServletRequest(httpServletRequest));
+		OAuth2State oAuth2State = OAuth2StateUtil.getOAuth2State(
+			_portal.getOriginalServletRequest(httpServletRequest));
 
-		OAuth2State oAuth2State = oAuth2StateOptional.orElseThrow(
-			() -> new IllegalStateException(
-				"Authorization state is not initialized"));
+		if (oAuth2State == null) {
+			throw new IllegalStateException(
+				"Authorization state is not initialized");
+		}
 
 		if (!OAuth2StateUtil.isValid(oAuth2State, httpServletRequest)) {
 			OAuth2StateUtil.cleanUp(httpServletRequest);

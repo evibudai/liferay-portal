@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.data.provider.instance.internal;
@@ -19,26 +10,32 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Leonardo Barros
@@ -52,6 +49,19 @@ public class WorkflowDefinitionsDataProviderTest {
 
 	@BeforeClass
 	public static void setUpClass() {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+
+		_workflowDefinitionManagerServiceRegistration =
+			bundleContext.registerService(
+				WorkflowDefinitionManager.class, _workflowDefinitionManager,
+				null);
+
 		_workflowDefinitionsDataProvider =
 			new WorkflowDefinitionsDataProvider();
 
@@ -63,6 +73,12 @@ public class WorkflowDefinitionsDataProviderTest {
 
 		ReflectionTestUtil.setFieldValue(
 			_workflowDefinitionsDataProvider, "_language", _language);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_frameworkUtilMockedStatic.close();
+		_workflowDefinitionManagerServiceRegistration.unregister();
 	}
 
 	@Test(expected = UnsupportedOperationException.class)
@@ -80,9 +96,6 @@ public class WorkflowDefinitionsDataProviderTest {
 		).withCompanyId(
 			1L
 		).build();
-
-		_workflowDefinitionsDataProvider.workflowDefinitionManager =
-			_workflowDefinitionManager;
 
 		WorkflowDefinition workflowDefinition1 = Mockito.mock(
 			WorkflowDefinition.class);
@@ -108,21 +121,21 @@ public class WorkflowDefinitionsDataProviderTest {
 
 		Assert.assertTrue(ddmDataProviderResponse.hasOutput("Default-Output"));
 
-		Optional<List<KeyValuePair>> optional =
-			ddmDataProviderResponse.getOutputOptional(
-				"Default-Output", List.class);
+		List<KeyValuePair> keyValuePairs = ddmDataProviderResponse.getOutput(
+			"Default-Output", List.class);
 
-		Assert.assertTrue(optional.isPresent());
+		Assert.assertNotNull(keyValuePairs);
 
-		List<KeyValuePair> keyValuePairs = new ArrayList<KeyValuePair>() {
-			{
-				add(new KeyValuePair("no-workflow", "No Workflow"));
-				add(new KeyValuePair("definition1", "Definition 1"));
-				add(new KeyValuePair("definition2", "Definition 2"));
-			}
-		};
+		List<KeyValuePair> expectedKeyValuePairs =
+			new ArrayList<KeyValuePair>() {
+				{
+					add(new KeyValuePair("no-workflow", "No Workflow"));
+					add(new KeyValuePair("definition1", "Definition 1"));
+					add(new KeyValuePair("definition2", "Definition 2"));
+				}
+			};
 
-		Assert.assertEquals(keyValuePairs, optional.get());
+		Assert.assertEquals(expectedKeyValuePairs, keyValuePairs);
 	}
 
 	@Test
@@ -139,19 +152,19 @@ public class WorkflowDefinitionsDataProviderTest {
 
 		Assert.assertTrue(ddmDataProviderResponse.hasOutput("Default-Output"));
 
-		Optional<List<KeyValuePair>> optional =
-			ddmDataProviderResponse.getOutputOptional(
-				"Default-Output", List.class);
+		List<KeyValuePair> keyValuePairs = ddmDataProviderResponse.getOutput(
+			"Default-Output", List.class);
 
-		Assert.assertTrue(optional.isPresent());
+		Assert.assertNotNull(keyValuePairs);
 
-		List<KeyValuePair> keyValuePairs = new ArrayList<KeyValuePair>() {
-			{
-				add(new KeyValuePair("no-workflow", "No Workflow"));
-			}
-		};
+		List<KeyValuePair> expectedKeyValuePairs =
+			new ArrayList<KeyValuePair>() {
+				{
+					add(new KeyValuePair("no-workflow", "No Workflow"));
+				}
+			};
 
-		Assert.assertEquals(keyValuePairs, optional.get());
+		Assert.assertEquals(expectedKeyValuePairs, keyValuePairs);
 	}
 
 	@Test(expected = DDMDataProviderException.class)
@@ -164,9 +177,6 @@ public class WorkflowDefinitionsDataProviderTest {
 		).withCompanyId(
 			1L
 		).build();
-
-		_workflowDefinitionsDataProvider.workflowDefinitionManager =
-			_workflowDefinitionManager;
 
 		Mockito.when(
 			_workflowDefinitionManager.getActiveWorkflowDefinitions(
@@ -194,13 +204,15 @@ public class WorkflowDefinitionsDataProviderTest {
 		);
 	}
 
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 	private static final Language _language = Mockito.mock(Language.class);
 	private static final Locale _locale = new Locale("en", "US");
-	private static WorkflowDefinitionsDataProvider
-		_workflowDefinitionsDataProvider = Mockito.mock(
-			WorkflowDefinitionsDataProvider.class);
-
-	private final WorkflowDefinitionManager _workflowDefinitionManager =
+	private static final WorkflowDefinitionManager _workflowDefinitionManager =
 		Mockito.mock(WorkflowDefinitionManager.class);
+	private static ServiceRegistration<WorkflowDefinitionManager>
+		_workflowDefinitionManagerServiceRegistration;
+	private static WorkflowDefinitionsDataProvider
+		_workflowDefinitionsDataProvider;
 
 }

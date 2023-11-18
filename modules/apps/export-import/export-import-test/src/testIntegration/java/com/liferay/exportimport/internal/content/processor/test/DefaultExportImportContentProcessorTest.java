@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.content.processor.test;
@@ -103,7 +94,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -219,7 +209,6 @@ public class DefaultExportImportContentProcessorTest {
 			_stagingPublicLayout.getPlid(), _livePublicLayout.getPlid());
 
 		_portletDataContextImport.setPlid(_livePublicLayout.getPlid());
-
 		_portletDataContextImport.setSourceGroupId(_stagingGroup.getGroupId());
 
 		rootElement.addElement("entry");
@@ -584,6 +573,31 @@ public class DefaultExportImportContentProcessorTest {
 	}
 
 	@Test
+	public void testExportUUIDDLReference() throws Exception {
+		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
+			null, TestPropsValues.getUserId(), _stagingGroup.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			"00000000-0000-0000-0000-000000000000.txt", ContentTypes.TEXT_PLAIN,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		ThumbnailCapability thumbnailCapability =
+			fileEntry.getRepositoryCapability(ThumbnailCapability.class);
+
+		fileEntry = thumbnailCapability.setLargeImageId(
+			fileEntry, fileEntry.getFileEntryId());
+
+		_portletDataContextExport.setZipWriter(new TestReaderWriter());
+
+		String content = _replaceParameters(
+			_getContent("dl_references.txt"), fileEntry);
+
+		_exportImportContentProcessor.validateContentReferences(
+			_stagingGroup.getGroupId(), content);
+	}
+
+	@Test
 	public void testImportDLReferences1() throws Exception {
 		_testImportDLReferences(false);
 	}
@@ -877,13 +891,11 @@ public class DefaultExportImportContentProcessorTest {
 		Pattern pattern = Pattern.compile(
 			String.format("/%s/%d/\\d+\\.\\d+$", className, classPK));
 
-		Stream<String> entriesStream = entries.stream();
-
 		Assert.assertTrue(
 			String.format(
 				"%s does not contain a binary entry for %s with primary key %s",
 				entries.toString(), className, classPK),
-			entriesStream.anyMatch(pattern.asPredicate()));
+			ListUtil.exists(entries, pattern.asPredicate()));
 	}
 
 	private void _assertContainsPathWithStopCharacters(
@@ -909,13 +921,11 @@ public class DefaultExportImportContentProcessorTest {
 
 		String expected = String.format("/%s/%d.xml", className, classPK);
 
-		Stream<String> entriesStream = entries.stream();
-
 		Assert.assertTrue(
 			String.format(
 				"%s does not contain an entry for %s with primary key %s",
 				entries.toString(), className, classPK),
-			entriesStream.anyMatch(entry -> entry.endsWith(expected)));
+			ListUtil.exists(entries, entry -> entry.endsWith(expected)));
 	}
 
 	private void _assertLinksToLayouts(

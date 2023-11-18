@@ -2,7 +2,7 @@
 definition {
 
 	property app.server.bundles.size = "1";
-	property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+	property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 	property databases.size = "1";
 	property minimum.slave.ram = "24";
 	property portal.release = "true";
@@ -15,27 +15,27 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Staging Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Staging Blogs Page",
 			widgetName = "Blogs");
 
 		Staging.remoteStagingSetUpViaJson(
 			groupName = "Site Name",
-			remotePort = "9080");
+			remotePort = 9080);
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -46,9 +46,10 @@ definition {
 	}
 
 	@description = "This ensures that the friendlyURL in Blogs can be published when remote staging is enabled."
-	@priority = "5"
+	@priority = 5
 	test CanPublishFriendlyURL {
-		property test.name.skip.portal.instance = "BlogsFriendlyURLRemoteStaging#CanPublishFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -100,9 +101,10 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL in Blogs can be removed and published when remote staging is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanPublishRemovedOldFriendlyURL {
-		property test.name.skip.portal.instance = "BlogsFriendlyURLRemoteStaging#CanPublishRemovedOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -158,9 +160,10 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL in Blogs can be restored and published when remote staging is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanPublishRestoredOldFriendlyURL {
-		property test.name.skip.portal.instance = "BlogsFriendlyURLRemoteStaging#CanPublishRestoredOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",

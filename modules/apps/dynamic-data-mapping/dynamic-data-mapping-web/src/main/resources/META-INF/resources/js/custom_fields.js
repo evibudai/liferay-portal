@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -358,8 +349,7 @@ AUI.add(
 						'0_json': JSON.stringify(criterionJSON),
 						'1_json': JSON.stringify(criterionJSON),
 						'2_json': JSON.stringify(uploadCriterionJSON),
-						'criteria':
-							'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion',
+						'criteria': 'file',
 						'itemSelectedEventName':
 							portletNamespace + 'selectDocumentLibrary',
 						'p_p_id': Liferay.PortletKeys.ITEM_SELECTOR,
@@ -531,9 +521,86 @@ AUI.add(
 			},
 		});
 
+		const IntegerCellEditor = A.Component.create({
+			EXTENDS: A.TextCellEditor,
+
+			NAME: 'text-cell-editor',
+
+			prototype: {
+				ELEMENT_TEMPLATE: '<input type="text" />',
+
+				getElementsValue() {
+					const instance = this;
+
+					let retVal;
+
+					const input = instance.get('boundingBox').one('input');
+
+					if (input) {
+						const val = input.val();
+
+						if (/^[+-]?(\d+)*$/.test(val) || val === '') {
+							retVal = val;
+						}
+					}
+
+					if (retVal) {
+						return retVal;
+					}
+					else {
+						instance.fire('save', {
+							newVal: '',
+							prevVal: retVal,
+						});
+					}
+				},
+			},
+		});
+
+		const NumberCellEditor = A.Component.create({
+			EXTENDS: A.TextCellEditor,
+
+			NAME: 'text-cell-editor',
+
+			prototype: {
+				ELEMENT_TEMPLATE: '<input type="text" />',
+
+				getElementsValue() {
+					const instance = this;
+
+					let retVal;
+
+					const input = instance.get('boundingBox').one('input');
+
+					if (input) {
+						const val = input.val();
+
+						if (/^[+-]?(\d+)([.,]\d+)*$/.test(val) || val === '') {
+							retVal = val;
+						}
+					}
+
+					if (retVal) {
+						return retVal;
+					}
+					else {
+						instance.fire('save', {
+							newVal: '',
+							prevVal: retVal,
+						});
+					}
+				},
+			},
+		});
+
 		Liferay.FormBuilder.CUSTOM_CELL_EDITORS = {};
 
-		const customCellEditors = [ColorCellEditor, DLFileEntryCellEditor];
+		const customCellEditors = [
+			ColorCellEditor,
+			DLFileEntryCellEditor,
+			IntegerCellEditor,
+			NumberCellEditor,
+		];
 
 		customCellEditors.forEach((item) => {
 			Liferay.FormBuilder.CUSTOM_CELL_EDITORS[item.NAME] = item;
@@ -1451,6 +1518,33 @@ AUI.add(
 			EXTENDS: A.FormBuilderTextField,
 
 			NAME: 'ddm-decimal',
+
+			prototype: {
+				getPropertyModel() {
+					const instance = this;
+
+					const model = DDMDecimalField.superclass.getPropertyModel.apply(
+						instance,
+						arguments
+					);
+
+					model.forEach((item, index, collection) => {
+						const attributeName = item.attributeName;
+
+						if (attributeName === 'predefinedValue') {
+							collection[index] = {
+								attributeName,
+								editor: new NumberCellEditor({
+									strings: editorLocalizedStrings,
+								}),
+								name: Liferay.Language.get('predefined-value'),
+							};
+						}
+					});
+
+					return model;
+				},
+			},
 		});
 
 		const DDMDocumentLibraryField = A.Component.create({
@@ -1623,6 +1717,33 @@ AUI.add(
 			EXTENDS: A.FormBuilderTextField,
 
 			NAME: 'ddm-integer',
+
+			prototype: {
+				getPropertyModel() {
+					const instance = this;
+
+					const model = DDMIntegerField.superclass.getPropertyModel.apply(
+						instance,
+						arguments
+					);
+
+					model.forEach((item, index, collection) => {
+						const attributeName = item.attributeName;
+
+						if (attributeName === 'predefinedValue') {
+							collection[index] = {
+								attributeName,
+								editor: new IntegerCellEditor({
+									strings: editorLocalizedStrings,
+								}),
+								name: Liferay.Language.get('predefined-value'),
+							};
+						}
+					});
+
+					return model;
+				},
+			},
 		});
 
 		const DDMNumberField = A.Component.create({
@@ -1639,6 +1760,33 @@ AUI.add(
 			EXTENDS: A.FormBuilderTextField,
 
 			NAME: 'ddm-number',
+
+			prototype: {
+				getPropertyModel() {
+					const instance = this;
+
+					const model = DDMIntegerField.superclass.getPropertyModel.apply(
+						instance,
+						arguments
+					);
+
+					model.forEach((item, index, collection) => {
+						const attributeName = item.attributeName;
+
+						if (attributeName === 'predefinedValue') {
+							collection[index] = {
+								attributeName,
+								editor: new NumberCellEditor({
+									strings: editorLocalizedStrings,
+								}),
+								name: Liferay.Language.get('predefined-value'),
+							};
+						}
+					});
+
+					return model;
+				},
+			},
 		});
 
 		const DDMParagraphField = A.Component.create({

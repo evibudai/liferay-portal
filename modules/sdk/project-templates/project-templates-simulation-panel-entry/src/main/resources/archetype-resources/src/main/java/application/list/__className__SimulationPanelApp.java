@@ -23,7 +23,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author ${author}
  */
 @Component(
-	immediate = true,
 	property = {
 		"panel.app.order:Integer=500",
 		"panel.category.key=" + ProductNavigationSimulationConstants.SIMULATION_PANEL_CATEGORY_KEY
@@ -63,6 +62,26 @@ public class ${className}SimulationPanelApp extends BaseJSPPanelApp {
 	}
 
 	@Override
+#if (${newTemplate.equals("true")})
+	public Portlet getPortlet() {
+		return _portlet;
+	}
+
+	@Override
+	protected ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Reference(
+		target = "(osgi.web.symbolicname=${artifactId})"
+	)
+	private ServletContext _servletContext;
+
+	@Reference(
+		target = "(javax.portlet.name=" + ProductNavigationSimulationPortletKeys.PRODUCT_NAVIGATION_SIMULATION + ")"
+	)
+	private Portlet _portlet;
+#else
 	@Reference(
 		target = "(javax.portlet.name=" + ProductNavigationSimulationPortletKeys.PRODUCT_NAVIGATION_SIMULATION + ")",
 		unbind = "-"
@@ -71,7 +90,6 @@ public class ${className}SimulationPanelApp extends BaseJSPPanelApp {
 		super.setPortlet(portlet);
 	}
 
-	@Override
 	@Reference(
 		target = "(osgi.web.symbolicname=${artifactId})",
 		unbind = "-"
@@ -79,5 +97,5 @@ public class ${className}SimulationPanelApp extends BaseJSPPanelApp {
 	public void setServletContext(ServletContext servletContext) {
 		super.setServletContext(servletContext);
 	}
-
+#end
 }

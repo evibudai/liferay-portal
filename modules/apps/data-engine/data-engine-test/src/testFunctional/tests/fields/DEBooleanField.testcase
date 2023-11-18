@@ -10,15 +10,15 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,7 +27,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be created."
-	@priority = "5"
+	@priority = 5
 	test CanBeCreated {
 		property portal.acceptance = "true";
 
@@ -49,7 +49,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be deleted."
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		property portal.acceptance = "true";
 
@@ -72,8 +72,12 @@ definition {
 		WebContentNavigator.gotoEditStructure(structureName = "Boolean Structure");
 
 		Click(
+			key_fieldLabel = "Boolean",
+			locator1 = "Checkbox#CHECKBOX_LABEL");
+
+		Click(
 			key_text = "Boolean",
-			locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+			locator1 = "Icon#SELECTED_FORM_FIELD_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Delete");
 
@@ -82,10 +86,14 @@ definition {
 		WebContentNavigator.gotoEditStructure(structureName = "Boolean Structure");
 
 		DataEngine.assertFieldNotPresent(fieldFieldLabel = "Boolean");
+
+		AssertElementNotPresent(
+			key_fieldLabel = "Boolean",
+			locator1 = "Checkbox#CHECKBOX_LABEL");
 	}
 
 	@description = "Verify that a structure with the boolean field can be duplicated."
-	@priority = "5"
+	@priority = 5
 	test CanBeDuplicated {
 		property portal.acceptance = "true";
 
@@ -119,7 +127,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be edited."
-	@priority = "5"
+	@priority = 5
 	test CanBeEdited {
 		property portal.acceptance = "true";
 
@@ -149,10 +157,8 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be Required."
-	@priority = "5"
+	@priority = 5
 	test CanBeRequired {
-		property portal.acceptance = "quarantine";
-
 		NavItem.gotoStructures();
 
 		WebContentStructures.addCP(structureName = "Structure 1");
@@ -168,6 +174,10 @@ definition {
 		Check.checkToggleSwitch(
 			checkboxName = "Required Field",
 			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		WaitForVisible(
+			key_fieldFieldLabel = "Boolean",
+			locator1 = "Icon#ASTERISK_DATE_FIELD");
 
 		WebContentStructures.saveCP();
 
@@ -195,7 +205,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be set to show as a switch."
-	@priority = "5"
+	@priority = 5
 	test CanBeSetToShowAsASwitch {
 		property portal.acceptance = "true";
 
@@ -235,7 +245,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with more than one boolean field can be save and if the entries are stored correctly."
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedAndCheckEntries {
 		property portal.acceptance = "true";
 
@@ -250,10 +260,6 @@ definition {
 		DEBuilder.addField(
 			fieldLabel = "Boolean 2",
 			fieldName = "Boolean");
-
-		FormFields.viewBooleanField(fieldValue = "Boolean 1");
-
-		FormFields.viewBooleanField(fieldValue = "Boolean 2");
 
 		Click(locator1 = "DataEngineBuilder#FIELD_BODY");
 
@@ -287,7 +293,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field having a help text can be added."
-	@priority = "5"
+	@priority = 5
 	test HelpTextCanBeAdded {
 		property portal.acceptance = "true";
 
@@ -325,7 +331,7 @@ definition {
 	}
 
 	@description = "Verify that the boolean field can have its label edited."
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeEdited {
 		property portal.acceptance = "true";
 
@@ -357,7 +363,7 @@ definition {
 	}
 
 	@description = "Verify that the boolean field reference can be edited."
-	@priority = "5"
+	@priority = 5
 	test ReferenceCanBeEdited {
 		property portal.acceptance = "true";
 

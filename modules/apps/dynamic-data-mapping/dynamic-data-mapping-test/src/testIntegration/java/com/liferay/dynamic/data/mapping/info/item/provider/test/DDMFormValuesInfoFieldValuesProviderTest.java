@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.info.item.provider.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFieldValuesProvider;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
@@ -96,7 +87,8 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
-			ddmFormField, _ddmFormValuesToFieldsConverter,
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter,
 			JSONUtil.putAll(
 				expectedKey1, expectedKey2
 			).toString(),
@@ -128,8 +120,9 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 			DDMFormFieldTypeConstants.RADIO);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
-			ddmFormField, _ddmFormValuesToFieldsConverter, expectedKey,
-			_group.getGroupId(), _journalConverter);
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, expectedKey, _group.getGroupId(),
+			_journalConverter);
 
 		_assertGetInfoFieldValues(
 			ddmFormField.getName(), journalArticle,
@@ -154,7 +147,8 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 			DDMFormFieldTypeConstants.RADIO);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
-			ddmFormField, _ddmFormValuesToFieldsConverter, StringPool.BLANK,
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, StringPool.BLANK,
 			_group.getGroupId(), _journalConverter);
 
 		_assertGetInfoFieldValues(
@@ -179,7 +173,8 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 			DDMFormFieldTypeConstants.SELECT);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
-			ddmFormField, _ddmFormValuesToFieldsConverter,
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter,
 			JSONUtil.put(
 				expectedKey
 			).toString(),
@@ -208,7 +203,8 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 			DDMFormFieldTypeConstants.SELECT);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
-			ddmFormField, _ddmFormValuesToFieldsConverter, StringPool.BLANK,
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, StringPool.BLANK,
 			_group.getGroupId(), _journalConverter);
 
 		_assertGetInfoFieldValues(
@@ -248,9 +244,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 
 		List<InfoFieldValue<InfoLocalizedValue<Object>>> infoFieldValues =
 			_ddmFormValuesInfoFieldValuesProvider.getInfoFieldValues(
-				journalArticle,
-				_ddmBeanTranslator.translate(
-					journalArticle.getDDMFormValues()));
+				journalArticle, journalArticle.getDDMFormValues());
 
 		Assert.assertEquals(
 			infoFieldValues.toString(), 1, infoFieldValues.size());
@@ -269,8 +263,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 	private DDMFormField _createDDMFormField(
 		boolean multiple, Map<String, String> optionsMap, String type) {
 
-		DDMFormField ddmFormField = new DDMFormField(
-			RandomTestUtil.randomString(10), type);
+		DDMFormField ddmFormField = new DDMFormField("name", type);
 
 		ddmFormField.setDataType("text");
 		ddmFormField.setIndexType("text");
@@ -299,7 +292,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 	}
 
 	@Inject
-	private DDMBeanTranslator _ddmBeanTranslator;
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
 
 	@Inject
 	private DDMFormValuesInfoFieldValuesProvider

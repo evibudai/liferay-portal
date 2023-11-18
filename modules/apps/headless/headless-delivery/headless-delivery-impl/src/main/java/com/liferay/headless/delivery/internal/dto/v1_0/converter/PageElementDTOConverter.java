@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.converter;
 
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
-import com.liferay.headless.delivery.internal.dto.v1_0.mapper.LayoutStructureItemMapperRegistry;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.PageElementUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
@@ -23,10 +13,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
-import java.util.Optional;
-
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
@@ -58,30 +45,25 @@ public class PageElementDTOConverter
 					layoutStructureItem.getItemId());
 		}
 
-		long groupId = GetterUtil.getLong(groupIdObject);
+		LayoutStructure layoutStructure =
+			(LayoutStructure)dtoConverterContext.getAttribute(
+				"layoutStructure");
 
-		LayoutStructure layoutStructure = Optional.ofNullable(
-			dtoConverterContext.getAttribute("layoutStructure")
-		).map(
-			LayoutStructure.class::cast
-		).orElseThrow(
-			() -> new IllegalArgumentException(
+		if (layoutStructure == null) {
+			throw new IllegalArgumentException(
 				"Layout structure is not defined for layout structure item " +
-					layoutStructureItem.getItemId())
-		);
+					layoutStructureItem.getItemId());
+		}
+
+		long groupId = GetterUtil.getLong(groupIdObject);
 		boolean saveInlineContent = GetterUtil.getBoolean(
 			dtoConverterContext.getAttribute("saveInlineContent"), true);
 		boolean saveMappingConfiguration = GetterUtil.getBoolean(
 			dtoConverterContext.getAttribute("saveMappingConfiguration"), true);
 
 		return PageElementUtil.toPageElement(
-			groupId, layoutStructure, layoutStructureItem,
-			_layoutStructureItemMapperRegistry, saveInlineContent,
+			groupId, layoutStructure, layoutStructureItem, saveInlineContent,
 			saveMappingConfiguration);
 	}
-
-	@Reference
-	private LayoutStructureItemMapperRegistry
-		_layoutStructureItemMapperRegistry;
 
 }

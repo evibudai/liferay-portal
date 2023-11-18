@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.scheduler.multiple.internal;
@@ -196,31 +187,6 @@ public class ClusterSchedulerEngine
 
 	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
 	@Override
-	public void pause(String groupName, StorageType storageType)
-		throws SchedulerException {
-
-		boolean memoryClusteredSlaveJob = _isMemoryClusteredSlaveJob(
-			storageType);
-
-		_readLock.lock();
-
-		try {
-			if (memoryClusteredSlaveJob) {
-				_updateMemoryClusteredJobs(groupName, TriggerState.PAUSED);
-			}
-			else {
-				_schedulerEngine.pause(groupName, storageType);
-			}
-		}
-		finally {
-			_readLock.unlock();
-		}
-
-		setClusterableThreadLocal(storageType);
-	}
-
-	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
-	@Override
 	public void pause(String jobName, String groupName, StorageType storageType)
 		throws SchedulerException {
 
@@ -236,31 +202,6 @@ public class ClusterSchedulerEngine
 			}
 			else {
 				_schedulerEngine.pause(jobName, groupName, storageType);
-			}
-		}
-		finally {
-			_readLock.unlock();
-		}
-
-		setClusterableThreadLocal(storageType);
-	}
-
-	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
-	@Override
-	public void resume(String groupName, StorageType storageType)
-		throws SchedulerException {
-
-		boolean memoryClusteredSlaveJob = _isMemoryClusteredSlaveJob(
-			storageType);
-
-		_readLock.lock();
-
-		try {
-			if (memoryClusteredSlaveJob) {
-				_updateMemoryClusteredJobs(groupName, TriggerState.NORMAL);
-			}
-			else {
-				_schedulerEngine.resume(groupName, storageType);
 			}
 		}
 		finally {
@@ -295,6 +236,15 @@ public class ClusterSchedulerEngine
 		}
 
 		setClusterableThreadLocal(storageType);
+	}
+
+	@Override
+	public void run(
+			long companyId, String jobName, String groupName,
+			StorageType storageType)
+		throws SchedulerException {
+
+		_schedulerEngine.run(companyId, jobName, groupName, storageType);
 	}
 
 	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
@@ -422,107 +372,6 @@ public class ClusterSchedulerEngine
 		_schedulerEngine.start();
 
 		_portalReady = true;
-	}
-
-	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
-	@Override
-	public void unschedule(String groupName, StorageType storageType)
-		throws SchedulerException {
-
-		boolean memoryClusteredSlaveJob = _isMemoryClusteredSlaveJob(
-			storageType);
-
-		_readLock.lock();
-
-		try {
-			if (memoryClusteredSlaveJob) {
-				_removeMemoryClusteredJobs(groupName);
-			}
-			else {
-				_schedulerEngine.unschedule(groupName, storageType);
-			}
-		}
-		finally {
-			_readLock.unlock();
-		}
-
-		setClusterableThreadLocal(storageType);
-	}
-
-	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
-	@Override
-	public void unschedule(
-			String jobName, String groupName, StorageType storageType)
-		throws SchedulerException {
-
-		boolean memoryClusteredSlaveJob = _isMemoryClusteredSlaveJob(
-			storageType);
-
-		_readLock.lock();
-
-		try {
-			if (memoryClusteredSlaveJob) {
-				_memoryClusteredJobs.remove(_getFullName(jobName, groupName));
-			}
-			else {
-				_schedulerEngine.unschedule(jobName, groupName, storageType);
-			}
-		}
-		finally {
-			_readLock.unlock();
-		}
-
-		setClusterableThreadLocal(storageType);
-	}
-
-	@Clusterable(acceptor = SchedulerClusterInvokeAcceptor.class)
-	@Override
-	public void update(Trigger trigger, StorageType storageType)
-		throws SchedulerException {
-
-		String jobName = trigger.getJobName();
-		String groupName = trigger.getGroupName();
-
-		boolean memoryClusteredSlaveJob = _isMemoryClusteredSlaveJob(
-			storageType);
-
-		_readLock.lock();
-
-		try {
-			if (memoryClusteredSlaveJob) {
-				boolean updated = false;
-
-				for (ObjectValuePair<SchedulerResponse, TriggerState>
-						memoryClusteredJob : _memoryClusteredJobs.values()) {
-
-					SchedulerResponse schedulerResponse =
-						memoryClusteredJob.getKey();
-
-					if (jobName.equals(schedulerResponse.getJobName()) &&
-						groupName.equals(schedulerResponse.getGroupName())) {
-
-						schedulerResponse.setTrigger(trigger);
-
-						updated = true;
-
-						break;
-					}
-				}
-
-				if (!updated) {
-					throw new SchedulerException(
-						"Unable to update trigger for memory clustered job");
-				}
-			}
-			else {
-				_schedulerEngine.update(trigger, storageType);
-			}
-		}
-		finally {
-			_readLock.unlock();
-		}
-
-		setClusterableThreadLocal(storageType);
 	}
 
 	@Override
@@ -794,20 +643,6 @@ public class ClusterSchedulerEngine
 
 		if (memoryClusteredJob != null) {
 			memoryClusteredJob.setValue(triggerState);
-		}
-	}
-
-	private void _updateMemoryClusteredJobs(
-		String groupName, TriggerState triggerState) {
-
-		for (ObjectValuePair<SchedulerResponse, TriggerState>
-				memoryClusteredJob : _memoryClusteredJobs.values()) {
-
-			SchedulerResponse schedulerResponse = memoryClusteredJob.getKey();
-
-			if (groupName.equals(schedulerResponse.getGroupName())) {
-				memoryClusteredJob.setValue(triggerState);
-			}
 		}
 	}
 

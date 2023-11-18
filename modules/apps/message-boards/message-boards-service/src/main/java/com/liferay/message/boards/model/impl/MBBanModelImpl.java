@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.model.impl;
@@ -235,71 +226,87 @@ public class MBBanModelImpl extends BaseModelImpl<MBBan> implements MBBanModel {
 	}
 
 	public Map<String, Function<MBBan, Object>> getAttributeGetterFunctions() {
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<MBBan, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<MBBan, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<MBBan, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<MBBan, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<MBBan, Object>>();
-		Map<String, BiConsumer<MBBan, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<MBBan, ?>>();
+		private static final Map<String, Function<MBBan, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", MBBan::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion", (BiConsumer<MBBan, Long>)MBBan::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", MBBan::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<MBBan, Long>)MBBan::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", MBBan::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<MBBan, String>)MBBan::setUuid);
-		attributeGetterFunctions.put("banId", MBBan::getBanId);
-		attributeSetterBiConsumers.put(
-			"banId", (BiConsumer<MBBan, Long>)MBBan::setBanId);
-		attributeGetterFunctions.put("groupId", MBBan::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId", (BiConsumer<MBBan, Long>)MBBan::setGroupId);
-		attributeGetterFunctions.put("companyId", MBBan::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<MBBan, Long>)MBBan::setCompanyId);
-		attributeGetterFunctions.put("userId", MBBan::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<MBBan, Long>)MBBan::setUserId);
-		attributeGetterFunctions.put("userName", MBBan::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<MBBan, String>)MBBan::setUserName);
-		attributeGetterFunctions.put("createDate", MBBan::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate", (BiConsumer<MBBan, Date>)MBBan::setCreateDate);
-		attributeGetterFunctions.put("modifiedDate", MBBan::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate", (BiConsumer<MBBan, Date>)MBBan::setModifiedDate);
-		attributeGetterFunctions.put("banUserId", MBBan::getBanUserId);
-		attributeSetterBiConsumers.put(
-			"banUserId", (BiConsumer<MBBan, Long>)MBBan::setBanUserId);
-		attributeGetterFunctions.put(
-			"lastPublishDate", MBBan::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<MBBan, Date>)MBBan::setLastPublishDate);
+		static {
+			Map<String, Function<MBBan, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<MBBan, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("mvccVersion", MBBan::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", MBBan::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", MBBan::getUuid);
+			attributeGetterFunctions.put("banId", MBBan::getBanId);
+			attributeGetterFunctions.put("groupId", MBBan::getGroupId);
+			attributeGetterFunctions.put("companyId", MBBan::getCompanyId);
+			attributeGetterFunctions.put("userId", MBBan::getUserId);
+			attributeGetterFunctions.put("userName", MBBan::getUserName);
+			attributeGetterFunctions.put("createDate", MBBan::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", MBBan::getModifiedDate);
+			attributeGetterFunctions.put("banUserId", MBBan::getBanUserId);
+			attributeGetterFunctions.put(
+				"lastPublishDate", MBBan::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<MBBan, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<MBBan, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<MBBan, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion", (BiConsumer<MBBan, Long>)MBBan::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<MBBan, Long>)MBBan::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<MBBan, String>)MBBan::setUuid);
+			attributeSetterBiConsumers.put(
+				"banId", (BiConsumer<MBBan, Long>)MBBan::setBanId);
+			attributeSetterBiConsumers.put(
+				"groupId", (BiConsumer<MBBan, Long>)MBBan::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId", (BiConsumer<MBBan, Long>)MBBan::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<MBBan, Long>)MBBan::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName", (BiConsumer<MBBan, String>)MBBan::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate", (BiConsumer<MBBan, Date>)MBBan::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<MBBan, Date>)MBBan::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"banUserId", (BiConsumer<MBBan, Long>)MBBan::setBanUserId);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<MBBan, Date>)MBBan::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -889,8 +896,9 @@ public class MBBanModelImpl extends BaseModelImpl<MBBan> implements MBBanModel {
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<MBBan, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<MBBan, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

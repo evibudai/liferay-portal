@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.exportimport.service.impl;
@@ -43,10 +34,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.exportimport.service.base.ExportImportConfigurationLocalServiceBaseImpl;
-import com.liferay.trash.kernel.exception.RestoreEntryException;
-import com.liferay.trash.kernel.exception.TrashEntryException;
-import com.liferay.trash.kernel.model.TrashEntry;
-import com.liferay.trash.kernel.service.TrashEntryLocalService;
 
 import java.io.Serializable;
 
@@ -298,27 +285,8 @@ public class ExportImportConfigurationLocalServiceImpl
 			long userId, long exportImportConfigurationId)
 		throws PortalException {
 
-		ExportImportConfiguration exportImportConfiguration =
-			exportImportConfigurationPersistence.findByPrimaryKey(
-				exportImportConfigurationId);
-
-		if (exportImportConfiguration.isInTrash()) {
-			throw new TrashEntryException();
-		}
-
-		int oldStatus = exportImportConfiguration.getStatus();
-
-		exportImportConfiguration = updateStatus(
-			userId, exportImportConfiguration.getExportImportConfigurationId(),
-			WorkflowConstants.STATUS_IN_TRASH);
-
-		_trashEntryLocalService.addTrashEntry(
-			userId, exportImportConfiguration.getGroupId(),
-			ExportImportConfiguration.class.getName(),
-			exportImportConfiguration.getExportImportConfigurationId(), null,
-			null, oldStatus, null, null);
-
-		return exportImportConfiguration;
+		return exportImportConfigurationPersistence.findByPrimaryKey(
+			exportImportConfigurationId);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -327,28 +295,8 @@ public class ExportImportConfigurationLocalServiceImpl
 			long userId, long exportImportConfigurationId)
 		throws PortalException {
 
-		ExportImportConfiguration exportImportConfiguration =
-			exportImportConfigurationPersistence.findByPrimaryKey(
-				exportImportConfigurationId);
-
-		if (!exportImportConfiguration.isInTrash()) {
-			throw new RestoreEntryException(
-				RestoreEntryException.INVALID_STATUS);
-		}
-
-		TrashEntry trashEntry = _trashEntryLocalService.getEntry(
-			ExportImportConfiguration.class.getName(),
+		return exportImportConfigurationPersistence.findByPrimaryKey(
 			exportImportConfigurationId);
-
-		exportImportConfiguration = updateStatus(
-			userId, exportImportConfiguration.getExportImportConfigurationId(),
-			trashEntry.getStatus());
-
-		_trashEntryLocalService.deleteEntry(
-			ExportImportConfiguration.class.getName(),
-			exportImportConfiguration.getExportImportConfigurationId());
-
-		return exportImportConfiguration;
 	}
 
 	@Override
@@ -464,7 +412,6 @@ public class ExportImportConfigurationLocalServiceImpl
 		SearchContext searchContext = new SearchContext();
 
 		searchContext.setAndSearch(andSearch);
-
 		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
@@ -477,7 +424,6 @@ public class ExportImportConfigurationLocalServiceImpl
 			).put(
 				"type", type
 			).build());
-
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -494,10 +440,6 @@ public class ExportImportConfigurationLocalServiceImpl
 
 		return searchContext;
 	}
-
-	@BeanReference(type = TrashEntryLocalService.class)
-	@SuppressWarnings("deprecation")
-	private TrashEntryLocalService _trashEntryLocalService;
 
 	@BeanReference(type = UserPersistence.class)
 	private UserPersistence _userPersistence;

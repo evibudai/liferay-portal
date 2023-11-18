@@ -1,18 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
+
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.model.Region;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link RegionLocalService}.
@@ -33,10 +29,9 @@ public class RegionLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region addRegion(
-			long countryId, boolean active, java.lang.String name,
-			double position, java.lang.String regionCode,
-			ServiceContext serviceContext)
+	public Region addRegion(
+			long countryId, boolean active, String name, double position,
+			String regionCode, ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.addRegion(
@@ -54,9 +49,7 @@ public class RegionLocalServiceWrapper
 	 * @return the region that was added
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region addRegion(
-		com.liferay.portal.kernel.model.Region region) {
-
+	public Region addRegion(Region region) {
 		return _regionLocalService.addRegion(region);
 	}
 
@@ -78,7 +71,7 @@ public class RegionLocalServiceWrapper
 	 * @return the new region
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region createRegion(long regionId) {
+	public Region createRegion(long regionId) {
 		return _regionLocalService.createRegion(regionId);
 	}
 
@@ -110,7 +103,7 @@ public class RegionLocalServiceWrapper
 	 * @throws PortalException if a region with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region deleteRegion(long regionId)
+	public Region deleteRegion(long regionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.deleteRegion(regionId);
@@ -127,9 +120,7 @@ public class RegionLocalServiceWrapper
 	 * @return the region that was removed
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region deleteRegion(
-		com.liferay.portal.kernel.model.Region region) {
-
+	public Region deleteRegion(Region region) {
 		return _regionLocalService.deleteRegion(region);
 	}
 
@@ -235,14 +226,12 @@ public class RegionLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region fetchRegion(long regionId) {
+	public Region fetchRegion(long regionId) {
 		return _regionLocalService.fetchRegion(regionId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region fetchRegion(
-		long countryId, java.lang.String regionCode) {
-
+	public Region fetchRegion(long countryId, String regionCode) {
 		return _regionLocalService.fetchRegion(countryId, regionCode);
 	}
 
@@ -254,16 +243,14 @@ public class RegionLocalServiceWrapper
 	 * @return the matching region, or <code>null</code> if a matching region could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region fetchRegionByUuidAndCompanyId(
-		java.lang.String uuid, long companyId) {
-
+	public Region fetchRegionByUuidAndCompanyId(String uuid, long companyId) {
 		return _regionLocalService.fetchRegionByUuidAndCompanyId(
 			uuid, companyId);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.RegionLocalization
-		fetchRegionLocalization(long regionId, java.lang.String languageId) {
+		fetchRegionLocalization(long regionId, String languageId) {
 
 		return _regionLocalService.fetchRegionLocalization(
 			regionId, languageId);
@@ -299,7 +286,7 @@ public class RegionLocalServiceWrapper
 	 * @return the OSGi service identifier
 	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _regionLocalService.getOSGiServiceIdentifier();
 	}
 
@@ -322,15 +309,14 @@ public class RegionLocalServiceWrapper
 	 * @throws PortalException if a region with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region getRegion(long regionId)
+	public Region getRegion(long regionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegion(regionId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region getRegion(
-			long countryId, java.lang.String regionCode)
+	public Region getRegion(long countryId, String regionCode)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegion(countryId, regionCode);
@@ -345,8 +331,7 @@ public class RegionLocalServiceWrapper
 	 * @throws PortalException if a matching region could not be found
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region getRegionByUuidAndCompanyId(
-			java.lang.String uuid, long companyId)
+	public Region getRegionByUuidAndCompanyId(String uuid, long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegionByUuidAndCompanyId(uuid, companyId);
@@ -354,7 +339,7 @@ public class RegionLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.model.RegionLocalization
-			getRegionLocalization(long regionId, java.lang.String languageId)
+			getRegionLocalization(long regionId, String languageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegionLocalization(regionId, languageId);
@@ -379,43 +364,40 @@ public class RegionLocalServiceWrapper
 	 * @return the range of regions
 	 */
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Region> getRegions(
-		int start, int end) {
-
+	public java.util.List<Region> getRegions(int start, int end) {
 		return _regionLocalService.getRegions(start, end);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Region> getRegions(
-			long countryId, boolean active)
+	public java.util.List<Region> getRegions(long countryId, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegions(countryId, active);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Region> getRegions(
+	public java.util.List<Region> getRegions(
 		long countryId, boolean active, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<com.liferay.portal.kernel.model.Region> orderByComparator) {
+		com.liferay.portal.kernel.util.OrderByComparator<Region>
+			orderByComparator) {
 
 		return _regionLocalService.getRegions(
 			countryId, active, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Region> getRegions(
+	public java.util.List<Region> getRegions(
 		long countryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<com.liferay.portal.kernel.model.Region> orderByComparator) {
+		com.liferay.portal.kernel.util.OrderByComparator<Region>
+			orderByComparator) {
 
 		return _regionLocalService.getRegions(
 			countryId, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Region> getRegions(
-			long companyId, java.lang.String a2, boolean active)
+	public java.util.List<Region> getRegions(
+			long companyId, String a2, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.getRegions(companyId, a2, active);
@@ -442,33 +424,30 @@ public class RegionLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.portal.kernel.model.Region> searchRegions(
-				long companyId, java.lang.Boolean active,
-				java.lang.String keywords,
-				java.util.LinkedHashMap<java.lang.String, java.lang.Object>
-					params,
-				int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.portal.kernel.model.Region> orderByComparator)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<Region>
+			searchRegions(
+				long companyId, Boolean active, String keywords,
+				java.util.LinkedHashMap<String, Object> params, int start,
+				int end,
+				com.liferay.portal.kernel.util.OrderByComparator<Region>
+					orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.searchRegions(
 			companyId, active, keywords, params, start, end, orderByComparator);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region updateActive(
-			long regionId, boolean active)
+	public Region updateActive(long regionId, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.updateActive(regionId, active);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.Region updateRegion(
-			long regionId, boolean active, java.lang.String name,
-			double position, java.lang.String regionCode)
+	public Region updateRegion(
+			long regionId, boolean active, String name, double position,
+			String regionCode)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.updateRegion(
@@ -486,17 +465,14 @@ public class RegionLocalServiceWrapper
 	 * @return the region that was updated
 	 */
 	@Override
-	public com.liferay.portal.kernel.model.Region updateRegion(
-		com.liferay.portal.kernel.model.Region region) {
-
+	public Region updateRegion(Region region) {
 		return _regionLocalService.updateRegion(region);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.model.RegionLocalization
 			updateRegionLocalization(
-				com.liferay.portal.kernel.model.Region region,
-				java.lang.String languageId, java.lang.String title)
+				Region region, String languageId, String title)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.updateRegionLocalization(
@@ -506,11 +482,34 @@ public class RegionLocalServiceWrapper
 	@Override
 	public java.util.List<com.liferay.portal.kernel.model.RegionLocalization>
 			updateRegionLocalizations(
-				com.liferay.portal.kernel.model.Region region,
-				java.util.Map<java.lang.String, java.lang.String> titleMap)
+				Region region, java.util.Map<String, String> titleMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _regionLocalService.updateRegionLocalizations(region, titleMap);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _regionLocalService.getBasePersistence();
+	}
+
+	@Override
+	public CTPersistence<Region> getCTPersistence() {
+		return _regionLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<Region> getModelClass() {
+		return _regionLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<Region>, R, E> updateUnsafeFunction)
+		throws E {
+
+		return _regionLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.segments;
@@ -24,7 +15,6 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -59,7 +49,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
@@ -71,7 +60,7 @@ import javax.servlet.http.HttpServletRequest;
 public class SegmentsExperienceUtil {
 
 	public static void copySegmentsExperienceData(
-			long plid, CommentManager commentManager, long groupId,
+			CommentManager commentManager, long groupId, Layout layout,
 			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
 			long targetSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
@@ -84,7 +73,7 @@ public class SegmentsExperienceUtil {
 			CopyLayoutThreadLocal.setCopyLayout(true);
 
 			_copyLayoutData(
-				plid, commentManager, groupId, portletRegistry,
+				commentManager, groupId, layout, portletRegistry,
 				sourceSegmentsExperienceId, targetSegmentsExperienceId,
 				serviceContextFunction, userId);
 		}
@@ -114,9 +103,7 @@ public class SegmentsExperienceUtil {
 
 		List<SegmentsExperience> segmentsExperiences =
 			SegmentsExperienceServiceUtil.getSegmentsExperiences(
-				themeDisplay.getScopeGroupId(),
-				PortalUtil.getClassNameId(Layout.class.getName()),
-				themeDisplay.getPlid(), true);
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(), true);
 
 		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
 			availableSegmentsExperiences.put(
@@ -170,15 +157,12 @@ public class SegmentsExperienceUtil {
 			ThemeDisplay themeDisplay, long segmentsExperienceId)
 		throws Exception {
 
-		Optional<SegmentsExperiment> segmentsExperimentOptional =
-			_getSegmentsExperimentOptional(themeDisplay, segmentsExperienceId);
+		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment(
+			themeDisplay, segmentsExperienceId);
 
-		if (!segmentsExperimentOptional.isPresent()) {
+		if (segmentsExperiment == null) {
 			return null;
 		}
-
-		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentOptional.get();
 
 		SegmentsExperimentConstants.Status status =
 			SegmentsExperimentConstants.Status.valueOf(
@@ -193,7 +177,7 @@ public class SegmentsExperienceUtil {
 	}
 
 	private static void _copyLayoutData(
-			long plid, CommentManager commentManager, long groupId,
+			CommentManager commentManager, long groupId, Layout layout,
 			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
 			long targetSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
@@ -202,16 +186,16 @@ public class SegmentsExperienceUtil {
 
 		LayoutStructure layoutStructure =
 			LayoutStructureUtil.getLayoutStructure(
-				groupId, plid, sourceSegmentsExperienceId);
+				groupId, layout.getPlid(), sourceSegmentsExperienceId);
 
 		JSONObject dataJSONObject = _updateLayoutDataJSONObject(
-			plid, commentManager, layoutStructure, groupId, portletRegistry,
+			commentManager, groupId, layout, layoutStructure, portletRegistry,
 			sourceSegmentsExperienceId, serviceContextFunction,
 			targetSegmentsExperienceId, userId);
 
 		LayoutPageTemplateStructureLocalServiceUtil.
 			updateLayoutPageTemplateStructureData(
-				groupId, plid, targetSegmentsExperienceId,
+				groupId, layout.getPlid(), targetSegmentsExperienceId,
 				dataJSONObject.toString());
 	}
 
@@ -224,43 +208,36 @@ public class SegmentsExperienceUtil {
 				portletRegistry.getFragmentEntryLinkPortletIds(
 					fragmentEntryLink)) {
 
-			_getNewPortletPreferencesOptional(
+			_getNewPortletPreferences(
 				fragmentEntryLink.getNamespace(),
 				newFragmentEntryLink.getNamespace(), plid, portletId);
 		}
 	}
 
 	private static String _getNewEditableValues(
-			String editableValues, String namespace, String newNamespace,
-			long plid)
-		throws JSONException {
-
-		JSONObject editableValuesJSONObject = JSONFactoryUtil.createJSONObject(
-			editableValues);
+		JSONObject editableValuesJSONObject, String namespace,
+		String newNamespace, long plid) {
 
 		String instanceId = editableValuesJSONObject.getString("instanceId");
 		String portletId = editableValuesJSONObject.getString("portletId");
 
 		if (Validator.isNull(instanceId) || Validator.isNull(portletId)) {
-			return editableValues;
+			return editableValuesJSONObject.toString();
 		}
 
-		return _getNewPortletPreferencesOptional(
+		PortletPreferences portletPreferences = _getNewPortletPreferences(
 			namespace, newNamespace, plid,
-			PortletIdCodec.encode(portletId, instanceId)
-		).map(
-			portletPreferences -> {
-				JSONObject newEditableValuesJSONObject =
-					editableValuesJSONObject.put(
-						"instanceId",
-						PortletIdCodec.decodeInstanceId(
-							portletPreferences.getPortletId()));
+			PortletIdCodec.encode(portletId, instanceId));
 
-				return newEditableValuesJSONObject.toString();
-			}
-		).orElse(
-			editableValues
-		);
+		if (portletPreferences == null) {
+			return editableValuesJSONObject.toString();
+		}
+
+		JSONObject newEditableValuesJSONObject = editableValuesJSONObject.put(
+			"instanceId",
+			PortletIdCodec.decodeInstanceId(portletPreferences.getPortletId()));
+
+		return newEditableValuesJSONObject.toString();
 	}
 
 	private static String _getNewPortletId(
@@ -274,10 +251,8 @@ public class SegmentsExperienceUtil {
 		return StringUtil.replace(portletId, namespace, newNamespace);
 	}
 
-	private static Optional<PortletPreferences>
-		_getNewPortletPreferencesOptional(
-			String namespace, String newNamespace, long plid,
-			String portletId) {
+	private static PortletPreferences _getNewPortletPreferences(
+		String namespace, String newNamespace, long plid, String portletId) {
 
 		PortletPreferences portletPreferences =
 			PortletPreferencesLocalServiceUtil.fetchPortletPreferences(
@@ -285,13 +260,13 @@ public class SegmentsExperienceUtil {
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, plid, portletId);
 
 		if (portletPreferences == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(portletId);
 
 		if ((portlet == null) || portlet.isUndeployedPortlet()) {
-			return Optional.empty();
+			return null;
 		}
 
 		String newPortletId = _getNewPortletId(
@@ -307,25 +282,21 @@ public class SegmentsExperienceUtil {
 				portletPreferences);
 
 		if (existingPortletPreferences == null) {
-			return Optional.of(
-				PortletPreferencesLocalServiceUtil.addPortletPreferences(
-					portletPreferences.getCompanyId(),
-					portletPreferences.getOwnerId(),
-					portletPreferences.getOwnerType(), plid, newPortletId,
-					portlet,
-					PortletPreferencesFactoryUtil.toXML(jxPortletPreferences)));
+			return PortletPreferencesLocalServiceUtil.addPortletPreferences(
+				portletPreferences.getCompanyId(),
+				portletPreferences.getOwnerId(),
+				portletPreferences.getOwnerType(), plid, newPortletId, portlet,
+				PortletPreferencesFactoryUtil.toXML(jxPortletPreferences));
 		}
 
-		return Optional.of(
-			PortletPreferencesLocalServiceUtil.updatePreferences(
-				existingPortletPreferences.getOwnerId(),
-				existingPortletPreferences.getOwnerType(),
-				existingPortletPreferences.getPlid(),
-				existingPortletPreferences.getPortletId(),
-				jxPortletPreferences));
+		return PortletPreferencesLocalServiceUtil.updatePreferences(
+			existingPortletPreferences.getOwnerId(),
+			existingPortletPreferences.getOwnerType(),
+			existingPortletPreferences.getPlid(),
+			existingPortletPreferences.getPortletId(), jxPortletPreferences);
 	}
 
-	private static Optional<SegmentsExperiment> _getSegmentsExperimentOptional(
+	private static SegmentsExperiment _getSegmentsExperiment(
 			ThemeDisplay themeDisplay, long segmentsExperienceId)
 		throws Exception {
 
@@ -334,11 +305,9 @@ public class SegmentsExperienceUtil {
 		Layout layout = LayoutLocalServiceUtil.getLayout(
 			draftLayout.getClassPK());
 
-		return Optional.ofNullable(
-			SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(
-				segmentsExperienceId, PortalUtil.getClassNameId(Layout.class),
-				layout.getPlid(),
-				SegmentsExperimentConstants.Status.getExclusiveStatusValues()));
+		return SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(
+			themeDisplay.getScopeGroupId(), segmentsExperienceId,
+			layout.getPlid());
 	}
 
 	private static String _getSegmentsExperimentURL(
@@ -353,9 +322,9 @@ public class SegmentsExperienceUtil {
 	}
 
 	private static JSONObject _updateLayoutDataJSONObject(
-			long plid, CommentManager commentManager,
-			LayoutStructure layoutStructure, long groupId,
-			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
+			CommentManager commentManager, long groupId, Layout layout,
+			LayoutStructure layoutStructure, PortletRegistry portletRegistry,
+			long sourceSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
 			long targetSegmentsExperienceId, long userId)
 		throws PortalException {
@@ -363,7 +332,7 @@ public class SegmentsExperienceUtil {
 		List<FragmentEntryLink> fragmentEntryLinks =
 			FragmentEntryLinkLocalServiceUtil.
 				getFragmentEntryLinksBySegmentsExperienceId(
-					groupId, sourceSegmentsExperienceId, plid);
+					groupId, sourceSegmentsExperienceId, layout.getPlid());
 
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
 			if (fragmentEntryLink.isDeleted()) {
@@ -394,15 +363,38 @@ public class SegmentsExperienceUtil {
 			newFragmentEntryLink.setSegmentsExperienceId(
 				targetSegmentsExperienceId);
 
-			String newNamespace = fragmentEntryLink.getNamespace();
+			String newNamespace = StringUtil.randomId();
+
+			JSONObject editableValuesJSONObject =
+				JSONFactoryUtil.createJSONObject(
+					fragmentEntryLink.getEditableValues());
+
+			long segmentsExperimentPlid = layout.getPlid();
+
+			if (layout.isDraftLayout()) {
+				segmentsExperimentPlid = layout.getClassPK();
+			}
+
+			SegmentsExperiment segmentsExperiment =
+				SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(
+					layout.getGroupId(), sourceSegmentsExperienceId,
+					segmentsExperimentPlid);
+
+			if (Validator.isNull(
+					editableValuesJSONObject.getString("instanceId")) &&
+				Validator.isNull(
+					editableValuesJSONObject.getString("portletId")) &&
+				(segmentsExperiment != null)) {
+
+				newNamespace = fragmentEntryLink.getNamespace();
+			}
 
 			newFragmentEntryLink.setEditableValues(
 				_getNewEditableValues(
-					fragmentEntryLink.getEditableValues(),
-					fragmentEntryLink.getNamespace(), newNamespace, plid));
+					editableValuesJSONObject, fragmentEntryLink.getNamespace(),
+					newNamespace, layout.getPlid()));
 
 			newFragmentEntryLink.setNamespace(newNamespace);
-
 			newFragmentEntryLink.setLastPropagationDate(new Date());
 
 			newFragmentEntryLink =
@@ -419,7 +411,8 @@ public class SegmentsExperienceUtil {
 				serviceContextFunction);
 
 			_copyPortletPreferences(
-				fragmentEntryLink, newFragmentEntryLink, plid, portletRegistry);
+				fragmentEntryLink, newFragmentEntryLink, layout.getPlid(),
+				portletRegistry);
 		}
 
 		return layoutStructure.toJSONObject();

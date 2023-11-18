@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.trash.web.internal.portlet;
@@ -33,7 +24,7 @@ import com.liferay.portal.model.adapter.ModelAdapterUtil;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.constants.TrashEntryConstants;
 import com.liferay.trash.constants.TrashPortletKeys;
-import com.liferay.trash.kernel.exception.RestoreEntryException;
+import com.liferay.trash.exception.RestoreEntryException;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashEntryService;
@@ -68,6 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-trash",
 		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/trash.png",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -82,7 +74,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.security-role-ref=administrator",
 		"javax.portlet.version=3.0"
 	},
-	service = {Portlet.class, TrashPortlet.class}
+	service = Portlet.class
 )
 public class TrashPortlet extends MVCPortlet {
 
@@ -194,12 +186,9 @@ public class TrashPortlet extends MVCPortlet {
 						new ObjectValuePair<>(
 							entry.getClassName(), entry.getClassPK()));
 				}
-				catch (com.liferay.trash.exception.RestoreEntryException
-							restoreEntryException) {
-
+				catch (RestoreEntryException restoreEntryException) {
 					if (restoreEntryException.getType() !=
-							com.liferay.trash.exception.RestoreEntryException.
-								NOT_RESTORABLE) {
+							RestoreEntryException.NOT_RESTORABLE) {
 
 						throw restoreEntryException;
 					}
@@ -282,9 +271,7 @@ public class TrashPortlet extends MVCPortlet {
 
 	@Override
 	protected boolean isSessionErrorException(Throwable throwable) {
-		if (throwable instanceof
-				com.liferay.trash.exception.RestoreEntryException ||
-			throwable instanceof RestoreEntryException ||
+		if (throwable instanceof RestoreEntryException ||
 			throwable instanceof TrashPermissionException) {
 
 			return true;
@@ -337,7 +324,7 @@ public class TrashPortlet extends MVCPortlet {
 
 			sendRedirect(actionRequest, actionResponse);
 
-			throw new com.liferay.trash.exception.RestoreEntryException(
+			throw new RestoreEntryException(
 				restoreEntryException.getType(),
 				restoreEntryException.getCause());
 		}

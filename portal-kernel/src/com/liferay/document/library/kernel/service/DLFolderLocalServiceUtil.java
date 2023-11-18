@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -45,28 +36,32 @@ public class DLFolderLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFolderLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static void addDLFileEntryTypeDLFolder(
+	public static boolean addDLFileEntryTypeDLFolder(
 		long fileEntryTypeId, DLFolder dlFolder) {
 
-		getService().addDLFileEntryTypeDLFolder(fileEntryTypeId, dlFolder);
+		return getService().addDLFileEntryTypeDLFolder(
+			fileEntryTypeId, dlFolder);
 	}
 
-	public static void addDLFileEntryTypeDLFolder(
+	public static boolean addDLFileEntryTypeDLFolder(
 		long fileEntryTypeId, long folderId) {
 
-		getService().addDLFileEntryTypeDLFolder(fileEntryTypeId, folderId);
+		return getService().addDLFileEntryTypeDLFolder(
+			fileEntryTypeId, folderId);
 	}
 
-	public static void addDLFileEntryTypeDLFolders(
+	public static boolean addDLFileEntryTypeDLFolders(
 		long fileEntryTypeId, List<DLFolder> dlFolders) {
 
-		getService().addDLFileEntryTypeDLFolders(fileEntryTypeId, dlFolders);
+		return getService().addDLFileEntryTypeDLFolders(
+			fileEntryTypeId, dlFolders);
 	}
 
-	public static void addDLFileEntryTypeDLFolders(
+	public static boolean addDLFileEntryTypeDLFolders(
 		long fileEntryTypeId, long[] folderIds) {
 
-		getService().addDLFileEntryTypeDLFolders(fileEntryTypeId, folderIds);
+		return getService().addDLFileEntryTypeDLFolders(
+			fileEntryTypeId, folderIds);
 	}
 
 	/**
@@ -84,15 +79,15 @@ public class DLFolderLocalServiceUtil {
 	}
 
 	public static DLFolder addFolder(
-			long userId, long groupId, long repositoryId, boolean mountPoint,
-			long parentFolderId, String name, String description,
-			boolean hidden,
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, boolean mountPoint, long parentFolderId,
+			String name, String description, boolean hidden,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFolder(
-			userId, groupId, repositoryId, mountPoint, parentFolderId, name,
-			description, hidden, serviceContext);
+			externalReferenceCode, userId, groupId, repositoryId, mountPoint,
+			parentFolderId, name, description, hidden, serviceContext);
 	}
 
 	public static void clearDLFileEntryTypeDLFolders(long fileEntryTypeId) {
@@ -528,6 +523,12 @@ public class DLFolderLocalServiceUtil {
 		return getService().getFolderId(companyId, folderId);
 	}
 
+	public static List<DLFolder> getFolders(
+		long groupId, boolean mountPoint, String treePath, boolean hidden) {
+
+		return getService().getFolders(groupId, mountPoint, treePath, hidden);
+	}
+
 	public static List<DLFolder> getFolders(long groupId, long parentFolderId) {
 		return getService().getFolders(groupId, parentFolderId);
 	}
@@ -564,6 +565,10 @@ public class DLFolderLocalServiceUtil {
 
 		return getService().getFolders(
 			groupId, parentFolderId, start, end, orderByComparator);
+	}
+
+	public static List<DLFolder> getFolders(long classNameId, String treePath) {
+		return getService().getFolders(classNameId, treePath);
 	}
 
 	public static List<Object> getFoldersAndFileEntriesAndFileShortcuts(
@@ -616,6 +621,12 @@ public class DLFolderLocalServiceUtil {
 			groupId, parentFolderId, status, includeMountfolders);
 	}
 
+	public static long getFolderSize(
+		long companyId, long groupId, String treePath) {
+
+		return getService().getFolderSize(companyId, groupId, treePath);
+	}
+
 	public static List<Long> getGroupFolderIds(
 		long groupId, long parentFolderId) {
 
@@ -655,6 +666,13 @@ public class DLFolderLocalServiceUtil {
 
 	public static List<DLFolder> getNoAssetFolders() {
 		return getService().getNoAssetFolders();
+	}
+
+	public static List<DLFolder> getNotInTrashFolders(
+		long groupId, boolean mountPoint, String treePath, boolean hidden) {
+
+		return getService().getNotInTrashFolders(
+			groupId, mountPoint, treePath, hidden);
 	}
 
 	/**
@@ -859,6 +877,10 @@ public class DLFolderLocalServiceUtil {
 
 	public static DLFolderLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(DLFolderLocalService service) {
+		_service = service;
 	}
 
 	private static volatile DLFolderLocalService _service;

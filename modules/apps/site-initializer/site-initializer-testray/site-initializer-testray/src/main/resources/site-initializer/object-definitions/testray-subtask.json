@@ -49,6 +49,17 @@
 			"type": "String"
 		},
 		{
+			"DBType": "Long",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Number"
+			},
+			"name": "number",
+			"required": false,
+			"type": "Integer"
+		},
+		{
 			"DBType": "Integer",
 			"indexed": false,
 			"indexedAsKeyword": false,

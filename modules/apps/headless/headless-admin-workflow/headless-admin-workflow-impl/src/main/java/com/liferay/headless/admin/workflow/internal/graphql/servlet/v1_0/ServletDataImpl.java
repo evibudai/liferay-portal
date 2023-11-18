@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.workflow.internal.graphql.servlet.v1_0;
@@ -61,6 +52,8 @@ public class ServletDataImpl implements ServletData {
 			_workflowDefinitionResourceComponentServiceObjects);
 		Mutation.setWorkflowInstanceResourceComponentServiceObjects(
 			_workflowInstanceResourceComponentServiceObjects);
+		Mutation.setWorkflowLogResourceComponentServiceObjects(
+			_workflowLogResourceComponentServiceObjects);
 		Mutation.setWorkflowTaskResourceComponentServiceObjects(
 			_workflowTaskResourceComponentServiceObjects);
 		Mutation.setWorkflowTaskAssignableUsersResourceComponentServiceObjects(
@@ -117,6 +110,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createWorkflowDefinitionsPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"postWorkflowDefinitionsPageExportBatch"));
+					put(
 						"mutation#createWorkflowDefinition",
 						new ObjectValuePair<>(
 							WorkflowDefinitionResourceImpl.class,
@@ -167,6 +165,11 @@ public class ServletDataImpl implements ServletData {
 							WorkflowDefinitionResourceImpl.class,
 							"putWorkflowDefinitionBatch"));
 					put(
+						"mutation#createWorkflowInstancesPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"postWorkflowInstancesPageExportBatch"));
+					put(
 						"mutation#createWorkflowInstanceSubmit",
 						new ObjectValuePair<>(
 							WorkflowInstanceResourceImpl.class,
@@ -186,6 +189,21 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowInstanceResourceImpl.class,
 							"postWorkflowInstanceChangeTransition"));
+					put(
+						"mutation#createWorkflowInstanceWorkflowLogsPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"postWorkflowInstanceWorkflowLogsPageExportBatch"));
+					put(
+						"mutation#createWorkflowTaskWorkflowLogsPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"postWorkflowTaskWorkflowLogsPageExportBatch"));
+					put(
+						"mutation#createWorkflowInstanceWorkflowTasksPageExportBatch",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"postWorkflowInstanceWorkflowTasksPageExportBatch"));
 					put(
 						"mutation#createWorkflowTasksPage",
 						new ObjectValuePair<>(
@@ -350,6 +368,66 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WorkflowTaskResourceImpl.class,
 							"getWorkflowTaskHasAssignableUsers"));
+
+					put(
+						"query#WorkflowInstance.workflowTasks",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksPage"));
+					put(
+						"query#WorkflowInstance.workflowLogs",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"getWorkflowInstanceWorkflowLogsPage"));
+					put(
+						"query#WorkflowTask.hasAssignableUsers",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowTaskHasAssignableUsers"));
+					put(
+						"query#WorkflowInstance.workflowTasksAssignedToMe",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksAssignedToMePage"));
+					put(
+						"query#WorkflowTask.workflowInstance",
+						new ObjectValuePair<>(
+							WorkflowInstanceResourceImpl.class,
+							"getWorkflowInstance"));
+					put(
+						"query#WorkflowTasksBulkSelection.workflowDefinition",
+						new ObjectValuePair<>(
+							WorkflowDefinitionResourceImpl.class,
+							"getWorkflowDefinition"));
+					put(
+						"query#WorkflowTaskAssignToUser.workflowTask",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class, "getWorkflowTask"));
+					put(
+						"query#WorkflowTask.assignableUsers",
+						new ObjectValuePair<>(
+							AssigneeResourceImpl.class,
+							"getWorkflowTaskAssignableUsersPage"));
+					put(
+						"query#WorkflowTask.nextTransitions",
+						new ObjectValuePair<>(
+							TransitionResourceImpl.class,
+							"getWorkflowTaskNextTransitionsPage"));
+					put(
+						"query#WorkflowInstance.workflowTasksAssignedToUser",
+						new ObjectValuePair<>(
+							WorkflowTaskResourceImpl.class,
+							"getWorkflowInstanceWorkflowTasksAssignedToUserPage"));
+					put(
+						"query#WorkflowInstance.nextTransitions",
+						new ObjectValuePair<>(
+							TransitionResourceImpl.class,
+							"getWorkflowInstanceNextTransitionsPage"));
+					put(
+						"query#WorkflowTask.workflowLogs",
+						new ObjectValuePair<>(
+							WorkflowLogResourceImpl.class,
+							"getWorkflowTaskWorkflowLogsPage"));
 				}
 			};
 
@@ -360,6 +438,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<WorkflowInstanceResource>
 		_workflowInstanceResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<WorkflowLogResource>
+		_workflowLogResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<WorkflowTaskResource>
@@ -380,9 +462,5 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TransitionResource>
 		_transitionResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<WorkflowLogResource>
-		_workflowLogResourceComponentServiceObjects;
 
 }

@@ -1,0 +1,26 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.layout.admin.web.internal.item.selector;
+
+import com.liferay.item.selector.BaseItemSelectorCriterion;
+
+/**
+ * @author Eudaldo Alonso
+ */
+public class StyleBookEntryItemSelectorCriterion
+	extends BaseItemSelectorCriterion {
+
+	public long getSelPlid() {
+		return _selPlid;
+	}
+
+	public void setSelPlid(long selPlid) {
+		_selPlid = selPlid;
+	}
+
+	private long _selPlid;
+
+}

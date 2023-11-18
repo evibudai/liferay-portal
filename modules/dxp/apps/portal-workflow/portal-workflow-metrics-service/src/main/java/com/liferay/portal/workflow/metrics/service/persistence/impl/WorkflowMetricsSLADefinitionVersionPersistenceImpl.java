@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.service.persistence.impl;
@@ -38,7 +29,7 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.workflow.metrics.exception.NoSuchSLADefinitionVersionException;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersion;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersionTable;
@@ -50,7 +41,6 @@ import com.liferay.portal.workflow.metrics.service.persistence.impl.constants.Wo
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
@@ -2577,7 +2567,7 @@ public class WorkflowMetricsSLADefinitionVersionPersistenceImpl
 		workflowMetricsSLADefinitionVersion.setPrimaryKey(
 			workflowMetricsSLADefinitionVersionId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		workflowMetricsSLADefinitionVersion.setUuid(uuid);
 
@@ -2715,7 +2705,7 @@ public class WorkflowMetricsSLADefinitionVersionPersistenceImpl
 					workflowMetricsSLADefinitionVersion;
 
 		if (Validator.isNull(workflowMetricsSLADefinitionVersion.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			workflowMetricsSLADefinitionVersion.setUuid(uuid);
 		}
@@ -3158,33 +3148,15 @@ public class WorkflowMetricsSLADefinitionVersionPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"version", "wmSLADefinitionId"}, false);
 
-		_setWorkflowMetricsSLADefinitionVersionUtilPersistence(this);
+		WorkflowMetricsSLADefinitionVersionUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setWorkflowMetricsSLADefinitionVersionUtilPersistence(null);
+		WorkflowMetricsSLADefinitionVersionUtil.setPersistence(null);
 
 		entityCache.removeCache(
 			WorkflowMetricsSLADefinitionVersionImpl.class.getName());
-	}
-
-	private void _setWorkflowMetricsSLADefinitionVersionUtilPersistence(
-		WorkflowMetricsSLADefinitionVersionPersistence
-			workflowMetricsSLADefinitionVersionPersistence) {
-
-		try {
-			Field field =
-				WorkflowMetricsSLADefinitionVersionUtil.class.getDeclaredField(
-					"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, workflowMetricsSLADefinitionVersionPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -3256,8 +3228,5 @@ public class WorkflowMetricsSLADefinitionVersionPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

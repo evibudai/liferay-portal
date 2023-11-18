@@ -265,6 +265,14 @@ paths:
                                     $ref: "#/components/schemas/CommerceChannel"
                                 type: array
             tags: ["CommerceChannel"]
+    "/configuration/wizard-mode":
+        post:
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["AnalyticsDXPEntityBatchExporter"]
     "/contacts/account-groups":
         get:
             operationId: getContactAccountGroupsPage
@@ -494,6 +502,60 @@ paths:
             tags: ["Field"]
         patch:
             operationId: patchFieldAccount
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/Field"
+                            type: array
+                    application/xml:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/Field"
+                            type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Field"]
+    "/fields/orders":
+        get:
+            operationId: getFieldsOrdersPage
+            parameters:
+                - in: query
+                  name: keyword
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Field"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Field"
+                                type: array
+            tags: ["Field"]
+        patch:
+            operationId: patchFieldOrder
             requestBody:
                 content:
                     application/json:

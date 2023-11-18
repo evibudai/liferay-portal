@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -139,18 +130,19 @@ public class TestHistoryMap {
 				JSONObject testJSONObject = new JSONObject();
 
 				testJSONObject.put(
-					"averageDuration", testClassHistory.getAverageDuration());
-				testJSONObject.put(
+					"averageDuration", testClassHistory.getAverageDuration()
+				).put(
 					"averageOverheadDuration",
-					testClassHistory.getAverageOverheadDuration());
-				testJSONObject.put(
-					"failureCount", testClassHistory.getFailureCount());
-				testJSONObject.put(
-					"statusChanges", testClassHistory.getStatusChanges());
-				testJSONObject.put(
-					"testCount", testClassHistory.getTestCount());
-				testJSONObject.put(
-					"testName", testClassHistory.getTestClassName());
+					testClassHistory.getAverageOverheadDuration()
+				).put(
+					"failureCount", testClassHistory.getFailureCount()
+				).put(
+					"statusChanges", testClassHistory.getStatusChanges()
+				).put(
+					"testCount", testClassHistory.getTestCount()
+				).put(
+					"testName", testClassHistory.getTestClassName()
+				);
 
 				TestrayCaseResult testrayCaseResult =
 					testClassHistory.getTestrayCaseResult();
@@ -166,9 +158,12 @@ public class TestHistoryMap {
 			JSONObject batchJSONObject = new JSONObject();
 
 			batchJSONObject.put(
-				"averageDuration", batchHistory.getAverageDuration());
-			batchJSONObject.put("batchName", batchHistory.getBatchName());
-			batchJSONObject.put("tests", testsJSONArray);
+				"averageDuration", batchHistory.getAverageDuration()
+			).put(
+				"batchName", batchHistory.getBatchName()
+			).put(
+				"tests", testsJSONArray
+			);
 
 			batchesJSONArray.put(batchJSONObject);
 		}
@@ -180,10 +175,10 @@ public class TestHistoryMap {
 		TestrayServer testrayServer = _latestTestrayBuild.getTestrayServer();
 
 		ciHistoryJSONObject.put(
-			"testray_url", String.valueOf(testrayServer.getURL()));
-
-		ciHistoryJSONObject.put(
-			"upstream_branch_name", _latestTestrayBuild.getPortalBranch());
+			"testray_url", String.valueOf(testrayServer.getURL())
+		).put(
+			"upstream_branch_name", _latestTestrayBuild.getPortalBranch()
+		);
 
 		File file = new File(filePath);
 

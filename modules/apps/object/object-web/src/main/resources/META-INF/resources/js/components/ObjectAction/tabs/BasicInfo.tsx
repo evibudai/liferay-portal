@@ -1,29 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayForm, {ClayToggle} from '@clayui/form';
+import ClayForm from '@clayui/form';
 import {
 	Card,
 	FormError,
 	Input,
-	InputLocalized,
+	Toggle,
 } from '@liferay/object-js-components-web';
+import {InputLocalized} from 'frontend-js-components-web';
 import React from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {toCamelCase} from '../../../utils/string';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+interface BasicInfoProps {
+	errors: FormError<ObjectAction & ObjectActionParameters>;
+	handleChange: React.ChangeEventHandler<HTMLInputElement>;
+	isApproved: boolean;
+	readOnly?: boolean;
+	setValues: (values: Partial<ObjectAction>) => void;
+	values: Partial<ObjectAction>;
+}
 
 export default function BasicInfo({
 	errors,
@@ -32,32 +32,31 @@ export default function BasicInfo({
 	readOnly,
 	setValues,
 	values,
-}: IProps) {
+}: BasicInfoProps) {
 	return (
 		<Card title={Liferay.Language.get('basic-info')}>
-			{Liferay.FeatureFlags['LPS-148804'] && (
-				<InputLocalized
-					error={errors.label}
-					label={Liferay.Language.get('action-label')}
-					name="label"
-					onChange={(label) =>
-						setValues({
-							...values,
-							...(!isApproved && {
+			<InputLocalized
+				error={errors.label}
+				label={Liferay.Language.get('action-label')}
+				name="label"
+				onChange={(label) =>
+					setValues({
+						...values,
+						...(!isApproved &&
+							!values.system && {
 								name: toCamelCase(
 									label[defaultLanguageId] ?? ''
 								),
 							}),
-							label,
-						})
-					}
-					required
-					translations={values.label ?? {[defaultLanguageId]: ''}}
-				/>
-			)}
+						label,
+					})
+				}
+				required
+				translations={values.label ?? {[defaultLanguageId]: ''}}
+			/>
 
 			<Input
-				disabled={isApproved}
+				disabled={isApproved || values.system}
 				error={errors.name}
 				label={Liferay.Language.get('action-name')}
 				name="name"
@@ -68,6 +67,7 @@ export default function BasicInfo({
 
 			<Input
 				component="textarea"
+				disabled={values.system}
 				error={errors.description}
 				label={Liferay.Language.get('description')}
 				name="description"
@@ -76,8 +76,8 @@ export default function BasicInfo({
 			/>
 
 			<ClayForm.Group>
-				<ClayToggle
-					disabled={readOnly}
+				<Toggle
+					disabled={readOnly || values.system}
 					label={Liferay.Language.get('active')}
 					name="indexed"
 					onToggle={(active) => setValues({active})}
@@ -86,13 +86,4 @@ export default function BasicInfo({
 			</ClayForm.Group>
 		</Card>
 	);
-}
-
-interface IProps {
-	errors: FormError<ObjectAction & ObjectActionParameters>;
-	handleChange: React.ChangeEventHandler<HTMLInputElement>;
-	isApproved: boolean;
-	readOnly?: boolean;
-	setValues: (values: Partial<ObjectAction>) => void;
-	values: Partial<ObjectAction>;
 }

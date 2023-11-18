@@ -1,36 +1,38 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm, {ClayCheckbox} from '@clayui/form';
 import {
 	Card,
 	Input,
+	REQUIRED_MSG,
+	getLocalizableLabel,
 	invalidateRequired,
 } from '@liferay/object-js-components-web';
 import React from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 const InfoScreen: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
-	const [{isViewOnly, objectLayout}, dispatch] = useLayoutContext();
+	const [
+		{creationLanguageId, isViewOnly, objectLayout},
+		dispatch,
+	] = useLayoutContext();
 
 	let error: string | undefined;
 
-	if (invalidateRequired(objectLayout.name[defaultLanguageId])) {
-		error = Liferay.Language.get('required');
+	if (
+		invalidateRequired(
+			getLocalizableLabel(
+				creationLanguageId as Liferay.Language.Locale,
+				objectLayout.name
+			)
+		)
+	) {
+		error = REQUIRED_MSG;
 	}
 
 	return (
@@ -47,7 +49,10 @@ const InfoScreen: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 					});
 				}}
 				required
-				value={objectLayout.name[defaultLanguageId]}
+				value={getLocalizableLabel(
+					creationLanguageId as Liferay.Language.Locale,
+					objectLayout.name
+				)}
 			/>
 
 			<ClayForm.Group className="mb-0">

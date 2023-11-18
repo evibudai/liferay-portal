@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
@@ -274,6 +265,14 @@ public class ObjectEntryLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
+	public static ObjectEntry fetchManyToOneObjectEntry(
+			long groupId, long objectRelationshipId, long primaryKey)
+		throws PortalException {
+
+		return getService().fetchManyToOneObjectEntry(
+			groupId, objectRelationshipId, primaryKey);
+	}
+
 	public static ObjectEntry fetchObjectEntry(long objectEntryId) {
 		return getService().fetchObjectEntry(objectEntryId);
 	}
@@ -305,13 +304,14 @@ public class ObjectEntryLocalServiceUtil {
 	}
 
 	public static Map<Object, Long> getAggregationCounts(
-			long objectDefinitionId, String aggregationTerm,
+			long groupId, long objectDefinitionId, String aggregationTerm,
 			com.liferay.petra.sql.dsl.expression.Predicate predicate, int start,
 			int end)
 		throws PortalException {
 
 		return getService().getAggregationCounts(
-			objectDefinitionId, aggregationTerm, predicate, start, end);
+			groupId, objectDefinitionId, aggregationTerm, predicate, start,
+			end);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -341,21 +341,22 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static List<ObjectEntry> getManyToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, boolean reverse, int start, int end)
+			boolean related, boolean reverse, String search, int start, int end)
 		throws PortalException {
 
 		return getService().getManyToManyObjectEntries(
-			groupId, objectRelationshipId, primaryKey, related, reverse, start,
-			end);
+			groupId, objectRelationshipId, primaryKey, related, reverse, search,
+			start, end);
 	}
 
 	public static int getManyToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, boolean reverse)
+			boolean related, boolean reverse, String search)
 		throws PortalException {
 
 		return getService().getManyToManyObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, related, reverse);
+			groupId, objectRelationshipId, primaryKey, related, reverse,
+			search);
 	}
 
 	/**
@@ -374,17 +375,14 @@ public class ObjectEntryLocalServiceUtil {
 	}
 
 	public static List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int start, int end)
-		throws PortalException {
+		long groupId, long objectDefinitionId, int start, int end) {
 
 		return getService().getObjectEntries(
 			groupId, objectDefinitionId, start, end);
 	}
 
 	public static List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int status, int start,
-			int end)
-		throws PortalException {
+		long groupId, long objectDefinitionId, int status, int start, int end) {
 
 		return getService().getObjectEntries(
 			groupId, objectDefinitionId, status, start, end);
@@ -436,6 +434,16 @@ public class ObjectEntryLocalServiceUtil {
 		return getService().getObjectEntriesCount(groupId, objectDefinitionId);
 	}
 
+	public static long getObjectEntriesCount(
+			long groupId,
+			com.liferay.object.model.ObjectDefinition objectDefinition,
+			com.liferay.petra.sql.dsl.expression.Predicate predicate)
+		throws PortalException {
+
+		return getService().getObjectEntriesCount(
+			groupId, objectDefinition, predicate);
+	}
+
 	/**
 	 * Returns the object entry with the primary key.
 	 *
@@ -482,20 +490,21 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static List<ObjectEntry> getOneToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related, int start, int end)
+			boolean related, String search, int start, int end)
 		throws PortalException {
 
 		return getService().getOneToManyObjectEntries(
-			groupId, objectRelationshipId, primaryKey, related, start, end);
+			groupId, objectRelationshipId, primaryKey, related, search, start,
+			end);
 	}
 
 	public static int getOneToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean related)
+			boolean related, String search)
 		throws PortalException {
 
 		return getService().getOneToManyObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, related);
+			groupId, objectRelationshipId, primaryKey, related, search);
 	}
 
 	/**
@@ -574,12 +583,12 @@ public class ObjectEntryLocalServiceUtil {
 	}
 
 	public static void insertIntoOrUpdateExtensionTable(
-			long objectDefinitionId, long primaryKey,
+			long userId, long objectDefinitionId, long primaryKey,
 			Map<String, Serializable> values)
 		throws PortalException {
 
 		getService().insertIntoOrUpdateExtensionTable(
-			objectDefinitionId, primaryKey, values);
+			userId, objectDefinitionId, primaryKey, values);
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
@@ -636,6 +645,10 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static ObjectEntryLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ObjectEntryLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ObjectEntryLocalService _service;

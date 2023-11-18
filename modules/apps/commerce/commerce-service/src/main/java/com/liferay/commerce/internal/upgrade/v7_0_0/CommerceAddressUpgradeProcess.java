@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.upgrade.v7_0_0;
@@ -17,7 +8,6 @@ package com.liferay.commerce.internal.upgrade.v7_0_0;
 import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -30,6 +20,8 @@ import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.PhoneLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -74,7 +66,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 				address.setClassPK(resultSet.getLong("classPK"));
 				address.setCountryId(resultSet.getLong("countryId"));
 				address.setListTypeId(
-					_getListTypeId(resultSet.getInt("type_")));
+					_getListTypeId(
+						resultSet.getInt("type_"),
+						resultSet.getLong("companyId")));
 				address.setRegionId(resultSet.getLong("regionId"));
 				address.setCity(resultSet.getString("city"));
 				address.setDescription(resultSet.getString("description"));
@@ -94,12 +88,17 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 				_setDefaultShipping(
 					address, resultSet.getBoolean("defaultShipping"));
 			}
-
-			runSQL("drop table CommerceAddress");
 		}
 	}
 
-	private long _getListTypeId(int commerceAddressType) {
+	@Override
+	protected UpgradeStep[] getPostUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.dropTables("CommerceAddress")
+		};
+	}
+
+	private long _getListTypeId(int commerceAddressType, long companyId) {
 		String name = null;
 
 		if (CommerceAddressConstants.ADDRESS_TYPE_BILLING ==
@@ -119,11 +118,12 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 		}
 
 		ListType listType = _listTypeLocalService.getListType(
-			name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
+			companyId, name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
 
 		if (listType == null) {
 			listType = _listTypeLocalService.addListType(
-				name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
+				companyId, name,
+				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
 		}
 
 		return listType.getListTypeId();
@@ -134,7 +134,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 
 		if (defaultBilling &&
 			(Objects.equals(AccountEntry.class.getName(), className) ||
-			 Objects.equals(CommerceAccount.class.getName(), className))) {
+			 Objects.equals(
+				 className,
+				 "com.liferay.commerce.account.model.CommerceAccount"))) {
 
 			try {
 				_accountEntryLocalService.updateDefaultBillingAddressId(
@@ -151,7 +153,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 
 		if (defaultShipping &&
 			(Objects.equals(AccountEntry.class.getName(), className) ||
-			 Objects.equals(CommerceAccount.class.getName(), className))) {
+			 Objects.equals(
+				 className,
+				 "com.liferay.commerce.account.model.CommerceAccount"))) {
 
 			try {
 				_accountEntryLocalService.updateDefaultShippingAddressId(
@@ -168,9 +172,6 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 			return;
 		}
 
-		ListType listType = _listTypeLocalService.getListType(
-			"phone-number", ListTypeConstants.ADDRESS_PHONE);
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setUserId(address.getUserId());
@@ -179,7 +180,10 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 			_phoneLocalService.addPhone(
 				serviceContext.getUserId(), Address.class.getName(),
 				address.getAddressId(), phoneNumber, null,
-				listType.getListTypeId(), false, serviceContext);
+				_listTypeLocalService.getListTypeId(
+					address.getCompanyId(), "phone-number",
+					ListTypeConstants.ADDRESS_PHONE),
+				false, serviceContext);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);

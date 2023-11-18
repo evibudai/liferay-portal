@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -22,15 +13,14 @@ import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
 import {filterArrayByQuery} from '../../utils/array';
-import {Card} from '../Card';
+import {getLocalizableLabel} from '../../utils/string';
 import {ManagementToolbarSearch} from '../ManagementToolbar/ManagementToolbarSearch';
 import BuilderListItem from './BuilderListItem';
 
 import './BuilderScreen.scss';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 export function BuilderScreen({
+	creationLanguageId,
 	defaultSort,
 	disableEdit,
 	emptyState,
@@ -46,18 +36,21 @@ export function BuilderScreen({
 	openModal,
 	secondColumnHeader,
 	thirdColumnHeader,
-	title,
 }: IProps) {
 	const [query, setQuery] = useState('');
 
 	const filteredItems = useMemo(() => {
-		return filterArrayByQuery(objectColumns, 'fieldLabel', query);
+		return filterArrayByQuery({
+			array: objectColumns,
+			query,
+			str: 'fieldLabel',
+		});
 	}, [objectColumns, query]);
 
 	const tableItems = query ? filteredItems : objectColumns;
 
 	return (
-		<Card title={title}>
+		<>
 			<ManagementToolbar.Container>
 				<ManagementToolbar.ItemList expand>
 					<ManagementToolbarSearch
@@ -151,9 +144,11 @@ export function BuilderScreen({
 												  )
 											: filter
 											? viewColumn?.objectFieldBusinessType
-											: viewColumn?.label[
-													defaultLanguageId
-											  ]
+											: getLocalizableLabel(
+													creationLanguageId as Liferay.Language.Locale,
+													viewColumn?.label,
+													viewColumn.objectFieldName
+											  )
 									}
 									thirdColumnValues={
 										viewColumn?.valueList ??
@@ -185,7 +180,7 @@ export function BuilderScreen({
 					</ClayEmptyState>
 				</div>
 			)}
-		</Card>
+		</>
 	);
 }
 
@@ -210,6 +205,7 @@ type TBuilderScreenColumn = {
 };
 
 interface IProps {
+	creationLanguageId?: Liferay.Language.Locale;
 	defaultSort?: boolean;
 	disableEdit?: boolean;
 	emptyState: {
@@ -229,5 +225,4 @@ interface IProps {
 	openModal: () => void;
 	secondColumnHeader: string;
 	thirdColumnHeader?: string;
-	title: string;
 }

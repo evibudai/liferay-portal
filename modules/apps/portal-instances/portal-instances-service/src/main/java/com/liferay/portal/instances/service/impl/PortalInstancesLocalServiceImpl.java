@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.instances.service.impl;
@@ -51,26 +42,23 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ColorSchemeFactory;
+import com.liferay.portal.kernel.util.ColorSchemeFactoryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portlet.RenderRequestFactory;
 import com.liferay.portlet.RenderResponseFactory;
 import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerRegistry;
-
-import java.sql.SQLException;
 
 import java.util.List;
 
@@ -79,7 +67,6 @@ import javax.portlet.PortletMode;
 import javax.portlet.PortletRequest;
 import javax.portlet.WindowState;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
@@ -96,23 +83,8 @@ public class PortalInstancesLocalServiceImpl
 	extends PortalInstancesLocalServiceBaseImpl {
 
 	@Override
-	public void addCompanyId(long companyId) {
-		PortalInstances.addCompanyId(companyId);
-	}
-
-	@Override
-	public long getCompanyId(HttpServletRequest httpServletRequest) {
-		return PortalInstances.getCompanyId(httpServletRequest);
-	}
-
-	@Override
 	public long[] getCompanyIds() {
 		return PortalInstances.getCompanyIds();
-	}
-
-	@Override
-	public long[] getCompanyIdsBySQL() throws SQLException {
-		return PortalInstances.getCompanyIdsBySQL();
 	}
 
 	@Override
@@ -121,19 +93,13 @@ public class PortalInstancesLocalServiceImpl
 	}
 
 	@Override
-	public String[] getWebIds() {
-		return PortalInstances.getWebIds();
-	}
-
-	@Override
 	public void initializePortalInstance(
-			long companyId, String siteInitializerKey,
-			ServletContext servletContext)
+			long companyId, String siteInitializerKey)
 		throws PortalException {
 
 		Company company = _companyLocalService.getCompany(companyId);
 
-		PortalInstances.initCompany(servletContext, company.getWebId());
+		PortalInstances.initCompany(company);
 
 		if (Validator.isNull(siteInitializerKey)) {
 			return;
@@ -193,41 +159,6 @@ public class PortalInstancesLocalServiceImpl
 		}
 	}
 
-	@Override
-	public boolean isAutoLoginIgnoreHost(String host) {
-		return PortalInstances.isAutoLoginIgnoreHost(host);
-	}
-
-	@Override
-	public boolean isAutoLoginIgnorePath(String path) {
-		return PortalInstances.isAutoLoginIgnorePath(path);
-	}
-
-	@Override
-	public boolean isCompanyActive(long companyId) {
-		return PortalInstances.isCompanyActive(companyId);
-	}
-
-	@Override
-	public boolean isVirtualHostsIgnoreHost(String host) {
-		return PortalInstances.isVirtualHostsIgnoreHost(host);
-	}
-
-	@Override
-	public boolean isVirtualHostsIgnorePath(String path) {
-		return PortalInstances.isVirtualHostsIgnorePath(path);
-	}
-
-	@Override
-	public void reload(ServletContext servletContext) {
-		PortalInstances.reload(servletContext);
-	}
-
-	@Override
-	public void removeCompany(long companyId) {
-		PortalInstances.removeCompany(companyId);
-	}
-
 	@Clusterable
 	@Override
 	public void synchronizePortalInstances() {
@@ -247,11 +178,7 @@ public class PortalInstancesLocalServiceImpl
 						return;
 					}
 
-					ServletContext portalContext = ServletContextPool.get(
-						_portal.getPathContext());
-
-					PortalInstances.initCompany(
-						portalContext, company.getWebId());
+					PortalInstances.initCompany(company);
 				});
 
 			_companyLocalService.forEachCompanyId(
@@ -311,13 +238,13 @@ public class PortalInstancesLocalServiceImpl
 			(LayoutTypePortlet)controlPanelLayout.getLayoutType());
 		themeDisplay.setLocale(LocaleUtil.getSiteDefault());
 
-		String themeId = PrefsPropsUtil.getString(
+		String themeId = _prefsProps.getString(
 			company.getCompanyId(),
 			PropsKeys.CONTROL_PANEL_LAYOUT_REGULAR_THEME_ID);
 
 		themeDisplay.setLookAndFeel(
 			_themeLocalService.getTheme(company.getCompanyId(), themeId),
-			_colorSchemeFactory.getDefaultRegularColorScheme());
+			ColorSchemeFactoryUtil.getDefaultRegularColorScheme());
 
 		themeDisplay.setPermissionChecker(permissionChecker);
 		themeDisplay.setPlid(controlPanelPlid);
@@ -358,7 +285,6 @@ public class PortalInstancesLocalServiceImpl
 
 			httpServletRequest.setAttribute(
 				JavaConstants.JAVAX_PORTLET_REQUEST, liferayRenderRequest);
-
 			httpServletRequest.setAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE,
 				RenderResponseFactory.create(
@@ -373,9 +299,6 @@ public class PortalInstancesLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortalInstancesLocalServiceImpl.class);
-
-	@Reference
-	private ColorSchemeFactory _colorSchemeFactory;
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
@@ -394,6 +317,9 @@ public class PortalInstancesLocalServiceImpl
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
+	private PrefsProps _prefsProps;
 
 	@Reference
 	private RoleLocalService _roleLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.service.persistence.impl;
@@ -48,11 +39,10 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -733,21 +723,21 @@ public class ClientExtensionEntryRelPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			ClientExtensionEntryRel.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			ClientExtensionEntryRel.class);
 
 		if (result instanceof ClientExtensionEntryRel) {
 			ClientExtensionEntryRel clientExtensionEntryRel =
@@ -758,6 +748,15 @@ public class ClientExtensionEntryRelPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						ClientExtensionEntryRel.class,
+						clientExtensionEntryRel.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3353,24 +3352,24 @@ public class ClientExtensionEntryRelPersistenceImpl
 	private static final String _FINDER_COLUMN_C_C_T_TYPE_3 =
 		"(clientExtensionEntryRel.type IS NULL OR clientExtensionEntryRel.type = '')";
 
-	private FinderPath _finderPathFetchByERC_C;
-	private FinderPath _finderPathCountByERC_C;
+	private FinderPath _finderPathFetchByERC_G;
+	private FinderPath _finderPathCountByERC_G;
 
 	/**
-	 * Returns the client extension entry rel where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchClientExtensionEntryRelException</code> if it could not be found.
+	 * Returns the client extension entry rel where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchClientExtensionEntryRelException</code> if it could not be found.
 	 *
 	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @return the matching client extension entry rel
 	 * @throws NoSuchClientExtensionEntryRelException if a matching client extension entry rel could not be found
 	 */
 	@Override
-	public ClientExtensionEntryRel findByERC_C(
-			String externalReferenceCode, long companyId)
+	public ClientExtensionEntryRel findByERC_G(
+			String externalReferenceCode, long groupId)
 		throws NoSuchClientExtensionEntryRelException {
 
-		ClientExtensionEntryRel clientExtensionEntryRel = fetchByERC_C(
-			externalReferenceCode, companyId);
+		ClientExtensionEntryRel clientExtensionEntryRel = fetchByERC_G(
+			externalReferenceCode, groupId);
 
 		if (clientExtensionEntryRel == null) {
 			StringBundler sb = new StringBundler(6);
@@ -3380,8 +3379,8 @@ public class ClientExtensionEntryRelPersistenceImpl
 			sb.append("externalReferenceCode=");
 			sb.append(externalReferenceCode);
 
-			sb.append(", companyId=");
-			sb.append(companyId);
+			sb.append(", groupId=");
+			sb.append(groupId);
 
 			sb.append("}");
 
@@ -3396,48 +3395,48 @@ public class ClientExtensionEntryRelPersistenceImpl
 	}
 
 	/**
-	 * Returns the client extension entry rel where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the client extension entry rel where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @return the matching client extension entry rel, or <code>null</code> if a matching client extension entry rel could not be found
 	 */
 	@Override
-	public ClientExtensionEntryRel fetchByERC_C(
-		String externalReferenceCode, long companyId) {
+	public ClientExtensionEntryRel fetchByERC_G(
+		String externalReferenceCode, long groupId) {
 
-		return fetchByERC_C(externalReferenceCode, companyId, true);
+		return fetchByERC_G(externalReferenceCode, groupId, true);
 	}
 
 	/**
-	 * Returns the client extension entry rel where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the client extension entry rel where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching client extension entry rel, or <code>null</code> if a matching client extension entry rel could not be found
 	 */
 	@Override
-	public ClientExtensionEntryRel fetchByERC_C(
-		String externalReferenceCode, long companyId, boolean useFinderCache) {
+	public ClientExtensionEntryRel fetchByERC_G(
+		String externalReferenceCode, long groupId, boolean useFinderCache) {
 
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			ClientExtensionEntryRel.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
-			finderArgs = new Object[] {externalReferenceCode, companyId};
+		if (useFinderCache) {
+			finderArgs = new Object[] {externalReferenceCode, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByERC_C, finderArgs, this);
+				_finderPathFetchByERC_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			ClientExtensionEntryRel.class);
 
 		if (result instanceof ClientExtensionEntryRel) {
 			ClientExtensionEntryRel clientExtensionEntryRel =
@@ -3446,10 +3445,19 @@ public class ClientExtensionEntryRelPersistenceImpl
 			if (!Objects.equals(
 					externalReferenceCode,
 					clientExtensionEntryRel.getExternalReferenceCode()) ||
-				(companyId != clientExtensionEntryRel.getCompanyId())) {
+				(groupId != clientExtensionEntryRel.getGroupId())) {
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						ClientExtensionEntryRel.class,
+						clientExtensionEntryRel.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3460,15 +3468,15 @@ public class ClientExtensionEntryRelPersistenceImpl
 			boolean bindExternalReferenceCode = false;
 
 			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
 			}
 
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
 
 			String sql = sb.toString();
 
@@ -3485,14 +3493,14 @@ public class ClientExtensionEntryRelPersistenceImpl
 					queryPos.add(externalReferenceCode);
 				}
 
-				queryPos.add(companyId);
+				queryPos.add(groupId);
 
 				List<ClientExtensionEntryRel> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache && productionMode) {
 						finderCache.putResult(
-							_finderPathFetchByERC_C, finderArgs, list);
+							_finderPathFetchByERC_G, finderArgs, list);
 					}
 				}
 				else {
@@ -3521,32 +3529,32 @@ public class ClientExtensionEntryRelPersistenceImpl
 	}
 
 	/**
-	 * Removes the client extension entry rel where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 * Removes the client extension entry rel where externalReferenceCode = &#63; and groupId = &#63; from the database.
 	 *
 	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @return the client extension entry rel that was removed
 	 */
 	@Override
-	public ClientExtensionEntryRel removeByERC_C(
-			String externalReferenceCode, long companyId)
+	public ClientExtensionEntryRel removeByERC_G(
+			String externalReferenceCode, long groupId)
 		throws NoSuchClientExtensionEntryRelException {
 
-		ClientExtensionEntryRel clientExtensionEntryRel = findByERC_C(
-			externalReferenceCode, companyId);
+		ClientExtensionEntryRel clientExtensionEntryRel = findByERC_G(
+			externalReferenceCode, groupId);
 
 		return remove(clientExtensionEntryRel);
 	}
 
 	/**
-	 * Returns the number of client extension entry rels where externalReferenceCode = &#63; and companyId = &#63;.
+	 * Returns the number of client extension entry rels where externalReferenceCode = &#63; and groupId = &#63;.
 	 *
 	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @return the number of matching client extension entry rels
 	 */
 	@Override
-	public int countByERC_C(String externalReferenceCode, long companyId) {
+	public int countByERC_G(String externalReferenceCode, long groupId) {
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
 		boolean productionMode = ctPersistenceHelper.isProductionMode(
@@ -3558,9 +3566,9 @@ public class ClientExtensionEntryRelPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathCountByERC_C;
+			finderPath = _finderPathCountByERC_G;
 
-			finderArgs = new Object[] {externalReferenceCode, companyId};
+			finderArgs = new Object[] {externalReferenceCode, groupId};
 
 			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 		}
@@ -3573,15 +3581,15 @@ public class ClientExtensionEntryRelPersistenceImpl
 			boolean bindExternalReferenceCode = false;
 
 			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
 			}
 
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
 
 			String sql = sb.toString();
 
@@ -3598,7 +3606,7 @@ public class ClientExtensionEntryRelPersistenceImpl
 					queryPos.add(externalReferenceCode);
 				}
 
-				queryPos.add(companyId);
+				queryPos.add(groupId);
 
 				count = (Long)query.uniqueResult();
 
@@ -3617,14 +3625,14 @@ public class ClientExtensionEntryRelPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
+	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
 		"clientExtensionEntryRel.externalReferenceCode = ? AND ";
 
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
+	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3 =
 		"(clientExtensionEntryRel.externalReferenceCode IS NULL OR clientExtensionEntryRel.externalReferenceCode = '') AND ";
 
-	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
-		"clientExtensionEntryRel.companyId = ?";
+	private static final String _FINDER_COLUMN_ERC_G_GROUPID_2 =
+		"clientExtensionEntryRel.groupId = ?";
 
 	public ClientExtensionEntryRelPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -3666,10 +3674,10 @@ public class ClientExtensionEntryRelPersistenceImpl
 			clientExtensionEntryRel);
 
 		finderCache.putResult(
-			_finderPathFetchByERC_C,
+			_finderPathFetchByERC_G,
 			new Object[] {
 				clientExtensionEntryRel.getExternalReferenceCode(),
-				clientExtensionEntryRel.getCompanyId()
+				clientExtensionEntryRel.getGroupId()
 			},
 			clientExtensionEntryRel);
 	}
@@ -3772,12 +3780,12 @@ public class ClientExtensionEntryRelPersistenceImpl
 
 		args = new Object[] {
 			clientExtensionEntryRelModelImpl.getExternalReferenceCode(),
-			clientExtensionEntryRelModelImpl.getCompanyId()
+			clientExtensionEntryRelModelImpl.getGroupId()
 		};
 
-		finderCache.putResult(_finderPathCountByERC_C, args, Long.valueOf(1));
+		finderCache.putResult(_finderPathCountByERC_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchByERC_C, args, clientExtensionEntryRelModelImpl);
+			_finderPathFetchByERC_G, args, clientExtensionEntryRelModelImpl);
 	}
 
 	/**
@@ -3794,7 +3802,7 @@ public class ClientExtensionEntryRelPersistenceImpl
 		clientExtensionEntryRel.setNew(true);
 		clientExtensionEntryRel.setPrimaryKey(clientExtensionEntryRelId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		clientExtensionEntryRel.setUuid(uuid);
 
@@ -3923,7 +3931,7 @@ public class ClientExtensionEntryRelPersistenceImpl
 			(ClientExtensionEntryRelModelImpl)clientExtensionEntryRel;
 
 		if (Validator.isNull(clientExtensionEntryRel.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			clientExtensionEntryRel.setUuid(uuid);
 		}
@@ -3935,15 +3943,17 @@ public class ClientExtensionEntryRelPersistenceImpl
 				clientExtensionEntryRel.getUuid());
 		}
 		else {
-			ClientExtensionEntryRel ercClientExtensionEntryRel = fetchByERC_C(
+			ClientExtensionEntryRel ercClientExtensionEntryRel = fetchByERC_G(
 				clientExtensionEntryRel.getExternalReferenceCode(),
-				clientExtensionEntryRel.getCompanyId());
+				clientExtensionEntryRel.getGroupId());
 
 			if (isNew) {
 				if (ercClientExtensionEntryRel != null) {
 					throw new DuplicateClientExtensionEntryRelExternalReferenceCodeException(
 						"Duplicate client extension entry rel with external reference code " +
-							clientExtensionEntryRel.getExternalReferenceCode());
+							clientExtensionEntryRel.getExternalReferenceCode() +
+								" and group " +
+									clientExtensionEntryRel.getGroupId());
 				}
 			}
 			else {
@@ -3954,7 +3964,9 @@ public class ClientExtensionEntryRelPersistenceImpl
 
 					throw new DuplicateClientExtensionEntryRelExternalReferenceCodeException(
 						"Duplicate client extension entry rel with external reference code " +
-							clientExtensionEntryRel.getExternalReferenceCode());
+							clientExtensionEntryRel.getExternalReferenceCode() +
+								" and group " +
+									clientExtensionEntryRel.getGroupId());
 				}
 			}
 		}
@@ -4512,7 +4524,7 @@ public class ClientExtensionEntryRelPersistenceImpl
 		_uniqueIndexColumnNames.add(new String[] {"uuid_", "groupId"});
 
 		_uniqueIndexColumnNames.add(
-			new String[] {"externalReferenceCode", "companyId"});
+			new String[] {"externalReferenceCode", "groupId"});
 	}
 
 	/**
@@ -4645,40 +4657,24 @@ public class ClientExtensionEntryRelPersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "type_"}, false);
 
-		_finderPathFetchByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+		_finderPathFetchByERC_G = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, true);
+			new String[] {"externalReferenceCode", "groupId"}, true);
 
-		_finderPathCountByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
+		_finderPathCountByERC_G = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, false);
+			new String[] {"externalReferenceCode", "groupId"}, false);
 
-		_setClientExtensionEntryRelUtilPersistence(this);
+		ClientExtensionEntryRelUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setClientExtensionEntryRelUtilPersistence(null);
+		ClientExtensionEntryRelUtil.setPersistence(null);
 
 		entityCache.removeCache(ClientExtensionEntryRelImpl.class.getName());
-	}
-
-	private void _setClientExtensionEntryRelUtilPersistence(
-		ClientExtensionEntryRelPersistence clientExtensionEntryRelPersistence) {
-
-		try {
-			Field field = ClientExtensionEntryRelUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, clientExtensionEntryRelPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -4747,8 +4743,5 @@ public class ClientExtensionEntryRelPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

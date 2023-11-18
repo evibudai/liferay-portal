@@ -19,13 +19,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,10 +37,11 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8154 | Test Summary: Delete a Liferay DXP data source and ensure contacts and ensure analytics events are no longer being synced"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test DeleteLiferayDXPDataSourceEnsureContactsAndEventsNoBeingSynced {
 
 		// AC Bug ticket: LRAC-10534
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
 		ACUtils.addSiteAndPage();
 
@@ -46,7 +49,7 @@ definition {
 
 		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
-		var itemName = StringUtil.replace("${propertyName}", " Combined Property", "");
+		var itemName = StringUtil.replace(${propertyName}, " Combined Property", "");
 
 		JSONUser.addUser(
 			userEmailAddress = "ac@liferay.com",
@@ -58,13 +61,13 @@ definition {
 
 		ACUtils.launchAC();
 
-		ACSettings.deleteDataSource(dataSourceName = "${itemName}");
+		//ACSettings.deleteDataSource(dataSourceName = ${itemName});
 
 		ACNavigation.exitSettings();
 
 		ACNavigation.goToSettings();
 
-		ACUtils.assertItemsNameNotPresent(itemList = "${itemName}");
+		ACUtils.assertItemsNameNotPresent(itemList = ${itemName});
 
 		ACUtils.launchDXP(userEmailAddress = "ac@liferay.com");
 
@@ -77,14 +80,14 @@ definition {
 
 		ACUtils.launchAC();
 
-		ACProperties.switchProperty(propertyName = "${propertyName}");
+		ACProperties.switchProperty(propertyName = ${propertyName});
 
 		ACTimeFilter.clickTimeFilterButton(cardName = "${propertyName} Activities");
 
 		ACTimeFilter.setLast24Hours();
 
 		AssertElementNotPresent(
-			index = "1",
+			index = 1,
 			locator1 = "ACIndividualsDashboard#INDIVIDUALS_ACTIVITIES_CHART_RECHARTS_BAR");
 
 		ACNavigation.goToAssets();

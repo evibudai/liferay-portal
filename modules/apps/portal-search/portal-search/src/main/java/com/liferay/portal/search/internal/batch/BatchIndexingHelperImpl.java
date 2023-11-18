@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.batch;
@@ -23,8 +14,6 @@ import com.liferay.portal.search.batch.BatchIndexingHelper;
 import com.liferay.portal.search.configuration.ReindexConfiguration;
 
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -42,19 +31,18 @@ public class BatchIndexingHelperImpl implements BatchIndexingHelper {
 
 	@Override
 	public int getBulkSize(String entryClassName) {
-		Optional<Integer> optional = Stream.of(
-			_reindexConfiguration.indexingBatchSizes()
-		).map(
-			line -> StringUtil.split(line, StringPool.EQUAL)
-		).filter(
-			pair -> pair.length == 2
-		).filter(
-			pair -> entryClassName.equals(pair[0])
-		).map(
-			pair -> GetterUtil.getInteger(pair[1])
-		).findAny();
+		for (String indexingBatchSize :
+				_reindexConfiguration.indexingBatchSizes()) {
 
-		return optional.orElse(Indexer.DEFAULT_INTERVAL);
+			String[] pair = StringUtil.split(
+				indexingBatchSize, StringPool.EQUAL);
+
+			if ((pair.length == 2) && entryClassName.equals(pair[0])) {
+				return GetterUtil.getInteger(pair[1]);
+			}
+		}
+
+		return Indexer.DEFAULT_INTERVAL;
 	}
 
 	@Activate

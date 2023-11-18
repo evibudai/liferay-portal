@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.categories.admin.web.internal.portlet.test;
@@ -25,6 +16,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -52,8 +44,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -172,33 +162,23 @@ public class AssetCategoryAdminPortletTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true,
-				0, 0, 0, WorkflowConstants.STATUS_APPROVED,
-				new ServiceContext());
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
+				0, 0, WorkflowConstants.STATUS_APPROVED, new ServiceContext());
 
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"assetDisplayPageId",
 			String.valueOf(
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
-
-		Stream<AssetCategory> stream = assetCategories.stream();
-
-		List<String> categoryIds = stream.map(
-			AssetCategory::getCategoryId
-		).map(
-			String::valueOf
-		).collect(
-			Collectors.toList()
-		);
-
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"categoryIds",
-			categoryIds.toArray(categoryIds.toArray(new String[0])));
-
-		actionRequest.addParameter(
+			TransformUtil.transformToArray(
+				assetCategories,
+				assetCategory -> String.valueOf(assetCategory.getCategoryId()),
+				String.class));
+		mockLiferayPortletActionRequest.addParameter(
 			"displayPageType",
 			String.valueOf(AssetDisplayPageConstants.TYPE_SPECIFIC));
 
@@ -208,12 +188,14 @@ public class AssetCategoryAdminPortletTest {
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setUser(_user);
 
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "doProcessAction",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
-			actionRequest, new MockLiferayPortletActionResponse());
+			mockLiferayPortletActionRequest,
+			new MockLiferayPortletActionResponse());
 
 		long classNameId = _portal.getClassNameId(
 			AssetCategory.class.getName());

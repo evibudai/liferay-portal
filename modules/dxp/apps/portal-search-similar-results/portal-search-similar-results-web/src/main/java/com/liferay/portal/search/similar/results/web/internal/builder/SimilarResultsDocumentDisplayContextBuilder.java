@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.similar.results.web.internal.builder;
@@ -61,7 +52,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -285,7 +275,6 @@ public class SimilarResultsDocumentDisplayContextBuilder {
 
 		similarResultsDocumentDisplayContext.setTitle(
 			getTitle(assetEntry, summary));
-
 		similarResultsDocumentDisplayContext.setViewURL(
 			_getViewURL(assetEntry, assetRenderer, className, classPK));
 
@@ -352,15 +341,27 @@ public class SimilarResultsDocumentDisplayContextBuilder {
 		SimilarResultsDocumentDisplayContext
 			similarResultsDocumentDisplayContext) {
 
-		Optional<String> dateStringOptional = SearchStringUtil.maybe(
+		String dateString = SearchStringUtil.maybe(
 			_getFieldValueString(Field.CREATE_DATE));
 
-		Optional<Date> dateOptional = dateStringOptional.map(
-			this::_parseDateStringFieldValue);
+		if (dateString == null) {
+			return;
+		}
 
-		dateOptional.ifPresent(
-			date -> similarResultsDocumentDisplayContext.setCreationDateString(
-				_formatCreationDate(date)));
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+		try {
+			Date date = dateFormat.parse(dateString);
+
+			if (date != null) {
+				similarResultsDocumentDisplayContext.setCreationDateString(
+					_formatCreationDate(date));
+			}
+		}
+		catch (Exception exception) {
+			throw new IllegalArgumentException(
+				"Unable to parse date string: " + dateString, exception);
+		}
 	}
 
 	private void _buildCreatorUserName(
@@ -597,7 +598,7 @@ public class SimilarResultsDocumentDisplayContextBuilder {
 
 		SimilarResultsPortletPreferences similarResultsPortletPreferences =
 			new SimilarResultsPortletPreferencesImpl(
-				Optional.of(_renderRequest.getPreferences()));
+				_renderRequest.getPreferences());
 
 		if (Objects.equals(
 				similarResultsPortletPreferences.getLinkBehavior(),
@@ -690,19 +691,6 @@ public class SimilarResultsDocumentDisplayContextBuilder {
 			destinationBuilderImpl, destinationHelper);
 
 		return destinationBuilderImpl.build();
-	}
-
-	private Date _parseDateStringFieldValue(String dateStringFieldValue) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-
-		try {
-			return dateFormat.parse(dateStringFieldValue);
-		}
-		catch (Exception exception) {
-			throw new IllegalArgumentException(
-				"Unable to parse date string: " + dateStringFieldValue,
-				exception);
-		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

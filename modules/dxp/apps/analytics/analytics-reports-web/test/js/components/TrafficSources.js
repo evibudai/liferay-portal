@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import '@testing-library/jest-dom/extend-expect';
@@ -14,9 +8,11 @@ import {fireEvent, render, waitFor} from '@testing-library/react';
 import React from 'react';
 
 import TrafficSources from '../../../src/main/resources/META-INF/resources/js/components/TrafficSources';
+import {StoreContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/StoreContext';
 import {numberFormat} from '../../../src/main/resources/META-INF/resources/js/utils/numberFormat';
 
 const noop = () => {};
+const mockLanguageTag = 'en-US';
 
 describe('TrafficSources', () => {
 	it('displays the traffic sources with buttons to view keywords', async () => {
@@ -42,11 +38,13 @@ describe('TrafficSources', () => {
 		);
 
 		const {getByText} = render(
-			<TrafficSources
-				dataProvider={mockTrafficSourcesDataProvider}
-				languageTag="en-US"
-				onTrafficSourceClick={noop}
-			/>
+			<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+				<TrafficSources
+					dataProvider={mockTrafficSourcesDataProvider}
+					languageTag="en-US"
+					onTrafficSourceClick={noop}
+				/>
+			</StoreContextProvider>
 		);
 
 		await waitFor(() => {

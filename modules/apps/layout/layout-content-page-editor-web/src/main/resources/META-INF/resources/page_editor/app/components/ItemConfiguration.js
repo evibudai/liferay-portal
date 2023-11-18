@@ -1,30 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
+import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
 import ClayTabs from '@clayui/tabs';
+import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useState} from 'react';
 
-import {useId} from '../../core/hooks/useId';
+import SidebarPanelHeader from '../../common/components/SidebarPanelHeader';
 import {
 	PANELS,
 	selectPanels,
-} from '../../plugins/browser/components/page-structure/selectors/selectPanels';
+} from '../../plugins/browser/components/page_structure/selectors/selectPanels';
+import {ITEM_TYPES} from '../config/constants/itemTypes';
 import {useCollectionActiveItemContext} from '../contexts/CollectionActiveItemContext';
 import {CollectionItemContext} from '../contexts/CollectionItemContext';
+import {useSelectItem} from '../contexts/ControlsContext';
 import {useSelector, useSelectorCallback} from '../contexts/StoreContext';
+import selectCanUpdateItemConfiguration from '../selectors/selectCanUpdateItemConfiguration';
 import selectCanViewItemConfiguration from '../selectors/selectCanViewItemConfiguration';
 import {deepEqual} from '../utils/checkDeepEqual';
 
@@ -57,12 +55,19 @@ function ItemConfigurationContent({
 }) {
 	const tabIdPrefix = useId();
 	const panelIdPrefix = useId();
+	const selectItem = useSelectItem();
 
 	const {activeItem, panelsIds} = useSelectorCallback(
 		(state) => selectPanels(activeItemId, activeItemType, state),
 		[activeItemId, activeItemType],
 		deepEqual
 	);
+
+	const canUpdateItemConfiguration = useSelector(
+		selectCanUpdateItemConfiguration
+	);
+
+	const [previousPanel, setPreviousPanel] = useState({});
 
 	const panels = useMemo(
 		() =>
@@ -74,12 +79,25 @@ function ItemConfigurationContent({
 	);
 
 	useEffect(() => {
+
+		// Keep current panel if it's available
+
 		if (
 			!panels.length ||
 			panels.some((panel) => panel.panelId === activePanel.id)
 		) {
 			return;
 		}
+
+		// Restore previous panel if it's available
+
+		if (panels.some((panel) => panel.panelId === previousPanel.id)) {
+			setActivePanel(previousPanel);
+
+			return;
+		}
+
+		// Look for a panel of the same type than the current one
 
 		let nextActivePanelId = activePanel.id;
 		let nextActivePanelType = activePanel.type;
@@ -91,16 +109,47 @@ function ItemConfigurationContent({
 		if (sameTypePanel) {
 			nextActivePanelId = sameTypePanel.panelId;
 		}
+
+		// Select the first of available panels
+
 		else {
 			nextActivePanelId = panels[0]?.panelId;
 			nextActivePanelType = panels[0]?.type;
 		}
 
+		setPreviousPanel(activePanel);
 		setActivePanel({id: nextActivePanelId, type: nextActivePanelType});
-	}, [panels, activePanel, setActivePanel]);
+	}, [panels, activePanel, setActivePanel, previousPanel]);
 
 	return (
 		<div className="page-editor__page-structure__item-configuration">
+			{activeItemType === ITEM_TYPES.editable && (
+				<SidebarPanelHeader
+					iconLeft={
+						canUpdateItemConfiguration && (
+							<ClayButton
+								aria-label={Liferay.Language.get(
+									'back-to-parent-configuration'
+								)}
+								borderless
+								className="mb-0 mr-3 p-0"
+								displayType="secondary"
+								onClick={() => selectItem(activeItem.parentId)}
+								size="sm"
+								title={Liferay.Language.get(
+									'back-to-parent-configuration'
+								)}
+							>
+								<ClayIcon symbol="angle-left" />
+							</ClayButton>
+						)
+					}
+					showCloseButton={false}
+				>
+					{activeItem.editableId}
+				</SidebarPanelHeader>
+			)}
+
 			{!panels.length ? (
 				<ClayAlert
 					className="m-3"
@@ -118,7 +167,12 @@ function ItemConfigurationContent({
 						active={panels.findIndex(
 							(panel) => panel.panelId === activePanel.id
 						)}
-						className="flex-nowrap pt-2 px-3"
+						className={classNames(
+							'flex-nowrap flex-shrink-0 px-3',
+							{
+								'pt-2': activeItemType !== ITEM_TYPES.editable,
+							}
+						)}
 						onActiveChange={(activeIndex) => {
 							const panel = panels[activeIndex];
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.upgrade;
@@ -17,7 +8,6 @@ package com.liferay.portal.kernel.upgrade;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -178,7 +168,6 @@ public abstract class BasePortletIdUpgradeProcess extends UpgradeProcess {
 
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					preparedStatement2.setString(1, newTypeSettings);
-
 					preparedStatement2.setLong(2, resultSet.getLong("groupId"));
 
 					preparedStatement2.addBatch();
@@ -215,9 +204,7 @@ public abstract class BasePortletIdUpgradeProcess extends UpgradeProcess {
 				"_USER_%'"));
 
 		if (hasColumn("PortletPreferences", "preferences")) {
-			DB db = DBManagerUtil.getDB();
-
-			DBType dbType = db.getDBType();
+			DBType dbType = DBManagerUtil.getDBType();
 
 			String preferencesExpression = "preferences";
 
@@ -437,7 +424,6 @@ public abstract class BasePortletIdUpgradeProcess extends UpgradeProcess {
 
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					preparedStatement2.setString(1, newTypeSettings);
-
 					preparedStatement2.setLong(
 						2, resultSet.getLong("layoutRevisionId"));
 
@@ -475,7 +461,6 @@ public abstract class BasePortletIdUpgradeProcess extends UpgradeProcess {
 
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					preparedStatement2.setString(1, newTypeSettings);
-
 					preparedStatement2.setLong(2, resultSet.getLong("plid"));
 
 					preparedStatement2.addBatch();
@@ -735,7 +720,6 @@ public abstract class BasePortletIdUpgradeProcess extends UpgradeProcess {
 						jsonObject.put("portletId", newRootPortletId);
 
 						preparedStatement2.setString(1, jsonObject.toString());
-
 						preparedStatement2.setLong(
 							2, resultSet.getLong("fragmentEntryLinkId"));
 
