@@ -1,20 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.indexer.helper;
 
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
@@ -27,22 +21,22 @@ import com.liferay.portal.search.internal.indexer.IndexerProvidedClausesUtil;
 import com.liferay.portal.search.internal.indexer.ModelPreFilterContributorsRegistry;
 import com.liferay.portal.search.internal.indexer.ModelSearchSettingsImpl;
 import com.liferay.portal.search.internal.indexer.QueryPreFilterContributorsRegistry;
-import com.liferay.portal.search.internal.indexer.SearchPermissionFilterContributorsRegistry;
 import com.liferay.portal.search.internal.util.SearchStringUtil;
 import com.liferay.portal.search.permission.SearchPermissionFilterContributor;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.query.contributor.QueryPreFilterContributor;
+import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchSettings;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -88,13 +82,23 @@ public class PreFilterContributorHelperImpl
 			booleanFilter, modelSearchSettings, searchContext);
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, SearchPermissionFilterContributor.class);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerList.close();
+	}
+
 	protected Collection<String> getStrings(
 		String string, SearchContext searchContext) {
 
 		return Arrays.asList(
 			SearchStringUtil.splitAndUnquote(
-				Optional.ofNullable(
-					(String)searchContext.getAttribute(string))));
+				(String)searchContext.getAttribute(string)));
 	}
 
 	@Reference
@@ -107,10 +111,6 @@ public class PreFilterContributorHelperImpl
 
 	@Reference
 	protected SearchPermissionChecker searchPermissionChecker;
-
-	@Reference
-	protected SearchPermissionFilterContributorsRegistry
-		searchPermissionFilterContributorsRegistry;
 
 	private void _addIndexerProvidedPreFilters(
 		BooleanFilter booleanFilter, Indexer<?> indexer,
@@ -143,8 +143,8 @@ public class PreFilterContributorHelperImpl
 		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
 		SearchContext searchContext) {
 
-		Stream<ModelPreFilterContributor> stream =
-			modelPreFilterContributorsRegistry.stream(
+		List<ModelPreFilterContributor> modelPreFilterContributors =
+			modelPreFilterContributorsRegistry.filterModelPreFilterContributor(
 				modelSearchSettings.getClassName(),
 				getStrings(
 					"search.full.query.clause.contributors.excludes",
@@ -154,9 +154,12 @@ public class PreFilterContributorHelperImpl
 					searchContext),
 				IndexerProvidedClausesUtil.shouldSuppress(searchContext));
 
-		stream.forEach(
-			modelPreFilterContributor -> modelPreFilterContributor.contribute(
-				booleanFilter, modelSearchSettings, searchContext));
+		for (ModelPreFilterContributor modelPreFilterContributor :
+				modelPreFilterContributors) {
+
+			modelPreFilterContributor.contribute(
+				booleanFilter, modelSearchSettings, searchContext);
+		}
 	}
 
 	private void _addPermissionFilter(
@@ -167,22 +170,17 @@ public class PreFilterContributorHelperImpl
 			return;
 		}
 
-		Optional<String> optional = _getParentEntryClassNameOptional(
-			entryClassName);
-
-		String permissionedEntryClassName = optional.orElse(entryClassName);
-
 		searchPermissionChecker.getPermissionBooleanFilter(
 			searchContext.getCompanyId(), searchContext.getGroupIds(),
-			searchContext.getUserId(), permissionedEntryClassName,
+			searchContext.getUserId(), _getParentEntryClassName(entryClassName),
 			booleanFilter, searchContext);
 	}
 
 	private void _addPreFilters(
 		BooleanFilter booleanFilter, SearchContext searchContext) {
 
-		Stream<QueryPreFilterContributor> stream =
-			queryPreFilterContributorsRegistry.stream(
+		List<QueryPreFilterContributor> queryPreFilterContributors =
+			queryPreFilterContributorsRegistry.filterQueryPreFilterContributor(
 				getStrings(
 					"search.full.query.clause.contributors.excludes",
 					searchContext),
@@ -190,9 +188,11 @@ public class PreFilterContributorHelperImpl
 					"search.full.query.clause.contributors.includes",
 					searchContext));
 
-		stream.forEach(
-			queryPreFilterContributor -> queryPreFilterContributor.contribute(
-				booleanFilter, searchContext));
+		for (QueryPreFilterContributor queryPreFilterContributor :
+				queryPreFilterContributors) {
+
+			queryPreFilterContributor.contribute(booleanFilter, searchContext);
+		}
 	}
 
 	private Filter _createPreFilterForEntryClassName(
@@ -215,38 +215,42 @@ public class PreFilterContributorHelperImpl
 	}
 
 	private ModelSearchSettings _getModelSearchSettings(Indexer<?> indexer) {
-		ModelSearchSettingsImpl modelSearchSettingsImpl =
-			new ModelSearchSettingsImpl(indexer.getClassName());
+		ModelSearchConfigurator<?> modelSearchConfigurator =
+			new ModelSearchConfigurator<BaseModel<?>>() {
 
-		modelSearchSettingsImpl.setStagingAware(indexer.isStagingAware());
+				@Override
+				public String getClassName() {
+					return indexer.getClassName();
+				}
 
-		return modelSearchSettingsImpl;
+				@Override
+				public boolean isStagingAware() {
+					return indexer.isStagingAware();
+				}
+
+			};
+
+		return new ModelSearchSettingsImpl(modelSearchConfigurator);
 	}
 
-	private Optional<String> _getParentEntryClassNameOptional(
-		String entryClassName) {
-
-		Stream<SearchPermissionFilterContributor> stream =
-			searchPermissionFilterContributorsRegistry.getAll();
-
-		List<SearchPermissionFilterContributor> list = stream.collect(
-			Collectors.toList());
-
+	private String _getParentEntryClassName(String entryClassName) {
 		for (SearchPermissionFilterContributor
-				searchPermissionFilterContributor : list) {
+				searchPermissionFilterContributor :
+					_serviceTrackerList.toList()) {
 
-			Optional<String> parentEntryClassNameOptional =
-				searchPermissionFilterContributor.
-					getParentEntryClassNameOptional(entryClassName);
+			String parentEntryClassName =
+				searchPermissionFilterContributor.getParentEntryClassName(
+					entryClassName);
 
-			if ((parentEntryClassNameOptional != null) &&
-				parentEntryClassNameOptional.isPresent()) {
-
-				return parentEntryClassNameOptional;
+			if (parentEntryClassName != null) {
+				return parentEntryClassName;
 			}
 		}
 
-		return Optional.empty();
+		return entryClassName;
 	}
+
+	private ServiceTrackerList<SearchPermissionFilterContributor>
+		_serviceTrackerList;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.qualifier.internal.metadata;
@@ -24,8 +15,7 @@ import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.sort.OrderByExpression;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.AddressTable;
-import com.liferay.portal.kernel.model.ListType;
-import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
@@ -41,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.commerce.qualifier.configuration.AddressCommerceQualifierConfiguration",
-	service = {CommerceQualifierMetadata.class, ModelListener.class}
+	service = CommerceQualifierMetadata.class
 )
 public class CommerceBillingAddressCommerceQualifierMetadata
 	extends BaseCommerceQualifierMetadata<Address> {
@@ -53,21 +43,17 @@ public class CommerceBillingAddressCommerceQualifierMetadata
 
 	@Override
 	public Predicate getFilterPredicate() {
-		ListType accountEntryAddressTypeBillingAndShippingListType =
-			_listTypeLocalService.getListType(
-				AccountListTypeConstants.
-					ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING_AND_SHIPPING,
-				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
-		ListType accountEntryAddressTypeBillingListType =
-			_listTypeLocalService.getListType(
-				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING,
-				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
-
 		return AddressTable.INSTANCE.listTypeId.in(
 			new Long[] {
-				accountEntryAddressTypeBillingAndShippingListType.
-					getListTypeId(),
-				accountEntryAddressTypeBillingListType.getListTypeId()
+				_listTypeLocalService.getListTypeId(
+					CompanyThreadLocal.getCompanyId(),
+					AccountListTypeConstants.
+						ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING_AND_SHIPPING,
+					AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS),
+				_listTypeLocalService.getListTypeId(
+					CompanyThreadLocal.getCompanyId(),
+					AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING,
+					AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS)
 			});
 	}
 

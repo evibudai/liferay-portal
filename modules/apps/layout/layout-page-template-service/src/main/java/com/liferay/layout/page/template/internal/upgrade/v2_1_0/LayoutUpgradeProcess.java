@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.internal.upgrade.v2_1_0;
 
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.string.StringBundler;
@@ -69,7 +61,7 @@ public class LayoutUpgradeProcess extends UpgradeProcess {
 			long layoutPrototypeId, ServiceContext serviceContext)
 		throws Exception {
 
-		if ((type == LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE) &&
+		if ((type == LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE) &&
 			(layoutPrototypeId > 0)) {
 
 			LayoutPrototype layoutPrototype =
@@ -84,7 +76,7 @@ public class LayoutUpgradeProcess extends UpgradeProcess {
 		boolean privateLayout = false;
 		String layoutType = LayoutConstants.TYPE_ASSET_DISPLAY;
 
-		if (type == LayoutPageTemplateEntryTypeConstants.TYPE_BASIC) {
+		if (type == LayoutPageTemplateEntryTypeConstants.BASIC) {
 			layoutType = LayoutConstants.TYPE_CONTENT;
 			privateLayout = true;
 		}
@@ -99,7 +91,7 @@ public class LayoutUpgradeProcess extends UpgradeProcess {
 			PortalUtil.getValidUserId(companyId, userId), groupId,
 			privateLayout, 0, titleMap, titleMap, null, null, null, layoutType,
 			UnicodePropertiesBuilder.put(
-				"published", "true"
+				LayoutTypeSettingsConstants.KEY_PUBLISHED, "true"
 			).buildString(),
 			true, true, new HashMap<>(), serviceContext);
 
@@ -158,8 +150,9 @@ public class LayoutUpgradeProcess extends UpgradeProcess {
 					fragmentEntryLink.setClassPK(plid);
 					fragmentEntryLink.setPlid(plid);
 
-					_fragmentEntryLinkLocalService.updateFragmentEntryLink(
-						fragmentEntryLink);
+					fragmentEntryLink =
+						_fragmentEntryLinkLocalService.updateFragmentEntryLink(
+							fragmentEntryLink);
 
 					_fragmentEntryLinkLocalService.addFragmentEntryLink(
 						draftLayout.getUserId(), draftLayout.getGroupId(), 0,

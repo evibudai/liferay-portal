@@ -15,7 +15,7 @@ definition {
 			layoutName = "Knowledge Base Article Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Knowledge Base Article Page",
 			widgetName = "Knowledge Base Article");
@@ -24,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,7 +37,7 @@ definition {
 	}
 
 	@description = "This test ensures that a user can select a child article to display from the widget configuration."
-	@priority = "5"
+	@priority = 5
 	test CanSelectChildArticleToDisplay {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -65,7 +65,7 @@ definition {
 	}
 
 	@description = "This test ensures that a user can select an article in a folder to display from the widget configuration."
-	@priority = "5"
+	@priority = 5
 	test CanSelectFolderArticleToDisplay {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -93,11 +93,42 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title");
 	}
 
-	@priority = "3"
+	@description = "This test ensures that the description can be displayed on the KB article widget after enabling it in the configuration."
+	@priority = 4
+	test CanViewDescriptionAfterEnablingInConfiguration {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "KB Article Content",
+			kbArticleTitle = "KB Article Title",
+			kbDescription = "KB Article Description");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Article Page");
+
+		KBArticle.selectArticlesToDisplayOnWidget(
+			kbArticle = "true",
+			kbArticleTitle = "KB Article Title");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Article Page");
+
+		KBArticle.viewPG(
+			description = "Disabled",
+			kbArticleContent = "KB Article Content",
+			kbArticleTitle = "KB Article Title",
+			kbDescription = "KB Article Description");
+
+		KBArticle.enableDescriptionOnPortlet(portletName = "Knowledge Base Article");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Article Page");
+
+		KBArticle.viewPG(
+			kbArticleContent = "KB Article Content",
+			kbArticleTitle = "KB Article Title",
+			kbDescription = "KB Article Description");
+	}
+
+	@priority = 3
 	@refactordone
 	test DeleteKBArticleViaKBArticle {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -122,9 +153,7 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
-		KBArticle.viewDefaultCP(
-			defaultHome = "true",
-			featureFlag = "true");
+		KBArticle.viewDefaultCP();
 	}
 
 }

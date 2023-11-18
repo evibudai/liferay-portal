@@ -1,35 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.settings.internal.configuration;
 
 import com.liferay.analytics.batch.exportimport.AnalyticsDXPEntityBatchExporter;
+import com.liferay.analytics.batch.exportimport.constants.AnalyticsDXPEntityBatchExporterConstants;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinationNames;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
 import com.liferay.analytics.message.sender.model.AnalyticsMessage;
-import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.AnalyticsEntityModel;
 import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalService;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
 import com.liferay.analytics.settings.internal.model.AnalyticsUserImpl;
-import com.liferay.analytics.settings.internal.util.EntityModelListenerRegistry;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -42,7 +38,8 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.model.UserConstants;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -51,11 +48,14 @@ import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import java.nio.charset.Charset;
 
@@ -71,14 +71,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -87,22 +90,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.analytics.settings.configuration.AnalyticsConfiguration",
-	property = Constants.SERVICE_PID + "=com.liferay.analytics.settings.configuration.AnalyticsConfiguration.scoped",
-	service = {
-		AnalyticsConfigurationRegistry.class, ManagedServiceFactory.class
-	}
+	service = AnalyticsConfigurationRegistry.class
 )
 public class AnalyticsConfigurationRegistryImpl
-	implements AnalyticsConfigurationRegistry, ManagedServiceFactory {
-
-	@Override
-	public void deleted(String pid) {
-		long companyId = getCompanyId(pid);
-
-		_unmapPid(pid);
-
-		_disable(companyId);
-	}
+	implements AnalyticsConfigurationRegistry {
 
 	@Override
 	public AnalyticsConfiguration getAnalyticsConfiguration(long companyId) {
@@ -129,34 +120,25 @@ public class AnalyticsConfigurationRegistryImpl
 			return null;
 		}
 
-		Set<Map.Entry<String, Long>> entries = _companyIds.entrySet();
+		for (Map.Entry<String, Long> entry : _companyIds.entrySet()) {
+			if (Objects.equals(entry.getValue(), companyId)) {
+				try {
+					Configuration configuration =
+						_configurationAdmin.getConfiguration(
+							entry.getKey(), StringPool.QUESTION);
 
-		Stream<Map.Entry<String, Long>> stream = entries.stream();
+					return configuration.getProperties();
+				}
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to get configuration for company " +
+								companyId,
+							exception);
+					}
 
-		String pid = stream.filter(
-			entry -> Objects.equals(entry.getValue(), companyId)
-		).map(
-			Map.Entry::getKey
-		).findFirst(
-		).orElse(
-			null
-		);
-
-		if (pid == null) {
-			return null;
-		}
-
-		try {
-			Configuration configuration = _configurationAdmin.getConfiguration(
-				pid, StringPool.QUESTION);
-
-			return configuration.getProperties();
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to get configuration for company " + companyId,
-					exception);
+					break;
+				}
 			}
 		}
 
@@ -174,12 +156,6 @@ public class AnalyticsConfigurationRegistryImpl
 	}
 
 	@Override
-	public String getName() {
-		return "com.liferay.analytics.settings.configuration." +
-			"AnalyticsConfiguration.scoped";
-	}
-
-	@Override
 	public boolean isActive() {
 		if (!_active && _hasConfiguration()) {
 			_active = true;
@@ -191,46 +167,33 @@ public class AnalyticsConfigurationRegistryImpl
 		return _active;
 	}
 
-	@Override
-	public void updated(String pid, Dictionary<String, ?> dictionary) {
-		_unmapPid(pid);
+	@Activate
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
 
-		long companyId = GetterUtil.getLong(
-			dictionary.get("companyId"), CompanyConstants.SYSTEM);
+		modified(properties);
 
-		if (companyId != CompanyConstants.SYSTEM) {
-			_analyticsConfigurations.put(
-				companyId,
-				ConfigurableUtil.createConfigurable(
-					AnalyticsConfiguration.class, dictionary));
-			_companyIds.put(pid, companyId);
-		}
-
-		if (!_initializedCompanyIds.contains(companyId)) {
-			_initializedCompanyIds.add(companyId);
-
-			if (Validator.isNotNull(dictionary.get("previousToken"))) {
-				return;
-			}
-		}
-
-		if (Validator.isNull(dictionary.get("token"))) {
-			if (Validator.isNotNull(dictionary.get("previousToken"))) {
-				_disable((Long)dictionary.get("companyId"));
-			}
-		}
-		else {
-			if (Validator.isNull(dictionary.get("previousToken"))) {
-				_enable((Long)dictionary.get("companyId"));
-			}
-
-			_sync(dictionary);
-		}
+		_serviceRegistration = bundleContext.registerService(
+			ManagedServiceFactory.class,
+			new AnalyticsConfigurationManagedServiceFactory(),
+			HashMapDictionaryBuilder.put(
+				Constants.SERVICE_PID,
+				"com.liferay.analytics.settings.configuration." +
+					"AnalyticsConfiguration.scoped"
+			).build());
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, AnalyticsEntityModel.class, null,
+			new AnalyticsEntityModelServiceReferenceMapper(bundleContext));
 	}
 
-	@Activate
+	@Deactivate
+	protected void deactivate() {
+		_serviceRegistration.unregister();
+		_serviceTrackerMap.close();
+	}
+
 	@Modified
-	protected void activate(Map<String, Object> properties) {
+	protected void modified(Map<String, Object> properties) {
 		_systemAnalyticsConfiguration = ConfigurableUtil.createConfigurable(
 			AnalyticsConfiguration.class, properties);
 	}
@@ -253,14 +216,14 @@ public class AnalyticsConfigurationRegistryImpl
 			AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN,
 			"analytics.administrator@" + company.getMx(),
 			LocaleUtil.getDefault(), "Analytics", "", "Administrator", 0, 0,
-			true, 0, 1, 1970, "", null, null, new long[] {role.getRoleId()},
-			null, false, new ServiceContext());
+			true, 0, 1, 1970, "", UserConstants.TYPE_REGULAR, null, null,
+			new long[] {role.getRoleId()}, null, false, new ServiceContext());
 
 		_userLocalService.updateUser(user);
 	}
 
 	private void _addAnalyticsMessages(
-		String action, List<? extends BaseModel> baseModels) {
+		String action, List<? extends BaseModel> baseModels, long companyId) {
 
 		if (baseModels.isEmpty()) {
 			return;
@@ -274,9 +237,10 @@ public class AnalyticsConfigurationRegistryImpl
 		BaseModel<?> baseModel = baseModels.get(0);
 
 		message.put(
-			"entityModelListener",
-			_entityModelListenerRegistry.getEntityModelListener(
-				baseModel.getModelClassName()));
+			"analyticsEntityModel",
+			_serviceTrackerMap.getService(baseModel.getModelClassName()));
+
+		message.put("principalName", _getAnalyticsAdminUserId(companyId));
 
 		message.setPayload(baseModels);
 
@@ -306,13 +270,13 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 
 		_sapEntryLocalService.addSAPEntry(
-			_userLocalService.getDefaultUserId(companyId), _SAP_ENTRY_OBJECT[1],
+			_userLocalService.getGuestUserId(companyId), _SAP_ENTRY_OBJECT[1],
 			false, true, sapEntryName,
 			Collections.singletonMap(LocaleUtil.getDefault(), sapEntryName),
 			new ServiceContext());
 	}
 
-	private void _addUsersAnalyticsMessages(List<User> users) {
+	private void _addUsersAnalyticsMessages(long companyId, List<User> users) {
 		List<AnalyticsUserImpl> analyticsUsers = new ArrayList<>(users.size());
 
 		List<Contact> contacts = new ArrayList<>(users.size());
@@ -320,19 +284,20 @@ public class AnalyticsConfigurationRegistryImpl
 		for (User user : users) {
 			Map<String, long[]> memberships = new HashMap<>();
 
-			for (EntityModelListener<?> entityModelListener :
-					_entityModelListenerRegistry.getEntityModelListeners()) {
+			for (AnalyticsEntityModel<?> analyticsEntityModel :
+					_serviceTrackerMap.values()) {
 
 				try {
-					long[] membershipIds = entityModelListener.getMembershipIds(
-						user);
+					long[] membershipIds =
+						analyticsEntityModel.getMembershipIds(user);
 
 					if (membershipIds.length == 0) {
 						continue;
 					}
 
 					memberships.put(
-						entityModelListener.getModelClassName(), membershipIds);
+						analyticsEntityModel.getModelClassName(),
+						membershipIds);
 				}
 				catch (Exception exception) {
 					_log.error(exception);
@@ -348,9 +313,9 @@ public class AnalyticsConfigurationRegistryImpl
 			}
 		}
 
-		_addAnalyticsMessages("update", analyticsUsers);
+		_addAnalyticsMessages("update", analyticsUsers, companyId);
 
-		_addAnalyticsMessages("update", contacts);
+		_addAnalyticsMessages("update", contacts, companyId);
 	}
 
 	private void _deleteAnalyticsAdmin(long companyId) throws Exception {
@@ -374,16 +339,19 @@ public class AnalyticsConfigurationRegistryImpl
 	private void _disable(long companyId) {
 		try {
 			if (companyId != CompanyConstants.SYSTEM) {
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LRAC-10632"))) {
+				_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+					companyId,
+					new String[] {
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_DXP_ENTITIES,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_ORDER,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_PRODUCT
+					});
 
-					_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
-						companyId);
-				}
-				else {
-					_analyticsMessageLocalService.deleteAnalyticsMessages(
-						companyId);
-				}
+				_analyticsMessageLocalService.deleteAnalyticsMessages(
+					companyId);
 
 				_deleteAnalyticsAdmin(companyId);
 				_deleteSAPEntry(companyId);
@@ -408,6 +376,111 @@ public class AnalyticsConfigurationRegistryImpl
 		catch (Exception exception) {
 			_log.error(exception);
 		}
+	}
+
+	private void _firstSync(long companyId) {
+		try {
+			Set<String> dispatchTriggerNames = new HashSet<>();
+
+			if (FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+				dispatchTriggerNames.add(
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
+			}
+
+			if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+					companyId)) {
+
+				Collections.addAll(
+					dispatchTriggerNames,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_ORDER,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_PRODUCT);
+			}
+
+			if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") ||
+				!dispatchTriggerNames.isEmpty()) {
+
+				_analyticsDXPEntityBatchExporter.scheduleExportTriggers(
+					companyId, dispatchTriggerNames.toArray(new String[0]));
+
+				_analyticsDXPEntityBatchExporter.export(
+					companyId, dispatchTriggerNames.toArray(new String[0]));
+			}
+
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+				AnalyticsConfiguration analyticsConfiguration =
+					getAnalyticsConfiguration(companyId);
+
+				Collection<AnalyticsEntityModel<?>> analyticsEntityModels =
+					_serviceTrackerMap.values();
+
+				for (AnalyticsEntityModel<?> analyticsEntityModel :
+						analyticsEntityModels) {
+
+					analyticsEntityModel.syncAll(companyId);
+				}
+
+				_syncDefaultFields(
+					companyId, analyticsConfiguration.syncedContactFieldNames(),
+					analyticsConfiguration.syncedUserFieldNames());
+
+				_syncUserCustomFields(
+					companyId, analyticsConfiguration.syncedUserFieldNames());
+
+				if (GetterUtil.getBoolean(
+						analyticsConfiguration.syncAllContacts())) {
+
+					_syncContacts(companyId);
+				}
+				else {
+					_syncOrganizationUsers(
+						companyId,
+						analyticsConfiguration.syncedOrganizationIds());
+					_syncUserGroupUsers(
+						companyId, analyticsConfiguration.syncedUserGroupIds());
+				}
+
+				Message message = new Message();
+
+				message.put("command", AnalyticsMessagesProcessorCommand.SEND);
+				message.put("companyId", companyId);
+				message.put(
+					"principalName", _getAnalyticsAdminUserId(companyId));
+
+				if (_log.isInfoEnabled()) {
+					_log.info("Queueing send analytics messages message");
+				}
+
+				TransactionCommitCallbackUtil.registerCallback(
+					() -> {
+						_messageBus.sendMessage(
+							AnalyticsMessagesDestinationNames.
+								ANALYTICS_MESSAGES_PROCESSOR,
+							message);
+
+						return null;
+					});
+			}
+
+			_analyticsSettingsManager.updateCompanyConfiguration(
+				companyId, Collections.singletonMap("firstSync", false));
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+	}
+
+	private long _getAnalyticsAdminUserId(long companyId) {
+		User user = _userLocalService.fetchUserByScreenName(
+			companyId, AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN);
+
+		if (user == null) {
+			return 0;
+		}
+
+		return user.getUserId();
 	}
 
 	private boolean _hasConfiguration() {
@@ -440,72 +513,147 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private void _sync(Dictionary<String, ?> dictionary) {
+	private void _sync(long companyId, Dictionary<String, ?> dictionary) {
 		try {
-			if (Validator.isNotNull(dictionary.get("token")) &&
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10632") &&
+				Validator.isNotNull(dictionary.get("token")) &&
 				Validator.isNull(dictionary.get("previousToken"))) {
 
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LRAC-10632"))) {
+				Collection<AnalyticsEntityModel<?>> analyticsEntityModels =
+					_serviceTrackerMap.values();
 
-					_analyticsDXPEntityBatchExporter.scheduleExportTriggers(
-						(Long)dictionary.get("companyId"));
+				for (AnalyticsEntityModel<?> analyticsEntityModel :
+						analyticsEntityModels) {
+
+					analyticsEntityModel.syncAll(companyId);
 				}
-				else {
-					Collection<EntityModelListener<?>> entityModelListeners =
-						_entityModelListenerRegistry.getEntityModelListeners();
+			}
 
-					for (EntityModelListener<?> entityModelListener :
-							entityModelListeners) {
+			if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") ||
+				!FeatureFlagManagerUtil.isEnabled("LRAC-10757")) {
 
-						entityModelListener.syncAll(
-							(Long)dictionary.get("companyId"));
+				Set<String> refreshDispatchTriggerNames = new HashSet<>();
+				Set<String> unscheduleDispatchTriggerNames = new HashSet<>();
+
+				if (_analyticsSettingsManager.syncedCommerceSettingsChanged(
+						companyId)) {
+
+					if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+							companyId)) {
+
+						Collections.addAll(
+							refreshDispatchTriggerNames,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
 					}
+					else {
+						Collections.addAll(
+							unscheduleDispatchTriggerNames,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
+					}
+				}
+
+				if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+						companyId)) {
+
+					if (_analyticsSettingsManager.syncedOrderFieldsChanged(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER);
+					}
+
+					if (_analyticsSettingsManager.syncedProductFieldsChanged(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
+					}
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") &&
+					((_analyticsSettingsManager.syncedAccountSettingsChanged(
+						companyId) &&
+					  _analyticsSettingsManager.syncedAccountSettingsEnabled(
+						  companyId)) ||
+					 (_analyticsSettingsManager.syncedAccountSettingsEnabled(
+						 companyId) &&
+					  _analyticsSettingsManager.syncedAccountFieldsChanged(
+						  companyId)) ||
+					 (_analyticsSettingsManager.syncedContactSettingsChanged(
+						 companyId) &&
+					  _analyticsSettingsManager.syncedContactSettingsEnabled(
+						  companyId)) ||
+					 (_analyticsSettingsManager.syncedContactSettingsEnabled(
+						 companyId) &&
+					  _analyticsSettingsManager.syncedUserFieldsChanged(
+						  companyId)))) {
+
+					refreshDispatchTriggerNames.add(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
+				}
+
+				if (!refreshDispatchTriggerNames.isEmpty()) {
+					_analyticsDXPEntityBatchExporter.refreshExportTriggers(
+						companyId,
+						refreshDispatchTriggerNames.toArray(new String[0]));
+
+					if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") &&
+						FeatureFlagManagerUtil.isEnabled("LRAC-10757")) {
+
+						_analyticsDXPEntityBatchExporter.export(
+							companyId,
+							new String[] {
+								AnalyticsDXPEntityBatchExporterConstants.
+									DISPATCH_TRIGGER_NAME_DXP_ENTITIES
+							});
+					}
+				}
+
+				if (!unscheduleDispatchTriggerNames.isEmpty()) {
+					_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+						companyId,
+						unscheduleDispatchTriggerNames.toArray(new String[0]));
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+					return;
 				}
 			}
 
 			String[] previousSyncedContactFieldNames =
 				GetterUtil.getStringValues(
 					dictionary.get("previousSyncedContactFieldNames"));
+
+			Arrays.sort(previousSyncedContactFieldNames);
+
 			String[] previousSyncedUserFieldNames = GetterUtil.getStringValues(
 				dictionary.get("previousSyncedUserFieldNames"));
+
+			Arrays.sort(previousSyncedUserFieldNames);
+
 			String[] syncedContactFieldNames = GetterUtil.getStringValues(
 				dictionary.get("syncedContactFieldNames"));
+
+			Arrays.sort(syncedContactFieldNames);
+
 			String[] syncedUserFieldNames = GetterUtil.getStringValues(
 				dictionary.get("syncedUserFieldNames"));
 
-			Arrays.sort(previousSyncedContactFieldNames);
-			Arrays.sort(previousSyncedUserFieldNames);
-			Arrays.sort(syncedContactFieldNames);
 			Arrays.sort(syncedUserFieldNames);
-
-			if (GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LRAC-10632"))) {
-
-				if (!Arrays.equals(
-						previousSyncedUserFieldNames, syncedUserFieldNames) ||
-					!Arrays.equals(
-						previousSyncedContactFieldNames,
-						syncedContactFieldNames) ||
-					!Arrays.equals(
-						previousSyncedUserFieldNames, syncedUserFieldNames)) {
-
-					_analyticsDXPEntityBatchExporter.refreshExportTrigger(
-						(Long)dictionary.get("companyId"),
-						"export-user-analytics-dxp-entities");
-				}
-
-				_analyticsDXPEntityBatchExporter.export(
-					(Long)dictionary.get("companyId"));
-
-				return;
-			}
 
 			if (!Arrays.equals(
 					previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
-				_syncUserCustomFields(
-					(Long)dictionary.get("companyId"), syncedUserFieldNames);
+				_syncUserCustomFields(companyId, syncedUserFieldNames);
 			}
 
 			if (!Arrays.equals(
@@ -514,28 +662,34 @@ public class AnalyticsConfigurationRegistryImpl
 					previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
 				_syncDefaultFields(
-					(Long)dictionary.get("companyId"), syncedContactFieldNames,
-					syncedUserFieldNames);
+					companyId, syncedContactFieldNames, syncedUserFieldNames);
 			}
 
 			if (GetterUtil.getBoolean(dictionary.get("syncAllContacts"))) {
 				if (!GetterUtil.getBoolean(
-						dictionary.get("previousSyncAllContacts"))) {
+						dictionary.get("previousSyncAllContacts")) ||
+					!Arrays.equals(
+						previousSyncedContactFieldNames,
+						syncedContactFieldNames) ||
+					!Arrays.equals(
+						previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
-					_syncContacts((Long)dictionary.get("companyId"));
+					_syncContacts(companyId);
 				}
 			}
 			else {
 				_syncOrganizationUsers(
+					companyId,
 					(String[])dictionary.get("syncedOrganizationIds"));
 				_syncUserGroupUsers(
-					(String[])dictionary.get("syncedUserGroupIds"));
+					companyId, (String[])dictionary.get("syncedUserGroupIds"));
 			}
 
 			Message message = new Message();
 
 			message.put("command", AnalyticsMessagesProcessorCommand.SEND);
 			message.put("companyId", dictionary.get("companyId"));
+			message.put("principalName", _getAnalyticsAdminUserId(companyId));
 
 			if (_log.isInfoEnabled()) {
 				_log.info("Queueing send analytics messages message");
@@ -573,7 +727,7 @@ public class AnalyticsConfigurationRegistryImpl
 			List<User> users = _userLocalService.getCompanyUsers(
 				companyId, start, end);
 
-			_addUsersAnalyticsMessages(users);
+			_addUsersAnalyticsMessages(companyId, users);
 		}
 	}
 
@@ -611,7 +765,7 @@ public class AnalyticsConfigurationRegistryImpl
 					analyticsMessageBuilder.buildJSONString();
 
 				_analyticsMessageLocalService.addAnalyticsMessage(
-					companyId, _userLocalService.getDefaultUserId(companyId),
+					companyId, _userLocalService.getGuestUserId(companyId),
 					analyticsMessageJSON.getBytes(Charset.defaultCharset()));
 			}
 			catch (Exception exception) {
@@ -625,7 +779,9 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 	}
 
-	private void _syncOrganizationUsers(String[] organizationIds) {
+	private void _syncOrganizationUsers(
+		long companyId, String[] organizationIds) {
+
 		for (String organizationId : organizationIds) {
 			int count = _userLocalService.getOrganizationUsersCount(
 				GetterUtil.getLong(organizationId));
@@ -645,7 +801,7 @@ public class AnalyticsConfigurationRegistryImpl
 					List<User> users = _userLocalService.getOrganizationUsers(
 						GetterUtil.getLong(organizationId), start, end);
 
-					_addUsersAnalyticsMessages(users);
+					_addUsersAnalyticsMessages(companyId, users);
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
@@ -677,11 +833,11 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 
 		if (!expandoColumns.isEmpty()) {
-			_addAnalyticsMessages("add", expandoColumns);
+			_addAnalyticsMessages("add", expandoColumns, companyId);
 		}
 	}
 
-	private void _syncUserGroupUsers(String[] userGroupIds) {
+	private void _syncUserGroupUsers(long companyId, String[] userGroupIds) {
 		for (String userGroupId : userGroupIds) {
 			int count = _userLocalService.getUserGroupUsersCount(
 				GetterUtil.getLong(userGroupId));
@@ -700,7 +856,7 @@ public class AnalyticsConfigurationRegistryImpl
 				List<User> users = _userLocalService.getUserGroupUsers(
 					GetterUtil.getLong(userGroupId), start, end);
 
-				_addUsersAnalyticsMessages(users);
+				_addUsersAnalyticsMessages(companyId, users);
 			}
 		}
 	}
@@ -710,6 +866,55 @@ public class AnalyticsConfigurationRegistryImpl
 
 		if (companyId != null) {
 			_analyticsConfigurations.remove(companyId);
+		}
+	}
+
+	private void _updated(
+		long companyId, String pid, Dictionary<String, ?> dictionary) {
+
+		if (companyId != CompanyConstants.SYSTEM) {
+			_analyticsConfigurations.put(
+				companyId,
+				ConfigurableUtil.createConfigurable(
+					AnalyticsConfiguration.class, dictionary));
+			_companyIds.put(pid, companyId);
+		}
+
+		if (!_initializedCompanyIds.contains(companyId)) {
+			_initializedCompanyIds.add(companyId);
+
+			if (Validator.isNotNull(dictionary.get("previousToken"))) {
+				return;
+			}
+		}
+
+		if (Validator.isNull(dictionary.get("token"))) {
+			if (Validator.isNotNull(dictionary.get("previousToken"))) {
+				_disable((Long)dictionary.get("companyId"));
+			}
+		}
+		else {
+			if (Validator.isNull(dictionary.get("previousToken"))) {
+				_enable((Long)dictionary.get("companyId"));
+			}
+
+			AnalyticsConfiguration analyticsConfiguration =
+				getAnalyticsConfiguration(companyId);
+
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10757") &&
+				analyticsConfiguration.wizardMode()) {
+
+				return;
+			}
+
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10757") &&
+				analyticsConfiguration.firstSync()) {
+
+				_firstSync(companyId);
+			}
+			else {
+				_sync((Long)dictionary.get("companyId"), dictionary);
+			}
 		}
 	}
 
@@ -746,8 +951,6 @@ public class AnalyticsConfigurationRegistryImpl
 			"contactId", "Integer"
 		).put(
 			"createDate", "date"
-		).put(
-			"defaultUser", "boolean"
 		).put(
 			"emailAddress", "Text"
 		).put(
@@ -829,7 +1032,7 @@ public class AnalyticsConfigurationRegistryImpl
 	private AnalyticsMessageLocalService _analyticsMessageLocalService;
 
 	@Reference
-	private ClassNameLocalService _classNameLocalService;
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	private final Map<String, Long> _companyIds = new ConcurrentHashMap<>();
 
@@ -838,9 +1041,6 @@ public class AnalyticsConfigurationRegistryImpl
 
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
-
-	@Reference
-	private EntityModelListenerRegistry _entityModelListenerRegistry;
 
 	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
@@ -856,9 +1056,104 @@ public class AnalyticsConfigurationRegistryImpl
 	@Reference
 	private SAPEntryLocalService _sapEntryLocalService;
 
+	private ServiceRegistration<ManagedServiceFactory> _serviceRegistration;
+	private ServiceTrackerMap<String, AnalyticsEntityModel<?>>
+		_serviceTrackerMap;
 	private volatile AnalyticsConfiguration _systemAnalyticsConfiguration;
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	private class AnalyticsConfigurationManagedServiceFactory
+		implements ManagedServiceFactory {
+
+		@Override
+		public void deleted(String pid) {
+			long companyId = getCompanyId(pid);
+
+			_unmapPid(pid);
+
+			long companyThreadLocalCompanyId =
+				CompanyThreadLocal.getCompanyId();
+
+			CompanyThreadLocal.setCompanyId(companyId);
+
+			try {
+				_disable(companyId);
+			}
+			finally {
+				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
+			}
+		}
+
+		@Override
+		public String getName() {
+			return "com.liferay.analytics.settings.configuration." +
+				"AnalyticsConfiguration.scoped";
+		}
+
+		@Override
+		public void updated(String pid, Dictionary<String, ?> dictionary) {
+			_unmapPid(pid);
+
+			long companyThreadLocalCompanyId =
+				CompanyThreadLocal.getCompanyId();
+
+			long companyId = GetterUtil.getLong(
+				dictionary.get("companyId"), CompanyConstants.SYSTEM);
+
+			CompanyThreadLocal.setCompanyId(companyId);
+
+			try {
+				_updated(companyId, pid, dictionary);
+			}
+			finally {
+				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
+			}
+		}
+
+	}
+
+	private class AnalyticsEntityModelServiceReferenceMapper
+		<T extends BaseModel<T>>
+			implements ServiceReferenceMapper<String, AnalyticsEntityModel<T>> {
+
+		public AnalyticsEntityModelServiceReferenceMapper(
+			BundleContext bundleContext) {
+
+			_bundleContext = bundleContext;
+		}
+
+		@Override
+		public void map(
+			ServiceReference<AnalyticsEntityModel<T>> serviceReference,
+			Emitter<String> emitter) {
+
+			AnalyticsEntityModel<?> analyticsEntityModel =
+				_bundleContext.getService(serviceReference);
+
+			Class<?> clazz = _getParameterizedClass(
+				analyticsEntityModel.getClass());
+
+			try {
+				emitter.emit(clazz.getName());
+			}
+			finally {
+				_bundleContext.ungetService(serviceReference);
+			}
+		}
+
+		private Class<?> _getParameterizedClass(Class<?> clazz) {
+			ParameterizedType parameterizedType =
+				(ParameterizedType)clazz.getGenericSuperclass();
+
+			Type[] types = parameterizedType.getActualTypeArguments();
+
+			return (Class<?>)types[0];
+		}
+
+		private final BundleContext _bundleContext;
+
+	}
 
 }

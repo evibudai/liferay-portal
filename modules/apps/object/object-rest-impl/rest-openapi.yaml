@@ -1,5 +1,31 @@
 components:
     schemas:
+        AuditEvent:
+            properties:
+                auditFieldChanges:
+                    items:
+                        $ref: "#/components/schemas/AuditFieldChange"
+                    readOnly: true
+                    type: array
+                creator:
+                    allOf:
+                        - $ref: "../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Creator"
+                    readOnly: true
+                dateCreated:
+                    format: date
+                    readOnly: true
+                    type: string
+                eventType:
+                    readOnly: true
+                    type: string
+        AuditFieldChange:
+            properties:
+                name:
+                    type: string
+                newValue:
+                    type: object
+                oldValue:
+                    type: object
         FileEntry:
             properties:
                 id:
@@ -38,6 +64,14 @@ components:
                         type: object
                     readOnly: true
                     type: object
+                auditEvents:
+                    description:
+                        Optional field with the audit events associated with this object entry, can be embedded with
+                        nestedFields
+                    items:
+                        $ref: "#/components/schemas/AuditEvent"
+                    readOnly: true
+                    type: array
                 creator:
                     allOf:
                         - $ref: "../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Creator"
@@ -49,11 +83,16 @@ components:
                     format: date
                     type: string
                 externalReferenceCode:
-                    readOnly: true
                     type: string
                 id:
                     format: int64
                     type: integer
+                keywords:
+                    description:
+                        A list of keywords describing the object entry.
+                    items:
+                        type: string
+                    type: array
                 properties:
                     additionalProperties:
                         type: object
@@ -64,18 +103,60 @@ components:
                     type: string
                 status:
                     $ref: "#/components/schemas/Status"
+                taxonomyCategoryBriefs:
+                    description:
+                        The categories associated with this object entry.
+                    items:
+                        $ref: "#/components/schemas/TaxonomyCategoryBrief"
                     readOnly: true
+                    type: array
+                taxonomyCategoryIds:
+                    # @review
+                    description:
+                        A write-only field that adds `TaxonomyCategory` instances to the object entry.
+                    items:
+                        format: int64
+                        type: integer
+                    type: array
+                    writeOnly: true
             type: object
         Status:
             properties:
                 code:
                     format: int32
-                    readOnly: true
                     type: integer
                 label:
                     type: string
                 label_i18n:
                     type: string
+            type: object
+        TaxonomyCategoryBrief:
+            properties:
+                embeddedTaxonomyCategory:
+                    # @review
+                    description:
+                        Optional field with the embedded taxonomy category, can be embedded with nestedFields
+                    readOnly: true
+                    type: object
+                taxonomyCategoryId:
+                    description:
+                        The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                taxonomyCategoryName:
+                    description:
+                        The category's name.
+                    readOnly: true
+                    type: string
+                taxonomyCategoryName_i18n:
+                    additionalProperties:
+                        type: string
+                    # @review
+                    description:
+                        The localized category's names.
+                    readOnly: true
+                    type: object
             type: object
 info:
     license:
@@ -96,9 +177,21 @@ paths:
                           type: string
                       type: array
                 - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -209,6 +302,44 @@ paths:
                   required: true
                   schema:
                       type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
+        patch:
+            operationId: patchByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ObjectEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ObjectEntry"
             responses:
                 200:
                     content:
@@ -298,6 +429,49 @@ paths:
                   required: true
                   schema:
                       type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
+        patch:
+            operationId: patchScopeScopeKeyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: scopeKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ObjectEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ObjectEntry"
             responses:
                 200:
                     content:
@@ -339,6 +513,30 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ObjectEntry"
             tags: ["ObjectEntry"]
+    "/scopes/{scopeKey}/by-external-reference-code/{externalReferenceCode}/object-actions/{objectActionName}":
+        put:
+            operationId: putScopeScopeKeyByExternalReferenceCodeObjectActionObjectActionName
+            parameters:
+                - in: path
+                  name: scopeKey
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: objectActionName
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["ObjectEntry"]
     "/{objectEntryId}":
         delete:
             operationId: deleteObjectEntry
@@ -364,6 +562,18 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -460,6 +670,18 @@ paths:
                       format: int64
                       type: integer
                 - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
                   name: roleNames
                   schema:
                       type: string
@@ -503,9 +725,21 @@ paths:
                           type: string
                       type: array
                 - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:

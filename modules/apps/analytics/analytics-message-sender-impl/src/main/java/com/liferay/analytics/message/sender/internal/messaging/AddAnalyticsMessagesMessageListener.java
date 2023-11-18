@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.sender.internal.messaging;
 
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinationNames;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
-import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.AnalyticsEntityModel;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -56,8 +47,9 @@ public class AddAnalyticsMessagesMessageListener extends BaseMessageListener {
 		}
 
 		String action = (String)message.get("action");
-		EntityModelListener entityModelListener =
-			(EntityModelListener)message.get("entityModelListener");
+
+		AnalyticsEntityModel analyticsEntityModel =
+			(AnalyticsEntityModel)message.get("analyticsEntityModel");
 
 		List<? extends BaseModel> baseModels =
 			(List<? extends BaseModel>)message.getPayload();
@@ -65,9 +57,9 @@ public class AddAnalyticsMessagesMessageListener extends BaseMessageListener {
 		for (BaseModel<?> baseModel : baseModels) {
 			ShardedModel shardedModel = (ShardedModel)baseModel;
 
-			entityModelListener.addAnalyticsMessage(
+			analyticsEntityModel.addAnalyticsMessage(
 				action,
-				entityModelListener.getAttributeNames(
+				analyticsEntityModel.getAttributeNames(
 					shardedModel.getCompanyId()),
 				baseModel);
 		}

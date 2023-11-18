@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.talend.common.util;
 
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Zoltán Takács
@@ -56,19 +46,18 @@ public class StringUtil {
 	}
 
 	public static Set<String> stripPrefix(String prefix, Set<String> values) {
-		Stream<String> stream = values.stream();
+		Set<String> prefixs = new HashSet<>();
 
-		return stream.map(
-			t -> {
-				if (t.startsWith(prefix)) {
-					return t.substring(prefix.length());
-				}
-
-				return t;
+		for (String value : values) {
+			if (value.startsWith(prefix)) {
+				prefixs.add(value.substring(prefix.length()));
 			}
-		).collect(
-			Collectors.toSet()
-		);
+			else {
+				prefixs.add(value);
+			}
+		}
+
+		return prefixs;
 	}
 
 	public static String toLowerCase(String value) {

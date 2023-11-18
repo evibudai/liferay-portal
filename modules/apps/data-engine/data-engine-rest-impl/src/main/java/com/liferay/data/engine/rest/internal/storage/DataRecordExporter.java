@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.storage;
 
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
-import com.liferay.data.engine.rest.internal.content.type.DataDefinitionContentTypeRegistry;
 import com.liferay.data.engine.rest.internal.dto.v2_0.util.DataDefinitionUtil;
 import com.liferay.data.engine.rest.internal.storage.util.DataStorageUtil;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
@@ -32,7 +22,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * @author Jeyvison Nascimento
@@ -40,13 +29,11 @@ import java.util.stream.Stream;
 public class DataRecordExporter {
 
 	public DataRecordExporter(
-		DataDefinitionContentTypeRegistry dataDefinitionContentTypeRegistry,
 		DDLRecordSetLocalService ddlRecordSetLocalService,
 		DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
 		DDMStructureLayoutLocalService ddmStructureLayoutLocalService,
 		SPIDDMFormRuleConverter spiDDMFormRuleConverter) {
 
-		_dataDefinitionContentTypeRegistry = dataDefinitionContentTypeRegistry;
 		_ddlRecordSetLocalService = ddlRecordSetLocalService;
 		_ddmFormFieldTypeServicesRegistry = ddmFormFieldTypeServicesRegistry;
 		_ddmStructureLayoutLocalService = ddmStructureLayoutLocalService;
@@ -64,19 +51,14 @@ public class DataRecordExporter {
 			dataRecord.getDataRecordCollectionId());
 
 		DataDefinition dataDefinition = DataDefinitionUtil.toDataDefinition(
-			_dataDefinitionContentTypeRegistry,
 			_ddmFormFieldTypeServicesRegistry, ddlRecordSet.getDDMStructure(),
 			_ddmStructureLayoutLocalService, _spiDDMFormRuleConverter);
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		Stream<DataRecord> stream = dataRecords.parallelStream();
-
-		stream.map(
-			record -> _toJSON(dataDefinition, record)
-		).forEach(
-			jsonArray::put
-		);
+		for (DataRecord record : dataRecords) {
+			jsonArray.put(_toJSON(dataDefinition, record));
+		}
 
 		return jsonArray.toString();
 	}
@@ -100,8 +82,6 @@ public class DataRecordExporter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataRecordExporter.class);
 
-	private final DataDefinitionContentTypeRegistry
-		_dataDefinitionContentTypeRegistry;
 	private final DDLRecordSetLocalService _ddlRecordSetLocalService;
 	private final DDMFormFieldTypeServicesRegistry
 		_ddmFormFieldTypeServicesRegistry;

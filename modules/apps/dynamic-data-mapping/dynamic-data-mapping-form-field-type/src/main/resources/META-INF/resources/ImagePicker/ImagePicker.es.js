@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayModal, {useModal} from '@clayui/modal';
-import {openSelectionModal, sub} from 'frontend-js-web';
+import {usePrevious} from '@liferay/frontend-js-react-web';
+import {addParams, openSelectionModal, sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
@@ -24,6 +16,7 @@ import {useSyncValue} from '../hooks/useSyncValue.es';
 const defaultValue = {description: '', title: '', url: ''};
 
 const ImagePicker = ({
+	accessibleProps,
 	editingLanguageId,
 	id,
 	inputValue,
@@ -45,6 +38,10 @@ const ImagePicker = ({
 		onClose: () => setModalVisible(false),
 	});
 
+	const [selectedImageId, setSelectedImageId] = useState(
+		inputValue?.fileEntryId
+	);
+
 	const dispatchValue = ({clear, value}, callback = () => {}) =>
 		setImageValues((oldValues) => {
 			let mergedValues = {...oldValues, ...value};
@@ -60,6 +57,8 @@ const ImagePicker = ({
 		if (selectedItem?.value) {
 			const selectedImage = new Image();
 			const selectedItemValue = JSON.parse(selectedItem.value);
+
+			setSelectedImageId(selectedItemValue.fileEntryId);
 
 			selectedImage.addEventListener('load', (event) => {
 				const {
@@ -82,6 +81,25 @@ const ImagePicker = ({
 					onFieldChanged(mergedValues)
 				);
 			});
+
+			selectedImage.addEventListener('error', (event) => {
+				const imageData = {
+					...{
+						description: '',
+						event,
+						height: 0,
+						title: '',
+						url: '',
+						width: 0,
+					},
+					...selectedItemValue,
+				};
+
+				dispatchValue({value: imageData}, (mergedValues) =>
+					onFieldChanged(mergedValues)
+				);
+			});
+
 			selectedImage.src = selectedItemValue.url;
 		}
 	};
@@ -91,6 +109,15 @@ const ImagePicker = ({
 
 		onFocus(event);
 
+		let url = itemSelectorURL;
+
+		if (Liferay.FeatureFlags['LPS-153332']) {
+			url = addParams(
+				`selectedItemIds=${selectedImageId}`,
+				itemSelectorURL
+			);
+		}
+
 		openSelectionModal({
 			onClose: () => onBlur(event),
 			onSelect: handleFieldChanged,
@@ -99,7 +126,7 @@ const ImagePicker = ({
 				Liferay.Language.get('select-x'),
 				Liferay.Language.get('image')
 			),
-			url: itemSelectorURL,
+			url,
 		});
 	};
 
@@ -119,6 +146,7 @@ const ImagePicker = ({
 				<ClayInput.Group>
 					<ClayInput.GroupItem className="d-none d-sm-block" prepend>
 						<ClayInput
+							{...accessibleProps}
 							className="field"
 							dir={Liferay.Language.direction[editingLanguageId]}
 							disabled={readOnly}
@@ -205,6 +233,12 @@ const ImagePicker = ({
 								alt={imageValues.description}
 								className="d-block img-fluid mb-2 rounded"
 								onClick={() => setModalVisible(true)}
+								onError={(event) =>
+									event.currentTarget.classList.add('hide')
+								}
+								onLoad={(event) =>
+									event.currentTarget.classList.remove('hide')
+								}
 								src={imageValues.url}
 								style={{
 									cursor: 'pointer',
@@ -242,12 +276,15 @@ const ImagePicker = ({
 };
 
 const Main = ({
+	defaultLanguageId,
 	displayErrors,
 	editingLanguageId,
 	errorMessage,
 	id,
 	inputValue,
 	itemSelectorURL,
+	localizable,
+	localizedValue,
 	message,
 	name,
 	onBlur,
@@ -259,6 +296,14 @@ const Main = ({
 	value,
 	...otherProps
 }) => {
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
+	if (prevEditingLanguageId !== editingLanguageId && localizable) {
+		value =
+			localizedValue[editingLanguageId] ??
+			localizedValue[defaultLanguageId];
+	}
+
 	const getErrorMessages = (errorMessage, isSignedIn) => {
 		const errorMessages = [errorMessage];
 
@@ -294,11 +339,22 @@ const Main = ({
 			displayErrors={isSignedIn ? displayErrors : true}
 			errorMessage={getErrorMessages(errorMessage, isSignedIn)}
 			id={id}
+			localizedValue={localizedValue}
 			name={name}
 			readOnly={isSignedIn ? readOnly : true}
 			valid={isSignedIn ? valid : false}
 		>
 			<ImagePicker
+				accessibleProps={{
+					...(otherProps.tip && {
+						'aria-describedby': `${id ?? name}_fieldHelp`,
+					}),
+					...(otherProps.requiredErrorMessage && {
+						'aria-errormessage': `${id ?? name}_fieldError`,
+					}),
+					'aria-invalid': !valid,
+					'aria-required': otherProps.required,
+				}}
 				editingLanguageId={editingLanguageId}
 				id={id ?? name}
 				inputValue={

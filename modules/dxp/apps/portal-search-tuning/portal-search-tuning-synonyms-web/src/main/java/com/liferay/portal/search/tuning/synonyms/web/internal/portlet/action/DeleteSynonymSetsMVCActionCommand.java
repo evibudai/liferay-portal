@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.portlet.action;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -29,9 +21,6 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.storage.SynonymSet
 import com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer.IndexToFilterSynchronizer;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -75,17 +64,9 @@ public class DeleteSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 	protected List<SynonymSet> getDeletedSynonymSets(
 		ActionRequest actionRequest, SynonymSetIndexName synonymSetIndexName) {
 
-		return Stream.of(
-			ParamUtil.getStringValues(actionRequest, "rowIds")
-		).map(
-			id -> _synonymSetIndexReader.fetchOptional(synonymSetIndexName, id)
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			ParamUtil.getStringValues(actionRequest, "rowIds"),
+			id -> _synonymSetIndexReader.fetch(synonymSetIndexName, id));
 	}
 
 	protected void removeSynonymSets(

@@ -1,247 +1,482 @@
 [
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_catalog_web_internal_portlet_CommerceCatalogsPortlet",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_inventory_web_internal_portlet_CommerceInventoryPortlet",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_pricing_web_internal_portlet_CommercePriceListPortlet",
 		"roleName": "Discount Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_pricing_web_internal_portlet_CommercePromotionPortlet",
 		"roleName": "Discount Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ACCESS_IN_CONTROL_PANEL",
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "com_liferay_commerce_subscription_web_internal_portlet_CommerceSubscriptionEntryPortlet",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ADD_CATEGORY",
+		"actionIds": [
+			"ADD_CATEGORY",
+			"ADD_VOCABULARY"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.asset.categories",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ADD_COMMERCE_CATALOG",
+		"actionIds": [
+			"ADD_COMMERCE_CATALOG"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.catalog",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ADD_COMMERCE_PRICE_LIST",
+		"actionIds": [
+			"ADD_COMMERCE_PRICE_LIST"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.price.list",
 		"roleName": "Discount Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "ADD_VOCABULARY",
-		"primKey": "0",
-		"resourceName": "com.liferay.asset.categories",
-		"roleName": "Category Manager",
-		"scope": "1"
-	},
-	{
-		"actionId": "CHECKOUT_OPEN_COMMERCE_ORDERS",
+		"actionIds": [
+			"CHECKOUT_OPEN_COMMERCE_ORDERS",
+			"VIEW_OPEN_COMMERCE_ORDERS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.order",
 		"roleName": "Sales Agent",
 		"scope": "1"
 	},
 	{
-		"actionId": "CHECKOUT_OPEN_COMMERCE_ORDERS",
+		"actionIds": [
+			"CHECKOUT_OPEN_COMMERCE_ORDERS",
+			"VIEW_OPEN_COMMERCE_ORDERS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.order",
 		"roleName": "Punch Out",
 		"scope": "1"
 	},
 	{
-		"actionId": "DELETE",
+		"actionIds": [
+			"DELETE",
+			"UPDATE",
+			"VIEW"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.price.list.model.CommercePriceList",
 		"roleName": "Discount Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_AVAILABLE_ACCOUNTS",
+		"actionIds": [
+			"MANAGE_AVAILABLE_ACCOUNTS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.portal.kernel.model.Organization",
 		"roleName": "Sales Agent",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_AVAILABLE_ACCOUNTS",
+		"actionIds": [
+			"MANAGE_AVAILABLE_ACCOUNTS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.portal.kernel.model.Organization",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_COMMERCE_ORDERS",
+		"actionIds": [
+			"MANAGE_COMMERCE_ORDERS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.order",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_COMMERCE_SHIPMENTS",
+		"actionIds": [
+			"MANAGE_COMMERCE_SHIPMENTS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.shipment",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_COMMERCE_SUBSCRIPTIONS",
+		"actionIds": [
+			"MANAGE_COMMERCE_SUBSCRIPTIONS"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.subscription",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_INVENTORY",
+		"actionIds": [
+			"MANAGE_INVENTORY"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.inventory",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "MANAGE_ORGANIZATIONS",
+		"actionIds": [
+			"MANAGE_ORGANIZATIONS"
+		],
 		"primKey": "0",
-		"resourceName": "com.liferay.commerce.account.model.CommerceAccount",
+		"resourceName": "com.liferay.account.model.AccountEntry",
 		"roleName": "Sales Agent",
 		"scope": "1"
 	},
 	{
-		"actionId": "UPDATE",
-		"primKey": "0",
-		"resourceName": "com.liferay.commerce.price.list.model.CommercePriceList",
-		"roleName": "Discount Manager",
-		"scope": "1"
-	},
-	{
-		"actionId": "UPDATE",
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.product.model.CommerceCatalog",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "VIEW",
-		"primKey": "0",
-		"resourceName": "com.liferay.commerce.price.list.model.CommercePriceList",
-		"roleName": "Discount Manager",
-		"scope": "1"
-	},
-	{
-		"actionId": "VIEW",
-		"primKey": "0",
-		"resourceName": "com.liferay.commerce.product.model.CommerceCatalog",
-		"roleName": "Category Manager",
-		"scope": "1"
-	},
-	{
-		"actionId": "VIEW",
-		"primKey": "0",
-		"resourceName": "com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet",
-		"roleName": "Category Manager",
-		"scope": "1"
-	},
-	{
-		"actionId": "VIEW_CONTROL_PANEL",
+		"actionIds": [
+			"VIEW_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "90",
 		"roleName": "Category Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "VIEW_CONTROL_PANEL",
+		"actionIds": [
+			"VIEW_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "90",
 		"roleName": "Discount Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "VIEW_CONTROL_PANEL",
+		"actionIds": [
+			"VIEW_CONTROL_PANEL"
+		],
 		"primKey": "0",
 		"resourceName": "90",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
 	{
-		"actionId": "VIEW_OPEN_COMMERCE_ORDERS",
-		"primKey": "0",
-		"resourceName": "com.liferay.commerce.order",
-		"roleName": "Punch Out",
-		"scope": "1"
-	},
-	{
-		"actionId": "VIEW_OPEN_COMMERCE_ORDERS",
-		"primKey": "0",
-		"resourceName": "com.liferay.commerce.order",
-		"roleName": "Sales Agent",
-		"scope": "1"
-	},
-	{
-		"actionId": "VIEW_PRICE",
+		"actionIds": [
+			"VIEW_PRICE"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.product",
 		"roleName": "User",
 		"scope": "1"
 	},
 	{
-		"actionId": "VIEW",
+		"actionIds": [
+			"VIEW"
+		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.product.model.CommerceChannel",
 		"roleName": "Guest",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifeApplication$]",
+		"roleName": "Underwriter",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifeApplication$]",
+		"roleName": "Underwriter",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifeApplication$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifeApplication$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifeQuote$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifeQuote$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifePolicy$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifePolicy$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifeSalesGoal$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifeSalesGoal$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ACCESS_IN_CONTROL_PANEL",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_[$OBJECT_DEFINITION_ID:RaylifeClaim$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:RaylifeClaim$]",
+		"roleName": "Producer",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:RaylifeApplication$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:RaylifeQuote$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:RaylifePolicy$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:RaylifeClaim$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:RaylifeSalesGoal$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:QuoteRetrieve$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:QuoteComparison$]",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_USER",
+			"ADD_ACCOUNT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "90",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"ADD_COMMERCE_ORDER",
+			"MANAGE_COMMERCE_ORDER_PRICES"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.commerce.order",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"MANAGE_COMMERCE_CURRENCIES"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.commerce.currency",
+		"roleName": "Producer",
+		"scope": 1
+	},
+	{
+		"actionIds": [
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.commerce.product.model.CommerceCatalog",
+		"roleName": "Producer",
 		"scope": "1"
 	}
 ]

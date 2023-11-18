@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.sharing.service.persistence.impl;
@@ -37,7 +28,7 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.sharing.exception.NoSuchEntryException;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.model.SharingEntryTable;
@@ -49,7 +40,6 @@ import com.liferay.sharing.service.persistence.impl.constants.SharingPersistence
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
@@ -5471,7 +5461,7 @@ public class SharingEntryPersistenceImpl
 		sharingEntry.setNew(true);
 		sharingEntry.setPrimaryKey(sharingEntryId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		sharingEntry.setUuid(uuid);
 
@@ -5590,7 +5580,7 @@ public class SharingEntryPersistenceImpl
 			(SharingEntryModelImpl)sharingEntry;
 
 		if (Validator.isNull(sharingEntry.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			sharingEntry.setUuid(uuid);
 		}
@@ -6110,30 +6100,14 @@ public class SharingEntryPersistenceImpl
 			},
 			new String[] {"toUserId", "classNameId", "classPK"}, false);
 
-		_setSharingEntryUtilPersistence(this);
+		SharingEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setSharingEntryUtilPersistence(null);
+		SharingEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(SharingEntryImpl.class.getName());
-	}
-
-	private void _setSharingEntryUtilPersistence(
-		SharingEntryPersistence sharingEntryPersistence) {
-
-		try {
-			Field field = SharingEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, sharingEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -6206,8 +6180,5 @@ public class SharingEntryPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

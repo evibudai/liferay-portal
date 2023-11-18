@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.configuration;
@@ -21,7 +12,6 @@ import java.io.IOException;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -133,14 +123,14 @@ public interface AMImageConfigurationHelper {
 		long companyId, Predicate<? super AMImageConfigurationEntry> predicate);
 
 	/**
-	 * Returns an optional image configuration entry for the given company and
-	 * image configuration entry UUID.
+	 * Returns an image configuration entry for the given company and
+	 * image configuration entry UUID or null.
 	 *
 	 * @param  companyId the primary key of the company
 	 * @param  configurationEntryUUID the image configuration entry's UUID
-	 * @return an optional image configuration entry
+	 * @return an image configuration entry
 	 */
-	public Optional<AMImageConfigurationEntry> getAMImageConfigurationEntry(
+	public AMImageConfigurationEntry getAMImageConfigurationEntry(
 		long companyId, String configurationEntryUUID);
 
 	/**

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.data.provider.instance.internal;
@@ -37,7 +28,6 @@ import com.liferay.portal.kernel.util.KeyValuePair;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,15 +46,11 @@ public class DDMDataProviderInstanceOutputParametersDataProvider
 	public DDMDataProviderResponse getData(
 		DDMDataProviderRequest ddmDataProviderRequest) {
 
-		Optional<Long> dataProviderInstanceIdOptional =
-			ddmDataProviderRequest.getParameterOptional(
-				"dataProviderInstanceId", String.class);
+		String dataProviderInstanceId = ddmDataProviderRequest.getParameter(
+			"dataProviderInstanceId", String.class);
 
-		long dataProviderInstanceId = 0;
-
-		if (dataProviderInstanceIdOptional.isPresent()) {
-			dataProviderInstanceId = GetterUtil.getLong(
-				dataProviderInstanceIdOptional.get());
+		if (dataProviderInstanceId == null) {
+			dataProviderInstanceId = "0";
 		}
 
 		DDMDataProviderResponse.Builder builder =
@@ -72,7 +58,7 @@ public class DDMDataProviderInstanceOutputParametersDataProvider
 
 		List<KeyValuePair> keyValuePairs = new ArrayList<>();
 
-		if (dataProviderInstanceId == 0) {
+		if (GetterUtil.getLong(dataProviderInstanceId) == 0) {
 			return builder.withOutput(
 				"outputParameterNames", keyValuePairs
 			).build();
@@ -82,7 +68,7 @@ public class DDMDataProviderInstanceOutputParametersDataProvider
 			DDMDataProviderOutputParametersSettings[]
 				ddmDataProviderOutputParametersSettings =
 					_getDDMDataProviderOutputParametersSettings(
-						dataProviderInstanceId);
+						GetterUtil.getLong(dataProviderInstanceId));
 
 			for (DDMDataProviderOutputParametersSettings
 					ddmDataProviderOutputParametersSetting :
@@ -100,7 +86,7 @@ public class DDMDataProviderInstanceOutputParametersDataProvider
 			_log.error(
 				String.format(
 					"Unable to get the output parameters for data provider " +
-						"instance with id '%d'",
+						"instance with id '%s'",
 					dataProviderInstanceId),
 				exception);
 		}

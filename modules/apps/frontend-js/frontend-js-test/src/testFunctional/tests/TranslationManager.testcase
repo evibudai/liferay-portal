@@ -30,9 +30,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,8 +42,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-148143. Validates language can be added to translation list."
-	@priority = "3"
+	@description = "LPS-140069. Validates language can be added to translation list."
+	@priority = 3
 	test CanAddLanguageToTranslationList {
 		task ("Given manage translations modal") {
 			TranslationManagerPortlet.goToManageTranslationsModal(
@@ -72,8 +72,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147612. Validates translation can be synced in selector and text field."
-	@priority = "3"
+	@description = "LPS-133329. Validates translation can be synced in selector and text field."
+	@priority = 3
 	test CanBeSyncedOnSelectedAndTranslatedLanguages {
 		task ("When input different language text in aui tag field") {
 			TranslationManagerPortlet.inputTextInAuiTagField(
@@ -124,8 +124,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-148142. Validates Manage Translations cancel add language by click cancel button."
-	@priority = "3"
+	@description = "LPS-140069. Validates Manage Translations cancel add language by click cancel button."
+	@priority = 3
 	test CancelAddLanguageByClickCancelButton {
 		task ("Given manage translations modal") {
 			TranslationManagerPortlet.goToManageTranslationsModal(
@@ -152,8 +152,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-148142. Validates Manage Translations cancel add language by click somewhere outside the modal."
-	@priority = "3"
+	@description = "LPS-140069. Validates Manage Translations cancel add language by click somewhere outside the modal."
+	@priority = 3
 	test CancelAddLanguageByClickSomewhereOutsideModal {
 		task ("Given manage translations modal") {
 			TranslationManagerPortlet.goToManageTranslationsModal(
@@ -182,8 +182,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147946. Validates language can be deleted from the Manage Translation list."
-	@priority = "3"
+	@description = "LPS-133329. Validates language can be deleted from the Manage Translation list."
+	@priority = 3
 	test CanDeleteLanguageFromManageTranslationsList {
 		task ("Given manage translations modal") {
 			TranslationManagerPortlet.goToManageTranslationsModal(
@@ -214,8 +214,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147499. Verifies default options are present in translation manager language menu."
-	@priority = "3"
+	@description = "LPS-133329. Verifies default options are present in translation manager language menu."
+	@priority = 3
 	test CanDisplayDefaultLanguageDropdownOptionsOnly {
 		task ("When select translation language dropdown") {
 			TranslationManagerPortlet.clickSelectTranslation(
@@ -239,13 +239,13 @@ definition {
 			AssertElementPresent(locator1 = "TranslationManager#MANAGE_TRANSLATIONS");
 
 			AssertElementNotPresent(
-				key_index = "6",
+				key_index = 6,
 				locator1 = "TranslationManager#SELECT_TRANSLATION_LANGUAGE_MENU_ITEM_INDEX");
 		}
 	}
 
-	@description = "LPS-147946. Validates languages are searchable from the Manage Translations list."
-	@priority = "3"
+	@description = "LPS-133329. Validates languages are searchable from the Manage Translations list."
+	@priority = 3
 	test CanSearchLanguageFromManageTranslationsList {
 		task ("Given manage translations modal") {
 			TranslationManagerPortlet.goToManageTranslationsModal(
@@ -263,13 +263,13 @@ definition {
 				locator1 = "ManageTranslations#LIST_ITEM_LANGUAGE");
 
 			AssertElementNotPresent(
-				key_index = "2",
+				key_index = 2,
 				locator1 = "ManageTranslations#TABLE_BODY_ROW_INDEX");
 		}
 	}
 
-	@description = "LPS-148144. Validates language status is not translated after deleting and re-adding language on modal."
-	@priority = "3"
+	@description = "LPS-140069. Validates language status is not translated after deleting and re-adding language on modal."
+	@priority = 3
 	test DeletedTranslatedLanguageDoesNotHaveTranslatedStatus {
 		task ("When input different language text in aui tag field") {
 			TranslationManagerPortlet.inputTextInAuiTagField(
@@ -311,8 +311,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-148144. Validates language status is still translated after not saving deleted translation."
-	@priority = "3"
+	@description = "LPS-140069. Validates language status is still translated after not saving deleted translation."
+	@priority = 3
 	test NotSavingDeletedTranslatedLanguageStillHasTranslatedStatus {
 		task ("When input different language text in aui tag field") {
 			TranslationManagerPortlet.inputTextInAuiTagField(

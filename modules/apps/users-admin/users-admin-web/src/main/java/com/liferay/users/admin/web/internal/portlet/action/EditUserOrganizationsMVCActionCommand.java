@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.web.internal.portlet.action;
@@ -30,8 +21,8 @@ import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 import com.liferay.users.admin.constants.UsersAdminPortletKeys;
-import com.liferay.users.admin.kernel.util.UsersAdmin;
 
 import java.util.Calendar;
 
@@ -48,6 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + UsersAdminPortletKeys.MY_ACCOUNT,
 		"javax.portlet.name=" + UsersAdminPortletKeys.MY_ORGANIZATIONS,
+		"javax.portlet.name=" + UsersAdminPortletKeys.SERVICE_ACCOUNTS,
 		"javax.portlet.name=" + UsersAdminPortletKeys.USERS_ADMIN,
 		"mvc.command.name=/users_admin/edit_user_organizations"
 	},
@@ -70,7 +62,7 @@ public class EditUserOrganizationsMVCActionCommand
 
 			birthdayCal.setTime(user.getBirthday());
 
-			long[] organizationIds = _usersAdmin.getOrganizationIds(
+			long[] organizationIds = UsersAdminUtil.getOrganizationIds(
 				actionRequest);
 
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -92,7 +84,7 @@ public class EditUserOrganizationsMVCActionCommand
 				contact.getJabberSn(), contact.getSkypeSn(),
 				contact.getTwitterSn(), user.getJobTitle(), user.getGroupIds(),
 				organizationIds, user.getRoleIds(),
-				_usersAdmin.getUserGroupRoles(actionRequest),
+				UsersAdminUtil.getUserGroupRoles(actionRequest),
 				user.getUserGroupIds(), serviceContext);
 		}
 		catch (Exception exception) {
@@ -120,9 +112,6 @@ public class EditUserOrganizationsMVCActionCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private UsersAdmin _usersAdmin;
 
 	@Reference
 	private UserService _userService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.service.test;
@@ -17,9 +8,11 @@ package com.liferay.portal.workflow.metrics.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersion;
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionVersionLocalServiceUtil;
 import com.liferay.portal.workflow.metrics.service.util.BaseWorkflowMetricsTestCase;
@@ -27,6 +20,7 @@ import com.liferay.portal.workflow.metrics.service.util.BaseWorkflowMetricsTestC
 import java.util.Date;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +40,12 @@ public class WorkflowMetricsSLADefinitionVersionLocalServiceTest
 		super.setUp();
 
 		_company = CompanyTestUtil.addCompany();
+	}
+
+	@After
+	@Override
+	public void tearDown() throws Exception {
+		_companyLocalService.deleteCompany(_company.getCompanyId());
 	}
 
 	@Test
@@ -171,5 +171,8 @@ public class WorkflowMetricsSLADefinitionVersionLocalServiceTest
 	}
 
 	private Company _company;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 }

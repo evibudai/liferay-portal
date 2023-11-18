@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+
+<project basedir="." name="portal-test-httpd" xmlns:antelope="antlib:ise.antelope.tasks">
+	<import file="build-test.xml" />
+
+	<target name="clean-up-httpd-server">
+		<replaceregexp
+			file="${apache.http.conf.file}"
+			flags="s"
+			match="(IncludeOptional.*conf)(.*)"
+			replace="\1"
+		/>
+
+		<print-file file.name="${apache.http.conf.file}" />
+	</target>
+
+	<target name="configure-httpd-server">
+		<if>
+			<not>
+				<resourcecontains
+					resource="${apache.http.conf.file}"
+					substring="Listen 88"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${apache.http.conf.file}"><![CDATA[
+
+Listen 88]]></echo>
+			</then>
+		</if>
+
+		<if>
+			<not>
+				<resourcecontains
+					resource="${apache.http.conf.file}"
+					substring="VirtualHost *:88"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${apache.http.conf.file}"><![CDATA[
+
+<VirtualHost *:88>
+	ServerName localhost
+	ProxyPreserveHost On
+	ProxyPass /${portal.proxy.path} http://localhost:8080
+	ProxyPassReverse /${portal.proxy.path} http://localhost:8080
+</VirtualHost>]]></echo>
+			</then>
+		</if>
+
+		<get-testcase-property property.name="app.server.bundles.size" />
+
+		<if>
+			<isset property="app.server.bundles.size" />
+			<then>
+				<var name="app.server.bundle.index" value="1" />
+
+				<antelope:repeat count="${app.server.bundles.size}">
+					<set-app-server-properties
+						app.server.bundle.index="${app.server.bundle.index}"
+					/>
+
+					<if>
+						<not>
+							<resourcecontains
+								resource="${apache.http.conf.file}"
+								substring="Listen ${test.app.server.leading.port.number}8"
+							/>
+						</not>
+						<then>
+							<echo append="true" file="${apache.http.conf.file}"><![CDATA[
+
+Listen ${test.app.server.leading.port.number}8]]></echo>
+						</then>
+					</if>
+
+					<if>
+						<not>
+							<resourcecontains
+								resource="${apache.http.conf.file}"
+								substring="VirtualHost *:${test.app.server.leading.port.number}0"
+							/>
+						</not>
+						<then>
+							<echo append="true" file="${apache.http.conf.file}"><![CDATA[
+
+<VirtualHost *:${test.app.server.leading.port.number}8>
+	ServerName localhost
+	ProxyPreserveHost On
+	ProxyPass /${portal.proxy.path} http://localhost:${test.app.server.leading.port.number}080
+	ProxyPassReverse /${portal.proxy.path} http://localhost:${test.app.server.leading.port.number}080
+</VirtualHost>]]></echo>
+						</then>
+					</if>
+
+					<math
+						datatype="int"
+						operand1="${app.server.bundle.index}"
+						operand2="1"
+						operation="+"
+						result="app.server.bundle.index"
+					/>
+				</antelope:repeat>
+
+				<var name="app.server.bundle.index" unset="true" />
+			</then>
+		</if>
+
+		<print-file file.name="${apache.http.conf.file}" />
+	</target>
+
+	<target name="start-httpd-server">
+		<exec executable="systemctl">
+			<arg line="start httpd.service" />
+		</exec>
+	</target>
+
+	<target name="stop-httpd-server">
+		<exec executable="systemctl">
+			<arg line="stop httpd.service" />
+		</exec>
+	</target>
+</project>

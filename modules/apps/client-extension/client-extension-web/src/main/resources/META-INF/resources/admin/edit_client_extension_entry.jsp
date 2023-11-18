@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -35,6 +26,8 @@ renderResponse.setTitle(editClientExtensionEntryDisplayContext.getTitle());
 	<aui:input name="redirect" type="hidden" value="<%= editClientExtensionEntryDisplayContext.getRedirect() %>" />
 	<aui:input name="externalReferenceCode" type="hidden" value="<%= editClientExtensionEntryDisplayContext.getExternalReferenceCode() %>" />
 
+	<liferay-ui:error exception="<%= ClientExtensionEntryNameException.class %>" message="client-extension-name-is-required" />
+
 	<liferay-ui:error exception="<%= ClientExtensionEntryTypeSettingsException.class %>">
 
 		<%
@@ -45,38 +38,80 @@ renderResponse.setTitle(editClientExtensionEntryDisplayContext.getTitle());
 	</liferay-ui:error>
 
 	<liferay-frontend:edit-form-body>
-		<aui:field-wrapper label="name" name="name">
-			<liferay-ui:input-localized
-				autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>"
-				name="name"
-				xml="<%= editClientExtensionEntryDisplayContext.getName() %>"
+		<h3 class="mb-3"><%= editClientExtensionEntryDisplayContext.getTitle() %></h3>
+
+		<p class="text-secondary"><%= editClientExtensionEntryDisplayContext.getHelpLabel() %>
+			<liferay-learn:message
+				key="<%= editClientExtensionEntryDisplayContext.getLearnResourceKey() %>"
+				resource="client-extension-web"
 			/>
-		</aui:field-wrapper>
+		</p>
 
-		<liferay-editor:editor
-			contents="<%= editClientExtensionEntryDisplayContext.getDescription() %>"
-			editorName="contentEditor"
-			name="description"
-			placeholder="description"
-		/>
+		<p class="text-secondary">
+			<liferay-learn:message
+				key="learn-browser-based-client-extensions"
+				resource="client-extension-web"
+			/>
+		</p>
 
-		<aui:input label="source-code-url" name="sourceCodeURL" type="text" value="<%= editClientExtensionEntryDisplayContext.getSourceCodeURL() %>" />
+		<clay:panel-group>
+			<clay:panel
+				displayTitle='<%= LanguageUtil.get(request, "identity") %>'
+				expanded="<%= true %>"
+			>
+				<div class="panel-body">
+					<aui:field-wrapper label="name" name="name" required="<%= true %>">
+						<liferay-ui:input-localized
+							name="name"
+							xml="<%= editClientExtensionEntryDisplayContext.getName() %>"
+						/>
+					</aui:field-wrapper>
 
-		<aui:input disabled="<%= true %>" label="type" name="typeLabel" type="text" value="<%= editClientExtensionEntryDisplayContext.getTypeLabel() %>" />
+					<liferay-editor:editor
+						contents="<%= editClientExtensionEntryDisplayContext.getDescription() %>"
+						editorName="contentEditor"
+						name="description"
+						placeholder="description"
+					/>
+				</div>
+			</clay:panel>
 
-		<aui:input name="type" type="hidden" value="<%= editClientExtensionEntryDisplayContext.getType() %>" />
+			<clay:panel
+				displayTitle='<%= LanguageUtil.get(request, "content") %>'
+				expanded="<%= true %>"
+			>
+				<div class="panel-body">
+					<liferay-util:include page="<%= editClientExtensionEntryDisplayContext.getEditJSP() %>" servletContext="<%= application %>" />
+				</div>
+			</clay:panel>
 
-		<liferay-util:include page="<%= editClientExtensionEntryDisplayContext.getEditJSP() %>" servletContext="<%= application %>" />
+			<clay:panel
+				displayTitle='<%= LanguageUtil.get(request, "additional-resources") %>'
+				expanded="<%= true %>"
+			>
+				<div class="panel-body">
+					<aui:field-wrapper cssClass="form-group">
+						<aui:input label="source-code-url" name="sourceCodeURL" type="text" value="<%= editClientExtensionEntryDisplayContext.getSourceCodeURL() %>" />
 
-		<c:if test="<%= editClientExtensionEntryDisplayContext.isPropertiesVisible() %>">
-			<aui:input label="properties" name="properties" type="textarea" value="<%= editClientExtensionEntryDisplayContext.getProperties() %>" />
-		</c:if>
+						<div class="form-text">
+							<liferay-ui:message key="specify-the-source-code-repository-url-for-the-client-extension" />
+						</div>
+					</aui:field-wrapper>
+
+					<aui:input name="type" type="hidden" value="<%= editClientExtensionEntryDisplayContext.getType() %>" />
+
+					<c:if test="<%= editClientExtensionEntryDisplayContext.isPropertiesVisible() %>">
+						<aui:input label="properties" name="properties" placeholder="define-the-default-properties-that-are-included-in-all-instances-of-the-client-extension-these-properties-are-passed-to-the-application-as-additional-url-attributes-so-they-can-be-accessed-programmatically" type="textarea" value="<%= editClientExtensionEntryDisplayContext.getProperties() %>" />
+					</c:if>
+				</div>
+			</clay:panel>
+		</clay:panel-group>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
 		<liferay-frontend:edit-form-buttons
 			redirect="<%= editClientExtensionEntryDisplayContext.getRedirect() %>"
-			submitLabel='<%= WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), 0L, ClientExtensionEntry.class.getName()) ? "submit-for-publication" : "publish" %>'
+			submitLabel='<%= WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), 0L, ClientExtensionEntry.class.getName()) ? "submit-for-workflow" : "publish" %>'
 		/>
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>

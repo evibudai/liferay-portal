@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ImageProcessor from '../../../../src/main/resources/META-INF/resources/page_editor/app/processors/ImageProcessor';
-import {openImageSelector} from '../../../../src/main/resources/META-INF/resources/page_editor/core/openImageSelector';
+import {openImageSelector} from '../../../../src/main/resources/META-INF/resources/page_editor/common/openImageSelector';
 
 jest.mock(
-	'../../../../src/main/resources/META-INF/resources/page_editor/core/openImageSelector',
+	'../../../../src/main/resources/META-INF/resources/page_editor/common/openImageSelector',
 	() => ({
 		openImageSelector: jest.fn(),
 	})
@@ -37,47 +28,10 @@ describe('ImageProcessor', () => {
 			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
 			expect(changeCallback).toHaveBeenCalledWith(
 				{
-					fileEntryId: undefined,
+					title: 'sample-image.jpg',
 					url: 'sample-image.jpg',
 				},
-				{imageTitle: 'sample-image.jpg'}
-			);
-		});
-
-		it('calls changeCallback with an empty string if the image title is not found', () => {
-			openImageSelector.mockImplementation((changeCallback) =>
-				changeCallback({url: 'sample-image.jpg'})
-			);
-
-			const changeCallback = jest.fn();
-
-			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
-			expect(changeCallback).toHaveBeenCalledWith(
-				{
-					fileEntryId: undefined,
-					url: 'sample-image.jpg',
-				},
-				{imageTitle: ''}
-			);
-		});
-
-		it('calls changeCallback with an empty string if the image url is not found', () => {
-			openImageSelector.mockImplementation((changeCallback) =>
-				changeCallback({
-					thisIsNotAnImage: 'victor.profile',
-					title: 'victor-profile.jpg',
-				})
-			);
-
-			const changeCallback = jest.fn();
-
-			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
-			expect(changeCallback).toHaveBeenCalledWith(
-				{
-					fileEntryId: undefined,
-					url: '',
-				},
-				{imageTitle: 'victor-profile.jpg'}
+				{alt: ''}
 			);
 		});
 
@@ -140,6 +94,25 @@ describe('ImageProcessor', () => {
 			expect(image.parentElement instanceof HTMLAnchorElement).toBe(true);
 			expect(image.parentElement.getAttribute('href')).toBe(
 				'http://localpie'
+			);
+			expect(image.parentElement.getAttribute('target')).toBe('_blank');
+			expect(image.getAttribute('src')).toBe('apple-pie.webp');
+		});
+
+		it('sets prefix to the href', () => {
+			const div = document.createElement('div');
+			const image = document.createElement('img');
+
+			div.appendChild(image);
+
+			ImageProcessor.render(div, 'apple-pie.webp', {
+				href: 'pablo@pablo.me',
+				prefix: 'mailto:',
+				target: '_blank',
+			});
+
+			expect(image.parentElement.getAttribute('href')).toBe(
+				'mailto:pablo@pablo.me'
 			);
 			expect(image.parentElement.getAttribute('target')).toBe('_blank');
 			expect(image.getAttribute('src')).toBe('apple-pie.webp');

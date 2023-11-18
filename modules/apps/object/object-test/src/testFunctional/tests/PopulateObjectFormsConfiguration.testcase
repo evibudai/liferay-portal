@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-136456 - Verify it is not possible to change the required option when a field is mapped to an object field"
-	@priority = "5"
+	@priority = 5
 	test CannotChangeRequiredOption {
 		property portal.acceptance = "true";
 
@@ -41,9 +41,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject303");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
@@ -61,7 +59,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's not possible to map a Object field with a Form field of a different type"
-	@priority = "4"
+	@priority = 4
 	test CannotMapWithDifferentFieldTypes {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 304",
@@ -78,9 +76,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject304");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -94,7 +90,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's not possible to map a Object field with a Form field of a different type in a Field Group"
-	@priority = "4"
+	@priority = 4
 	test CannotMapWithDifferentFieldTypesForFieldGroup {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 305",
@@ -111,9 +107,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject305");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -134,7 +128,7 @@ definition {
 
 	@description = "LPS-133365 - Verify if it's not possible to publish the Form when a required Object field is not mapped to a Form field"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CannotPublishWhenRequiredFieldNotMapped {
 		property portal.acceptance = "true";
 
@@ -161,9 +155,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject306");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -192,7 +184,7 @@ definition {
 
 	@description = "LPS-133365 - Verify if is not possible to publish the Form when required Object field is not mapped to a Form Field in a Field Group"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CannotPublishWhenRequiredFieldNotMappedForFieldGroup {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 307",
@@ -225,9 +217,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject307");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -268,7 +258,7 @@ definition {
 
 	@description = "LPS-133365 - Verify if it's not possible to save or publish the Form if a added Form field is not mapped to a Object field"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CannotSaveOrPublishWhenAddedFieldNotMapped {
 		property portal.acceptance = "true";
 
@@ -287,9 +277,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject308");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -316,7 +304,7 @@ definition {
 
 	@description = "LPS-133365 - Verify if it's not possible to save or publish the Form if a added Form field is not mapped to a Object field in a Field Group"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CannotSaveOrPublishWhenAddedFieldNotMappedForFieldGroup {
 		property portal.acceptance = "true";
 
@@ -335,9 +323,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject309");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
@@ -369,7 +355,7 @@ definition {
 	}
 
 	@description = "LPS-136456 - Verify that it is not possible to view forms entries when it is mapped to an object"
-	@priority = "4"
+	@priority = 4
 	test CannotViewFormsEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 310",
@@ -386,9 +372,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject310");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
@@ -416,7 +400,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to select Object as a Storage Type"
-	@priority = "5"
+	@priority = 5
 	test CanSelectObjectStorageType {
 		property portal.acceptance = "true";
 
@@ -435,21 +419,23 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject311");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		PopulateObjectFormsConfiguration.openFormSettings();
 
-		PopulateObjectFormsConfiguration.viewDisplaySelectOption(label = "Object");
+		AssertElementPresent(
+			key_label = "Object",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 
 		PopulateObjectFormsConfiguration.selectObject(label = "Object");
 
-		PopulateObjectFormsConfiguration.viewDisplaySelectOption(label = "Custom Object 311");
+		AssertElementPresent(
+			key_label = "Custom Object 311",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
 	}
 
 	@description = "LPS-136456 - Verify that the Repeatable option is not available on a form when it is mapped to an object"
-	@priority = "4"
+	@priority = 4
 	test RepeatableOptionNotAvailable {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 312",
@@ -468,9 +454,7 @@ definition {
 
 		Navigator.openURL();
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
@@ -490,7 +474,7 @@ definition {
 	}
 
 	@description = "LPS-136456 - Verify that the Searchable option is not available on a form when it is mapped to an object"
-	@priority = "4"
+	@priority = 4
 	test SearchableOptionNotAvailable {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 313",
@@ -507,9 +491,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject313");
 
-		PopulateObjectFormsConfiguration.openForm();
-
-		FormsAdminNavigator.gotoAddForm();
+		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 

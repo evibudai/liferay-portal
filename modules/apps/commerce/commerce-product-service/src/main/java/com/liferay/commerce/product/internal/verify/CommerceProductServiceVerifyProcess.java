@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.internal.verify;
@@ -26,7 +17,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.verify.VerifyProcess;
 
 import org.osgi.service.component.annotations.Component;
@@ -35,13 +26,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alessio Antonio Rendina
  */
-@Component(
-	property = {
-		"initial.deployment=true",
-		"verify.process.name=com.liferay.commerce.product.service"
-	},
-	service = {CommerceProductServiceVerifyProcess.class, VerifyProcess.class}
-)
+@Component(property = "initial.deployment=true", service = VerifyProcess.class)
 public class CommerceProductServiceVerifyProcess extends VerifyProcess {
 
 	public void verifyCPMeasurementUnits() throws Exception {
@@ -55,7 +40,7 @@ public class CommerceProductServiceVerifyProcess extends VerifyProcess {
 						UpgradeProcessUtil.getDefaultLanguageId(companyId));
 					serviceContext.setScopeGroupId(0);
 					serviceContext.setUserId(_getAdminUserId(companyId));
-					serviceContext.setUuid(_portalUUID.generate());
+					serviceContext.setUuid(PortalUUIDUtil.generate());
 
 					_cpMeasurementUnitLocalService.importDefaultValues(
 						serviceContext);
@@ -89,9 +74,6 @@ public class CommerceProductServiceVerifyProcess extends VerifyProcess {
 
 	@Reference
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 	@Reference
 	private RoleLocalService _roleLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayCheckbox} from '@clayui/form';
@@ -19,15 +10,16 @@ import classNames from 'classnames';
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import i18n from '~/i18n';
 
 import {Sort} from '../../context/ListViewContext';
+import Permission from '../../core/Permission';
 import useContextMenu from '../../hooks/useContextMenu';
 import {APIResponse} from '../../services/rest';
 import {Action, SortDirection, SortOption} from '../../types';
-import {Permission} from '../../util/permission';
 import ContextMenu from '../ContextMenu';
 
-type Column<T = any> = {
+export type Column<T = any> = {
 	clickable?: boolean;
 	key: string;
 	render?: (
@@ -37,13 +29,17 @@ type Column<T = any> = {
 	) => String | React.ReactNode;
 	size?: 'sm' | 'md' | 'lg' | 'xl' | 'none';
 	sorteable?: boolean;
+	truncate?: boolean;
 	value: string;
+	width?: '50' | '75' | '100' | '200' | '250' | '300' | '350' | '400';
 };
 
 export type TableProps<T = any> = {
 	actions?: Action[];
 	allRowsChecked?: boolean;
+	bodyVerticalAlignment?: 'bottom' | 'middle' | 'top';
 	columns: Column<T>[];
+	highlight?: (item: T) => boolean;
 	items: T[];
 	mutate: KeyedMutator<T>;
 	navigateTo?: (item: T) => string;
@@ -51,6 +47,7 @@ export type TableProps<T = any> = {
 	onSelectAllRows: () => void;
 	onSelectRow?: (row: any) => void;
 	onSort: (columnTable: string, direction: SortDirection) => void;
+	responsive?: boolean;
 	rowSelectable?: boolean;
 	rowWrap?: boolean;
 	selectedRows?: number[];
@@ -61,6 +58,7 @@ const Table: React.FC<TableProps> = ({
 	allRowsChecked = false,
 	actions,
 	columns,
+	highlight,
 	items,
 	mutate,
 	navigateTo,
@@ -68,10 +66,12 @@ const Table: React.FC<TableProps> = ({
 	onSelectAllRows,
 	onSelectRow,
 	onSort,
+	responsive,
 	rowSelectable = false,
 	rowWrap = false,
 	selectedRows = [],
 	sort,
+	bodyVerticalAlignment = 'middle',
 }) => {
 	const [firstRowAction] = items;
 
@@ -114,7 +114,13 @@ const Table: React.FC<TableProps> = ({
 
 	return (
 		<>
-			<ClayTable borderless className="testray-table" hover>
+			<ClayTable
+				borderless
+				className="tr-table"
+				hover
+				responsive={responsive}
+				tableVerticalAlignment={bodyVerticalAlignment}
+			>
 				<ClayTable.Head>
 					<ClayTable.Row>
 						{rowSelectable && (
@@ -129,24 +135,31 @@ const Table: React.FC<TableProps> = ({
 						)}
 
 						{columns.map((column, index) => (
-							<ClayTable.Cell
-								className="align-items-center text-nowrap"
-								headingTitle
-								key={index}
-							>
-								<>
-									{column.value}
+							<ClayTable.Cell headingTitle key={index}>
+								<span className="d-flex justify-content-between">
+									<span
+										className={classNames({
+											'cursor-pointer': column.sorteable,
+										})}
+										onClick={() => {
+											if (column.sorteable) {
+												changeSort(column.key);
+											}
+										}}
+									>
+										{column.value}
+									</span>
 
 									{column.sorteable && (
 										<ClayIcon
-											className="cursor-pointer ml-1"
+											className="cursor-pointer"
 											onClick={() =>
 												changeSort(column.key)
 											}
 											symbol={getSortSymbol(column.key)}
 										/>
 									)}
-								</>
+								</span>
 							</ClayTable.Cell>
 						))}
 					</ClayTable.Row>
@@ -159,9 +172,11 @@ const Table: React.FC<TableProps> = ({
 								rowIndex === contextMenuState.rowIndex &&
 								contextMenuState.visible
 							}
-							className={classNames('table-row', {
+							className={classNames('tr-table__row', {
 								'text-nowrap': !rowWrap,
 								'text-wrap': rowWrap,
+								'tr-table__row--highligth':
+									highlight && highlight(item),
 							})}
 							key={rowIndex}
 							onContextMenu={(event) => {
@@ -178,6 +193,44 @@ const Table: React.FC<TableProps> = ({
 							{rowSelectable && onSelectRow && (
 								<ClayTable.Cell>
 									<ClayCheckbox
+										aria-label={columns
+											.map((column) => {
+												const getValue = (
+													value: any
+												) => {
+													if (
+														React.isValidElement(
+															value
+														)
+													) {
+														return (value?.props as any)
+															?.children;
+													}
+
+													return value;
+												};
+
+												const value = column.render
+													? getValue(
+															column.render(
+																item[
+																	column.key
+																],
+																{
+																	...item,
+																	rowIndex,
+																},
+																mutate
+															)
+													  )
+													: item[column.key];
+
+												return `${column.value}: ${
+													value ??
+													i18n.translate('empty')
+												}`;
+											})
+											.join(', ')}
 										checked={selectedRows.includes(item.id)}
 										onChange={() => onSelectRow(item.id)}
 									/>
@@ -188,6 +241,7 @@ const Table: React.FC<TableProps> = ({
 								<ClayTable.Cell
 									className={classNames('text-dark', {
 										'cursor-pointer': column.clickable,
+										[`table-cell-minw-${column.width}`]: column.width,
 										'table-cell-expand':
 											column.size === 'sm',
 										'table-cell-expand-small':
@@ -197,6 +251,7 @@ const Table: React.FC<TableProps> = ({
 										'table-cell-expand-smallest':
 											column.size === 'md',
 									})}
+									expanded={column.truncate}
 									key={columnIndex}
 									onClick={() => {
 										if (column.clickable) {
@@ -209,6 +264,7 @@ const Table: React.FC<TableProps> = ({
 											}
 										}
 									}}
+									truncate={column.truncate}
 								>
 									{column.render
 										? column.render(

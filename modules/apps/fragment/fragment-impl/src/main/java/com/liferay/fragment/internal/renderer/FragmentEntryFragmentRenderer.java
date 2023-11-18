@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.renderer;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.input.template.parser.FragmentEntryInputTemplateNodeContextHelper;
 import com.liferay.fragment.input.template.parser.InputTemplateNode;
@@ -30,7 +20,8 @@ import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.form.InfoForm;
-import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
@@ -46,7 +37,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -58,7 +49,6 @@ import java.io.PrintWriter;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -171,20 +161,20 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	private JSONObject _getInputJSONObject(
 		FragmentEntryLink fragmentEntryLink,
-		HttpServletRequest httpServletRequest,
-		Optional<InfoForm> infoFormOptional, Locale locale) {
+		HttpServletRequest httpServletRequest, InfoForm infoForm,
+		Locale locale) {
 
 		FragmentEntryInputTemplateNodeContextHelper
 			fragmentEntryInputTemplateNodeContextHelper =
 				new FragmentEntryInputTemplateNodeContextHelper(
 					_getFragmentEntryName(fragmentEntryLink),
 					_dlAppLocalService, _fragmentEntryConfigurationParser,
+					_infoItemServiceRegistry, _infoSearchClassMapperRegistry,
 					_itemSelector);
 
 		InputTemplateNode inputTemplateNode =
 			fragmentEntryInputTemplateNodeContextHelper.toInputTemplateNode(
-				fragmentEntryLink, httpServletRequest, infoFormOptional,
-				locale);
+				fragmentEntryLink, httpServletRequest, infoForm, locale);
 
 		return inputTemplateNode.toJSONObject();
 	}
@@ -194,9 +184,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		FragmentRendererContext fragmentRendererContext) {
 
 		if (fragmentEntryLink.isTypeInput() ||
-			!Objects.equals(
-				fragmentRendererContext.getMode(),
-				FragmentEntryLinkConstants.VIEW) ||
+			!fragmentRendererContext.isViewMode() ||
 			(fragmentRendererContext.getPreviewClassPK() > 0) ||
 			!fragmentRendererContext.isUseCachedContent()) {
 
@@ -255,12 +243,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			fragmentRendererContext.getFragmentEntryLink();
 
 		if (Validator.isNotNull(css)) {
-			if (Objects.equals(
-					fragmentRendererContext.getMode(),
-					FragmentEntryLinkConstants.EDIT) ||
-				Objects.equals(
-					fragmentRendererContext.getMode(),
-					FragmentEntryLinkConstants.INDEX)) {
+			if (fragmentRendererContext.isEditMode() ||
+				fragmentRendererContext.isIndexMode()) {
 
 				sb.append("<style>");
 				sb.append(css);
@@ -326,13 +310,13 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 					JSONUtil.toString(
 						_getInputJSONObject(
 							fragmentEntryLink, httpServletRequest,
-							fragmentRendererContext.getInfoFormOptional(),
+							fragmentRendererContext.getInfoForm(),
 							fragmentRendererContext.getLocale())));
 			}
 
 			sb.append("; const layoutMode = '");
 			sb.append(
-				_html.escapeJS(
+				HtmlUtil.escapeJS(
 					ParamUtil.getString(
 						_portal.getOriginalServletRequest(httpServletRequest),
 						"p_l_mode", Constants.VIEW)));
@@ -382,21 +366,12 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 					fragmentRendererContext.getMode(),
 					fragmentRendererContext.getLocale());
 
-		Optional<InfoItemReference> contextInfoItemReferenceOptional =
-			fragmentRendererContext.getContextInfoItemReferenceOptional();
-
 		defaultFragmentEntryProcessorContext.setContextInfoItemReference(
-			contextInfoItemReferenceOptional.orElse(null));
-
+			fragmentRendererContext.getContextInfoItemReference());
 		defaultFragmentEntryProcessorContext.setFragmentElementId(
 			fragmentRendererContext.getFragmentElementId());
-
-		Optional<InfoForm> infoFormOptional =
-			fragmentRendererContext.getInfoFormOptional();
-
 		defaultFragmentEntryProcessorContext.setInfoForm(
-			infoFormOptional.orElse(null));
-
+			fragmentRendererContext.getInfoForm());
 		defaultFragmentEntryProcessorContext.setPreviewClassNameId(
 			fragmentRendererContext.getPreviewClassNameId());
 		defaultFragmentEntryProcessorContext.setPreviewClassPK(
@@ -424,10 +399,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 				fragmentEntryLink, defaultFragmentEntryProcessorContext);
 		}
 
-		if (Objects.equals(
-				defaultFragmentEntryProcessorContext.getMode(),
-				FragmentEntryLinkConstants.EDIT)) {
-
+		if (defaultFragmentEntryProcessorContext.isEditMode()) {
 			html = _writePortletPaths(
 				fragmentEntryLink, html, httpServletRequest,
 				httpServletResponse);
@@ -488,7 +460,10 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
 
 	@Reference
-	private Html _html;
+	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	@Reference
+	private InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;
 
 	@Reference
 	private ItemSelector _itemSelector;

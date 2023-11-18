@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.service.persistence;
@@ -392,150 +383,6 @@ public interface AssetListEntryUsagePersistence
 	public int countByUuid_C(String uuid, long companyId);
 
 	/**
-	 * Returns all the asset list entry usages where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @return the matching asset list entry usages
-	 */
-	public java.util.List<AssetListEntryUsage> findByAssetListEntryId(
-		long assetListEntryId);
-
-	/**
-	 * Returns a range of all the asset list entry usages where assetListEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param start the lower bound of the range of asset list entry usages
-	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
-	 * @return the range of matching asset list entry usages
-	 */
-	public java.util.List<AssetListEntryUsage> findByAssetListEntryId(
-		long assetListEntryId, int start, int end);
-
-	/**
-	 * Returns an ordered range of all the asset list entry usages where assetListEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param start the lower bound of the range of asset list entry usages
-	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset list entry usages
-	 */
-	public java.util.List<AssetListEntryUsage> findByAssetListEntryId(
-		long assetListEntryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the asset list entry usages where assetListEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param start the lower bound of the range of asset list entry usages
-	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of matching asset list entry usages
-	 */
-	public java.util.List<AssetListEntryUsage> findByAssetListEntryId(
-		long assetListEntryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
-			orderByComparator,
-		boolean useFinderCache);
-
-	/**
-	 * Returns the first asset list entry usage in the ordered set where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the first matching asset list entry usage
-	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
-	 */
-	public AssetListEntryUsage findByAssetListEntryId_First(
-			long assetListEntryId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<AssetListEntryUsage> orderByComparator)
-		throws NoSuchEntryUsageException;
-
-	/**
-	 * Returns the first asset list entry usage in the ordered set where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
-	 */
-	public AssetListEntryUsage fetchByAssetListEntryId_First(
-		long assetListEntryId,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
-			orderByComparator);
-
-	/**
-	 * Returns the last asset list entry usage in the ordered set where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset list entry usage
-	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
-	 */
-	public AssetListEntryUsage findByAssetListEntryId_Last(
-			long assetListEntryId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<AssetListEntryUsage> orderByComparator)
-		throws NoSuchEntryUsageException;
-
-	/**
-	 * Returns the last asset list entry usage in the ordered set where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
-	 */
-	public AssetListEntryUsage fetchByAssetListEntryId_Last(
-		long assetListEntryId,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
-			orderByComparator);
-
-	/**
-	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
-	 * @param assetListEntryId the asset list entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset list entry usage
-	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
-	 */
-	public AssetListEntryUsage[] findByAssetListEntryId_PrevAndNext(
-			long assetListEntryUsageId, long assetListEntryId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<AssetListEntryUsage> orderByComparator)
-		throws NoSuchEntryUsageException;
-
-	/**
-	 * Removes all the asset list entry usages where assetListEntryId = &#63; from the database.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 */
-	public void removeByAssetListEntryId(long assetListEntryId);
-
-	/**
-	 * Returns the number of asset list entry usages where assetListEntryId = &#63;.
-	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @return the number of matching asset list entry usages
-	 */
-	public int countByAssetListEntryId(long assetListEntryId);
-
-	/**
 	 * Returns all the asset list entry usages where plid = &#63;.
 	 *
 	 * @param plid the plid
@@ -679,159 +526,159 @@ public interface AssetListEntryUsagePersistence
 	public int countByPlid(long plid);
 
 	/**
-	 * Returns all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns all the asset list entry usages where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @return the matching asset list entry usages
 	 */
-	public java.util.List<AssetListEntryUsage> findByA_C(
-		long assetListEntryId, long classNameId);
+	public java.util.List<AssetListEntryUsage> findByCT_P(
+		long containerType, long plid);
 
 	/**
-	 * Returns a range of all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns a range of all the asset list entry usages where containerType = &#63; and plid = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
 	 * </p>
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param start the lower bound of the range of asset list entry usages
 	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
 	 * @return the range of matching asset list entry usages
 	 */
-	public java.util.List<AssetListEntryUsage> findByA_C(
-		long assetListEntryId, long classNameId, int start, int end);
+	public java.util.List<AssetListEntryUsage> findByCT_P(
+		long containerType, long plid, int start, int end);
 
 	/**
-	 * Returns an ordered range of all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns an ordered range of all the asset list entry usages where containerType = &#63; and plid = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
 	 * </p>
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param start the lower bound of the range of asset list entry usages
 	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching asset list entry usages
 	 */
-	public java.util.List<AssetListEntryUsage> findByA_C(
-		long assetListEntryId, long classNameId, int start, int end,
+	public java.util.List<AssetListEntryUsage> findByCT_P(
+		long containerType, long plid, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator);
 
 	/**
-	 * Returns an ordered range of all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns an ordered range of all the asset list entry usages where containerType = &#63; and plid = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
 	 * </p>
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param start the lower bound of the range of asset list entry usages
 	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset list entry usages
 	 */
-	public java.util.List<AssetListEntryUsage> findByA_C(
-		long assetListEntryId, long classNameId, int start, int end,
+	public java.util.List<AssetListEntryUsage> findByCT_P(
+		long containerType, long plid, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator,
 		boolean useFinderCache);
 
 	/**
-	 * Returns the first asset list entry usage in the ordered set where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the first asset list entry usage in the ordered set where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching asset list entry usage
 	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
 	 */
-	public AssetListEntryUsage findByA_C_First(
-			long assetListEntryId, long classNameId,
+	public AssetListEntryUsage findByCT_P_First(
+			long containerType, long plid,
 			com.liferay.portal.kernel.util.OrderByComparator
 				<AssetListEntryUsage> orderByComparator)
 		throws NoSuchEntryUsageException;
 
 	/**
-	 * Returns the first asset list entry usage in the ordered set where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the first asset list entry usage in the ordered set where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
 	 */
-	public AssetListEntryUsage fetchByA_C_First(
-		long assetListEntryId, long classNameId,
+	public AssetListEntryUsage fetchByCT_P_First(
+		long containerType, long plid,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator);
 
 	/**
-	 * Returns the last asset list entry usage in the ordered set where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the last asset list entry usage in the ordered set where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching asset list entry usage
 	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
 	 */
-	public AssetListEntryUsage findByA_C_Last(
-			long assetListEntryId, long classNameId,
+	public AssetListEntryUsage findByCT_P_Last(
+			long containerType, long plid,
 			com.liferay.portal.kernel.util.OrderByComparator
 				<AssetListEntryUsage> orderByComparator)
 		throws NoSuchEntryUsageException;
 
 	/**
-	 * Returns the last asset list entry usage in the ordered set where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the last asset list entry usage in the ordered set where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
 	 */
-	public AssetListEntryUsage fetchByA_C_Last(
-		long assetListEntryId, long classNameId,
+	public AssetListEntryUsage fetchByCT_P_Last(
+		long containerType, long plid,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator);
 
 	/**
-	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where containerType = &#63; and plid = &#63;.
 	 *
 	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the previous, current, and next asset list entry usage
 	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
 	 */
-	public AssetListEntryUsage[] findByA_C_PrevAndNext(
-			long assetListEntryUsageId, long assetListEntryId, long classNameId,
+	public AssetListEntryUsage[] findByCT_P_PrevAndNext(
+			long assetListEntryUsageId, long containerType, long plid,
 			com.liferay.portal.kernel.util.OrderByComparator
 				<AssetListEntryUsage> orderByComparator)
 		throws NoSuchEntryUsageException;
 
 	/**
-	 * Removes all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63; from the database.
+	 * Removes all the asset list entry usages where containerType = &#63; and plid = &#63; from the database.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 */
-	public void removeByA_C(long assetListEntryId, long classNameId);
+	public void removeByCT_P(long containerType, long plid);
 
 	/**
-	 * Returns the number of asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
+	 * Returns the number of asset list entry usages where containerType = &#63; and plid = &#63;.
 	 *
-	 * @param assetListEntryId the asset list entry ID
-	 * @param classNameId the class name ID
+	 * @param containerType the container type
+	 * @param plid the plid
 	 * @return the number of matching asset list entry usages
 	 */
-	public int countByA_C(long assetListEntryId, long classNameId);
+	public int countByCT_P(long containerType, long plid);
 
 	/**
 	 * Returns all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.

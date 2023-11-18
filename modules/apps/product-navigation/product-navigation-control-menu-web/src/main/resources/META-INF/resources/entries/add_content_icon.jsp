@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,18 +12,18 @@ String portletNamespace = PortalUtil.getPortletNamespace(ProductNavigationContro
 %>
 
 <li class="control-menu-nav-item">
-	<a
-		aria-label="<%= LanguageUtil.get(request, "add") %>"
-		class="control-menu-icon lfr-portal-tooltip product-menu-toggle sidenav-toggler"
+	<clay:button
+		aria-label='<%= LanguageUtil.get(request, "add") %>'
+		cssClass="lfr-portal-tooltip product-menu-toggle sidenav-toggler"
 		data-content="body"
-		data-open-class="open-admin-panel"
+		data-open-class="open-admin-panel open"
 		data-qa-id="add"
-		data-target="#<%= portletNamespace %>addPanelId"
-		data-title="<%= LanguageUtil.get(request, "add") %>"
+		data-target='<%= "#" + portletNamespace + "addPanelId" %>'
+		data-title='<%= LanguageUtil.get(request, "add") %>'
 		data-toggle="liferay-sidenav"
 		data-type="fixed-push"
 		data-type-mobile="fixed"
-		data-url="<%=
+		data-url='<%=
 			PortletURLBuilder.create(
 				PortletURLFactoryUtil.create(request, ProductNavigationControlMenuPortletKeys.PRODUCT_NAVIGATION_CONTROL_MENU, PortletRequest.RESOURCE_PHASE)
 			).setMVCPath(
@@ -42,12 +33,12 @@ String portletNamespace = PortalUtil.getPortletNamespace(ProductNavigationContro
 			).setWindowState(
 				LiferayWindowState.EXCLUSIVE
 			).buildString()
-		%>"
-		href="javascript:void(0);"
-		id="<%= portletNamespace %>addToggleId"
-	>
-		<aui:icon cssClass="icon-monospaced" image="plus" markupView="lexicon" />
-	</a>
+		%>'
+		displayType="unstyled"
+		icon="plus"
+		id='<%= portletNamespace + "addToggleId" %>'
+		small="<%= true %>"
+	/>
 </li>
 
 <%

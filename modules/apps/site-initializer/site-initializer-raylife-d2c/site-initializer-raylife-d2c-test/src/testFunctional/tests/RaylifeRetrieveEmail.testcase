@@ -15,15 +15,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(site = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,9 +36,14 @@ definition {
 
 	@description = "LPS-143798 - Verify that when you click 'send link and exit' the email is sent"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanConfirmEmailSent {
-		ApplicationsMenu.gotoSite(site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -57,7 +65,7 @@ definition {
 
 		AssertElementPresent(
 			key_name = "Test",
-			key_order = "1",
+			key_order = 1,
 			locator1 = "CommerceEntry#ASSERT_NOTIFICATION_QUEUE");
 
 		Click(
@@ -68,9 +76,14 @@ definition {
 	}
 
 	@description = "LPS-143796 - Verify that when user fills out the form and save, user can retrieve quote by copying and pasting the email link into the browser"
-	@priority = "4"
+	@priority = 4
 	test CanRecoverQuotationThroughEmailLink {
-		ApplicationsMenu.gotoSite(site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -89,6 +102,8 @@ definition {
 		RaylifeRetrieveEmail.openLastIdCreated();
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+
+		RaylifeIndustry.typeIndustry();
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 

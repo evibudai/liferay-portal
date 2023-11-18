@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -54,7 +45,7 @@ if (Validator.isNotNull(tempFileName)) {
 					'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/update_certificate"><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE_TEMP %>" /></liferay-portlet:resourceURL>',
 				'fileDescription': '*.p12 *.pfx',
 				'maxFileSize':
-					'<%= UploadServletRequestConfigurationHelperUtil.getMaxSize() %> B',
+					'<%= UploadServletRequestConfigurationProviderUtil.getMaxSize() %> B',
 				'multipleFiles': false,
 				'namespace': '<portlet:namespace />',
 				'tempFileURL':
@@ -106,7 +97,7 @@ if (Validator.isNotNull(tempFileName)) {
 		CertificateTool certificateTool = (CertificateTool)request.getAttribute(SamlWebKeys.SAML_CERTIFICATE_TOOL);
 		int otherEntriesCount = 0;
 
-		Enumeration<String> enu = keyStore.aliases();
+		Enumeration<String> enumeration = keyStore.aliases();
 		%>
 
 		<liferay-util:buffer
@@ -115,8 +106,8 @@ if (Validator.isNotNull(tempFileName)) {
 			<div data-keyStoreEntryAlias=""><liferay-ui:message key="select-a-keystore-entry-to-see-a-preview" /></div>
 
 			<%
-			while (enu.hasMoreElements()) {
-				String alias = enu.nextElement();
+			while (enumeration.hasMoreElements()) {
+				String alias = enumeration.nextElement();
 
 				if (!keyStore.entryInstanceOf(alias, KeyStore.PrivateKeyEntry.class)) {
 					otherEntriesCount++;

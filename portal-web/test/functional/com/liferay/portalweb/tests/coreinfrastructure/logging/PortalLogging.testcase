@@ -1,6 +1,7 @@
 @component-name = "portal-smoke"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
@@ -11,28 +12,28 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Ensure that Portal is logging into expected log files, both .xml and .log"
-	@priority = "5"
+	@priority = 5
 	test Smoke {
 		property database.bare.enabled = "true";
 		property portal.acceptance = "true";
 		property portal.smoke = "false";
 
-		var liferayLog = Clustering.getLogFileSpecificServer(nodePort = "0");
+		var liferayLog = Clustering.getLogFileSpecificServer(nodePort = 0);
 
-		for (var logContent : list "Started dynamic bundles,Auto deploy scanner started for,System check is enabled") {
-			if (!(contains("${liferayLog}", "${logContent}"))) {
+		for (var logContent : list "Started dynamic bundles,Auto deploy scanner started for,Available checkers") {
+			if (!(contains(${liferayLog}, ${logContent}))) {
 				fail("Unable to find expected logging: ${logContent}");
 			}
 
-			AssertConsoleTextPresent(value1 = "${logContent}");
+			AssertConsoleTextPresent(value1 = ${logContent});
 		}
 	}
 

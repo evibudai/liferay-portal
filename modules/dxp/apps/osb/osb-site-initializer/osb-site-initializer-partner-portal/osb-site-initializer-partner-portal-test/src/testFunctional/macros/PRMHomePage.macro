@@ -1,0 +1,17 @@
+definition {
+
+	macro gotoQuickLinksOption {
+		Click(
+			key_buttonLink = ${buttonLink},
+			key_buttonText = ${buttonText},
+			locator1 = "PRMHomePage#QUICK_OPTIONS");
+	}
+
+	macro viewAnnouncementOnList {
+		AssertElementPresent(
+			key_announcementContent = ${announcementBody},
+			key_announcementTitle = ${announcementTitle},
+			locator1 = "PRMAnnouncements#ANNOUNCEMENT_TITLE_AND_CONTENT");
+	}
+
+}

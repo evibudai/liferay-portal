@@ -9,23 +9,24 @@ definition {
 		TestCase.setUpPortalInstanceNoSelenium();
 
 		task ("Given an object definition is created") {
-			ObjectDefinitionAPI.setUpGlobalobjectDefinitionId();
+			ObjectDefinitionAPI.staticUniversityObjectId();
+
+			ObjectDefinitionAPI.staticSubjectObjectId();
 		}
 	}
 
 	tearDown {
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			ObjectAdmin.deleteObjectViaAPI(objectName = "University");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-			ObjectAdmin.deleteObjectViaAPI(objectName = "Subject");
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCPNoSelenium();
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "4"
+	@priority = 4
 	test IncludeBatchActionsForObjectDefinition {
 		property portal.acceptance = "true";
 
@@ -36,12 +37,12 @@ definition {
 		task ("Then the actions block include the information for the updateBatch, deleteBatch action endpoint") {
 			ObjectDefinitionAPI.assertBatchActionsInResponse(
 				batchActions = "updateBatch,deleteBatch",
-				responseToParse = "${response}");
+				responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "4"
+	@priority = 4
 	test IncludeBatchActionsForObjectEntries {
 		property portal.acceptance = "true";
 
@@ -59,12 +60,12 @@ definition {
 			ObjectDefinitionAPI.assertBatchActionsInResponse(
 				batchActions = "updateBatch,deleteBatch",
 				en_US_plural_label = "subjects",
-				responseToParse = "${response}");
+				responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "4"
+	@priority = 4
 	test IncludeBatchActionsForObjectSchemas {
 		property portal.acceptance = "true";
 
@@ -75,13 +76,13 @@ definition {
 		task ("Then the actions block include the information for the updatebatch, deleteBatch action endpoint") {
 			ObjectDefinitionAPI.assertBatchActionsWithGetObjectSchemas(
 				batchActions = "updateBatch,deleteBatch",
-				objectDefinitionId = "${staticObjectId1}",
-				objectSchemas = "${objectSchemas}");
+				objectDefinitionId = ${staticUniversityObjectId},
+				objectSchemas = ${objectSchemas});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "4"
+	@priority = 4
 	test IncludeCreateBatchInActionsForObjectDefinition {
 		property portal.acceptance = "true";
 
@@ -92,12 +93,12 @@ definition {
 		task ("Then the actions block include the information for the createBatch action endpoint") {
 			ObjectDefinitionAPI.assertBatchActionsInResponse(
 				batchActions = "createBatch",
-				responseToParse = "${response}");
+				responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "4"
+	@priority = 4
 	test IncludeCreateBatchInActionsForObjectEntries {
 		property portal.acceptance = "true";
 
@@ -115,12 +116,12 @@ definition {
 			ObjectDefinitionAPI.assertBatchActionsInResponse(
 				batchActions = "createBatch",
 				en_US_plural_label = "subjects",
-				responseToParse = "${response}");
+				responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@priority = "3"
+	@priority = 3
 	test IncludeCreateBatchInActionsForObjectSchemas {
 		property portal.acceptance = "true";
 
@@ -131,8 +132,8 @@ definition {
 		task ("Then the actions block include the information for the createBatch action endpoint") {
 			ObjectDefinitionAPI.assertBatchActionsWithGetObjectSchemas(
 				batchActions = "createBatch",
-				objectDefinitionId = "${staticObjectId1}",
-				objectSchemas = "${objectSchemas}");
+				objectDefinitionId = ${staticUniversityObjectId},
+				objectSchemas = ${objectSchemas});
 		}
 	}
 

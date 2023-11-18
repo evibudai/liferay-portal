@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {fetch} from 'frontend-js-web';
+import {fetch, getPortletId} from 'frontend-js-web';
 
 import formatFieldValue from '../../utils/formatFieldValue.es';
 import setDataRecord from '../../utils/setDataRecord.es';
@@ -56,11 +47,9 @@ const getDataRecordValues = ({
 const getFieldProperties = (fieldName, pages) => {
 	const visitor = new PagesVisitor(pages);
 
-	const {
-		itemSelectorURL,
-		locale,
-		localizedValueEdited = {[locale]: true},
-	} = visitor.findField((field) => field.fieldName === fieldName);
+	const {itemSelectorURL, localizedValueEdited} = visitor.findField(
+		(field) => field.fieldName === fieldName
+	);
 
 	return {itemSelectorURL, localizedValueEdited};
 };
@@ -84,7 +73,9 @@ export default function pageLanguageUpdate({
 		});
 
 		fetch(
-			`/o/data-engine/v2.0/data-layouts/${ddmStructureLayoutId}/context`,
+			`/o/data-engine/v2.0/data-layouts/${ddmStructureLayoutId}/context?p_l_id=${themeDisplay.getPlid()}&p_p_id=${getPortletId(
+				portletNamespace
+			)}`,
 			{
 				body: JSON.stringify({
 					dataRecordValues,
@@ -95,7 +86,10 @@ export default function pageLanguageUpdate({
 					siteGroupId: themeDisplay.getSiteGroupId(),
 				}),
 				headers: {
-					'Accept-Language': nextEditingLanguageId.replace('_', '-'),
+					'Accept-Language': nextEditingLanguageId.replaceAll(
+						'_',
+						'-'
+					),
 					'Content-Type': 'application/json',
 				},
 				method: 'POST',

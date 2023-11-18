@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -88,10 +79,12 @@ public class CPDefinitionOptionRelModelImpl
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"CPDefinitionId", Types.BIGINT}, {"CPOptionId", Types.BIGINT},
 		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"DDMFormFieldTypeName", Types.VARCHAR}, {"priority", Types.DOUBLE},
-		{"facetable", Types.BOOLEAN}, {"required", Types.BOOLEAN},
-		{"skuContributor", Types.BOOLEAN}, {"key_", Types.VARCHAR},
-		{"priceType", Types.VARCHAR}
+		{"commerceOptionTypeKey", Types.VARCHAR},
+		{"infoItemServiceKey", Types.VARCHAR}, {"priority", Types.DOUBLE},
+		{"definedExternally", Types.BOOLEAN}, {"facetable", Types.BOOLEAN},
+		{"required", Types.BOOLEAN}, {"skuContributor", Types.BOOLEAN},
+		{"key_", Types.VARCHAR}, {"priceType", Types.VARCHAR},
+		{"typeSettings", Types.CLOB}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -112,17 +105,20 @@ public class CPDefinitionOptionRelModelImpl
 		TABLE_COLUMNS_MAP.put("CPOptionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("DDMFormFieldTypeName", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("commerceOptionTypeKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("infoItemServiceKey", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
+		TABLE_COLUMNS_MAP.put("definedExternally", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("facetable", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("required", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("skuContributor", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("key_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("priceType", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("typeSettings", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPDefinitionOptionRel (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionOptionRelId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CPOptionId LONG,name STRING null,description STRING null,DDMFormFieldTypeName VARCHAR(75) null,priority DOUBLE,facetable BOOLEAN,required BOOLEAN,skuContributor BOOLEAN,key_ VARCHAR(75) null,priceType VARCHAR(75) null,primary key (CPDefinitionOptionRelId, ctCollectionId))";
+		"create table CPDefinitionOptionRel (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionOptionRelId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CPOptionId LONG,name STRING null,description STRING null,commerceOptionTypeKey VARCHAR(75) null,infoItemServiceKey VARCHAR(255) null,priority DOUBLE,definedExternally BOOLEAN,facetable BOOLEAN,required BOOLEAN,skuContributor BOOLEAN,key_ VARCHAR(75) null,priceType VARCHAR(75) null,typeSettings TEXT null,primary key (CPDefinitionOptionRelId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CPDefinitionOptionRel";
@@ -285,160 +281,198 @@ public class CPDefinitionOptionRelModelImpl
 	public Map<String, Function<CPDefinitionOptionRel, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CPDefinitionOptionRel, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CPDefinitionOptionRel, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CPDefinitionOptionRel, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CPDefinitionOptionRel, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CPDefinitionOptionRel, Object>>();
-		Map<String, BiConsumer<CPDefinitionOptionRel, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CPDefinitionOptionRel, ?>>();
+		private static final Map
+			<String, Function<CPDefinitionOptionRel, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CPDefinitionOptionRel::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CPDefinitionOptionRel::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", CPDefinitionOptionRel::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setUuid);
-		attributeGetterFunctions.put(
-			"CPDefinitionOptionRelId",
-			CPDefinitionOptionRel::getCPDefinitionOptionRelId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionOptionRelId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setCPDefinitionOptionRelId);
-		attributeGetterFunctions.put(
-			"groupId", CPDefinitionOptionRel::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", CPDefinitionOptionRel::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CPDefinitionOptionRel::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CPDefinitionOptionRel::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CPDefinitionOptionRel::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CPDefinitionOptionRel, Date>)
-				CPDefinitionOptionRel::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CPDefinitionOptionRel::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CPDefinitionOptionRel, Date>)
-				CPDefinitionOptionRel::setModifiedDate);
-		attributeGetterFunctions.put(
-			"CPDefinitionId", CPDefinitionOptionRel::getCPDefinitionId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setCPDefinitionId);
-		attributeGetterFunctions.put(
-			"CPOptionId", CPDefinitionOptionRel::getCPOptionId);
-		attributeSetterBiConsumers.put(
-			"CPOptionId",
-			(BiConsumer<CPDefinitionOptionRel, Long>)
-				CPDefinitionOptionRel::setCPOptionId);
-		attributeGetterFunctions.put("name", CPDefinitionOptionRel::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setName);
-		attributeGetterFunctions.put(
-			"description", CPDefinitionOptionRel::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setDescription);
-		attributeGetterFunctions.put(
-			"DDMFormFieldTypeName",
-			CPDefinitionOptionRel::getDDMFormFieldTypeName);
-		attributeSetterBiConsumers.put(
-			"DDMFormFieldTypeName",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setDDMFormFieldTypeName);
-		attributeGetterFunctions.put(
-			"priority", CPDefinitionOptionRel::getPriority);
-		attributeSetterBiConsumers.put(
-			"priority",
-			(BiConsumer<CPDefinitionOptionRel, Double>)
-				CPDefinitionOptionRel::setPriority);
-		attributeGetterFunctions.put(
-			"facetable", CPDefinitionOptionRel::getFacetable);
-		attributeSetterBiConsumers.put(
-			"facetable",
-			(BiConsumer<CPDefinitionOptionRel, Boolean>)
-				CPDefinitionOptionRel::setFacetable);
-		attributeGetterFunctions.put(
-			"required", CPDefinitionOptionRel::getRequired);
-		attributeSetterBiConsumers.put(
-			"required",
-			(BiConsumer<CPDefinitionOptionRel, Boolean>)
-				CPDefinitionOptionRel::setRequired);
-		attributeGetterFunctions.put(
-			"skuContributor", CPDefinitionOptionRel::getSkuContributor);
-		attributeSetterBiConsumers.put(
-			"skuContributor",
-			(BiConsumer<CPDefinitionOptionRel, Boolean>)
-				CPDefinitionOptionRel::setSkuContributor);
-		attributeGetterFunctions.put("key", CPDefinitionOptionRel::getKey);
-		attributeSetterBiConsumers.put(
-			"key",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setKey);
-		attributeGetterFunctions.put(
-			"priceType", CPDefinitionOptionRel::getPriceType);
-		attributeSetterBiConsumers.put(
-			"priceType",
-			(BiConsumer<CPDefinitionOptionRel, String>)
-				CPDefinitionOptionRel::setPriceType);
+		static {
+			Map<String, Function<CPDefinitionOptionRel, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CPDefinitionOptionRel, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CPDefinitionOptionRel::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CPDefinitionOptionRel::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", CPDefinitionOptionRel::getUuid);
+			attributeGetterFunctions.put(
+				"CPDefinitionOptionRelId",
+				CPDefinitionOptionRel::getCPDefinitionOptionRelId);
+			attributeGetterFunctions.put(
+				"groupId", CPDefinitionOptionRel::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", CPDefinitionOptionRel::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CPDefinitionOptionRel::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CPDefinitionOptionRel::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CPDefinitionOptionRel::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CPDefinitionOptionRel::getModifiedDate);
+			attributeGetterFunctions.put(
+				"CPDefinitionId", CPDefinitionOptionRel::getCPDefinitionId);
+			attributeGetterFunctions.put(
+				"CPOptionId", CPDefinitionOptionRel::getCPOptionId);
+			attributeGetterFunctions.put(
+				"name", CPDefinitionOptionRel::getName);
+			attributeGetterFunctions.put(
+				"description", CPDefinitionOptionRel::getDescription);
+			attributeGetterFunctions.put(
+				"commerceOptionTypeKey",
+				CPDefinitionOptionRel::getCommerceOptionTypeKey);
+			attributeGetterFunctions.put(
+				"infoItemServiceKey",
+				CPDefinitionOptionRel::getInfoItemServiceKey);
+			attributeGetterFunctions.put(
+				"priority", CPDefinitionOptionRel::getPriority);
+			attributeGetterFunctions.put(
+				"definedExternally",
+				CPDefinitionOptionRel::getDefinedExternally);
+			attributeGetterFunctions.put(
+				"facetable", CPDefinitionOptionRel::getFacetable);
+			attributeGetterFunctions.put(
+				"required", CPDefinitionOptionRel::getRequired);
+			attributeGetterFunctions.put(
+				"skuContributor", CPDefinitionOptionRel::getSkuContributor);
+			attributeGetterFunctions.put("key", CPDefinitionOptionRel::getKey);
+			attributeGetterFunctions.put(
+				"priceType", CPDefinitionOptionRel::getPriceType);
+			attributeGetterFunctions.put(
+				"typeSettings", CPDefinitionOptionRel::getTypeSettings);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CPDefinitionOptionRel, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CPDefinitionOptionRel, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CPDefinitionOptionRel, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setUuid);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionOptionRelId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setCPDefinitionOptionRelId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CPDefinitionOptionRel, Date>)
+					CPDefinitionOptionRel::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CPDefinitionOptionRel, Date>)
+					CPDefinitionOptionRel::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setCPDefinitionId);
+			attributeSetterBiConsumers.put(
+				"CPOptionId",
+				(BiConsumer<CPDefinitionOptionRel, Long>)
+					CPDefinitionOptionRel::setCPOptionId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setName);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setDescription);
+			attributeSetterBiConsumers.put(
+				"commerceOptionTypeKey",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setCommerceOptionTypeKey);
+			attributeSetterBiConsumers.put(
+				"infoItemServiceKey",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setInfoItemServiceKey);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<CPDefinitionOptionRel, Double>)
+					CPDefinitionOptionRel::setPriority);
+			attributeSetterBiConsumers.put(
+				"definedExternally",
+				(BiConsumer<CPDefinitionOptionRel, Boolean>)
+					CPDefinitionOptionRel::setDefinedExternally);
+			attributeSetterBiConsumers.put(
+				"facetable",
+				(BiConsumer<CPDefinitionOptionRel, Boolean>)
+					CPDefinitionOptionRel::setFacetable);
+			attributeSetterBiConsumers.put(
+				"required",
+				(BiConsumer<CPDefinitionOptionRel, Boolean>)
+					CPDefinitionOptionRel::setRequired);
+			attributeSetterBiConsumers.put(
+				"skuContributor",
+				(BiConsumer<CPDefinitionOptionRel, Boolean>)
+					CPDefinitionOptionRel::setSkuContributor);
+			attributeSetterBiConsumers.put(
+				"key",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setKey);
+			attributeSetterBiConsumers.put(
+				"priceType",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setPriceType);
+			attributeSetterBiConsumers.put(
+				"typeSettings",
+				(BiConsumer<CPDefinitionOptionRel, String>)
+					CPDefinitionOptionRel::setTypeSettings);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -922,22 +956,42 @@ public class CPDefinitionOptionRelModelImpl
 
 	@JSON
 	@Override
-	public String getDDMFormFieldTypeName() {
-		if (_DDMFormFieldTypeName == null) {
+	public String getCommerceOptionTypeKey() {
+		if (_commerceOptionTypeKey == null) {
 			return "";
 		}
 		else {
-			return _DDMFormFieldTypeName;
+			return _commerceOptionTypeKey;
 		}
 	}
 
 	@Override
-	public void setDDMFormFieldTypeName(String DDMFormFieldTypeName) {
+	public void setCommerceOptionTypeKey(String commerceOptionTypeKey) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_DDMFormFieldTypeName = DDMFormFieldTypeName;
+		_commerceOptionTypeKey = commerceOptionTypeKey;
+	}
+
+	@JSON
+	@Override
+	public String getInfoItemServiceKey() {
+		if (_infoItemServiceKey == null) {
+			return "";
+		}
+		else {
+			return _infoItemServiceKey;
+		}
+	}
+
+	@Override
+	public void setInfoItemServiceKey(String infoItemServiceKey) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_infoItemServiceKey = infoItemServiceKey;
 	}
 
 	@JSON
@@ -953,6 +1007,27 @@ public class CPDefinitionOptionRelModelImpl
 		}
 
 		_priority = priority;
+	}
+
+	@JSON
+	@Override
+	public boolean getDefinedExternally() {
+		return _definedExternally;
+	}
+
+	@JSON
+	@Override
+	public boolean isDefinedExternally() {
+		return _definedExternally;
+	}
+
+	@Override
+	public void setDefinedExternally(boolean definedExternally) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_definedExternally = definedExternally;
 	}
 
 	@JSON
@@ -1085,6 +1160,26 @@ public class CPDefinitionOptionRelModelImpl
 		}
 
 		_priceType = priceType;
+	}
+
+	@JSON
+	@Override
+	public String getTypeSettings() {
+		if (_typeSettings == null) {
+			return "";
+		}
+		else {
+			return _typeSettings;
+		}
+	}
+
+	@Override
+	public void setTypeSettings(String typeSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_typeSettings = typeSettings;
 	}
 
 	@Override
@@ -1254,14 +1349,18 @@ public class CPDefinitionOptionRelModelImpl
 		cpDefinitionOptionRelImpl.setCPOptionId(getCPOptionId());
 		cpDefinitionOptionRelImpl.setName(getName());
 		cpDefinitionOptionRelImpl.setDescription(getDescription());
-		cpDefinitionOptionRelImpl.setDDMFormFieldTypeName(
-			getDDMFormFieldTypeName());
+		cpDefinitionOptionRelImpl.setCommerceOptionTypeKey(
+			getCommerceOptionTypeKey());
+		cpDefinitionOptionRelImpl.setInfoItemServiceKey(
+			getInfoItemServiceKey());
 		cpDefinitionOptionRelImpl.setPriority(getPriority());
+		cpDefinitionOptionRelImpl.setDefinedExternally(isDefinedExternally());
 		cpDefinitionOptionRelImpl.setFacetable(isFacetable());
 		cpDefinitionOptionRelImpl.setRequired(isRequired());
 		cpDefinitionOptionRelImpl.setSkuContributor(isSkuContributor());
 		cpDefinitionOptionRelImpl.setKey(getKey());
 		cpDefinitionOptionRelImpl.setPriceType(getPriceType());
+		cpDefinitionOptionRelImpl.setTypeSettings(getTypeSettings());
 
 		cpDefinitionOptionRelImpl.resetOriginalValues();
 
@@ -1301,10 +1400,14 @@ public class CPDefinitionOptionRelModelImpl
 			this.<String>getColumnOriginalValue("name"));
 		cpDefinitionOptionRelImpl.setDescription(
 			this.<String>getColumnOriginalValue("description"));
-		cpDefinitionOptionRelImpl.setDDMFormFieldTypeName(
-			this.<String>getColumnOriginalValue("DDMFormFieldTypeName"));
+		cpDefinitionOptionRelImpl.setCommerceOptionTypeKey(
+			this.<String>getColumnOriginalValue("commerceOptionTypeKey"));
+		cpDefinitionOptionRelImpl.setInfoItemServiceKey(
+			this.<String>getColumnOriginalValue("infoItemServiceKey"));
 		cpDefinitionOptionRelImpl.setPriority(
 			this.<Double>getColumnOriginalValue("priority"));
+		cpDefinitionOptionRelImpl.setDefinedExternally(
+			this.<Boolean>getColumnOriginalValue("definedExternally"));
 		cpDefinitionOptionRelImpl.setFacetable(
 			this.<Boolean>getColumnOriginalValue("facetable"));
 		cpDefinitionOptionRelImpl.setRequired(
@@ -1315,6 +1418,8 @@ public class CPDefinitionOptionRelModelImpl
 			this.<String>getColumnOriginalValue("key_"));
 		cpDefinitionOptionRelImpl.setPriceType(
 			this.<String>getColumnOriginalValue("priceType"));
+		cpDefinitionOptionRelImpl.setTypeSettings(
+			this.<String>getColumnOriginalValue("typeSettings"));
 
 		return cpDefinitionOptionRelImpl;
 	}
@@ -1468,19 +1573,34 @@ public class CPDefinitionOptionRelModelImpl
 			cpDefinitionOptionRelCacheModel.description = null;
 		}
 
-		cpDefinitionOptionRelCacheModel.DDMFormFieldTypeName =
-			getDDMFormFieldTypeName();
+		cpDefinitionOptionRelCacheModel.commerceOptionTypeKey =
+			getCommerceOptionTypeKey();
 
-		String DDMFormFieldTypeName =
-			cpDefinitionOptionRelCacheModel.DDMFormFieldTypeName;
+		String commerceOptionTypeKey =
+			cpDefinitionOptionRelCacheModel.commerceOptionTypeKey;
 
-		if ((DDMFormFieldTypeName != null) &&
-			(DDMFormFieldTypeName.length() == 0)) {
+		if ((commerceOptionTypeKey != null) &&
+			(commerceOptionTypeKey.length() == 0)) {
 
-			cpDefinitionOptionRelCacheModel.DDMFormFieldTypeName = null;
+			cpDefinitionOptionRelCacheModel.commerceOptionTypeKey = null;
+		}
+
+		cpDefinitionOptionRelCacheModel.infoItemServiceKey =
+			getInfoItemServiceKey();
+
+		String infoItemServiceKey =
+			cpDefinitionOptionRelCacheModel.infoItemServiceKey;
+
+		if ((infoItemServiceKey != null) &&
+			(infoItemServiceKey.length() == 0)) {
+
+			cpDefinitionOptionRelCacheModel.infoItemServiceKey = null;
 		}
 
 		cpDefinitionOptionRelCacheModel.priority = getPriority();
+
+		cpDefinitionOptionRelCacheModel.definedExternally =
+			isDefinedExternally();
 
 		cpDefinitionOptionRelCacheModel.facetable = isFacetable();
 
@@ -1502,6 +1622,14 @@ public class CPDefinitionOptionRelModelImpl
 
 		if ((priceType != null) && (priceType.length() == 0)) {
 			cpDefinitionOptionRelCacheModel.priceType = null;
+		}
+
+		cpDefinitionOptionRelCacheModel.typeSettings = getTypeSettings();
+
+		String typeSettings = cpDefinitionOptionRelCacheModel.typeSettings;
+
+		if ((typeSettings != null) && (typeSettings.length() == 0)) {
+			cpDefinitionOptionRelCacheModel.typeSettings = null;
 		}
 
 		return cpDefinitionOptionRelCacheModel;
@@ -1583,19 +1711,23 @@ public class CPDefinitionOptionRelModelImpl
 	private String _nameCurrentLanguageId;
 	private String _description;
 	private String _descriptionCurrentLanguageId;
-	private String _DDMFormFieldTypeName;
+	private String _commerceOptionTypeKey;
+	private String _infoItemServiceKey;
 	private double _priority;
+	private boolean _definedExternally;
 	private boolean _facetable;
 	private boolean _required;
 	private boolean _skuContributor;
 	private String _key;
 	private String _priceType;
+	private String _typeSettings;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CPDefinitionOptionRel, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1636,13 +1768,16 @@ public class CPDefinitionOptionRelModelImpl
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put(
-			"DDMFormFieldTypeName", _DDMFormFieldTypeName);
+			"commerceOptionTypeKey", _commerceOptionTypeKey);
+		_columnOriginalValues.put("infoItemServiceKey", _infoItemServiceKey);
 		_columnOriginalValues.put("priority", _priority);
+		_columnOriginalValues.put("definedExternally", _definedExternally);
 		_columnOriginalValues.put("facetable", _facetable);
 		_columnOriginalValues.put("required", _required);
 		_columnOriginalValues.put("skuContributor", _skuContributor);
 		_columnOriginalValues.put("key_", _key);
 		_columnOriginalValues.put("priceType", _priceType);
+		_columnOriginalValues.put("typeSettings", _typeSettings);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1695,19 +1830,25 @@ public class CPDefinitionOptionRelModelImpl
 
 		columnBitmasks.put("description", 8192L);
 
-		columnBitmasks.put("DDMFormFieldTypeName", 16384L);
+		columnBitmasks.put("commerceOptionTypeKey", 16384L);
 
-		columnBitmasks.put("priority", 32768L);
+		columnBitmasks.put("infoItemServiceKey", 32768L);
 
-		columnBitmasks.put("facetable", 65536L);
+		columnBitmasks.put("priority", 65536L);
 
-		columnBitmasks.put("required", 131072L);
+		columnBitmasks.put("definedExternally", 131072L);
 
-		columnBitmasks.put("skuContributor", 262144L);
+		columnBitmasks.put("facetable", 262144L);
 
-		columnBitmasks.put("key_", 524288L);
+		columnBitmasks.put("required", 524288L);
 
-		columnBitmasks.put("priceType", 1048576L);
+		columnBitmasks.put("skuContributor", 1048576L);
+
+		columnBitmasks.put("key_", 2097152L);
+
+		columnBitmasks.put("priceType", 4194304L);
+
+		columnBitmasks.put("typeSettings", 8388608L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

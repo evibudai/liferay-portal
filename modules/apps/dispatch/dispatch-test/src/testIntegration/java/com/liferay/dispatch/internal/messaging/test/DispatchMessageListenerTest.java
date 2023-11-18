@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dispatch.internal.messaging.test;
@@ -29,14 +20,13 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -45,8 +35,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -78,7 +66,8 @@ public class DispatchMessageListenerTest {
 		int executeCount = RandomTestUtil.randomInt(1, 3);
 
 		DispatchTrigger dispatchTrigger = _executeDispatchTrigger(
-			executeCount, 1000, RandomTestUtil.randomBoolean(), "missingType");
+			executeCount, 1000, true,
+			TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST);
 
 		List<DispatchLog> dispatchLogs =
 			_dispatchLogLocalService.getDispatchLogs(
@@ -92,7 +81,7 @@ public class DispatchMessageListenerTest {
 
 		for (DispatchLog dispatchLog : dispatchLogs) {
 			Assert.assertEquals(
-				DispatchTaskStatus.CANCELED.getStatus(),
+				DispatchTaskStatus.SUCCESSFUL.getStatus(),
 				dispatchLog.getStatus());
 		}
 	}
@@ -131,9 +120,8 @@ public class DispatchMessageListenerTest {
 		List<DispatchLog> dispatchLogs, int executeCount,
 		boolean overlapAllowed) {
 
-		Stream<DispatchLog> stream = dispatchLogs.stream();
-
-		List<DispatchLog> sortedDispatchLogs = stream.filter(
+		dispatchLogs = ListUtil.filter(
+			dispatchLogs,
 			dispatchLog -> {
 				if (DispatchTaskStatus.valueOf(dispatchLog.getStatus()) ==
 						DispatchTaskStatus.SUCCESSFUL) {
@@ -142,13 +130,12 @@ public class DispatchMessageListenerTest {
 				}
 
 				return false;
-			}
-		).sorted(
+			});
+
+		List<DispatchLog> sortedDispatchLogs = ListUtil.sort(
+			dispatchLogs,
 			(dispatchLog1, dispatchLog2) -> DateUtil.compareTo(
-				dispatchLog1.getCreateDate(), dispatchLog2.getCreateDate())
-		).collect(
-			Collectors.toList()
-		);
+				dispatchLog1.getCreateDate(), dispatchLog2.getCreateDate()));
 
 		if (sortedDispatchLogs.isEmpty()) {
 			return;
@@ -227,9 +214,7 @@ public class DispatchMessageListenerTest {
 			boolean overlapAllowed, String type)
 		throws Exception {
 
-		Company company = CompanyTestUtil.addCompany();
-
-		User user = UserTestUtil.addUser(company);
+		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger =
 			_dispatchTriggerLocalService.addDispatchTrigger(

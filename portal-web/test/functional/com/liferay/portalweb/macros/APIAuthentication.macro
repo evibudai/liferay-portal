@@ -2,14 +2,14 @@ definition {
 
 	macro openToConfigInInstanceSettings {
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		if ("${portlet}" == "Auto Login") {
+		if (${portlet} == "Auto Login") {
 			var portletId = "com.liferay.portal.security.auto.login.internal.basic.auth.header.configuration.BasicAuthHeaderAutoLoginConfiguration";
 		}
 
-		if ("${portlet}" == "Protocol Support") {
+		if (${portlet} == "Protocol Support") {
 			var portletId = "com.liferay.portal.security.configuration.BasicAuthHeaderSupportConfiguration";
 		}
 

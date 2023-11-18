@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
 import ClaySticker from '@clayui/sticker';
+import {checkCookieConsentForTypes} from '@liferay/cookies-banner-web';
 import classnames from 'classnames';
+import {COOKIE_TYPES, checkConsent} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 
 import CommerceCookie from '../../utilities/cookies';
 import {
@@ -25,7 +18,10 @@ import {
 	TOGGLE_ITEM_IN_PRODUCT_COMPARISON,
 } from '../../utilities/eventsDefinitions';
 
-const compareCookie = new CommerceCookie('COMMERCE_COMPARE_cpDefinitionIds_');
+const compareCookie = new CommerceCookie(
+	'COMMERCE_COMPARE_cpDefinitionIds_',
+	COOKIE_TYPES.FUNCTIONAL
+);
 
 function toggleStatus(commerceChannelGroupId, id, toggle) {
 	const value = compareCookie.getValue(commerceChannelGroupId);
@@ -46,6 +42,17 @@ function toggleStatus(commerceChannelGroupId, id, toggle) {
 	}
 
 	compareCookie.setValue(commerceChannelGroupId, cpDefinitionIds.join(':'));
+}
+
+function alertCookies(alertType, alertTitle, alertMessage) {
+	Liferay.Util.openToast({
+		message: alertMessage,
+		title: alertTitle,
+		toastProps: {
+			autoClose: 5000,
+		},
+		type: alertType,
+	});
 }
 
 function Item(props) {
@@ -71,11 +78,54 @@ function Item(props) {
 
 function MiniCompare(props) {
 	const [items, setItems] = useState(props.items);
-
-	compareCookie.setValue(
-		props.commerceChannelGroupId,
-		items.map((item) => item.id).join(':')
+	const [functionalCookiesConsent, setFunctionalCookiesConsent] = useState(
+		checkConsent(COOKIE_TYPES.FUNCTIONAL)
 	);
+
+	const triggerCheckCookieConsent = useCallback(() => {
+		return !functionalCookiesConsent && items?.length > 0;
+	}, [functionalCookiesConsent, items?.length]);
+
+	useEffect(() => {
+		if (triggerCheckCookieConsent()) {
+			checkCookieConsentForTypes(COOKIE_TYPES.FUNCTIONAL, {
+				alertMessage: Liferay.Language.get(
+					'product-comparison-cookies-alert'
+				),
+				customTitle: Liferay.Language.get(
+					'product-comparison-cookies-title'
+				),
+			})
+				.then(() => {
+					compareCookie.setValue(
+						props.commerceChannelGroupId,
+						items.map((item) => item.id).join(':')
+					);
+					setFunctionalCookiesConsent(true);
+					alertCookies(
+						'success',
+						Liferay.Language.get('cookies-allowed'),
+						Liferay.Language.get(
+							'product-comparison-cookies-success'
+						)
+					);
+				})
+				.catch(() => {
+					alertCookies(
+						'warning',
+						Liferay.Language.get('cookies-not-allowed'),
+						Liferay.Language.get(
+							'product-comparison-cookies-warning'
+						)
+					);
+				});
+		}
+	}, [
+		functionalCookiesConsent,
+		items,
+		props.commerceChannelGroupId,
+		triggerCheckCookieConsent,
+	]);
 
 	useEffect(() => {
 		function toggleItem({id, thumbnail}) {
@@ -112,7 +162,7 @@ function MiniCompare(props) {
 		});
 	}, [items, props.itemsLimit]);
 
-	return (
+	return triggerCheckCookieConsent() ? null : (
 		<div className={classnames('mini-compare', !!items.length && 'active')}>
 			{Array(props.itemsLimit)
 				.fill(null)

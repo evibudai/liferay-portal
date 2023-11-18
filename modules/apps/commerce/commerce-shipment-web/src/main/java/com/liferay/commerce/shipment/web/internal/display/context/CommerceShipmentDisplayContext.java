@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.display.context;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountServiceUtil;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryServiceUtil;
 import com.liferay.commerce.address.CommerceAddressFormatter;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
@@ -31,7 +22,7 @@ import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
-import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
@@ -39,6 +30,7 @@ import com.liferay.commerce.service.CommerceShippingMethodService;
 import com.liferay.commerce.shipment.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -67,7 +59,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -85,7 +76,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceShipmentDisplayContext(
 		ActionHelper actionHelper,
 		CommerceAddressFormatter commerceAddressFormatter,
-		CommerceAddressService commerceAddressService,
+		CommerceAddressLocalService commerceAddressLocalService,
 		CommerceChannelService commerceChannelService,
 		CommerceOrderItemService commerceOrderItemService,
 		CommerceOrderLocalService commerceOrderLocalService,
@@ -98,7 +89,7 @@ public class CommerceShipmentDisplayContext
 		super(actionHelper, httpServletRequest, portletResourcePermission);
 
 		_commerceAddressFormatter = commerceAddressFormatter;
-		_commerceAddressService = commerceAddressService;
+		_commerceAddressLocalService = commerceAddressLocalService;
 		_commerceChannelService = commerceChannelService;
 		_commerceOrderItemService = commerceOrderItemService;
 		_commerceOrderLocalService = commerceOrderLocalService;
@@ -108,44 +99,29 @@ public class CommerceShipmentDisplayContext
 		_regionService = regionService;
 	}
 
-	public List<CommerceAccount> getCommerceAccountsWithShippableOrders()
+	public List<AccountEntry> getCommerceAccountsWithShippableOrders()
 		throws PortalException {
 
-		List<CommerceOrder> commerceOrders = getCommerceOrders();
-
-		Stream<CommerceOrder> stream = commerceOrders.stream();
-
-		long[] commerceAccountIds = stream.mapToLong(
-			CommerceOrder::getCommerceAccountId
-		).toArray();
-
-		commerceAccountIds = ArrayUtil.unique(commerceAccountIds);
-
-		List<CommerceAccount> commerceAccounts = new ArrayList<>();
-
-		for (long commerceAccountId : commerceAccountIds) {
-			commerceAccounts.add(
-				CommerceAccountServiceUtil.getCommerceAccount(
-					commerceAccountId));
-		}
-
-		return commerceAccounts;
+		return TransformUtil.transformToList(
+			ArrayUtil.unique(
+				TransformUtil.transformToLongArray(
+					getCommerceOrders(), CommerceOrder::getCommerceAccountId)),
+			AccountEntryServiceUtil::getAccountEntry);
 	}
 
 	public String getCommerceAccountThumbnailURL(
-		CommerceAccount commerceAccount, String pathImage) {
+		AccountEntry accountEntry, String pathImage) {
 
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(pathImage);
 		sb.append("/organization_logo?img_id=");
-		sb.append(commerceAccount.getLogoId());
+		sb.append(accountEntry.getLogoId());
 
-		if (commerceAccount.getLogoId() > 0) {
+		if (accountEntry.getLogoId() > 0) {
 			sb.append("&t=");
 			sb.append(
-				WebServerServletTokenUtil.getToken(
-					commerceAccount.getLogoId()));
+				WebServerServletTokenUtil.getToken(accountEntry.getLogoId()));
 		}
 
 		return sb.toString();
@@ -210,7 +186,7 @@ public class CommerceShipmentDisplayContext
 		}
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.getCommerceAddress(
+			_commerceAddressLocalService.getCommerceAddress(
 				commerceShipment.getCommerceAddressId());
 
 		return _commerceShippingMethodService.getCommerceShippingMethods(
@@ -221,18 +197,6 @@ public class CommerceShipmentDisplayContext
 	public List<Country> getCountries() {
 		return _countryService.getCompanyCountries(
 			cpRequestHelper.getCompanyId(), true);
-	}
-
-	public String getDatasetView() throws PortalException {
-		CommerceShipment commerceShipment = getCommerceShipment();
-
-		if (commerceShipment.getStatus() >
-				CommerceShipmentConstants.SHIPMENT_STATUS_READY_TO_BE_SHIPPED) {
-
-			return CommerceShipmentFDSNames.SHIPPED_SHIPMENT_ITEMS;
-		}
-
-		return CommerceShipmentFDSNames.PROCESSING_SHIPMENT_ITEMS;
 	}
 
 	public String getDescriptiveShippingAddress() throws PortalException {
@@ -250,6 +214,18 @@ public class CommerceShipmentDisplayContext
 
 		return _commerceAddressFormatter.getDescriptiveAddress(
 			commerceAddress, true);
+	}
+
+	public String getFDSName() throws PortalException {
+		CommerceShipment commerceShipment = getCommerceShipment();
+
+		if (commerceShipment.getStatus() >
+				CommerceShipmentConstants.SHIPMENT_STATUS_READY_TO_BE_SHIPPED) {
+
+			return CommerceShipmentFDSNames.SHIPPED_SHIPMENT_ITEMS;
+		}
+
+		return CommerceShipmentFDSNames.PROCESSING_SHIPMENT_ITEMS;
 	}
 
 	public List<HeaderActionModel> getHeaderActionModels()
@@ -437,7 +413,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceAddress getShippingAddress() throws PortalException {
 		CommerceShipment commerceShipment = getCommerceShipment();
 
-		return _commerceAddressService.fetchCommerceAddress(
+		return _commerceAddressLocalService.fetchCommerceAddress(
 			commerceShipment.getCommerceAddressId());
 	}
 
@@ -489,7 +465,8 @@ public class CommerceShipmentDisplayContext
 		searchContext.setCompanyId(cpRequestHelper.getCompanyId());
 		searchContext.setEnd(QueryUtil.ALL_POS);
 
-		long[] commerceChannelGroupIds = _getCommerceChannelGroupIds();
+		long[] commerceChannelGroupIds = TransformUtil.transformToLongArray(
+			getCommerceChannels(), CommerceChannel::getGroupId);
 
 		if ((commerceChannelGroupIds != null) &&
 			(commerceChannelGroupIds.length > 0)) {
@@ -507,21 +484,11 @@ public class CommerceShipmentDisplayContext
 		return searchContext;
 	}
 
-	private long[] _getCommerceChannelGroupIds() throws PortalException {
-		List<CommerceChannel> commerceChannels = getCommerceChannels();
-
-		Stream<CommerceChannel> stream = commerceChannels.stream();
-
-		return stream.mapToLong(
-			CommerceChannel::getGroupId
-		).toArray();
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceShipmentDisplayContext.class);
 
 	private final CommerceAddressFormatter _commerceAddressFormatter;
-	private final CommerceAddressService _commerceAddressService;
+	private final CommerceAddressLocalService _commerceAddressLocalService;
 	private final CommerceChannelService _commerceChannelService;
 	private final CommerceOrderItemService _commerceOrderItemService;
 	private final CommerceOrderLocalService _commerceOrderLocalService;

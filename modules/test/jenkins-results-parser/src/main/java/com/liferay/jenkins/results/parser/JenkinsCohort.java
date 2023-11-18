@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -63,6 +54,20 @@ public class JenkinsCohort {
 
 	public List<JenkinsMaster> getJenkinsMasters() {
 		return new ArrayList<>(_jenkinsMastersMap.values());
+	}
+
+	public JenkinsMaster getMostAvailableJenkinsMaster(
+		int invokedBatchSize, int minimumRAM, int maximumSlavesPerHost) {
+
+		String mostAvailableMasterURL =
+			JenkinsResultsParserUtil.getMostAvailableMasterURL(
+				JenkinsResultsParserUtil.combine(
+					"http://", getName(), ".liferay.com"),
+				JenkinsResultsParserUtil.join(",", _jenkinsMastersBlacklist),
+				invokedBatchSize, minimumRAM, maximumSlavesPerHost);
+
+		return JenkinsMaster.getInstance(
+			mostAvailableMasterURL.replaceAll("http://(.+)", "$1"));
 	}
 
 	public String getName() {
@@ -163,14 +168,16 @@ public class JenkinsCohort {
 			callables.add(callable);
 		}
 
-		ThreadPoolExecutor threadPoolExecutor =
-			JenkinsResultsParserUtil.getNewThreadPoolExecutor(
-				_jenkinsMastersMap.size(), true);
+		if (!_jenkinsMastersMap.isEmpty()) {
+			ThreadPoolExecutor threadPoolExecutor =
+				JenkinsResultsParserUtil.getNewThreadPoolExecutor(
+					_jenkinsMastersMap.size(), true);
 
-		ParallelExecutor<Void> parallelExecutor = new ParallelExecutor<>(
-			callables, threadPoolExecutor);
+			ParallelExecutor<Void> parallelExecutor = new ParallelExecutor<>(
+				callables, threadPoolExecutor);
 
-		parallelExecutor.execute();
+			parallelExecutor.execute();
+		}
 
 		for (String buildURL : buildURLs) {
 			_loadBuildURL(buildURL);
@@ -494,8 +501,24 @@ public class JenkinsCohort {
 		".*\\/([0-9]+)");
 	private static final Map<String, JenkinsCohort> _jenkinsCohorts =
 		new HashMap<>();
+	private static final List<String> _jenkinsMastersBlacklist =
+		new ArrayList<>();
 	private static final Pattern _jobNamePattern = Pattern.compile(
 		"https?:.*job\\/(.*?)\\/");
+
+	static {
+		try {
+			String jenkinsMastersBlacklist =
+				JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.load.balancer.blacklist");
+
+			Collections.addAll(
+				_jenkinsMastersBlacklist, jenkinsMastersBlacklist.split(","));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
 
 	private final Map<String, JenkinsCohortJob> _jenkinsCohortJobsMap =
 		new HashMap<>();

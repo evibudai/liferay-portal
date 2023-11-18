@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.graphql.servlet.v1_0;
@@ -70,6 +61,10 @@ public class ServletDataImpl implements ServletData {
 			_shippingFixedOptionOrderTypeResourceComponentServiceObjects);
 		Mutation.setShippingFixedOptionTermResourceComponentServiceObjects(
 			_shippingFixedOptionTermResourceComponentServiceObjects);
+		Mutation.setShippingMethodResourceComponentServiceObjects(
+			_shippingMethodResourceComponentServiceObjects);
+		Mutation.setTaxCategoryResourceComponentServiceObjects(
+			_taxCategoryResourceComponentServiceObjects);
 
 		Query.setChannelResourceComponentServiceObjects(
 			_channelResourceComponentServiceObjects);
@@ -125,6 +120,11 @@ public class ServletDataImpl implements ServletData {
 		_resourceMethodObjectValuePairs =
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
+					put(
+						"mutation#createChannelsPageExportBatch",
+						new ObjectValuePair<>(
+							ChannelResourceImpl.class,
+							"postChannelsPageExportBatch"));
 					put(
 						"mutation#createChannel",
 						new ObjectValuePair<>(
@@ -228,6 +228,16 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ShippingFixedOptionTermResourceImpl.class,
 							"postShippingFixedOptionIdShippingFixedOptionTerm"));
+					put(
+						"mutation#createChannelShippingMethodsPageExportBatch",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"postChannelShippingMethodsPageExportBatch"));
+					put(
+						"mutation#createTaxCategoriesPageExportBatch",
+						new ObjectValuePair<>(
+							TaxCategoryResourceImpl.class,
+							"postTaxCategoriesPageExportBatch"));
 
 					put(
 						"query#channels",
@@ -296,6 +306,12 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TermResourceImpl.class,
 							"getShippingFixedOptionTermTerm"));
+
+					put(
+						"query#Channel.shippingMethods",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"getChannelShippingMethodsPage"));
 				}
 			};
 
@@ -320,16 +336,16 @@ public class ServletDataImpl implements ServletData {
 		_shippingFixedOptionTermResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<OrderTypeResource>
-		_orderTypeResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ShippingMethodResource>
 		_shippingMethodResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TaxCategoryResource>
 		_taxCategoryResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<OrderTypeResource>
+		_orderTypeResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TermResource>

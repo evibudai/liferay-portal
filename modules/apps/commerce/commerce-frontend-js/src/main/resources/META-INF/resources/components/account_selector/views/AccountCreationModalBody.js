@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useResource} from '@clayui/data-provider';
 import ClayForm, {ClayInput, ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
 import {fetch} from 'frontend-js-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 
 const ORGANIZATIONS_ROOT_ENDPOINT = '/o/headless-admin-user/v1.0/organizations';
 
@@ -32,34 +24,35 @@ export default function AccountCreationModalBody({
 	setAccountData,
 }) {
 	const [organizationQuery, setOrganizationQuery] = useState('');
-	const [organizationData, setOrganizationData] = useState([]);
 	const [organizationError, setOrganizationError] = useState(false);
 
-	useEffect(() => {
-		fetch(orgUrl.toString())
-			.then((response) => response.json())
-			.then((data) => setOrganizationData(data.items));
-	}, []);
+	const [networkStatus, setNetworkStatus] = useState(4);
+	const {resource = []} = useResource({
+		fetch: async (link, options) => {
+			const result = await fetch(link, options);
+			const json = await result.json();
 
-	const organizations = useMemo(
-		() =>
-			organizationData.map(({id, name}) => {
-				return {label: name, value: id};
-			}),
-		[organizationData]
-	);
+			return json.items.map((item) => ({
+				label: item.name,
+				value: item.id,
+			}));
+		},
+		fetchPolicy: 'cache-first',
+		link: orgUrl.toString(),
+		onNetworkStatusChange: setNetworkStatus,
+	});
 
-	const filterOrganizations = (organizations, accountOrganizations) => {
-		if (!accountOrganizations.length) {
-			return organizations;
+	const availableOrganizations = useMemo(() => {
+		if (!resource) {
+			return [];
 		}
 
-		const accountValues = accountOrganizations.map((item) => item.value);
-
-		return organizations.filter(
-			(org) => !accountValues.includes(org.value)
+		const accountValues = accountData.organizations.map(
+			(item) => item.value
 		);
-	};
+
+		return resource.filter((org) => !accountValues.includes(org.value));
+	}, [accountData.organizations, resource]);
 
 	return (
 		<ClayModal.Body>
@@ -99,6 +92,7 @@ export default function AccountCreationModalBody({
 				<ClayMultiSelect
 					closeButtonAriaLabel={Liferay.Language.get('remove')}
 					items={accountData.organizations}
+					loadingState={networkStatus}
 					name="accountOrganizations"
 					onChange={setOrganizationQuery}
 					onItemsChange={(newItems) => {
@@ -108,9 +102,9 @@ export default function AccountCreationModalBody({
 
 						newItems.map((item) => {
 							if (
-								organizationData.find(
+								resource.find(
 									(organization) =>
-										organization.name.toLowerCase() ===
+										organization.label.toLowerCase() ===
 										item.label.toLowerCase()
 								)
 							) {
@@ -126,10 +120,7 @@ export default function AccountCreationModalBody({
 							organizations: validItems,
 						});
 					}}
-					sourceItems={filterOrganizations(
-						organizations,
-						accountData.organizations
-					)}
+					sourceItems={availableOrganizations}
 					value={organizationQuery}
 				/>
 

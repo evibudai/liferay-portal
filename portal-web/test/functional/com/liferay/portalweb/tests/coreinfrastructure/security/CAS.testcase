@@ -2,6 +2,7 @@
 definition {
 
 	property app.server.bundles.size = "0";
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Security";
@@ -13,7 +14,7 @@ definition {
 	}
 
 	@description = "LPS-126600 TC-2: Validate there is no CAS option under SSO category in Instance Settings."
-	@priority = "4"
+	@priority = 3
 	test AssertCASNotAvailableUnderInstanceSettings {
 		property portal.acceptance = "true";
 
@@ -31,7 +32,7 @@ definition {
 	}
 
 	@description = "LPS-126600 TC-1: Validate there is no CAS option under SSO category in System Settings."
-	@priority = "4"
+	@priority = 3
 	test AssertCASNotAvailableUnderSystemSettings {
 		property portal.acceptance = "true";
 

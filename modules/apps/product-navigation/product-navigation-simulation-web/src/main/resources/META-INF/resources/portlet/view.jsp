@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -36,14 +27,20 @@ PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(panelAppRegist
 					<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(panelApp.getKey()) %>Collapse" aria-expanded="<%= true %>" class="collapse-icon collapse-icon-middle list-group-heading panel-header pl-0 text-decoration-none" data-toggle="liferay-collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(panelApp.getKey()) %>Collapse" role="button">
 						<span class="category-name font-weight-semi-bold text-truncate text-uppercase"><%= panelApp.getLabel(locale) %></span>
 
-						<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+						<clay:icon
+							cssClass="collapse-icon-closed"
+							symbol="angle-right"
+						/>
 
-						<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
+						<clay:icon
+							cssClass="collapse-icon-open"
+							symbol="angle-down"
+						/>
 					</a>
 				</div>
 
 				<div aria-expanded="<%= true %>" aria-labelledby="<portlet:namespace /><%= AUIUtil.normalizeId(panelApp.getKey()) %>Header" class="collapse panel-collapse show" id="<portlet:namespace /><%= AUIUtil.normalizeId(panelApp.getKey()) %>Collapse" role="tabpanel">
-					<div class="list-group-item simulation-app-panel-body">
+					<div class="simulation-app-panel-body">
 
 						<%
 						panelApp.include(request, response);

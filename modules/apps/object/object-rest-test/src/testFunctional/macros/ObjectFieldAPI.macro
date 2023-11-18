@@ -12,27 +12,21 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/object-admin/v1.0/${api} \
-			-H accept: application/json \
-			-H Content-Type: application/json \
-			-u test@liferay.com:test \
+				-H accept: application/json \
+				-H Content-Type: application/json \
+				-u test@liferay.com:test \
 		''';
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro deleteObjectField {
-		var curl = ObjectFieldAPI._curlObjectField(objectFieldId = "${staticObjectFieldId}");
-
-		JSONCurlUtil.delete("${curl}");
-	}
-
-	macro getIdOfCreatedObjectField {
+	macro createObjectFieldByObjectDefinitionId {
 		Variables.assertDefined(parameterList = "${objectDefinitionId},${dbType},${name}");
 
-		var curl = ObjectFieldAPI._curlObjectField(objectDefinitionId = "${objectDefinitionId}");
+		var curl = ObjectFieldAPI._curlObjectField(objectDefinitionId = ${objectDefinitionId});
 
 		if (!(isSet(label))) {
-			var label = "${name}";
+			var label = ${name};
 		}
 
 		var body = '''
@@ -47,32 +41,94 @@ definition {
 			}
 		''';
 
-		var curl = StringUtil.add("${curl}", "${body}", " ");
+		var curl = StringUtil.add(${curl}, ${body}, " ");
 
-		var objectFieldId = JSONCurlUtil.post("${curl}", "$.id");
+		var response = JSONCurlUtil.post(${curl});
 
-		return "${objectFieldId}";
+		return ${response};
+	}
+
+	macro deleteObjectField {
+		var curl = ObjectFieldAPI._curlObjectField(objectFieldId = ${staticObjectFieldId});
+
+		JSONCurlUtil.delete(${curl});
+	}
+
+	macro getIdOfCreatedObjectField {
+		var response = ObjectFieldAPI.createObjectFieldByObjectDefinitionId(
+			dbType = ${dbType},
+			name = ${name},
+			objectDefinitionId = ${objectDefinitionId});
+
+		var objectFieldId = JSONPathUtil.getIdValue(response = ${response});
+
+		return ${objectFieldId};
 	}
 
 	macro getObjectFieldsByObjectId {
-		Variables.assertDefined(parameterList = "${objectDefinitionId}");
+		Variables.assertDefined(parameterList = ${objectDefinitionId});
 
-		var curl = ObjectFieldAPI._curlObjectField(objectDefinitionId = "${objectDefinitionId}");
+		var curl = ObjectFieldAPI._curlObjectField(objectDefinitionId = ${objectDefinitionId});
 
-		var response = JSONCurlUtil.get("${curl}");
+		var response = JSONCurlUtil.get(${curl});
 
-		return "${response}";
+		return ${response};
+	}
+
+	macro setUpGlobalObjectFieldErcByObjectDefinitionId {
+		Variables.assertDefined(parameterList = "${name},${objectDefinitionId}");
+
+		var objectFields = ObjectFieldAPI.getObjectFieldsByObjectId(objectDefinitionId = ${objectDefinitionId});
+
+		var objectFieldErc = JSONUtil.getWithJSONPath(${objectFields}, "$..items[?(@.name=='${name}')].externalReferenceCode");
+
+		echo("MY OBJECT FIELD ERC");
+
+		echo(${objectFieldErc});
+
+		static var staticObjectFieldErc = ${objectFieldErc};
+
+		return ${staticObjectFieldErc};
 	}
 
 	macro setUpGlobalObjectFieldId {
 		var objectFieldId = ObjectFieldAPI.getIdOfCreatedObjectField(
-			dbType = "${dbType}",
-			name = "${name}",
-			objectDefinitionId = "${objectDefinitionId}");
+			dbType = ${dbType},
+			name = ${name},
+			objectDefinitionId = ${objectDefinitionId});
 
-		static var staticObjectFieldId = "${objectFieldId}";
+		static var staticObjectFieldId = ${objectFieldId};
 
-		return "${staticObjectFieldId}";
+		return ${staticObjectFieldId};
+	}
+
+	macro updateFieldOfEntryById {
+		Variables.assertDefined(parameterList = "${en_US_plural_label},${entryId},${fieldLabel},${fieldValue},${requiredFieldLabel},${requiredFieldValue}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/c/${en_US_plural_label}/${entryId} \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d {
+					"${requiredFieldLabel}": "${requiredFieldValue}",
+		''';
+
+		if (isSet(picklist)) {
+			var fieldInBody = '''"${fieldLabel}": {"key":"${fieldValue}"}''';
+		}
+
+		if (isSet(multiselectPicklist)) {
+			var fieldInBody = '''"${fieldLabel}": ["${fieldValue}","${fieldValue2}"]''';
+		}
+		else {
+			var fieldInBody = '''"${fieldLabel}": "${fieldValue}"''';
+		}
+
+		var curl = StringUtil.add(${curl}, "${fieldInBody}}", "");
+
+		JSONCurlUtil.patch(${curl});
 	}
 
 }

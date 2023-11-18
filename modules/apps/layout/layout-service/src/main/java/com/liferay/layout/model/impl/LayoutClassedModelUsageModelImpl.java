@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.model.impl;
@@ -75,6 +66,7 @@ public class LayoutClassedModelUsageModelImpl
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"classNameId", Types.BIGINT}, {"classPK", Types.BIGINT},
+		{"cmExternalReferenceCode", Types.VARCHAR},
 		{"containerKey", Types.VARCHAR}, {"containerType", Types.BIGINT},
 		{"plid", Types.BIGINT}, {"type_", Types.INTEGER},
 		{"lastPublishDate", Types.TIMESTAMP}
@@ -94,6 +86,7 @@ public class LayoutClassedModelUsageModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("classNameId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("classPK", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("cmExternalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("containerKey", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("containerType", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("plid", Types.BIGINT);
@@ -102,7 +95,7 @@ public class LayoutClassedModelUsageModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table LayoutClassedModelUsage (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,layoutClassedModelUsageId LONG not null,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,containerKey VARCHAR(200) null,containerType LONG,plid LONG,type_ INTEGER,lastPublishDate DATE null,primary key (layoutClassedModelUsageId, ctCollectionId))";
+		"create table LayoutClassedModelUsage (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,layoutClassedModelUsageId LONG not null,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,cmExternalReferenceCode VARCHAR(75) null,containerKey VARCHAR(200) null,containerType LONG,plid LONG,type_ INTEGER,lastPublishDate DATE null,primary key (layoutClassedModelUsageId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table LayoutClassedModelUsage";
@@ -135,50 +128,57 @@ public class LayoutClassedModelUsageModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 4L;
+	public static final long CLASSEDMODELEXTERNALREFERENCECODE_COLUMN_BITMASK =
+		4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CONTAINERKEY_COLUMN_BITMASK = 8L;
+	public static final long COMPANYID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CONTAINERTYPE_COLUMN_BITMASK = 16L;
+	public static final long CONTAINERKEY_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long GROUPID_COLUMN_BITMASK = 32L;
+	public static final long CONTAINERTYPE_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long PLID_COLUMN_BITMASK = 64L;
+	public static final long GROUPID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long TYPE_COLUMN_BITMASK = 128L;
+	public static final long PLID_COLUMN_BITMASK = 128L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 256L;
+	public static final long TYPE_COLUMN_BITMASK = 256L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 512L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long LAYOUTCLASSEDMODELUSAGEID_COLUMN_BITMASK = 512L;
+	public static final long LAYOUTCLASSEDMODELUSAGEID_COLUMN_BITMASK = 1024L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -271,124 +271,150 @@ public class LayoutClassedModelUsageModelImpl
 	public Map<String, Function<LayoutClassedModelUsage, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<LayoutClassedModelUsage, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<LayoutClassedModelUsage, Object>>
-		_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<LayoutClassedModelUsage, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<LayoutClassedModelUsage, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<LayoutClassedModelUsage, Object>>();
-		Map<String, BiConsumer<LayoutClassedModelUsage, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<LayoutClassedModelUsage, ?>>();
+		private static final Map
+			<String, Function<LayoutClassedModelUsage, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", LayoutClassedModelUsage::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", LayoutClassedModelUsage::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", LayoutClassedModelUsage::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<LayoutClassedModelUsage, String>)
-				LayoutClassedModelUsage::setUuid);
-		attributeGetterFunctions.put(
-			"layoutClassedModelUsageId",
-			LayoutClassedModelUsage::getLayoutClassedModelUsageId);
-		attributeSetterBiConsumers.put(
-			"layoutClassedModelUsageId",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setLayoutClassedModelUsageId);
-		attributeGetterFunctions.put(
-			"groupId", LayoutClassedModelUsage::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", LayoutClassedModelUsage::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setCompanyId);
-		attributeGetterFunctions.put(
-			"createDate", LayoutClassedModelUsage::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<LayoutClassedModelUsage, Date>)
-				LayoutClassedModelUsage::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", LayoutClassedModelUsage::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<LayoutClassedModelUsage, Date>)
-				LayoutClassedModelUsage::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId", LayoutClassedModelUsage::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setClassNameId);
-		attributeGetterFunctions.put(
-			"classPK", LayoutClassedModelUsage::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setClassPK);
-		attributeGetterFunctions.put(
-			"containerKey", LayoutClassedModelUsage::getContainerKey);
-		attributeSetterBiConsumers.put(
-			"containerKey",
-			(BiConsumer<LayoutClassedModelUsage, String>)
-				LayoutClassedModelUsage::setContainerKey);
-		attributeGetterFunctions.put(
-			"containerType", LayoutClassedModelUsage::getContainerType);
-		attributeSetterBiConsumers.put(
-			"containerType",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setContainerType);
-		attributeGetterFunctions.put("plid", LayoutClassedModelUsage::getPlid);
-		attributeSetterBiConsumers.put(
-			"plid",
-			(BiConsumer<LayoutClassedModelUsage, Long>)
-				LayoutClassedModelUsage::setPlid);
-		attributeGetterFunctions.put("type", LayoutClassedModelUsage::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<LayoutClassedModelUsage, Integer>)
-				LayoutClassedModelUsage::setType);
-		attributeGetterFunctions.put(
-			"lastPublishDate", LayoutClassedModelUsage::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<LayoutClassedModelUsage, Date>)
-				LayoutClassedModelUsage::setLastPublishDate);
+		static {
+			Map<String, Function<LayoutClassedModelUsage, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<LayoutClassedModelUsage, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", LayoutClassedModelUsage::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", LayoutClassedModelUsage::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", LayoutClassedModelUsage::getUuid);
+			attributeGetterFunctions.put(
+				"layoutClassedModelUsageId",
+				LayoutClassedModelUsage::getLayoutClassedModelUsageId);
+			attributeGetterFunctions.put(
+				"groupId", LayoutClassedModelUsage::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", LayoutClassedModelUsage::getCompanyId);
+			attributeGetterFunctions.put(
+				"createDate", LayoutClassedModelUsage::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", LayoutClassedModelUsage::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", LayoutClassedModelUsage::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", LayoutClassedModelUsage::getClassPK);
+			attributeGetterFunctions.put(
+				"classedModelExternalReferenceCode",
+				LayoutClassedModelUsage::getClassedModelExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"containerKey", LayoutClassedModelUsage::getContainerKey);
+			attributeGetterFunctions.put(
+				"containerType", LayoutClassedModelUsage::getContainerType);
+			attributeGetterFunctions.put(
+				"plid", LayoutClassedModelUsage::getPlid);
+			attributeGetterFunctions.put(
+				"type", LayoutClassedModelUsage::getType);
+			attributeGetterFunctions.put(
+				"lastPublishDate", LayoutClassedModelUsage::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<LayoutClassedModelUsage, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<LayoutClassedModelUsage, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<LayoutClassedModelUsage, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<LayoutClassedModelUsage, String>)
+					LayoutClassedModelUsage::setUuid);
+			attributeSetterBiConsumers.put(
+				"layoutClassedModelUsageId",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setLayoutClassedModelUsageId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<LayoutClassedModelUsage, Date>)
+					LayoutClassedModelUsage::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<LayoutClassedModelUsage, Date>)
+					LayoutClassedModelUsage::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setClassPK);
+			attributeSetterBiConsumers.put(
+				"classedModelExternalReferenceCode",
+				(BiConsumer<LayoutClassedModelUsage, String>)
+					LayoutClassedModelUsage::
+						setClassedModelExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"containerKey",
+				(BiConsumer<LayoutClassedModelUsage, String>)
+					LayoutClassedModelUsage::setContainerKey);
+			attributeSetterBiConsumers.put(
+				"containerType",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setContainerType);
+			attributeSetterBiConsumers.put(
+				"plid",
+				(BiConsumer<LayoutClassedModelUsage, Long>)
+					LayoutClassedModelUsage::setPlid);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<LayoutClassedModelUsage, Integer>)
+					LayoutClassedModelUsage::setType);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<LayoutClassedModelUsage, Date>)
+					LayoutClassedModelUsage::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -610,6 +636,36 @@ public class LayoutClassedModelUsageModelImpl
 	}
 
 	@Override
+	public String getClassedModelExternalReferenceCode() {
+		if (_classedModelExternalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _classedModelExternalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setClassedModelExternalReferenceCode(
+		String classedModelExternalReferenceCode) {
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_classedModelExternalReferenceCode = classedModelExternalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalClassedModelExternalReferenceCode() {
+		return getColumnOriginalValue("cmExternalReferenceCode");
+	}
+
+	@Override
 	public String getContainerKey() {
 		if (_containerKey == null) {
 			return "";
@@ -798,6 +854,8 @@ public class LayoutClassedModelUsageModelImpl
 		layoutClassedModelUsageImpl.setModifiedDate(getModifiedDate());
 		layoutClassedModelUsageImpl.setClassNameId(getClassNameId());
 		layoutClassedModelUsageImpl.setClassPK(getClassPK());
+		layoutClassedModelUsageImpl.setClassedModelExternalReferenceCode(
+			getClassedModelExternalReferenceCode());
 		layoutClassedModelUsageImpl.setContainerKey(getContainerKey());
 		layoutClassedModelUsageImpl.setContainerType(getContainerType());
 		layoutClassedModelUsageImpl.setPlid(getPlid());
@@ -834,6 +892,8 @@ public class LayoutClassedModelUsageModelImpl
 			this.<Long>getColumnOriginalValue("classNameId"));
 		layoutClassedModelUsageImpl.setClassPK(
 			this.<Long>getColumnOriginalValue("classPK"));
+		layoutClassedModelUsageImpl.setClassedModelExternalReferenceCode(
+			this.<String>getColumnOriginalValue("cmExternalReferenceCode"));
 		layoutClassedModelUsageImpl.setContainerKey(
 			this.<String>getColumnOriginalValue("containerKey"));
 		layoutClassedModelUsageImpl.setContainerType(
@@ -965,6 +1025,19 @@ public class LayoutClassedModelUsageModelImpl
 
 		layoutClassedModelUsageCacheModel.classPK = getClassPK();
 
+		layoutClassedModelUsageCacheModel.classedModelExternalReferenceCode =
+			getClassedModelExternalReferenceCode();
+
+		String classedModelExternalReferenceCode =
+			layoutClassedModelUsageCacheModel.classedModelExternalReferenceCode;
+
+		if ((classedModelExternalReferenceCode != null) &&
+			(classedModelExternalReferenceCode.length() == 0)) {
+
+			layoutClassedModelUsageCacheModel.
+				classedModelExternalReferenceCode = null;
+		}
+
 		layoutClassedModelUsageCacheModel.containerKey = getContainerKey();
 
 		String containerKey = layoutClassedModelUsageCacheModel.containerKey;
@@ -1063,6 +1136,7 @@ public class LayoutClassedModelUsageModelImpl
 	private boolean _setModifiedDate;
 	private long _classNameId;
 	private long _classPK;
+	private String _classedModelExternalReferenceCode;
 	private String _containerKey;
 	private long _containerType;
 	private long _plid;
@@ -1073,7 +1147,8 @@ public class LayoutClassedModelUsageModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<LayoutClassedModelUsage, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1109,6 +1184,8 @@ public class LayoutClassedModelUsageModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("classNameId", _classNameId);
 		_columnOriginalValues.put("classPK", _classPK);
+		_columnOriginalValues.put(
+			"cmExternalReferenceCode", _classedModelExternalReferenceCode);
 		_columnOriginalValues.put("containerKey", _containerKey);
 		_columnOriginalValues.put("containerType", _containerType);
 		_columnOriginalValues.put("plid", _plid);
@@ -1122,6 +1199,8 @@ public class LayoutClassedModelUsageModelImpl
 		Map<String, String> attributeNames = new HashMap<>();
 
 		attributeNames.put("uuid_", "uuid");
+		attributeNames.put(
+			"cmExternalReferenceCode", "classedModelExternalReferenceCode");
 		attributeNames.put("type_", "type");
 
 		_attributeNames = Collections.unmodifiableMap(attributeNames);
@@ -1158,15 +1237,17 @@ public class LayoutClassedModelUsageModelImpl
 
 		columnBitmasks.put("classPK", 512L);
 
-		columnBitmasks.put("containerKey", 1024L);
+		columnBitmasks.put("cmExternalReferenceCode", 1024L);
 
-		columnBitmasks.put("containerType", 2048L);
+		columnBitmasks.put("containerKey", 2048L);
 
-		columnBitmasks.put("plid", 4096L);
+		columnBitmasks.put("containerType", 4096L);
 
-		columnBitmasks.put("type_", 8192L);
+		columnBitmasks.put("plid", 8192L);
 
-		columnBitmasks.put("lastPublishDate", 16384L);
+		columnBitmasks.put("type_", 16384L);
+
+		columnBitmasks.put("lastPublishDate", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

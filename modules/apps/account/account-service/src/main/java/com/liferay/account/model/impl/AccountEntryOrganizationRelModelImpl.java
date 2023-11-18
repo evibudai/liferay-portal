@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.model.impl;
@@ -215,68 +206,86 @@ public class AccountEntryOrganizationRelModelImpl
 	public Map<String, Function<AccountEntryOrganizationRel, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AccountEntryOrganizationRel, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<AccountEntryOrganizationRel, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<AccountEntryOrganizationRel, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AccountEntryOrganizationRel, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<AccountEntryOrganizationRel, Object>>();
-		Map<String, BiConsumer<AccountEntryOrganizationRel, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<AccountEntryOrganizationRel, ?>>();
+		private static final Map
+			<String, Function<AccountEntryOrganizationRel, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", AccountEntryOrganizationRel::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<AccountEntryOrganizationRel, Long>)
-				AccountEntryOrganizationRel::setMvccVersion);
-		attributeGetterFunctions.put(
-			"accountEntryOrganizationRelId",
-			AccountEntryOrganizationRel::getAccountEntryOrganizationRelId);
-		attributeSetterBiConsumers.put(
-			"accountEntryOrganizationRelId",
-			(BiConsumer<AccountEntryOrganizationRel, Long>)
-				AccountEntryOrganizationRel::setAccountEntryOrganizationRelId);
-		attributeGetterFunctions.put(
-			"companyId", AccountEntryOrganizationRel::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AccountEntryOrganizationRel, Long>)
-				AccountEntryOrganizationRel::setCompanyId);
-		attributeGetterFunctions.put(
-			"accountEntryId", AccountEntryOrganizationRel::getAccountEntryId);
-		attributeSetterBiConsumers.put(
-			"accountEntryId",
-			(BiConsumer<AccountEntryOrganizationRel, Long>)
-				AccountEntryOrganizationRel::setAccountEntryId);
-		attributeGetterFunctions.put(
-			"organizationId", AccountEntryOrganizationRel::getOrganizationId);
-		attributeSetterBiConsumers.put(
-			"organizationId",
-			(BiConsumer<AccountEntryOrganizationRel, Long>)
-				AccountEntryOrganizationRel::setOrganizationId);
+		static {
+			Map<String, Function<AccountEntryOrganizationRel, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String,
+						 Function<AccountEntryOrganizationRel, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", AccountEntryOrganizationRel::getMvccVersion);
+			attributeGetterFunctions.put(
+				"accountEntryOrganizationRelId",
+				AccountEntryOrganizationRel::getAccountEntryOrganizationRelId);
+			attributeGetterFunctions.put(
+				"companyId", AccountEntryOrganizationRel::getCompanyId);
+			attributeGetterFunctions.put(
+				"accountEntryId",
+				AccountEntryOrganizationRel::getAccountEntryId);
+			attributeGetterFunctions.put(
+				"organizationId",
+				AccountEntryOrganizationRel::getOrganizationId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<AccountEntryOrganizationRel, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AccountEntryOrganizationRel, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<AccountEntryOrganizationRel, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<AccountEntryOrganizationRel, Long>)
+					AccountEntryOrganizationRel::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"accountEntryOrganizationRelId",
+				(BiConsumer<AccountEntryOrganizationRel, Long>)
+					AccountEntryOrganizationRel::
+						setAccountEntryOrganizationRelId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AccountEntryOrganizationRel, Long>)
+					AccountEntryOrganizationRel::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"accountEntryId",
+				(BiConsumer<AccountEntryOrganizationRel, Long>)
+					AccountEntryOrganizationRel::setAccountEntryId);
+			attributeSetterBiConsumers.put(
+				"organizationId",
+				(BiConsumer<AccountEntryOrganizationRel, Long>)
+					AccountEntryOrganizationRel::setOrganizationId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -625,7 +634,8 @@ public class AccountEntryOrganizationRelModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<AccountEntryOrganizationRel, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

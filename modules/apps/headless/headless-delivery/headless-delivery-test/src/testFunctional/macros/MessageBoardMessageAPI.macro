@@ -1,0 +1,88 @@
+definition {
+
+	macro _curlMessageBoardMessage {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (isSet(messageBoardThreadId)) {
+			var api = "message-board-threads/${messageBoardThreadId}/message-board-messages";
+		}
+		else if (isSet(messageBoardMessageId)) {
+			var api = "message-board-messages/${messageBoardMessageId}";
+		}
+		else {
+			var api = "message-board-messages/${parentMessageBoardMessageId}/message-board-messages";
+		}
+
+		var command = '''
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
+		''';
+
+		if (isSet(headline)) {
+			var body = '''
+				-d {
+					"headline": "${headline}"
+				}
+			''';
+
+			var command = StringUtil.add(${command}, " \ ${body}", "");
+		}
+
+		var curl = StringUtil.add("${portalURL}/o/headless-delivery/v1.0/${api}", "\ ${command}", "");
+
+		return ${curl};
+	}
+
+	macro createChildMbMessageByMbMessageId {
+		Variables.assertDefined(parameterList = "${headline},${parentMessageBoardMessageId}");
+
+		var curl = MessageBoardMessageAPI._curlMessageBoardMessage(
+			headline = ${headline},
+			parentMessageBoardMessageId = ${parentMessageBoardMessageId});
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+	macro createMbMessageByMbThreadId {
+		Variables.assertDefined(parameterList = "${headline},${messageBoardThreadId}");
+
+		var curl = MessageBoardMessageAPI._curlMessageBoardMessage(
+			headline = ${headline},
+			messageBoardThreadId = ${messageBoardThreadId});
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+	macro getIdOfCreatedMbMessageByMbThreadId {
+		var response = MessageBoardMessageAPI.createMbMessageByMbThreadId(
+			headline = ${headline},
+			messageBoardThreadId = ${messageBoardThreadId});
+
+		var messageboardMessageId = JSONUtil.getWithJSONPath(${response}, "$.id");
+
+		return ${messageboardMessageId};
+	}
+
+	macro getMbMessageByMbMessageId {
+		Variables.assertDefined(parameterList = ${messageBoardMessageId});
+
+		var curl = MessageBoardMessageAPI._curlMessageBoardMessage(messageBoardMessageId = ${messageBoardMessageId});
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	macro getMbMessageErcByMbMessageId {
+		var response = MessageBoardMessageAPI.getMbMessageByMbMessageId(messageBoardMessageId = ${messageBoardMessageId});
+
+		var messageBoardMessageErc = JSONUtil.getWithJSONPath(${response}, "$.externalReferenceCode");
+
+		return ${messageBoardMessageErc};
+	}
+
+}

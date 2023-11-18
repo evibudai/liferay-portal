@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.field.business.type;
@@ -38,29 +29,20 @@ public class ObjectFieldBusinessTypeRegistryImpl
 
 	@Override
 	public ObjectFieldBusinessType getObjectFieldBusinessType(String key) {
-		ServiceTrackerMap<String, ObjectFieldBusinessType> serviceTrackerMap =
-			_getServiceTrackerMap();
-
-		return serviceTrackerMap.getService(key);
+		return _serviceTrackerMap.getService(key);
 	}
 
 	@Override
 	public List<ObjectFieldBusinessType> getObjectFieldBusinessTypes() {
-		ServiceTrackerMap<String, ObjectFieldBusinessType> serviceTrackerMap =
-			_getServiceTrackerMap();
-
-		return new ArrayList(serviceTrackerMap.values());
+		return new ArrayList(_serviceTrackerMap.values());
 	}
 
 	@Override
 	public Set<String> getObjectFieldDBTypes() {
 		Set<String> objectFieldDBTypes = new HashSet<>();
 
-		ServiceTrackerMap<String, ObjectFieldBusinessType> serviceTrackerMap =
-			_getServiceTrackerMap();
-
 		for (ObjectFieldBusinessType objectFieldBusinessType :
-				serviceTrackerMap.values()) {
+				_serviceTrackerMap.values()) {
 
 			objectFieldDBTypes.add(objectFieldBusinessType.getDBType());
 		}
@@ -70,40 +52,17 @@ public class ObjectFieldBusinessTypeRegistryImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_bundleContext = bundleContext;
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, ObjectFieldBusinessType.class,
+			"object.field.business.type.key");
 	}
 
 	@Deactivate
-	protected synchronized void deactivate() {
-		if (_serviceTrackerMap != null) {
-			_serviceTrackerMap.close();
-		}
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	private ServiceTrackerMap<String, ObjectFieldBusinessType>
-		_getServiceTrackerMap() {
-
-		ServiceTrackerMap<String, ObjectFieldBusinessType> serviceTrackerMap =
-			_serviceTrackerMap;
-
-		if (serviceTrackerMap != null) {
-			return serviceTrackerMap;
-		}
-
-		synchronized (this) {
-			if (_serviceTrackerMap == null) {
-				_serviceTrackerMap =
-					ServiceTrackerMapFactory.openSingleValueMap(
-						_bundleContext, ObjectFieldBusinessType.class,
-						"object.field.business.type.key");
-			}
-
-			return _serviceTrackerMap;
-		}
-	}
-
-	private BundleContext _bundleContext;
-	private volatile ServiceTrackerMap<String, ObjectFieldBusinessType>
 		_serviceTrackerMap;
 
 }

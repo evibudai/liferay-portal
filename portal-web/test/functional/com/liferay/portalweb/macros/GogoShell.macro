@@ -3,27 +3,55 @@ definition {
 	macro executeCommand {
 		Type(
 			locator1 = "GogoShell#COMMAND_FIELD",
-			value1 = "${commandName}");
+			value1 = ${commandName});
 
 		AssertClick(
 			locator1 = "GogoShell#EXECUTE_BUTTON",
 			value1 = "Execute");
 	}
 
+	macro executeCommandViaTelnet {
+		if (!(isSet(nodePort))) {
+			var nodePort = 8080;
+		}
+
+		var leadingPortNumber = StringUtil.replace(${nodePort}, 080, "");
+
+		var bundleIndex = ${leadingPortNumber} - 8;
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+		if (${bundleIndex} != 0) {
+			var liferayHome = "${liferayHome}-${bundleIndex}";
+		}
+
+		AntCommands.runCommand("build-test.xml", "execute-command-from-gogo-shell -Dbundle.index=${bundleIndex} -Dcommand=${command}");
+
+		if (isSet(expectedOutput)) {
+			var outputContent = FileUtil.read("${liferayHome}/gogo-output.txt");
+
+			if (contains(${outputContent}, ${expectedOutput})) {
+				echo("${expectedOutput} exists!");
+			}
+			else {
+				fail("${expectedOutput} does not exist!");
+			}
+		}
+	}
+
 	macro getModuleID {
-		GogoShell.listModuleStatus(moduleName = "${moduleName}");
+		GogoShell.listModuleStatus(moduleName = ${moduleName});
 
 		AssertElementPresent(locator1 = "GogoShell#OUTPUT_FIELD");
 
 		var moduleStatusOutput = selenium.getText("GogoShell#OUTPUT_FIELD");
 
-		var partialModuleStatusOutput = StringUtil.stripBetween("${moduleStatusOutput}", "START", "Name");
+		var partialModuleStatusOutput = StringUtil.stripBetween(${moduleStatusOutput}, "START", "Name");
 
-		var originalmoduleId = StringUtil.extractFirst("${partialModuleStatusOutput}", "|");
+		var originalmoduleId = StringUtil.extractFirst(${partialModuleStatusOutput}, "|");
 
-		var moduleId = StringUtil.trim("${originalmoduleId}");
+		var moduleId = StringUtil.trim(${originalmoduleId});
 
-		return "${moduleId}";
+		return ${moduleId};
 	}
 
 	macro listModuleStatus {
@@ -37,7 +65,14 @@ definition {
 	}
 
 	macro openGogoShellAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+		if (isSet(baseURL)) {
+			Navigator.openWithAppendToBaseURL(
+				baseURL = ${baseURL},
+				urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+		}
+		else {
+			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+		}
 	}
 
 	macro startModule {
@@ -61,23 +96,23 @@ definition {
 	}
 
 	macro viewModuleStatus {
-		GogoShell.listModuleStatus(moduleName = "${moduleName}");
+		GogoShell.listModuleStatus(moduleName = ${moduleName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${moduleStatus}");
+			value1 = ${moduleStatus});
 	}
 
 	macro viewNoOutput {
 		AssertTextNotPresent(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${outputContent}");
+			value1 = ${outputContent});
 	}
 
 	macro viewOutput {
 		AssertTextEquals.assertPartialText(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${outputContent}");
+			value1 = ${outputContent});
 	}
 
 }

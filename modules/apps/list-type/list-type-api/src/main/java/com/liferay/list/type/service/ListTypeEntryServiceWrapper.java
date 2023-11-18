@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service;
@@ -38,12 +29,12 @@ public class ListTypeEntryServiceWrapper
 
 	@Override
 	public com.liferay.list.type.model.ListTypeEntry addListTypeEntry(
-			long listTypeDefinitionId, String key,
+			String externalReferenceCode, long listTypeDefinitionId, String key,
 			java.util.Map<java.util.Locale, String> nameMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _listTypeEntryService.addListTypeEntry(
-			listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, listTypeDefinitionId, key, nameMap);
 	}
 
 	@Override
@@ -79,6 +70,17 @@ public class ListTypeEntryServiceWrapper
 		return _listTypeEntryService.getListTypeEntry(listTypeEntryId);
 	}
 
+	@Override
+	public com.liferay.list.type.model.ListTypeEntry
+			getListTypeEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId,
+				long listTypeDefinitionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _listTypeEntryService.getListTypeEntryByExternalReferenceCode(
+			externalReferenceCode, companyId, listTypeDefinitionId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -91,12 +93,12 @@ public class ListTypeEntryServiceWrapper
 
 	@Override
 	public com.liferay.list.type.model.ListTypeEntry updateListTypeEntry(
-			long listTypeEntryId,
+			String externalReferenceCode, long listTypeEntryId,
 			java.util.Map<java.util.Locale, String> nameMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _listTypeEntryService.updateListTypeEntry(
-			listTypeEntryId, nameMap);
+			externalReferenceCode, listTypeEntryId, nameMap);
 	}
 
 	@Override

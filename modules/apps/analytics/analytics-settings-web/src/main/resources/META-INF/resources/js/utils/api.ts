@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {TTableRequestParams} from '../components/table/types';
@@ -29,6 +20,12 @@ export function deleteConnection() {
 	return request('/data-sources', {method: 'DELETE'});
 }
 
+export function sync() {
+	return request('/configuration/wizard-mode', {
+		method: 'POST',
+	});
+}
+
 export function fetchAccountGroups(params: TTableRequestParams) {
 	const queryString = serializeTableRequestParams(params);
 
@@ -46,12 +43,18 @@ export function fetchChannels(params: TTableRequestParams) {
 }
 
 export function fetchConnection(token: string) {
-	return request('/data-sources', {
-		body: JSON.stringify({
-			token,
-		}),
-		method: 'POST',
-	});
+	return request(
+		'/data-sources',
+		{
+			body: JSON.stringify({
+				token,
+			}),
+			method: 'POST',
+		},
+		Liferay.Language.get(
+			'token-is-not-valid.-please-insert-a-valid-analytics-cloud-token'
+		)
+	);
 }
 
 export function fetchContactsOrganization(params: TTableRequestParams) {
@@ -76,8 +79,10 @@ export function fetchAttributesConfiguration() {
 	});
 }
 
-export function fetchProperties() {
-	return request('/channels?sort=createDate:desc', {method: 'GET'});
+export function fetchProperties(params: TTableRequestParams) {
+	const queryString = serializeTableRequestParams(params);
+
+	return request(`/channels?${queryString}`, {method: 'GET'});
 }
 
 export function fetchSites(params: TTableRequestParams) {
@@ -97,7 +102,7 @@ export function updateProperty({
 }: {
 	channelId: string;
 	commerceChannelIds?: number[];
-	commerceSyncEnabled?: boolean;
+	commerceSyncEnabled: boolean;
 	dataSourceId?: string;
 	siteIds?: number[];
 }) {
@@ -122,10 +127,7 @@ export function updatecommerceSyncEnabled({
 	commerceSyncEnabled,
 }: {
 	channelId: string;
-	commerceChannelIds?: number[];
-	commerceSyncEnabled?: boolean;
-	dataSourceId?: string;
-	siteIds?: number[];
+	commerceSyncEnabled: boolean;
 }) {
 	return request('/channels', {
 		body: JSON.stringify({
@@ -165,20 +167,29 @@ export function fetchSelectedFields() {
 	return request('/fields', {method: 'GET'});
 }
 
-export function fetchPeopleFields(params: TTableRequestParams) {
-	const queryString = serializeTableRequestParams(params);
-
-	return request(
-		`/fields/people?${queryString.replace('keywords', 'keyword')}`,
-		{method: 'GET'}
-	);
-}
-
 export function fetchAccountsFields(params: TTableRequestParams) {
 	const queryString = serializeTableRequestParams(params);
 
 	return request(
 		`/fields/accounts?${queryString.replace('keywords', 'keyword')}`,
+		{method: 'GET'}
+	);
+}
+
+export function fetchOrdersFields(params: TTableRequestParams) {
+	const queryString = serializeTableRequestParams(params);
+
+	return request(
+		`/fields/orders?${queryString.replace('keywords', 'keyword')}`,
+		{method: 'GET'}
+	);
+}
+
+export function fetchPeopleFields(params: TTableRequestParams) {
+	const queryString = serializeTableRequestParams(params);
+
+	return request(
+		`/fields/people?${queryString.replace('keywords', 'keyword')}`,
 		{method: 'GET'}
 	);
 }
@@ -201,15 +212,22 @@ type TField = {
 	type: string;
 };
 
-export function updatePeopleFields(fields: TField[]) {
-	return request('/fields/people', {
+export function updateAccountsFields(fields: TField[]) {
+	return request('/fields/accounts', {
 		body: JSON.stringify(fields),
 		method: 'PATCH',
 	});
 }
 
-export function updateAccountsFields(fields: TField[]) {
-	return request('/fields/accounts', {
+export function updateOrdersFields(fields: TField[]) {
+	return request('/fields/orders', {
+		body: JSON.stringify(fields),
+		method: 'PATCH',
+	});
+}
+
+export function updatePeopleFields(fields: TField[]) {
+	return request('/fields/people', {
 		body: JSON.stringify(fields),
 		method: 'PATCH',
 	});

@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.test.rule;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.petra.io.unsync.UnsyncPrintWriter;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -37,7 +29,6 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
@@ -48,6 +39,7 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
 import java.io.Closeable;
 import java.io.Serializable;
@@ -174,7 +166,12 @@ public class DataGuardTestRuleUtil {
 				persistedModelLocalService.deletePersistedModel(persistedModel);
 			}
 			else {
-				deleteMethod.invoke(persistedModelLocalService, persistedModel);
+				BaseModel<?> baseModel = (BaseModel<?>)persistedModel;
+
+				deleteMethod.invoke(
+					persistedModelLocalService,
+					persistedModelLocalService.getPersistedModel(
+						baseModel.getPrimaryKeyObj()));
 			}
 		}
 		catch (Throwable throwable1) {
@@ -356,8 +353,7 @@ public class DataGuardTestRuleUtil {
 				ClassLoader classLoader =
 					persistedModelLocalServiceClass.getClassLoader();
 
-				Class<?> modelClass = classLoader.loadClass(
-					_sanitizeClassName(className));
+				Class<?> modelClass = classLoader.loadClass(className);
 
 				List<BaseModel<?>> currentBaseModels = entry.getValue();
 
@@ -523,10 +519,22 @@ public class DataGuardTestRuleUtil {
 	private static Map<String, PersistedModelLocalService>
 		_getPersistedModelLocalServices() {
 
-		return ReflectionTestUtil.getFieldValue(
-			PersistedModelLocalServiceRegistryUtil.
-				getPersistedModelLocalServiceRegistry(),
-			"_persistedModelLocalServices");
+		Map<String, PersistedModelLocalService>
+			scrubbedPersistedModelLocalServices = new HashMap<>();
+
+		ServiceTrackerMap<String, PersistedModelLocalService>
+			serviceTrackerMap = ReflectionTestUtil.getFieldValue(
+				PersistedModelLocalServiceRegistryUtil.class,
+				"_serviceTrackerMap");
+
+		for (String modeClassName : serviceTrackerMap.keySet()) {
+			if (modeClassName.indexOf(CharPool.POUND) == -1) {
+				scrubbedPersistedModelLocalServices.put(
+					modeClassName, serviceTrackerMap.getService(modeClassName));
+			}
+		}
+
+		return scrubbedPersistedModelLocalServices;
 	}
 
 	private static String _getSymbolicName(ClassLoader classLoader) {
@@ -630,14 +638,6 @@ public class DataGuardTestRuleUtil {
 
 		return () -> ReflectionTestUtil.setFieldValue(
 			basePersistence, "_sessionFactory", originalSessionFactory);
-	}
-
-	private static String _sanitizeClassName(String className) {
-		if (!className.contains(StringPool.POUND)) {
-			return className;
-		}
-
-		return className.substring(0, className.indexOf(CharPool.POUND));
 	}
 
 	private static final ThreadLocal<Map<String, Map<Serializable, String>>>

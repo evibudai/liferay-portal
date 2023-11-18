@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.action.executor;
@@ -27,7 +18,8 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -57,47 +49,30 @@ public class AddObjectEntryObjectActionExecutorImpl
 
 	@Override
 	public void execute(
-			long companyId, UnicodeProperties parametersUnicodeProperties,
+			long companyId, long objectActionId,
+			UnicodeProperties parametersUnicodeProperties,
 			JSONObject payloadJSONObject, long userId)
 		throws Exception {
 
+		ObjectDefinition sourceObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				payloadJSONObject.getLong("objectDefinitionId"));
 		ObjectDefinition targetObjectDefinition =
 			_objectDefinitionLocalService.getObjectDefinition(
 				GetterUtil.getLong(
 					parametersUnicodeProperties.get("objectDefinitionId")));
 
-		if (targetObjectDefinition.isSystem()) {
-			throw new UnsupportedOperationException();
-		}
-
-		ObjectDefinition sourceObjectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinition(
-				payloadJSONObject.getLong("objectDefinitionId"));
-		User user = _userLocalService.getUser(userId);
-
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				targetObjectDefinition.getStorageType());
-
-		ObjectEntry objectEntry = objectEntryManager.addObjectEntry(
-			new DefaultDTOConverterContext(
-				false, Collections.emptyMap(), _dtoConverterRegistry, null,
-				user.getLocale(), null, user),
-			targetObjectDefinition,
-			new ObjectEntry() {
-				{
-					properties = ObjectEntryVariablesUtil.getValues(
-						_ddmExpressionFactory, parametersUnicodeProperties,
-						ObjectEntryVariablesUtil.getActionVariables(
-							_dtoConverterRegistry, sourceObjectDefinition,
-							payloadJSONObject,
-							_systemObjectDefinitionMetadataRegistry));
-				}
-			},
-			String.valueOf(
-				_getGroupId(
-					companyId, payloadJSONObject, sourceObjectDefinition,
-					targetObjectDefinition)));
+		long primaryKey = _execute(
+			_getGroupId(
+				companyId, payloadJSONObject, sourceObjectDefinition,
+				targetObjectDefinition),
+			targetObjectDefinition, _userLocalService.getUser(userId),
+			ObjectEntryVariablesUtil.getValues(
+				_ddmExpressionFactory, parametersUnicodeProperties,
+				ObjectEntryVariablesUtil.getVariables(
+					_dtoConverterRegistry, sourceObjectDefinition,
+					payloadJSONObject,
+					_systemObjectDefinitionManagerRegistry)));
 
 		if (!GetterUtil.getBoolean(
 				parametersUnicodeProperties.get("relatedObjectEntries"))) {
@@ -119,7 +94,7 @@ public class AddObjectEntryObjectActionExecutorImpl
 			_objectRelationshipLocalService.
 				addObjectRelationshipMappingTableValues(
 					userId, objectRelationship.getObjectRelationshipId(),
-					payloadJSONObject.getLong("classPK"), objectEntry.getId(),
+					payloadJSONObject.getLong("classPK"), primaryKey,
 					_getServiceContext(companyId, userId));
 		}
 	}
@@ -127,6 +102,39 @@ public class AddObjectEntryObjectActionExecutorImpl
 	@Override
 	public String getKey() {
 		return ObjectActionExecutorConstants.KEY_ADD_OBJECT_ENTRY;
+	}
+
+	private long _execute(
+			long groupId, ObjectDefinition objectDefinition, User user,
+			Map<String, Object> values)
+		throws Exception {
+
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
+						objectDefinition.getName());
+
+			return systemObjectDefinitionManager.addBaseModel(user, values);
+		}
+
+		ObjectEntryManager objectEntryManager =
+			_objectEntryManagerRegistry.getObjectEntryManager(
+				objectDefinition.getStorageType());
+
+		ObjectEntry objectEntry = objectEntryManager.addObjectEntry(
+			new DefaultDTOConverterContext(
+				false, Collections.emptyMap(), _dtoConverterRegistry, null,
+				user.getLocale(), null, user),
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = values;
+				}
+			},
+			String.valueOf(groupId));
+
+		return objectEntry.getId();
 	}
 
 	private long _getGroupId(
@@ -154,7 +162,7 @@ public class AddObjectEntryObjectActionExecutorImpl
 			return companyGroup.getGroupId();
 		}
 
-		if (sourceObjectDefinition.isSystem()) {
+		if (sourceObjectDefinition.isUnmodifiableSystemObject()) {
 			return MapUtil.getLong(
 				(Map<String, Object>)payloadJSONObject.get(
 					"model" + sourceObjectDefinition.getName()),
@@ -197,8 +205,8 @@ public class AddObjectEntryObjectActionExecutorImpl
 	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	@Reference
 	private UserLocalService _userLocalService;

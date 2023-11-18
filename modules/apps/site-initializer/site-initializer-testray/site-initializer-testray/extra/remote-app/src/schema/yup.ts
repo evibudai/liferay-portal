@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {yupResolver} from '@hookform/resolvers/yup';
@@ -64,9 +55,9 @@ const passwordRequiredStructure = {
 };
 
 const buildStructure = {
-	active: yup.boolean(),
 	caseIds: yup.array().of(yup.number()),
 	description: yup.string(),
+	dueStatus: yup.string(),
 	factorStacks: yup.mixed(),
 	gitHash: yup.string(),
 	id: yup.string(),
@@ -157,8 +148,19 @@ const yupSchema = {
 		number: yup.number(),
 	}),
 	issue: yup.object({
-		id: yup.string().nullable(),
 		name: yup.string(),
+	}),
+	jiraImportRequirement: yup.object({
+		issues: yup.string().required(),
+		projectId: yup.number().required(),
+	}),
+	jiraIssues: yup.object({
+		issues: yup.array(
+			yup.object({
+				label: yup.string(),
+				value: yup.string(),
+			})
+		),
 	}),
 	option: yup.object({
 		name: yup.string(),
@@ -171,12 +173,13 @@ const yupSchema = {
 		projectId: yup.string(),
 	}),
 	project: yup.object({
-		description: yup.string().notRequired(),
+		description: yup.string().notRequired().max(280),
 		id: yup.string().notRequired(),
 		name: yup.string().required(),
 	}),
 	requirement: yup.object({
 		componentId: yup.string().required(),
+		components: yup.string(),
 		description: yup.string(),
 		descriptionType: yup.string().required(),
 		id: yup.string(),
@@ -216,7 +219,9 @@ const yupSchema = {
 		mbThreadId: yup.number().nullable(),
 		mergedToSubtaskId: yup.number(),
 		name: yup.string(),
+		number: yup.number(),
 		score: yup.number(),
+		splitFromSubtaskId: yup.number(),
 		taskId: yup.number(),
 		userId: yup.number(),
 	}),
@@ -227,6 +232,7 @@ const yupSchema = {
 	}),
 	subtaskToCaseResult: yup.object({
 		caseResultId: yup.number(),
+		issues: yup.string(),
 		name: yup.string(),
 		subtaskId: yup.number(),
 	}),
@@ -238,12 +244,23 @@ const yupSchema = {
 		name: yup.string().required(),
 		smartSuite: yup.string(),
 	}),
+	suiteCase: yup.object({
+		caseId: yup.number(),
+		name: yup.string(),
+		suiteId: yup.number(),
+	}),
 	task: yup.object({
-		buildId: yup.number().required(),
+		buildId: yup.number(),
 		caseTypes: yup.array(yup.number()).required(),
 		dueStatus: yup.string(),
+		id: yup.number().required(),
 		name: yup.string().required(i18n.sub('x-is-a-required-field', 'name')),
 		userIds: yup.array().of(yup.number()),
+	}),
+	taskToCaseTypes: yup.object({
+		caseTypeId: yup.number(),
+		name: yup.string(),
+		taskId: yup.number(),
 	}),
 	taskToUser: yup.object({
 		name: yup.string(),

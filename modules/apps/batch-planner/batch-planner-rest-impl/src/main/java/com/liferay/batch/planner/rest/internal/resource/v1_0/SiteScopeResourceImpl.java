@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.rest.internal.resource.v1_0;
@@ -18,7 +9,10 @@ import com.liferay.batch.planner.rest.dto.v1_0.SiteScope;
 import com.liferay.batch.planner.rest.internal.vulcan.yaml.openapi.OpenAPIYAMLProvider;
 import com.liferay.batch.planner.rest.resource.v1_0.SiteScopeResource;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -43,17 +37,17 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class SiteScopeResourceImpl extends BaseSiteScopeResourceImpl {
 
 	@Override
-	public Page<SiteScope> getPlanInternalClassNameSiteScopesPage(
-			String internalClassName, Boolean export)
+	public Page<SiteScope> getPlanInternalClassNameKeySiteScopesPage(
+			String internalClassNameKey, Boolean export)
 		throws Exception {
 
 		List<String> entityScopes = null;
 
 		OpenAPIYAML openAPIYAML = _openAPIYAMLProvider.getOpenAPIYAML(
-			internalClassName);
+			contextCompany.getCompanyId(), internalClassNameKey);
 
-		String simpleInternalClassName = internalClassName.substring(
-			internalClassName.lastIndexOf(StringPool.PERIOD) + 1);
+		String simpleInternalClassName = internalClassNameKey.substring(
+			internalClassNameKey.lastIndexOf(StringPool.PERIOD) + 1);
 
 		if (GetterUtil.getBoolean(export)) {
 			entityScopes = OpenAPIUtil.getReadEntityScopes(
@@ -73,7 +67,10 @@ public class SiteScopeResourceImpl extends BaseSiteScopeResourceImpl {
 		List<SiteScope> siteScopes = new ArrayList<>();
 
 		if (entityScopes.contains("site")) {
-			for (Group group : _groupService.getUserSitesGroups()) {
+			for (Group group :
+					_groupService.getUserSitesGroups(
+						_CLASS_NAMES, QueryUtil.ALL_POS)) {
+
 				if (Objects.equals(group.getDescriptiveName(), "Global")) {
 					continue;
 				}
@@ -90,6 +87,11 @@ public class SiteScopeResourceImpl extends BaseSiteScopeResourceImpl {
 
 		return siteScopes;
 	}
+
+	private static final String[] _CLASS_NAMES = {
+		Company.class.getName(), Group.class.getName(),
+		Organization.class.getName()
+	};
 
 	@Reference
 	private GroupService _groupService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.portlet.action;
@@ -20,6 +11,7 @@ import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentCompositionService;
+import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -35,7 +27,9 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
@@ -60,7 +54,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pavel Savinov
  */
 @Component(
-	immediate = true,
 	property = {
 		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"mvc.command.name=/fragment/copy_fragment_entry"
@@ -73,6 +66,18 @@ public class CopyFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
+
+		hideDefaultSuccessMessage(actionRequest);
+
+		long[] fragmentEntryIds = StringUtil.split(
+			ParamUtil.getString(actionRequest, "fragmentEntryIds"), 0L);
+
+		long fragmentCollectionId = ParamUtil.getLong(
+			actionRequest, "fragmentCollectionId");
+
+		if (_isShowSuccessMessage(fragmentEntryIds, fragmentCollectionId)) {
+			MultiSessionMessages.add(actionRequest, "fragmentEntryCopied");
+		}
 
 		sendRedirect(
 			actionRequest, actionResponse,
@@ -87,13 +92,6 @@ public class CopyFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 					ThemeDisplay themeDisplay =
 						(ThemeDisplay)actionRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
-
-					long[] fragmentEntryIds = StringUtil.split(
-						ParamUtil.getString(actionRequest, "fragmentEntryIds"),
-						0L);
-
-					long fragmentCollectionId = ParamUtil.getLong(
-						actionRequest, "fragmentCollectionId");
 
 					for (long fragmentEntryId : fragmentEntryIds) {
 						_fragmentEntryService.copyFragmentEntry(
@@ -238,6 +236,25 @@ public class CopyFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 		return 0;
 	}
 
+	private boolean _isShowSuccessMessage(
+		long[] fragmentEntryIds, long fragmentCollectionId) {
+
+		if (ArrayUtil.isEmpty(fragmentEntryIds)) {
+			return false;
+		}
+
+		FragmentEntry fragmentEntry =
+			_fragmentEntryLocalService.fetchFragmentEntry(fragmentEntryIds[0]);
+
+		if ((fragmentEntry == null) ||
+			(fragmentEntry.getFragmentCollectionId() != fragmentCollectionId)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CopyFragmentEntryMVCActionCommand.class);
 
@@ -247,6 +264,9 @@ public class CopyFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private FragmentCompositionService _fragmentCompositionService;
+
+	@Reference
+	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
 	private FragmentEntryService _fragmentEntryService;

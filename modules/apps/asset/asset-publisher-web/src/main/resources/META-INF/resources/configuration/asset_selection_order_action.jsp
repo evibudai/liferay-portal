@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -35,22 +26,24 @@ boolean last = assetEntryOrder == (searchContainer.getTotal() - 1);
 		String taglibUpURL = "javascript:" + liferayPortletResponse.getNamespace() + "moveSelectionUp('" + assetEntryOrder + "')";
 		%>
 
-		<liferay-ui:icon
+		<clay:link
+			aria-label='<%= LanguageUtil.get(request, "up") %>'
+			cssClass="lfr-portal-tooltip"
+			href="<%= taglibUpURL %>"
 			icon="angle-up"
-			markupView="lexicon"
-			message="up"
-			url="<%= taglibUpURL %>"
+			title='<%= LanguageUtil.get(request, "up") %>'
 		/>
 
 		<%
 		String taglibDownURL = "javascript:" + liferayPortletResponse.getNamespace() + "moveSelectionDown('" + assetEntryOrder + "')";
 		%>
 
-		<liferay-ui:icon
+		<clay:link
+			aria-label='<%= LanguageUtil.get(request, "down") %>'
+			cssClass="lfr-portal-tooltip"
+			href="<%= taglibDownURL %>"
 			icon="angle-down"
-			markupView="lexicon"
-			message="down"
-			url="<%= taglibDownURL %>"
+			title='<%= LanguageUtil.get(request, "down") %>'
 		/>
 	</c:when>
 	<c:when test="<%= assetEntryOrder == 0 %>">
@@ -59,11 +52,12 @@ boolean last = assetEntryOrder == (searchContainer.getTotal() - 1);
 		String taglibDownURL = "javascript:" + liferayPortletResponse.getNamespace() + "moveSelectionDown('" + assetEntryOrder + "')";
 		%>
 
-		<liferay-ui:icon
+		<clay:link
+			aria-label='<%= LanguageUtil.get(request, "down") %>'
+			cssClass="lfr-portal-tooltip"
+			href="<%= taglibDownURL %>"
 			icon="angle-down"
-			markupView="lexicon"
-			message="down"
-			url="<%= taglibDownURL %>"
+			title='<%= LanguageUtil.get(request, "down") %>'
 		/>
 	</c:when>
 	<c:when test="<%= last %>">
@@ -72,11 +66,12 @@ boolean last = assetEntryOrder == (searchContainer.getTotal() - 1);
 		String taglibUpURL = "javascript:" + liferayPortletResponse.getNamespace() + "moveSelectionUp('" + assetEntryOrder + "')";
 		%>
 
-		<liferay-ui:icon
+		<clay:link
+			aria-label='<%= LanguageUtil.get(request, "up") %>'
+			cssClass="lfr-portal-tooltip"
+			href="<%= taglibUpURL %>"
 			icon="angle-up"
-			markupView="lexicon"
-			message="up"
-			url="<%= taglibUpURL %>"
+			title='<%= LanguageUtil.get(request, "up") %>'
 		/>
 	</c:when>
 </c:choose>

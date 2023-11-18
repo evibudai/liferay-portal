@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.facet;
@@ -26,8 +17,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -152,23 +142,23 @@ public class FacetDiscounterTest {
 	private void _discount(
 		FacetDiscounter facetDiscounter, Document... documents) {
 
-		_discount(facetDiscounter, Stream.of(documents));
+		_discount(facetDiscounter, Arrays.asList(documents));
 	}
 
 	private void _discount(
-		FacetDiscounter facetDiscounter, Stream<Document> documentsStream) {
+		FacetDiscounter facetDiscounter, List<Document> documents) {
 
-		facetDiscounter.discount(documentsStream.collect(Collectors.toList()));
+		facetDiscounter.discount(documents);
 	}
 
 	private void _discount(FacetDiscounter facetDiscounter, String... terms) {
-		Stream<Document> documentsStream = Stream.of(
-			terms
-		).map(
-			this::_createDocument
-		);
+		Document[] documents = new Document[terms.length];
 
-		_discount(facetDiscounter, documentsStream);
+		for (int i = 0; i < documents.length; i++) {
+			documents[i] = _createDocument(terms[i]);
+		}
+
+		_discount(facetDiscounter, documents);
 	}
 
 	private void _populate(Facet facet, TermCollector... termCollectors) {

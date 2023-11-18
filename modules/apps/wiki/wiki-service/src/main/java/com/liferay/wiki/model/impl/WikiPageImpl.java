@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.model.impl;
@@ -25,6 +16,7 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -114,15 +106,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 			int start, int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
-		long attachmentsFolderId = getAttachmentsFolderId();
-
-		if (attachmentsFolderId == DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			return Collections.emptyList();
-		}
-
-		return PortletFileRepositoryUtil.getPortletFileEntries(
-			getGroupId(), attachmentsFolderId,
-			WorkflowConstants.STATUS_APPROVED, start, end, orderByComparator);
+		return getAttachmentsFileEntries(null, start, end, orderByComparator);
 	}
 
 	@Override
@@ -137,9 +121,33 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 			return Collections.emptyList();
 		}
 
-		return PortletFileRepositoryUtil.getPortletFileEntries(
-			getGroupId(), attachmentsFolderId, mimeTypes,
-			WorkflowConstants.STATUS_APPROVED, start, end, orderByComparator);
+		WikiPage latestWikiPage = WikiPageLocalServiceUtil.getLatestPage(
+			getResourcePrimKey(), WorkflowConstants.STATUS_ANY, false);
+
+		if (latestWikiPage.getPageId() == getPageId()) {
+			return PortletFileRepositoryUtil.getPortletFileEntries(
+				getGroupId(), attachmentsFolderId, mimeTypes,
+				WorkflowConstants.STATUS_APPROVED, start, end,
+				orderByComparator);
+		}
+
+		List<FileEntry> fileEntries = new ArrayList<>();
+
+		for (FileEntry fileEntry :
+				PortletFileRepositoryUtil.getPortletFileEntries(
+					getGroupId(), attachmentsFolderId, mimeTypes,
+					WorkflowConstants.STATUS_APPROVED, start, end,
+					orderByComparator)) {
+
+			int value = DateUtil.compareTo(
+				fileEntry.getModifiedDate(), getStatusDate());
+
+			if (value <= 0) {
+				fileEntries.add(fileEntry);
+			}
+		}
+
+		return fileEntries;
 	}
 
 	@Override
@@ -178,7 +186,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 		FileEntry portletFileEntryByExternalReferenceCode =
 			PortletFileRepositoryUtil.
 				getPortletFileEntryByExternalReferenceCode(
-					groupId, externalReferenceCode);
+					externalReferenceCode, groupId);
 
 		long attachmentsFolderId = getAttachmentsFolderId();
 

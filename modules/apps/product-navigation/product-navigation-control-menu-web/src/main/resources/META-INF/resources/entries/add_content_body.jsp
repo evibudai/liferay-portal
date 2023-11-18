@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,16 +15,20 @@
 	String portletNamespace = PortalUtil.getPortletNamespace(ProductNavigationControlMenuPortletKeys.PRODUCT_NAVIGATION_CONTROL_MENU);
 	%>
 
-	<div class="cadmin closed d-print-none lfr-add-panel lfr-admin-panel sidenav-fixed sidenav-menu-slider sidenav-right" id="<%= portletNamespace %>addPanelId">
+	<div class="cadmin closed d-print-none lfr-add-panel lfr-admin-panel sidenav-fixed sidenav-menu-slider sidenav-right" id="<%= portletNamespace %>addPanelId" tabindex="-1">
 		<div class="sidebar sidebar-inverse sidebar-light sidenav-menu">
 			<div class="d-flex justify-content-between p-3 sidebar-header">
 				<h1 class="sr-only"><liferay-ui:message key="widget-selection-panel" /></h1>
 
 				<span class="font-weight-bold"><liferay-ui:message key="add" /></span>
 
-				<a aria-label="<%= LanguageUtil.get(request, "close") %>" class="sidenav-close text-secondary" href="javascript:void(0);">
-					<aui:icon cssClass="icon-monospaced" image="times" markupView="lexicon" />
-				</a>
+				<clay:button
+					aria-label='<%= LanguageUtil.get(request, "close") %>'
+					cssClass="sidenav-close text-secondary"
+					displayType="unstyled"
+					icon="times"
+					small="<%= true %>"
+				/>
 			</div>
 
 			<div class="sidebar-body"></div>

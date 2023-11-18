@@ -1,25 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useModal} from '@clayui/modal';
-import {BuilderScreen} from '@liferay/object-js-components-web';
+import {
+	BuilderScreen,
+	Card,
+	getLocalizableLabel,
+} from '@liferay/object-js-components-web';
 import React, {useState} from 'react';
 
 import {ModalEditViewColumn} from '../ModalEditViewColumn/ModalEditViewColumn';
 import {TYPES, useViewContext} from '../objectViewContext';
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 const ViewBuilderScreen: React.FC<{}> = () => {
 	const [visibleEditModal, setVisibleEditModal] = useState(false);
@@ -31,6 +24,7 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 
 	const [
 		{
+			creationLanguageId,
 			objectFields,
 			objectView: {objectViewColumns},
 		},
@@ -49,12 +43,14 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 		const parentWindow = Liferay.Util.getOpener();
 
 		parentWindow.Liferay.fire('openModalAddColumns', {
-			getName: ({label}: ObjectField) => label[defaultLanguageId],
+			getName: ({label, name}: ObjectField) =>
+				getLocalizableLabel(creationLanguageId, label, name),
 			header: Liferay.Language.get('add-columns'),
 			items: objectFields,
 			onSave: (selectedObjectFields: ObjectField[]) =>
 				dispatch({
 					payload: {
+						creationLanguageId,
 						selectedObjectFields,
 					},
 					type: TYPES.ADD_OBJECT_VIEW_COLUMN,
@@ -88,25 +84,26 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 
 	return (
 		<>
-			<BuilderScreen
-				emptyState={{
-					buttonText: Liferay.Language.get('add-column'),
-					description: Liferay.Language.get(
-						'add-columns-to-start-creating-a-view'
-					),
-					title: Liferay.Language.get('no-columns-added-yet'),
-				}}
-				firstColumnHeader={Liferay.Language.get('name')}
-				hasDragAndDrop
-				objectColumns={objectViewColumns ?? []}
-				onChangeColumnOrder={handleChangeColumnOrder}
-				onDeleteColumn={handleDeleteColumn}
-				onEditingObjectFieldName={setEditingObjectFieldName}
-				onVisibleEditModal={setVisibleEditModal}
-				openModal={handleAddColumns}
-				secondColumnHeader={Liferay.Language.get('column-label')}
-				title={Liferay.Language.get('columns')}
-			/>
+			<Card title={Liferay.Language.get('columns')}>
+				<BuilderScreen
+					emptyState={{
+						buttonText: Liferay.Language.get('add-column'),
+						description: Liferay.Language.get(
+							'add-columns-to-start-creating-a-view'
+						),
+						title: Liferay.Language.get('no-columns-added-yet'),
+					}}
+					firstColumnHeader={Liferay.Language.get('name')}
+					hasDragAndDrop
+					objectColumns={objectViewColumns ?? []}
+					onChangeColumnOrder={handleChangeColumnOrder}
+					onDeleteColumn={handleDeleteColumn}
+					onEditingObjectFieldName={setEditingObjectFieldName}
+					onVisibleEditModal={setVisibleEditModal}
+					openModal={handleAddColumns}
+					secondColumnHeader={Liferay.Language.get('column-label')}
+				/>
+			</Card>
 
 			{visibleEditModal && (
 				<ModalEditViewColumn

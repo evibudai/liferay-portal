@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.display.context;
@@ -18,10 +9,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
-import com.liferay.knowledge.base.model.KBArticleSearchDisplay;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
@@ -37,10 +30,12 @@ import com.liferay.knowledge.base.web.internal.util.comparator.KBOrderByComparat
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -88,7 +83,7 @@ public class KBAdminManagementToolbarDisplayContext {
 		_renderResponse = renderResponse;
 		_portletConfig = portletConfig;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_createSearchContainer();
@@ -261,6 +256,18 @@ public class KBAdminManagementToolbarDisplayContext {
 		return creationMenu;
 	}
 
+	public String getDisplayStyle() {
+		if (Validator.isNotNull(_displayStyle)) {
+			return _displayStyle;
+		}
+
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+			"entries-display-style", "descriptive", true);
+
+		return _displayStyle;
+	}
+
 	public List<DropdownItem> getEmptyStateActionDropdownItems() {
 		long kbFolderClassNameId = PortalUtil.getClassNameId(
 			KBFolderConstants.getClassName());
@@ -338,14 +345,50 @@ public class KBAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public List<DropdownItem> getFilterDropdownItems() {
+	public List<DropdownItem> getFilterDropDownItems() {
 		return DropdownItemListBuilder.addGroup(
+			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
 			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
 		).build();
+	}
+
+	public List<DropdownItem> getOrderByDropdownItems() {
+		return new DropdownItemList() {
+			{
+				Map<String, String> orderColumnsMap = HashMapBuilder.put(
+					"modified-date", "modified-date"
+				).put(
+					"priority", "priority"
+				).put(
+					"title", "title"
+				).put(
+					"view-count", "view-count"
+				).build();
+
+				String[] orderColumns = {
+					"priority", "modified-date", "title", "view-count"
+				};
+
+				for (String orderByCol : orderColumns) {
+					add(
+						dropdownItem -> {
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setHref(
+								_getCurrentSortingURL(), "orderByCol",
+								orderByCol);
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									orderColumnsMap.get(orderByCol)));
+						});
+				}
+			}
+		};
 	}
 
 	public String getOrderByType() {
@@ -377,6 +420,26 @@ public class KBAdminManagementToolbarDisplayContext {
 
 	public int getTotal() {
 		return _searchContainer.getTotal();
+	}
+
+	public List<ViewTypeItem> getViewTypeItems() {
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCPath(
+			"/admin/view.jsp"
+		).setParameter(
+			"parentResourcePrimKey",
+			ParamUtil.getLong(
+				_httpServletRequest, "parentResourcePrimKey",
+				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID)
+		).buildPortletURL();
+
+		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
+			{
+				addListViewTypeItem();
+				addTableViewTypeItem();
+			}
+		};
 	}
 
 	public boolean isDisabled() {
@@ -433,16 +496,16 @@ public class KBAdminManagementToolbarDisplayContext {
 			_searchContainer.setOrderByComparator(
 				new KBOrderByComparatorAdapter<>(kbArticleOrderByComparator));
 
-			KBArticleSearchDisplay kbArticleSearchDisplay =
-				KBArticleServiceUtil.getKBArticleSearchDisplay(
-					_themeDisplay.getScopeGroupId(), keywords, keywords,
-					WorkflowConstants.STATUS_ANY, null, null, false, new int[0],
-					_searchContainer.getCur(), _searchContainer.getDelta(),
-					kbArticleOrderByComparator);
-
 			_searchContainer.setResultsAndTotal(
-				() -> new ArrayList<>(kbArticleSearchDisplay.getResults()),
-				kbArticleSearchDisplay.getTotal());
+				() -> new ArrayList<>(
+					KBArticleServiceUtil.getKBArticlesByKeywords(
+						_themeDisplay.getScopeGroupId(), keywords,
+						WorkflowConstants.STATUS_ANY,
+						_searchContainer.getStart(),
+						_searchContainer.getEnd())),
+				KBArticleServiceUtil.countKBArticlesByKeywords(
+					_themeDisplay.getScopeGroupId(), keywords,
+					WorkflowConstants.STATUS_ANY));
 		}
 		else if (kbFolderView) {
 			_searchContainer.setResultsAndTotal(
@@ -478,9 +541,12 @@ public class KBAdminManagementToolbarDisplayContext {
 					WorkflowConstants.STATUS_ANY));
 		}
 
-		_searchContainer.setRowChecker(
-			new EntriesChecker(
-				_liferayPortletRequest, _liferayPortletResponse));
+		EntriesChecker entriesChecker = new EntriesChecker(
+			_liferayPortletRequest, _liferayPortletResponse);
+
+		entriesChecker.setRememberCheckBoxState(false);
+
+		_searchContainer.setRowChecker(entriesChecker);
 
 		return _searchContainer;
 	}
@@ -508,41 +574,6 @@ public class KBAdminManagementToolbarDisplayContext {
 
 	private String _getOrderByCol() {
 		return _searchContainer.getOrderByCol();
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				final Map<String, String> orderColumnsMap = HashMapBuilder.put(
-					"modifiedDate", "modified-date"
-				).put(
-					"priority", "priority"
-				).put(
-					"title", "title"
-				).put(
-					"viewCount", "view-count"
-				).build();
-
-				String[] orderColumns = {
-					"priority", "modifiedDate", "title", "viewCount"
-				};
-
-				for (String orderByCol : orderColumns) {
-					add(
-						dropdownItem -> {
-							dropdownItem.setActive(
-								orderByCol.equals(_getOrderByCol()));
-							dropdownItem.setHref(
-								_getCurrentSortingURL(), "orderByCol",
-								orderByCol);
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest,
-									orderColumnsMap.get(orderByCol)));
-						});
-				}
-			}
-		};
 	}
 
 	private String _getRedirect() {
@@ -598,6 +629,7 @@ public class KBAdminManagementToolbarDisplayContext {
 			KBActionKeys.ADD_KB_FOLDER);
 	}
 
+	private String _displayStyle;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -23,10 +14,20 @@ String referer = ParamUtil.getString(request, WebKeys.REFERER, currentURL);
 
 Ticket ticket = (Ticket)request.getAttribute(WebKeys.TICKET);
 
+String ticketId = ParamUtil.getString(request, "ticketId");
+
 String ticketKey = ParamUtil.getString(request, "ticketKey");
 
 if (referer.startsWith(themeDisplay.getPathMain() + "/portal/update_password") && Validator.isNotNull(ticketKey)) {
 	referer = themeDisplay.getPathMain();
+}
+
+String titlePage = (String)request.getAttribute(WebKeys.TITLE_SET_PASSWORD);
+boolean showCancelButton = false;
+
+if (Validator.isNull(titlePage)) {
+	titlePage = "change-password";
+	showCancelButton = true;
 }
 %>
 
@@ -35,7 +36,7 @@ if (referer.startsWith(themeDisplay.getPathMain() + "/portal/update_password") &
 		<div class="autofit-padded-no-gutters-x autofit-row">
 			<div class="autofit-col autofit-col-expand">
 				<h2 class="sheet-title">
-					<liferay-ui:message key="change-password" />
+					<liferay-ui:message key="<%= titlePage %>" />
 				</h2>
 			</div>
 
@@ -49,7 +50,14 @@ if (referer.startsWith(themeDisplay.getPathMain() + "/portal/update_password") &
 		<c:choose>
 			<c:when test="<%= !themeDisplay.isSignedIn() && (ticket == null) %>">
 				<div class="alert alert-warning">
-					<liferay-ui:message key="your-password-reset-link-is-no-longer-valid" />
+					<c:choose>
+						<c:when test="<%= (ticket == null) && (ticketKey != null) && Validator.isNull(ticketId) %>">
+							<liferay-ui:message key="this-link-format-is-no-longer-recognized-please-request-a-new-link" />
+						</c:when>
+						<c:otherwise>
+							<liferay-ui:message key="your-password-reset-link-is-no-longer-valid" />
+						</c:otherwise>
+					</c:choose>
 
 					<%
 					PortletURL portletURL = PortletURLFactoryUtil.create(request, PortletKeys.LOGIN, PortletRequest.RENDER_PHASE);
@@ -87,6 +95,7 @@ if (referer.startsWith(themeDisplay.getPathMain() + "/portal/update_password") &
 					<aui:input name="doAsUserId" type="hidden" value="<%= themeDisplay.getDoAsUserId() %>" />
 					<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 					<aui:input name="<%= WebKeys.REFERER %>" type="hidden" value="<%= referer %>" />
+					<aui:input name="ticketId" type="hidden" value="<%= ticketId %>" />
 					<aui:input name="ticketKey" type="hidden" value="<%= ticketKey %>" />
 
 					<c:if test="<%= !SessionErrors.isEmpty(request) %>">
@@ -177,23 +186,21 @@ if (referer.startsWith(themeDisplay.getPathMain() + "/portal/update_password") &
 					</c:if>
 
 					<aui:fieldset>
-						<aui:input autoFocus="<%= true %>" class="lfr-input-text-container" label="password" name="password1" showRequiredLabel="<%= false %>" type="password">
-							<aui:validator name="required" />
-						</aui:input>
+						<aui:input class="lfr-input-text-container" label="password" name="password1" required="<%= true %>" showRequiredLabel="<%= false %>" type="password" />
 
-						<aui:input class="lfr-input-text-container" label="enter-again" name="password2" showRequiredLabel="<%= false %>" type="password">
+						<aui:input class="lfr-input-text-container" label="reenter-password" name="password2" required="<%= true %>" showRequiredLabel="<%= false %>" type="password">
 							<aui:validator name="equalTo">
 								'#<portlet:namespace />password1'
 							</aui:validator>
-
-							<aui:validator name="required" />
 						</aui:input>
 					</aui:fieldset>
 
 					<aui:button-row>
 						<aui:button type="submit" />
 
-						<aui:button href='<%= themeDisplay.getPathMain() + "/portal/logout" %>' type="cancel" />
+						<c:if test="<%= showCancelButton %>">
+							<aui:button href='<%= themeDisplay.getPathMain() + "/portal/logout" %>' type="cancel" />
+						</c:if>
 					</aui:button-row>
 				</aui:form>
 			</c:otherwise>

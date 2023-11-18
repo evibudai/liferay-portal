@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -63,11 +54,12 @@ public class CPDisplayLayoutLocalServiceUtil {
 
 	public static CPDisplayLayout addCPDisplayLayout(
 			long userId, long groupId, Class<?> clazz, long classPK,
-			String layoutUuid)
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException {
 
 		return getService().addCPDisplayLayout(
-			userId, groupId, clazz, classPK, layoutUuid);
+			userId, groupId, clazz, classPK, layoutPageTemplateEntryUuid,
+			layoutUuid);
 	}
 
 	/**
@@ -240,22 +232,6 @@ public class CPDisplayLayoutLocalServiceUtil {
 		return getService().fetchCPDisplayLayout(groupId, clazz, classPK);
 	}
 
-	public static List<CPDisplayLayout>
-		fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-			long groupId, String layoutUuid) {
-
-		return getService().fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-			groupId, layoutUuid);
-	}
-
-	public static List<CPDisplayLayout>
-		fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-			long groupId, String layoutUuid, int start, int end) {
-
-		return getService().fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-			groupId, layoutUuid, start, end);
-	}
-
 	/**
 	 * Returns the cp display layout matching the UUID and group.
 	 *
@@ -318,6 +294,41 @@ public class CPDisplayLayoutLocalServiceUtil {
 		int start, int end) {
 
 		return getService().getCPDisplayLayouts(start, end);
+	}
+
+	public static List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+			long groupId, String layoutPageTemplateEntryUuid) {
+
+		return getService().
+			getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+				groupId, layoutPageTemplateEntryUuid);
+	}
+
+	public static List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+			long groupId, String layoutPageTemplateEntryUuid, int start,
+			int end) {
+
+		return getService().
+			getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+				groupId, layoutPageTemplateEntryUuid, start, end);
+	}
+
+	public static List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+			long groupId, String layoutUuid) {
+
+		return getService().getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+			groupId, layoutUuid);
+	}
+
+	public static List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+			long groupId, String layoutUuid, int start, int end) {
+
+		return getService().getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+			groupId, layoutUuid, start, end);
 	}
 
 	/**
@@ -396,12 +407,13 @@ public class CPDisplayLayoutLocalServiceUtil {
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
 		<CPDisplayLayout> searchCPDisplayLayout(
-				long companyId, long groupId, String className, String keywords,
-				int start, int end, com.liferay.portal.kernel.search.Sort sort)
+				long companyId, long groupId, String className, Integer type,
+				String keywords, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
 			throws PortalException {
 
 		return getService().searchCPDisplayLayout(
-			companyId, groupId, className, keywords, start, end, sort);
+			companyId, groupId, className, type, keywords, start, end, sort);
 	}
 
 	/**
@@ -421,15 +433,21 @@ public class CPDisplayLayoutLocalServiceUtil {
 	}
 
 	public static CPDisplayLayout updateCPDisplayLayout(
-			long cpDisplayLayoutId, long classPK, String layoutUuid)
+			long cpDisplayLayoutId, long classPK,
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException {
 
 		return getService().updateCPDisplayLayout(
-			cpDisplayLayoutId, classPK, layoutUuid);
+			cpDisplayLayoutId, classPK, layoutPageTemplateEntryUuid,
+			layoutUuid);
 	}
 
 	public static CPDisplayLayoutLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(CPDisplayLayoutLocalService service) {
+		_service = service;
 	}
 
 	private static volatile CPDisplayLayoutLocalService _service;

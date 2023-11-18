@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.menu.item.display.page.internal.display.context;
 
 import com.liferay.asset.display.page.util.AssetDisplayPageUtil;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
@@ -49,11 +39,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.menu.item.display.page.internal.type.DisplayPageTypeContext;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -76,7 +62,7 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 		_siteNavigationMenuItem = siteNavigationMenuItem;
 
 		PortletResponse portletResponse =
-			(PortletResponse)_httpServletRequest.getAttribute(
+			(PortletResponse)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
@@ -359,15 +345,10 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 	}
 
 	private JSONArray _getDataJSONArray() throws Exception {
-		Optional<LayoutDisplayPageInfoItemFieldValuesProvider<?>>
-			layoutDisplayPageInfoItemFieldValuesProviderOptional =
-				_displayPageTypeContext.
-					getLayoutDisplayPageInfoItemFieldValuesProviderOptional();
-
 		LayoutDisplayPageInfoItemFieldValuesProvider<?>
 			layoutDisplayPageInfoItemFieldValuesProvider =
-				layoutDisplayPageInfoItemFieldValuesProviderOptional.orElse(
-					null);
+				_displayPageTypeContext.
+					getLayoutDisplayPageInfoItemFieldValuesProvider();
 
 		if (layoutDisplayPageInfoItemFieldValuesProvider == null) {
 			return JSONFactoryUtil.createJSONArray();
@@ -377,13 +358,8 @@ public class DisplayPageTypeSiteNavigationMenuTypeDisplayContext {
 			layoutDisplayPageInfoItemFieldValuesProvider.getInfoItemFieldValues(
 				getClassPK());
 
-		Collection<InfoFieldValue<Object>> infoFieldValues =
-			infoItemFieldValues.getInfoFieldValues();
-
-		Stream<InfoFieldValue<Object>> stream = infoFieldValues.stream();
-
 		return JSONUtil.toJSONArray(
-			stream.collect(Collectors.toList()),
+			infoItemFieldValues.getInfoFieldValues(),
 			infoFieldValue -> JSONUtil.put(
 				"title",
 				() -> {

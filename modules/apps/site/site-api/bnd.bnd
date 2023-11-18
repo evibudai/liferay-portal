@@ -1,12 +1,16 @@
 Bundle-Name: Liferay Site API
 Bundle-SymbolicName: com.liferay.site.api
-Bundle-Version: 16.0.2
+Bundle-Version: 17.2.1
 Export-Package:\
+	com.liferay.site.configuration,\
+	com.liferay.site.configuration.manager,\
 	com.liferay.site.constants,\
+	com.liferay.site.display.context,\
 	com.liferay.site.exception,\
 	com.liferay.site.initializer,\
 	com.liferay.site.model,\
 	com.liferay.site.model.adapter,\
+	com.liferay.site.search,\
 	com.liferay.site.service,\
 	com.liferay.site.service.persistence,\
 	com.liferay.site.settings.configuration.admin.display,\

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.facet;
@@ -19,8 +10,6 @@ import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.facet.nested.NestedFacet;
-
-import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -44,9 +33,9 @@ public class NestedFacetProcessor
 	implements FacetProcessor<SearchRequestBuilder> {
 
 	@Override
-	public Optional<AggregationBuilder> processFacet(Facet facet) {
+	public AggregationBuilder processFacet(Facet facet) {
 		if (!(facet instanceof NestedFacet)) {
-			return Optional.empty();
+			return null;
 		}
 
 		NestedFacet nestedFacet = (NestedFacet)facet;
@@ -60,9 +49,9 @@ public class NestedFacetProcessor
 
 		termsAggregationBuilder.field(nestedFacet.getFieldName());
 
-		int minDocCount = dataJSONObject.getInt("frequencyThreshold");
+		int minDocCount = dataJSONObject.getInt("frequencyThreshold", -1);
 
-		if (minDocCount > 0) {
+		if (minDocCount >= 0) {
 			termsAggregationBuilder.minDocCount(minDocCount);
 		}
 
@@ -93,7 +82,7 @@ public class NestedFacetProcessor
 
 		nestedAggregationBuilder.subAggregation(aggregationBuilder);
 
-		return Optional.of(nestedAggregationBuilder);
+		return nestedAggregationBuilder;
 	}
 
 }

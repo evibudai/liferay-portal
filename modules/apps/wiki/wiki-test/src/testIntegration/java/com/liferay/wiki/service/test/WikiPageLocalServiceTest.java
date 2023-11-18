@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.service.test;
@@ -18,19 +9,22 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
-import com.liferay.asset.kernel.service.AssetLinkLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
+import com.liferay.asset.link.model.AssetLink;
+import com.liferay.asset.link.service.AssetLinkLocalServiceUtil;
 import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -64,7 +58,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 import com.liferay.wiki.exception.DuplicatePageException;
 import com.liferay.wiki.exception.DuplicateWikiPageExternalReferenceCodeException;
 import com.liferay.wiki.exception.NoSuchPageResourceException;
@@ -422,6 +415,23 @@ public class WikiPageLocalServiceTest {
 		Assert.assertEquals(copyFileEntry.getSize(), fileEntry.getSize());
 	}
 
+	@Test
+	public void testCopyPageWithDraftAttachments() throws Exception {
+		WikiPage approvedPage = _createPageWithDraftAttachments();
+
+		WikiPage copyPage = WikiTestUtil.copyPage(
+			approvedPage, true,
+			ServiceContextTestUtil.getServiceContext(
+				approvedPage.getGroupId()));
+
+		List<FileEntry> copyAttachmentsFileEntries =
+			copyPage.getAttachmentsFileEntries();
+
+		Assert.assertEquals(
+			copyAttachmentsFileEntries.toString(), 1,
+			copyAttachmentsFileEntries.size());
+	}
+
 	@Test(expected = NoSuchPageResourceException.class)
 	public void testDeletePage() throws Exception {
 		WikiPage page = WikiTestUtil.addPage(
@@ -616,6 +626,28 @@ public class WikiPageLocalServiceTest {
 	}
 
 	@Test
+	public void testGetAttachmentsFileEntriesWithDraftPage() throws Exception {
+		WikiPage approvedPage = _createPageWithDraftAttachments();
+
+		WikiPage draftPage = WikiPageLocalServiceUtil.getLatestPage(
+			approvedPage.getResourcePrimKey(), WorkflowConstants.STATUS_ANY,
+			false);
+
+		List<FileEntry> attachmentsFileEntries =
+			approvedPage.getAttachmentsFileEntries();
+
+		Assert.assertEquals(
+			attachmentsFileEntries.toString(), 1,
+			attachmentsFileEntries.size());
+
+		attachmentsFileEntries = draftPage.getAttachmentsFileEntries();
+
+		Assert.assertEquals(
+			attachmentsFileEntries.toString(), 2,
+			attachmentsFileEntries.size());
+	}
+
+	@Test
 	public void testGetPage() throws Exception {
 		WikiPage page = WikiTestUtil.addPage(
 			_group.getGroupId(), _node.getNodeId(), true);
@@ -693,6 +725,28 @@ public class WikiPageLocalServiceTest {
 
 		Assert.assertEquals(updatedPage2, recentPages.get(0));
 		Assert.assertEquals(page1, recentPages.get(1));
+	}
+
+	@Test
+	public void testMovePageToTrashWithDraftAttachments() throws Exception {
+		WikiPage approvedPage = _createPageWithDraftAttachments();
+
+		WikiPage draftPage = WikiPageLocalServiceUtil.getLatestPage(
+			approvedPage.getResourcePrimKey(), WorkflowConstants.STATUS_ANY,
+			false);
+
+		List<FileEntry> attachmentsFileEntries =
+			draftPage.getAttachmentsFileEntries();
+
+		WikiPageLocalServiceUtil.movePageToTrash(
+			approvedPage.getUserId(), approvedPage);
+
+		FileEntry draftFileEntry = attachmentsFileEntries.get(1);
+
+		DLFileEntry dlFileEntry = DLFileEntryLocalServiceUtil.getFileEntry(
+			draftFileEntry.getFileEntryId());
+
+		Assert.assertTrue(dlFileEntry.isInTrash());
 	}
 
 	@Test
@@ -1206,9 +1260,8 @@ public class WikiPageLocalServiceTest {
 				"multiValued=true\nrequiredClassNameIds=", classNameId,
 				":-1\nselectedClassNameIds=", classNameId, ":-1"));
 
-		AssetVocabularyLocalServiceUtil.updateAssetVocabulary(assetVocabulary);
-
-		return assetVocabulary;
+		return AssetVocabularyLocalServiceUtil.updateAssetVocabulary(
+			assetVocabulary);
 	}
 
 	protected void testChangeParent(boolean hasExpandoValues) throws Exception {
@@ -1320,6 +1373,35 @@ public class WikiPageLocalServiceTest {
 		Arrays.sort(actualArray);
 
 		Assert.assertArrayEquals(expectedArray, actualArray);
+	}
+
+	private WikiPage _createPageWithDraftAttachments() throws Exception {
+		WikiPage approvedPage = WikiTestUtil.addPage(
+			_group.getGroupId(), _node.getNodeId(), true);
+
+		WikiTestUtil.addWikiAttachment(
+			approvedPage.getUserId(), approvedPage.getNodeId(),
+			approvedPage.getTitle(), getClass());
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(approvedPage.getGroupId());
+
+		// Update the page so the modifiedDate comes after attachment
+		// modifiedDate to resemble the /wiki/edit_page action
+
+		approvedPage = WikiTestUtil.updatePage(
+			approvedPage, approvedPage.getUserId(), approvedPage.getTitle(),
+			approvedPage.getContent(), true, serviceContext);
+
+		WikiTestUtil.addWikiAttachment(
+			approvedPage.getUserId(), approvedPage.getNodeId(),
+			approvedPage.getTitle(), getClass());
+
+		WikiTestUtil.updatePage(
+			approvedPage, approvedPage.getUserId(), approvedPage.getTitle(),
+			approvedPage.getContent(), false, serviceContext);
+
+		return approvedPage;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

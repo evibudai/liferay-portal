@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.web.internal.servlet;
@@ -19,9 +10,11 @@ import com.liferay.adaptive.media.AdaptiveMedia;
 import com.liferay.adaptive.media.exception.AMException;
 import com.liferay.adaptive.media.handler.AMRequestHandler;
 import com.liferay.adaptive.media.web.internal.constants.AMWebConstants;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.repository.util.FileEntryHttpHeaderCustomizerUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -30,7 +23,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 
 import java.io.IOException;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,33 +67,52 @@ public class AMServlet extends HttpServlet {
 				return;
 			}
 
-			Optional<AdaptiveMedia<?>> adaptiveMediaOptional =
-				(Optional<AdaptiveMedia<?>>)amRequestHandler.handleRequest(
+			AdaptiveMedia<?> adaptiveMedia =
+				(AdaptiveMedia<?>)amRequestHandler.handleRequest(
 					httpServletRequest);
 
-			AdaptiveMedia<?> adaptiveMedia = adaptiveMediaOptional.orElseThrow(
-				AMException.AMNotFound::new);
-
-			Optional<Long> contentLengthOptional =
-				adaptiveMedia.getValueOptional(
-					AMAttribute.getContentLengthAMAttribute());
-
-			long contentLength = contentLengthOptional.orElse(0L);
-
-			Optional<String> contentTypeOptional =
-				adaptiveMedia.getValueOptional(
-					AMAttribute.getContentTypeAMAttribute());
-
-			String contentType = contentTypeOptional.orElse(
-				ContentTypes.APPLICATION_OCTET_STREAM);
-
-			Optional<String> fileNameOptional = adaptiveMedia.getValueOptional(
-				AMAttribute.getFileNameAMAttribute());
-
-			String fileName = fileNameOptional.orElse(null);
+			if (adaptiveMedia == null) {
+				throw new AMException.AMNotFound();
+			}
 
 			boolean download = ParamUtil.getBoolean(
 				httpServletRequest, "download");
+
+			long fileEntryId = _getFileEntryId(
+				String.valueOf(adaptiveMedia.getURI()));
+
+			if (fileEntryId > 0) {
+				String cacheControlValue =
+					HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE;
+
+				if (download) {
+					cacheControlValue =
+						HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE;
+				}
+
+				httpServletResponse.addHeader(
+					HttpHeaders.CACHE_CONTROL,
+					FileEntryHttpHeaderCustomizerUtil.getHttpHeaderValue(
+						_dlAppLocalService.getFileEntry(fileEntryId),
+						HttpHeaders.CACHE_CONTROL, cacheControlValue));
+			}
+
+			Long contentLength = adaptiveMedia.getValue(
+				AMAttribute.getContentLengthAMAttribute());
+
+			if (contentLength == null) {
+				contentLength = 0L;
+			}
+
+			String contentType = adaptiveMedia.getValue(
+				AMAttribute.getContentTypeAMAttribute());
+
+			if (contentType == null) {
+				contentType = ContentTypes.APPLICATION_OCTET_STREAM;
+			}
+
+			String fileName = adaptiveMedia.getValue(
+				AMAttribute.getFileNameAMAttribute());
 
 			if (download) {
 				ServletResponseUtil.sendFile(
@@ -153,6 +164,16 @@ public class AMServlet extends HttpServlet {
 		doGet(httpServletRequest, httpServletResponse);
 	}
 
+	private long _getFileEntryId(String uri) {
+		Matcher matcher = _fileEntryIdPattern.matcher(uri);
+
+		if (matcher.find()) {
+			return Long.valueOf(matcher.group(2));
+		}
+
+		return 0;
+	}
+
 	private String _getRequestHandlerPattern(
 		HttpServletRequest httpServletRequest) {
 
@@ -168,10 +189,15 @@ public class AMServlet extends HttpServlet {
 
 	private static final Log _log = LogFactoryUtil.getLog(AMServlet.class);
 
+	private static final Pattern _fileEntryIdPattern = Pattern.compile(
+		"(\\/image\\/)(\\d+)\\/");
 	private static final Pattern _requestHandlerPattern = Pattern.compile(
 		"^/([^/]*)");
 
 	@Reference
 	private AMRequestHandlerLocator _amRequestHandlerLocator;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
 
 }

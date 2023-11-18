@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.opener.onedrive.web.internal.oauth;
@@ -21,14 +12,13 @@ import com.github.scribejava.core.oauth.OAuth20Service;
 
 import com.liferay.document.library.opener.onedrive.web.internal.configuration.DLOneDriveCompanyConfiguration;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.io.IOException;
 
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.osgi.service.component.annotations.Component;
@@ -59,24 +49,21 @@ public class OAuth2Manager {
 		}
 	}
 
-	public Optional<AccessToken> getAccessTokenOptional(
-			long companyId, long userId)
+	public AccessToken getAccessToken(long companyId, long userId)
 		throws PortalException {
 
-		Optional<AccessToken> accessTokenOptional =
-			AccessTokenStoreUtil.getAccessTokenOptional(companyId, userId);
+		AccessToken accessToken = AccessTokenStoreUtil.getAccessToken(
+			companyId, userId);
 
-		if (!accessTokenOptional.isPresent()) {
-			return Optional.empty();
+		if (accessToken == null) {
+			return null;
 		}
-
-		AccessToken accessToken = accessTokenOptional.get();
 
 		if (!accessToken.isValid()) {
 			return _refreshOAuth2AccessToken(companyId, userId, accessToken);
 		}
 
-		return Optional.of(accessToken);
+		return accessToken;
 	}
 
 	public String getAuthorizationURL(
@@ -96,17 +83,20 @@ public class OAuth2Manager {
 	public boolean hasAccessToken(long companyId, long userId)
 		throws PortalException {
 
-		Optional<AccessToken> accessTokenOptional = getAccessTokenOptional(
-			companyId, userId);
+		AccessToken accessToken = getAccessToken(companyId, userId);
 
-		return accessTokenOptional.isPresent();
+		if (accessToken == null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public void revokeOAuth2AccessToken(long companyId, long userId) {
-		Optional<AccessToken> accessTokenOptional =
-			AccessTokenStoreUtil.getAccessTokenOptional(companyId, userId);
+		AccessToken accessToken = AccessTokenStoreUtil.getAccessToken(
+			companyId, userId);
 
-		if (!accessTokenOptional.isPresent()) {
+		if (accessToken == null) {
 			return;
 		}
 
@@ -158,12 +148,12 @@ public class OAuth2Manager {
 			"/document_library/onedrive/oauth2");
 	}
 
-	private Optional<AccessToken> _refreshOAuth2AccessToken(
+	private AccessToken _refreshOAuth2AccessToken(
 			long companyId, long userId, AccessToken accessToken)
 		throws PortalException {
 
 		if (accessToken.getRefreshToken() == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		try (OAuth20Service oAuth20Service = _createOAuth20Service(
@@ -175,7 +165,7 @@ public class OAuth2Manager {
 
 			AccessTokenStoreUtil.add(companyId, userId, newAccessToken);
 
-			return Optional.of(newAccessToken);
+			return newAccessToken;
 		}
 		catch (ExecutionException | InterruptedException | IOException
 					exception) {

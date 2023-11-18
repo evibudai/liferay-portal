@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -60,7 +52,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -133,15 +124,10 @@ public class SegmentsEntryLocalServiceTest {
 			segmentsEntry.getSegmentsEntryId(), classPKs,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		List<SegmentsEntryRel> segmentsEntryRels =
+		long[] actualClassPKs = TransformUtil.transformToLongArray(
 			_segmentsEntryRelLocalService.getSegmentsEntryRels(
-				segmentsEntry.getSegmentsEntryId());
-
-		Stream<SegmentsEntryRel> stream = segmentsEntryRels.stream();
-
-		long[] actualClassPKs = stream.mapToLong(
-			SegmentsEntryRel::getClassPK
-		).toArray();
+				segmentsEntry.getSegmentsEntryId()),
+			SegmentsEntryRel::getClassPK);
 
 		Assert.assertTrue(ArrayUtil.containsAll(actualClassPKs, classPKs));
 	}
@@ -287,7 +273,7 @@ public class SegmentsEntryLocalServiceTest {
 
 		_segmentsExperienceLocalService.addSegmentsExperience(
 			TestPropsValues.getUserId(), _group.getGroupId(),
-			segmentsEntry.getSegmentsEntryId(), 0, 0,
+			segmentsEntry.getSegmentsEntryId(), 0,
 			RandomTestUtil.randomLocaleStringMap(), RandomTestUtil.randomInt(),
 			false, new UnicodeProperties(true),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));

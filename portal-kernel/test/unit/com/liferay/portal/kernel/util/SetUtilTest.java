@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -73,6 +64,38 @@ public class SetUtilTest {
 		set = SetUtil.intersect(list1, list3);
 
 		Assert.assertEquals(set, new HashSet<String>(Arrays.asList("c")));
+	}
+
+	@Test
+	public void testRandomElement() {
+		Assert.assertNull(SetUtil.randomElement(null));
+		Assert.assertEquals("a", SetUtil.randomElement(SetUtil.fromArray("a")));
+
+		boolean foundA = false;
+		boolean foundB = false;
+		boolean foundC = false;
+
+		for (int i = 0; i < 100; i++) {
+			String string = SetUtil.randomElement(
+				SetUtil.fromArray("a", "b", "c"));
+
+			if (string.equals("a")) {
+				foundA = true;
+			}
+			else if (string.equals("b")) {
+				foundB = true;
+			}
+			else if (string.equals("c")) {
+				foundC = true;
+			}
+			else {
+				throw new IllegalStateException("Invalid string: " + string);
+			}
+
+			if (foundA && foundB && foundC) {
+				break;
+			}
+		}
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -79,7 +70,8 @@ public class CommerceCatalogModelImpl
 		{"commerceCatalogId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"commerceCurrencyCode", Types.VARCHAR},
+		{"accountEntryId", Types.BIGINT}, {"name", Types.VARCHAR},
+		{"commerceCurrencyCode", Types.VARCHAR},
 		{"catalogDefaultLanguageId", Types.VARCHAR}, {"system_", Types.BOOLEAN}
 	};
 
@@ -97,6 +89,7 @@ public class CommerceCatalogModelImpl
 		TABLE_COLUMNS_MAP.put("userName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("accountEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("commerceCurrencyCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("catalogDefaultLanguageId", Types.VARCHAR);
@@ -104,7 +97,7 @@ public class CommerceCatalogModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceCatalog (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceCatalogId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,commerceCurrencyCode VARCHAR(75) null,catalogDefaultLanguageId VARCHAR(75) null,system_ BOOLEAN,primary key (commerceCatalogId, ctCollectionId))";
+		"create table CommerceCatalog (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceCatalogId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,accountEntryId LONG,name VARCHAR(75) null,commerceCurrencyCode VARCHAR(75) null,catalogDefaultLanguageId VARCHAR(75) null,system_ BOOLEAN,primary key (commerceCatalogId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table CommerceCatalog";
 
@@ -124,32 +117,38 @@ public class CommerceCatalogModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 1L;
+	public static final long ACCOUNTENTRYID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 2L;
+	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long SYSTEM_COLUMN_BITMASK = 4L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 8L;
+	public static final long SYSTEM_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 16L;
+	public static final long CREATEDATE_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -241,104 +240,134 @@ public class CommerceCatalogModelImpl
 	public Map<String, Function<CommerceCatalog, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceCatalog, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CommerceCatalog, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CommerceCatalog, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceCatalog, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<CommerceCatalog, Object>>();
-		Map<String, BiConsumer<CommerceCatalog, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<CommerceCatalog, ?>>();
+		private static final Map<String, Function<CommerceCatalog, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceCatalog::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceCatalog, Long>)CommerceCatalog::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CommerceCatalog::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CommerceCatalog, Long>)
-				CommerceCatalog::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", CommerceCatalog::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CommerceCatalog, String>)CommerceCatalog::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", CommerceCatalog::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<CommerceCatalog, String>)
-				CommerceCatalog::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"commerceCatalogId", CommerceCatalog::getCommerceCatalogId);
-		attributeSetterBiConsumers.put(
-			"commerceCatalogId",
-			(BiConsumer<CommerceCatalog, Long>)
-				CommerceCatalog::setCommerceCatalogId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceCatalog::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceCatalog, Long>)CommerceCatalog::setCompanyId);
-		attributeGetterFunctions.put("userId", CommerceCatalog::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceCatalog, Long>)CommerceCatalog::setUserId);
-		attributeGetterFunctions.put("userName", CommerceCatalog::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceCatalog, String>)CommerceCatalog::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceCatalog::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceCatalog, Date>)CommerceCatalog::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceCatalog::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceCatalog, Date>)
-				CommerceCatalog::setModifiedDate);
-		attributeGetterFunctions.put("name", CommerceCatalog::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<CommerceCatalog, String>)CommerceCatalog::setName);
-		attributeGetterFunctions.put(
-			"commerceCurrencyCode", CommerceCatalog::getCommerceCurrencyCode);
-		attributeSetterBiConsumers.put(
-			"commerceCurrencyCode",
-			(BiConsumer<CommerceCatalog, String>)
-				CommerceCatalog::setCommerceCurrencyCode);
-		attributeGetterFunctions.put(
-			"catalogDefaultLanguageId",
-			CommerceCatalog::getCatalogDefaultLanguageId);
-		attributeSetterBiConsumers.put(
-			"catalogDefaultLanguageId",
-			(BiConsumer<CommerceCatalog, String>)
-				CommerceCatalog::setCatalogDefaultLanguageId);
-		attributeGetterFunctions.put("system", CommerceCatalog::getSystem);
-		attributeSetterBiConsumers.put(
-			"system",
-			(BiConsumer<CommerceCatalog, Boolean>)CommerceCatalog::setSystem);
+		static {
+			Map<String, Function<CommerceCatalog, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CommerceCatalog, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceCatalog::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CommerceCatalog::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", CommerceCatalog::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				CommerceCatalog::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"commerceCatalogId", CommerceCatalog::getCommerceCatalogId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceCatalog::getCompanyId);
+			attributeGetterFunctions.put("userId", CommerceCatalog::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceCatalog::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceCatalog::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CommerceCatalog::getModifiedDate);
+			attributeGetterFunctions.put(
+				"accountEntryId", CommerceCatalog::getAccountEntryId);
+			attributeGetterFunctions.put("name", CommerceCatalog::getName);
+			attributeGetterFunctions.put(
+				"commerceCurrencyCode",
+				CommerceCatalog::getCommerceCurrencyCode);
+			attributeGetterFunctions.put(
+				"catalogDefaultLanguageId",
+				CommerceCatalog::getCatalogDefaultLanguageId);
+			attributeGetterFunctions.put("system", CommerceCatalog::getSystem);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CommerceCatalog, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceCatalog, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<CommerceCatalog, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceCatalog, Long>)
+					CommerceCatalog::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CommerceCatalog, Long>)
+					CommerceCatalog::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CommerceCatalog, String>)CommerceCatalog::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<CommerceCatalog, String>)
+					CommerceCatalog::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"commerceCatalogId",
+				(BiConsumer<CommerceCatalog, Long>)
+					CommerceCatalog::setCommerceCatalogId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceCatalog, Long>)
+					CommerceCatalog::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceCatalog, Long>)CommerceCatalog::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceCatalog, String>)
+					CommerceCatalog::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceCatalog, Date>)
+					CommerceCatalog::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceCatalog, Date>)
+					CommerceCatalog::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"accountEntryId",
+				(BiConsumer<CommerceCatalog, Long>)
+					CommerceCatalog::setAccountEntryId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CommerceCatalog, String>)CommerceCatalog::setName);
+			attributeSetterBiConsumers.put(
+				"commerceCurrencyCode",
+				(BiConsumer<CommerceCatalog, String>)
+					CommerceCatalog::setCommerceCurrencyCode);
+			attributeSetterBiConsumers.put(
+				"catalogDefaultLanguageId",
+				(BiConsumer<CommerceCatalog, String>)
+					CommerceCatalog::setCatalogDefaultLanguageId);
+			attributeSetterBiConsumers.put(
+				"system",
+				(BiConsumer<CommerceCatalog, Boolean>)
+					CommerceCatalog::setSystem);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -558,6 +587,31 @@ public class CommerceCatalogModelImpl
 
 	@JSON
 	@Override
+	public long getAccountEntryId() {
+		return _accountEntryId;
+	}
+
+	@Override
+	public void setAccountEntryId(long accountEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_accountEntryId = accountEntryId;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public long getOriginalAccountEntryId() {
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("accountEntryId"));
+	}
+
+	@JSON
+	@Override
 	public String getName() {
 		if (_name == null) {
 			return "";
@@ -720,6 +774,7 @@ public class CommerceCatalogModelImpl
 		commerceCatalogImpl.setUserName(getUserName());
 		commerceCatalogImpl.setCreateDate(getCreateDate());
 		commerceCatalogImpl.setModifiedDate(getModifiedDate());
+		commerceCatalogImpl.setAccountEntryId(getAccountEntryId());
 		commerceCatalogImpl.setName(getName());
 		commerceCatalogImpl.setCommerceCurrencyCode(getCommerceCurrencyCode());
 		commerceCatalogImpl.setCatalogDefaultLanguageId(
@@ -755,6 +810,8 @@ public class CommerceCatalogModelImpl
 			this.<Date>getColumnOriginalValue("createDate"));
 		commerceCatalogImpl.setModifiedDate(
 			this.<Date>getColumnOriginalValue("modifiedDate"));
+		commerceCatalogImpl.setAccountEntryId(
+			this.<Long>getColumnOriginalValue("accountEntryId"));
 		commerceCatalogImpl.setName(
 			this.<String>getColumnOriginalValue("name"));
 		commerceCatalogImpl.setCommerceCurrencyCode(
@@ -898,6 +955,8 @@ public class CommerceCatalogModelImpl
 			commerceCatalogCacheModel.modifiedDate = Long.MIN_VALUE;
 		}
 
+		commerceCatalogCacheModel.accountEntryId = getAccountEntryId();
+
 		commerceCatalogCacheModel.name = getName();
 
 		String name = commerceCatalogCacheModel.name;
@@ -1004,6 +1063,7 @@ public class CommerceCatalogModelImpl
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
+	private long _accountEntryId;
 	private String _name;
 	private String _commerceCurrencyCode;
 	private String _catalogDefaultLanguageId;
@@ -1013,7 +1073,8 @@ public class CommerceCatalogModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceCatalog, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1049,6 +1110,7 @@ public class CommerceCatalogModelImpl
 		_columnOriginalValues.put("userName", _userName);
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("accountEntryId", _accountEntryId);
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put(
 			"commerceCurrencyCode", _commerceCurrencyCode);
@@ -1099,13 +1161,15 @@ public class CommerceCatalogModelImpl
 
 		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("name", 1024L);
+		columnBitmasks.put("accountEntryId", 1024L);
 
-		columnBitmasks.put("commerceCurrencyCode", 2048L);
+		columnBitmasks.put("name", 2048L);
 
-		columnBitmasks.put("catalogDefaultLanguageId", 4096L);
+		columnBitmasks.put("commerceCurrencyCode", 4096L);
 
-		columnBitmasks.put("system_", 8192L);
+		columnBitmasks.put("catalogDefaultLanguageId", 8192L);
+
+		columnBitmasks.put("system_", 16384L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

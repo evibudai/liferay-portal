@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a content page") {
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +37,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-95042, LPS-108339 and LPS-122017. View the Banner Center in content page. Can add Banner Center directly without Container to page."
-	@priority = "4"
+	@priority = 4
 	test ViewBannerCenterInContentPage {
 		task ("Add a Banner Center to page") {
 			ContentPagesNavigator.openEditContentPage(
@@ -52,7 +53,7 @@ definition {
 		task ("View the Banner Center is not inside of Container element") {
 			AssertElementNotPresent(
 				key_elementHeader = "//div[@aria-label='Container']//div[contains(@class,'page-editor__topper__content')]//div[contains(@class,'bg-gray500Color')][contains(@class,'page-editor__container')]",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 		}
 

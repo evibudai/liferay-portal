@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDropDown from '@clayui/drop-down';
 import {ClayCheckbox} from '@clayui/form';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useFormState} from 'data-engine-js-components-web';
 import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
 import {normalizeOptions, normalizeValue} from '../util/options';
+import {getTooltipTitle} from '../util/tooltip';
 import HiddenSelectInput from './HiddenSelectInput.es';
 import VisibleSelectInput from './VisibleSelectInput.es';
 
@@ -89,7 +83,7 @@ function toArray(value = '') {
 		newValue = [newValue];
 	}
 
-	return newValue;
+	return newValue.map((value) => value?.toString());
 }
 
 function handleDropdownItemClick({currentValue, multiple, option}) {
@@ -128,7 +122,6 @@ const DropdownItem = ({
 	multiple,
 	onSelect,
 	option,
-	options,
 }) => (
 	<>
 		<ClayDropDown.Item
@@ -147,7 +140,7 @@ const DropdownItem = ({
 					option,
 				});
 			}}
-			value={options.value}
+			value={option.reference}
 		>
 			{multiple ? (
 				<ClayCheckbox
@@ -177,22 +170,25 @@ const DropdownList = ({
 	currentValue,
 	expand,
 	handleSelect,
+	label,
 	multiple,
 	options,
 }) => (
 	<ClayDropDown.ItemList>
-		{options.map((option, index) => (
-			<DropdownItem
-				currentValue={currentValue}
-				expand={expand}
-				index={index}
-				key={`${option.value}-${index}`}
-				multiple={multiple}
-				onSelect={handleSelect}
-				option={option}
-				options={options}
-			/>
-		))}
+		<ClayDropDown.Group header={label}>
+			{options.map((option, index) => (
+				<DropdownItem
+					currentValue={currentValue}
+					expand={expand}
+					index={index}
+					key={`${option.value}-${index}`}
+					multiple={multiple}
+					onSelect={handleSelect}
+					option={option}
+					options={options}
+				/>
+			))}
+		</ClayDropDown.Group>
 	</ClayDropDown.ItemList>
 );
 
@@ -279,8 +275,11 @@ const Trigger = forwardRef(
 );
 
 const Select = ({
+	accessibleProps,
 	defaultSearch,
+	label,
 	multiple,
+	onChange,
 	onCloseButtonClicked,
 	onDropdownItemClicked,
 	onExpand,
@@ -291,12 +290,12 @@ const Select = ({
 	value,
 	...otherProps
 }) => {
+	const {viewMode} = useFormState();
 	const menuElementRef = useRef(null);
 	const triggerElementRef = useRef(null);
-
 	const [currentValue, setCurrentValue] = useSyncValue(value, false);
 	const [expand, setExpand] = useState(false);
-
+	const [selectedLabel, setSelectedLabel] = useState('');
 	const handleFocus = (event, direction) => {
 		const target = event.target;
 		const focusabledElements = event.currentTarget.querySelectorAll(
@@ -347,9 +346,14 @@ const Select = ({
 		}
 	};
 
-	const inputTrigger = document.querySelector(
-		'.lfr__ddm-select-input-trigger'
-	);
+	const inputTrigger =
+		document.querySelector(
+			'[data-field-name|="selectedObjectField"] > .lfr__ddm-select-input-trigger'
+		) ??
+		document.querySelector(
+			`[data-field-reference|='${otherProps.fieldReference}'] .lfr__ddm-select-input-trigger`
+		);
+
 	let leftRect;
 
 	if (inputTrigger) {
@@ -357,120 +361,158 @@ const Select = ({
 		leftRect = rect.left;
 	}
 
+	useEffect(() => {
+		const [selectedValue] = currentValue;
+		const selectedOption = options.find(
+			(option) => option.value === selectedValue
+		);
+
+		if (selectedOption) {
+			return setSelectedLabel(selectedOption.label);
+		}
+
+		setSelectedLabel('');
+	}, [currentValue, options, value]);
+
+	useEffect(() => {
+		if (viewMode && currentValue.length !== 0) {
+			onChange({target: {value: currentValue}});
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	return (
-		<>
-			<Trigger
-				multiple={multiple}
-				onCloseButtonClicked={({event, value}) => {
-					const newValue = removeValue({
-						value: currentValue,
-						valueToBeRemoved: value,
-					});
+		<ClayTooltipProvider>
+			<div
+				{...accessibleProps}
+				data-tooltip-align="top"
+				{...getTooltipTitle({
+					placeholder: Liferay.Language.get('choose-an-option'),
+					value: selectedLabel,
+				})}
+			>
+				<Trigger
+					multiple={multiple}
+					onChange={onChange}
+					onCloseButtonClicked={({event, value}) => {
+						const newValue = removeValue({
+							value: currentValue,
+							valueToBeRemoved: value,
+						});
 
-					setCurrentValue(newValue);
+						setCurrentValue(newValue);
 
-					onCloseButtonClicked({event, value: newValue});
-				}}
-				onTriggerClicked={(event) => {
-					if (readOnly) {
-						return;
-					}
-
-					setExpand(!expand);
-					onExpand({event, expand: !expand});
-
-					if (expand) {
-						triggerElementRef.current.firstChild.focus();
-					}
-				}}
-				onTriggerKeyDown={(event) => {
-					if (
-						(event.keyCode === KEYCODES.TAB ||
-							event.keyCode === KEYCODES.ARROW_DOWN) &&
-						!event.shiftKey &&
-						expand
-					) {
-						event.preventDefault();
-						event.stopPropagation();
-
-						const firstElement = menuElementRef.current.querySelector(
-							'button'
-						);
-
-						firstElement.focus();
-					}
-
-					if (
-						event.keyCode === KEYCODES.ENTER ||
-						(event.keyCode === KEYCODES.SPACE && !event.shiftKey)
-					) {
-						event.preventDefault();
-						event.stopPropagation();
+						onCloseButtonClicked({event, value: newValue});
+					}}
+					onTriggerClicked={(event) => {
+						if (readOnly) {
+							return;
+						}
 
 						setExpand(!expand);
-
 						onExpand({event, expand: !expand});
 
 						if (expand) {
 							triggerElementRef.current.firstChild.focus();
 						}
-					}
-				}}
-				options={options}
-				predefinedValue={predefinedValue}
-				readOnly={readOnly}
-				ref={triggerElementRef}
-				value={currentValue}
-				{...otherProps}
-			/>
-			<ClayDropDown.Menu
-				active={expand}
-				alignElementRef={triggerElementRef}
-				alignmentPosition={0}
-				className="ddm-btn-full ddm-select-dropdown"
-				onKeyDown={(event) => {
-					switch (event.keyCode) {
-						case KEYCODES.ARROW_DOWN:
-							handleFocus(event, false);
-							break;
-						case KEYCODES.ARROW_UP:
-							handleFocus(event, true);
-							break;
-						case KEYCODES.TAB:
-							handleFocus(event, event.shiftKey);
-							break;
-						default:
-							break;
-					}
-				}}
-				onSetActive={setExpand}
-				ref={menuElementRef}
-				style={{
-					left: leftRect,
-					maxWidth: inputTrigger ? inputTrigger.offsetWidth : '500px',
-					width: '100%',
-				}}
-			>
-				{options.length > MAX_ITEMS || defaultSearch ? (
-					<DropdownListWithSearch
-						currentValue={currentValue}
-						expand={expand}
-						handleSelect={handleSelect}
-						multiple={multiple}
-						options={options}
-						showEmptyOption={showEmptyOption}
-					/>
-				) : (
-					<DropdownList
-						currentValue={currentValue}
-						expand={expand}
-						handleSelect={handleSelect}
-						multiple={multiple}
-						options={options}
-					/>
-				)}
-			</ClayDropDown.Menu>
-		</>
+					}}
+					onTriggerKeyDown={(event) => {
+						if (
+							(event.keyCode === KEYCODES.TAB ||
+								event.keyCode === KEYCODES.ARROW_DOWN) &&
+							!event.shiftKey &&
+							expand
+						) {
+							event.preventDefault();
+							event.stopPropagation();
+
+							const firstElement = menuElementRef.current.querySelector(
+								'button'
+							);
+
+							firstElement.focus();
+						}
+
+						if (
+							event.keyCode === KEYCODES.ENTER ||
+							(event.keyCode === KEYCODES.SPACE &&
+								!event.shiftKey)
+						) {
+							event.preventDefault();
+							event.stopPropagation();
+
+							setExpand(!expand);
+
+							onExpand({event, expand: !expand});
+
+							if (expand) {
+								triggerElementRef.current.firstChild.focus();
+							}
+						}
+					}}
+					options={options}
+					predefinedValue={predefinedValue}
+					readOnly={readOnly}
+					ref={triggerElementRef}
+					value={currentValue}
+					{...otherProps}
+				/>
+
+				<ClayDropDown.Menu
+					active={expand}
+					alignElementRef={triggerElementRef}
+					alignmentPosition={5}
+					className="ddm-btn-full ddm-select-dropdown"
+					onKeyDown={(event) => {
+						switch (event.keyCode) {
+							case KEYCODES.ARROW_DOWN:
+								handleFocus(event, false);
+								break;
+							case KEYCODES.ARROW_UP:
+								handleFocus(event, true);
+								break;
+							case KEYCODES.TAB:
+								handleFocus(event, event.shiftKey);
+								break;
+							default:
+								break;
+						}
+					}}
+					onSetActive={setExpand}
+					ref={menuElementRef}
+					style={{
+						left: leftRect,
+						maxWidth: inputTrigger
+							? inputTrigger.offsetWidth
+							: '500px',
+						width: '100%',
+					}}
+				>
+					{options.length > MAX_ITEMS || defaultSearch ? (
+						<DropdownListWithSearch
+							currentValue={currentValue}
+							expand={expand}
+							handleSelect={handleSelect}
+							label={label}
+							multiple={multiple}
+							options={options}
+							showEmptyOption={showEmptyOption}
+						/>
+					) : (
+						<DropdownList
+							{...accessibleProps}
+							currentValue={currentValue}
+							expand={expand}
+							handleSelect={handleSelect}
+							label={label}
+							multiple={multiple}
+							options={options}
+						/>
+					)}
+				</ClayDropDown.Menu>
+			</div>
+		</ClayTooltipProvider>
 	);
 };
 
@@ -537,9 +579,14 @@ const Main = ({
 			{...otherProps}
 		>
 			<Select
+				accessibleProps={{
+					'aria-required': otherProps.required,
+				}}
 				defaultSearch={defaultSearch}
+				label={label}
 				multiple={multiple}
 				name={`${name}_field`}
+				onChange={onChange}
 				onCloseButtonClicked={({event, value}) =>
 					onChange(event, value)
 				}

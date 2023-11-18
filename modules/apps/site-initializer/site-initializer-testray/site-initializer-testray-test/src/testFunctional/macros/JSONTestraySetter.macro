@@ -1,0 +1,127 @@
+definition {
+
+	macro getBuildId {
+		var buildId = JSONTestrayAPI._getObjectId(
+			object = "builds",
+			objectName = ${buildName});
+
+		return ${buildId};
+	}
+
+	macro getCaseId {
+		var caseId = JSONTestrayAPI._getObjectId(
+			object = "cases",
+			objectName = ${caseName});
+
+		return ${caseId};
+	}
+
+	macro getCaseResultId {
+		var caseResultId = JSONTestrayAPI._getObjectId(
+			object = "caseresults",
+			objectName = ${caseResultName});
+
+		return ${caseResultId};
+	}
+
+	macro getCaseTypeId {
+		var caseTypeId = JSONTestrayAPI._getObjectId(
+			object = "casetypes",
+			objectName = ${caseType});
+
+		return ${caseTypeId};
+	}
+
+	macro getComponentId {
+		var componentId = JSONTestrayAPI._getObjectId(
+			object = "components",
+			objectName = ${componentName});
+
+		return ${componentId};
+	}
+
+	macro getFactorCategoryId {
+		var factorCategoryId = JSONTestrayAPI._getObjectId(
+			object = "factorcategories",
+			objectName = ${categoryName});
+
+		return ${factorCategoryId};
+	}
+
+	macro getFactorOptionsId {
+		var factorOptionsId = JSONTestrayAPI._getOptionsId(optionsName = ${optionsName});
+
+		return ${factorOptionsId};
+	}
+
+	macro getProductVersionId {
+		var productVersionId = JSONTestrayAPI._getObjectId(
+			object = "productversions",
+			objectName = ${productVersion});
+
+		return ${productVersionId};
+	}
+
+	macro getProjectId {
+		Variables.assertDefined(parameterList = ${projectName});
+
+		var projectId = JSONTestrayAPI._getProjectId(projectName = ${projectName});
+
+		return ${projectId};
+	}
+
+	macro getRequirementId {
+		var requirementId = JSONTestrayAPI._getObjectId(
+			object = "requirements",
+			objectName = ${requirementName});
+
+		return ${requirementId};
+	}
+
+	macro getRoutineId {
+		var routineId = JSONTestrayAPI._getObjectId(
+			object = "routines",
+			objectName = ${routineName});
+
+		return ${routineId};
+	}
+
+	macro getRunId {
+		var runId = JSONTestrayAPI._getObjectId(
+			object = "runs",
+			objectName = ${runName});
+
+		return ${runId};
+	}
+
+	macro getSubtaskId {
+		var subtaskId = JSONTestrayAPI._getObjectId(
+			object = "subtasks",
+			objectName = ${subtaskName});
+
+		return ${subtaskId};
+	}
+
+	macro getSuiteId {
+		var suiteId = JSONTestrayAPI._getObjectId(
+			object = "suites",
+			objectName = ${suiteName});
+
+		return ${suiteId};
+	}
+
+	macro getTaskId {
+		var taskId = JSONTestrayAPI._getObjectId(
+			object = "tasks",
+			objectName = ${taskName});
+
+		return ${taskId};
+	}
+
+	macro getTeamId {
+		var teamId = JSONTestrayAPI._getTeamId(teamName = ${teamName});
+
+		return ${teamId};
+	}
+
+}

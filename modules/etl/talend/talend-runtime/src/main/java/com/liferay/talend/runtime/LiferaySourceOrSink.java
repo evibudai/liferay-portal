@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.talend.runtime;
@@ -27,7 +18,6 @@ import com.liferay.talend.runtime.client.exception.ResponseContentClientExceptio
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.json.JsonObject;
 import javax.json.JsonValue;
@@ -58,44 +48,38 @@ import org.talend.daikon.properties.ValidationResult;
  */
 public class LiferaySourceOrSink implements OASSource, SourceOrSink {
 
-	public Optional<JsonObject> doDeleteRequest(String resourceURL) {
+	public JsonObject doDeleteRequest(String resourceURL) {
 		LiferayClient liferayClient = getLiferayClient();
 
-		return _getResponseContentJsonObjectOptional(
+		return _getResponseContentJsonObject(
 			liferayClient.executeDeleteRequest(resourceURL));
 	}
 
-	public Optional<JsonObject> doGetRequest(String resourceURL) {
+	public JsonObject doGetRequest(String resourceURL) {
 		LiferayClient liferayClient = getLiferayClient();
 
-		return _getResponseContentJsonObjectOptional(
+		return _getResponseContentJsonObject(
 			liferayClient.executeGetRequest(resourceURL));
 	}
 
-	public Optional<JsonObject> doPatchRequest(
-		String resourceURL, JsonValue jsonValue) {
-
+	public JsonObject doPatchRequest(String resourceURL, JsonValue jsonValue) {
 		LiferayClient liferayClient = getLiferayClient();
 
-		return _getResponseContentJsonObjectOptional(
+		return _getResponseContentJsonObject(
 			liferayClient.executePatchRequest(resourceURL, jsonValue));
 	}
 
-	public Optional<JsonObject> doPostRequest(
-		String resourceURL, JsonValue jsonValue) {
-
+	public JsonObject doPostRequest(String resourceURL, JsonValue jsonValue) {
 		LiferayClient liferayClient = getLiferayClient();
 
-		return _getResponseContentJsonObjectOptional(
+		return _getResponseContentJsonObject(
 			liferayClient.executePostRequest(resourceURL, jsonValue));
 	}
 
-	public Optional<JsonObject> doPutRequest(
-		String resourceURL, JsonValue jsonValue) {
-
+	public JsonObject doPutRequest(String resourceURL, JsonValue jsonValue) {
 		LiferayClient liferayClient = getLiferayClient();
 
-		return _getResponseContentJsonObjectOptional(
+		return _getResponseContentJsonObject(
 			liferayClient.executePutRequest(resourceURL, jsonValue));
 	}
 
@@ -154,10 +138,10 @@ public class LiferaySourceOrSink implements OASSource, SourceOrSink {
 
 	@Override
 	public JsonObject getOASJsonObject(String oasUrl) {
-		Optional<JsonObject> jsonObjectOptional = doGetRequest(oasUrl);
+		JsonObject jsonObject = doGetRequest(oasUrl);
 
-		if (jsonObjectOptional.isPresent()) {
-			return jsonObjectOptional.get();
+		if (jsonObject != null) {
+			return jsonObject;
 		}
 
 		throw new OASException(
@@ -315,9 +299,7 @@ public class LiferaySourceOrSink implements OASSource, SourceOrSink {
 			LiferaySourceOrSink.class);
 	}
 
-	private Optional<JsonObject> _getResponseContentJsonObjectOptional(
-		Response response) {
-
+	private JsonObject _getResponseContentJsonObject(Response response) {
 		if (!_responseHandler.isSuccess(response)) {
 			throw new ResponseContentClientException(
 				"Request did not succeed", response.getStatus(), null);
@@ -326,10 +308,10 @@ public class LiferaySourceOrSink implements OASSource, SourceOrSink {
 		if (((response.getLength() <= 0) && !response.hasEntity()) ||
 			!_responseHandler.isApplicationJsonContentType(response)) {
 
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(_responseHandler.asJsonObject(response));
+		return _responseHandler.asJsonObject(response);
 	}
 
 	private void _setProxyParameters(

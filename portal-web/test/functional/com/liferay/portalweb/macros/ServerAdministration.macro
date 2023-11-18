@@ -7,11 +7,11 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationLogLevels#ADD_CATEGORY_NAME_FIELD",
-			value1 = "${categoryName}");
+			value1 = ${categoryName});
 
 		Select(
 			locator1 = "ServerAdministrationLogLevels#ADD_CATEGORY_PRIORITY_SELECT",
-			value1 = "${categoryLevel}");
+			value1 = ${categoryLevel});
 
 		PortletEntry.save();
 	}
@@ -19,7 +19,7 @@ definition {
 	macro configureFileUploadOverallMaximumFileSize {
 		Type(
 			locator1 = "ServerAdministrationFileUploads#GENERAL_OVERALL_MAX_FILE_SIZE_FIELD",
-			value1 = "${maxFileSize}");
+			value1 = ${maxFileSize});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -31,7 +31,9 @@ definition {
 	}
 
 	macro configureMailServerSettings {
-		Navigator.gotoNavItem(navItem = "Mail");
+		if (IsElementPresent(key_navItem = "Mail", locator1 = "NavBar#NAV_ITEM_LINK")) {
+			Navigator.gotoNavItem(navItem = "Mail");
+		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_POP_SERVER",
@@ -39,11 +41,11 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PORT",
-			value1 = "995");
+			value1 = 995);
 
 		Check(locator1 = "ServerAdministrationMail#INCOMING_SECURE_NETWORK_CONNECTION_CHECKBOX");
 
-		if ("${needsReply}" == "true") {
+		if (${needsReply} == "true") {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_USER_NAME",
 				value1 = "recent:${userName}");
@@ -51,12 +53,12 @@ definition {
 		else {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PASSWORD",
-			value1 = "${userPassword}");
+			value1 = ${userPassword});
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_SMTP_SERVER",
@@ -64,11 +66,11 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PORT",
-			value1 = "465");
+			value1 = 465);
 
 		Check(locator1 = "ServerAdministrationMail#OUTGOING_SECURE_CONNECTION_CHECKBOX");
 
-		if ("${needsReply}" == "true") {
+		if (${needsReply} == "true") {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_USER_NAME",
 				value1 = "recent:${userName}");
@@ -76,12 +78,12 @@ definition {
 		else {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PASSWORD",
-			value1 = "${userPassword}");
+			value1 = ${userPassword});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -97,9 +99,9 @@ definition {
 
 		Select(
 			locator1 = "ServerAdministrationScript#LANGUAGE_SELECT",
-			value1 = "${language}");
+			value1 = ${language});
 
-		if ("${htmlOutput}" == "true") {
+		if (${htmlOutput} == "true") {
 			Select(
 				key_selectFieldLabel = "Output",
 				locator1 = "Select#ANY",
@@ -108,7 +110,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationScript#SCRIPT_TEXT",
-			value1 = "${script}");
+			value1 = ${script});
 
 		AssertClick(
 			locator1 = "ServerAdministrationScript#EXECUTE_BUTTON",
@@ -122,11 +124,11 @@ definition {
 
 		Panel.expandPanel(panel = "Clean Up Actions");
 
-		var key_actionsDescription = "${actionsDescription}";
+		var key_actionsDescription = ${actionsDescription};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationResources#ACTIONS_TABLE_DESCRIPTION",
-			value1 = "${actionsDescription}");
+			value1 = ${actionsDescription});
 
 		AssertClick(
 			locator1 = "ServerAdministrationResources#ACTIONS_TABLE_EXECUTE",
@@ -137,7 +139,7 @@ definition {
 
 	macro openServerAdmin {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_server_admin_web_portlet_ServerAdminPortlet");
 	}
 
@@ -172,7 +174,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PORT",
-			value1 = "110");
+			value1 = 110);
 
 		Uncheck(locator1 = "ServerAdministrationMail#INCOMING_SECURE_NETWORK_CONNECTION_CHECKBOX");
 
@@ -190,7 +192,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PORT",
-			value1 = "25");
+			value1 = 25);
 
 		Uncheck(locator1 = "ServerAdministrationMail#OUTGOING_SECURE_CONNECTION_CHECKBOX");
 
@@ -214,14 +216,14 @@ definition {
 	macro viewCategoryLogLevels {
 		Navigator.gotoNavItem(navItem = "Log Levels");
 
-		Search.searchCP(searchTerm = "${categoryName}");
+		Search.searchCP(searchTerm = ${categoryName});
 
 		AssertElementPresent(
-			key_categoryName = "${categoryName}",
+			key_categoryName = ${categoryName},
 			locator1 = "ServerAdministrationLogLevels#CATEGORY_NAME");
 
 		AssertSelectedLabel(
-			key_categoryName = "${categoryName}",
+			key_categoryName = ${categoryName},
 			locator1 = "ServerAdministrationLogLevels#CATEGORY_LEVEL_SELECT",
 			value1 = "DEBUG");
 	}
@@ -229,7 +231,7 @@ definition {
 	macro viewForbiddenErrorMessageAlert {
 		AssertTextEquals(
 			locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-			value1 = "Forbidden");
+			value1 = "Error:Forbidden");
 	}
 
 	macro viewJSONWSSecurityEmptyPage {
@@ -239,22 +241,22 @@ definition {
 	macro viewOutputField {
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationScript#OUTPUT_FIELD",
-			value1 = "${valueName}");
+			value1 = ${valueName});
 	}
 
 	macro viewProperties {
 		Navigator.gotoNavItem(navItem = "Properties");
 
-		var key_propertyName = "${propertyName}";
-		var key_propertyTitle = "${propertyTitle}";
+		var key_propertyName = ${propertyName};
+		var key_propertyTitle = ${propertyTitle};
 
 		AssertClick(
 			locator1 = "ServerAdministrationProperties#PORTAL_SYSTEM_PROPERTY_TITLE",
-			value1 = "${propertyTitle}");
+			value1 = ${propertyTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationProperties#PORTAL_SYSTEM_PROPERTY_NAME",
-			value1 = "${propertyName}");
+			value1 = ${propertyName});
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.calendar.service.impl;
@@ -23,6 +14,7 @@ import com.liferay.calendar.service.CalendarService;
 import com.liferay.calendar.service.base.CalendarBookingServiceBaseImpl;
 import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -59,10 +51,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -355,24 +344,11 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			return childCalendarBookings;
 		}
 
-		Stream<CalendarBooking> stream = childCalendarBookings.stream();
-
-		stream = stream.filter(
-			calendarBooking -> {
-				try {
-					return !_calendarLocalService.isStagingCalendar(
-						calendarBooking.getCalendar());
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(portalException);
-					}
-
-					return true;
-				}
-			});
-
-		return stream.collect(Collectors.toList());
+		return ListUtil.filter(
+			childCalendarBookings,
+			childCalendarBooking -> !_calendarLocalService.isStagingCalendar(
+				_calendarLocalService.fetchCalendar(
+					childCalendarBooking.getCalendarId())));
 	}
 
 	@Override
@@ -883,9 +859,8 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 	private List<CalendarBooking> _filterCalendarBookings(
 		List<CalendarBooking> calendarBookings) {
 
-		Stream<CalendarBooking> stream = calendarBookings.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			calendarBookings,
 			calendarBooking -> {
 				try {
 					return _filterCalendarBooking(calendarBooking);
@@ -897,12 +872,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 
 					return null;
 				}
-			}
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private List<CalendarBooking> _filterCalendarBookings(
@@ -974,7 +944,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			timeZone = TimeZone.getTimeZone(StringPool.UTC);
 		}
 
-		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
+		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
 			themeDisplay.getLocale(), timeZone);
 
 		return StringUtil.replace(
@@ -985,9 +955,9 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			},
 			new String[] {
 				calendarBooking.getDescription(themeDisplay.getLocale()),
-				dateFormatDateTime.format(calendarBooking.getEndTime()),
+				dateTimeFormat.format(calendarBooking.getEndTime()),
 				calendarBooking.getLocation(),
-				dateFormatDateTime.format(calendarBooking.getStartTime()),
+				dateTimeFormat.format(calendarBooking.getStartTime()),
 				calendarBooking.getTitle(themeDisplay.getLocale())
 			});
 	}

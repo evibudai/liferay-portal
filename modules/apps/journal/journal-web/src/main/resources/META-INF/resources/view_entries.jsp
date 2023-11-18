@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -23,6 +14,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 %>
 
 <liferay-ui:search-container
+	cssClass='<%= journalDisplayContext.isSearch() ? "pt-0" : StringPool.BLANK %>'
 	emptyResultsMessage="no-web-content-was-found"
 	id="articles"
 	searchContainer="<%= journalDisplayContext.getSearchContainer() %>"
@@ -92,11 +84,10 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 
 				<c:choose>
 					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "descriptive") %>'>
-						<liferay-ui:search-container-column-text>
-							<liferay-ui:user-portrait
-								userId="<%= curArticle.getStatusByUserId() %>"
-							/>
-						</liferay-ui:search-container-column-text>
+						<liferay-ui:search-container-column-icon
+							icon="web-content"
+							toggleRowChecker="<%= true %>"
+						/>
 
 						<liferay-ui:search-container-column-text
 							colspan="<%= 2 %>"
@@ -108,19 +99,31 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<span class="text-default">
+							<div class="d-flex">
+								<c:choose>
+									<c:when test="<%= editURL != StringPool.BLANK %>">
+										<clay:link
+											cssClass="d-block lfr-portal-tooltip text-dark text-truncate"
+											href="<%= editURL %>"
+											label="<%= title %>"
+											title="<%= HtmlUtil.escape(title) %>"
+										/>
+									</c:when>
+									<c:otherwise>
+										<span class="d-block lfr-portal-tooltip text-dark text-truncate" title="<%= HtmlUtil.escape(title) %>">
+											<%= HtmlUtil.escape(title) %>
+										</span>
+									</c:otherwise>
+								</c:choose>
+							</div>
+
+							<span class="text-secondary">
 								<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
 							</span>
 
-							<p class="font-weight-bold h5">
-								<aui:a href="<%= editURL %>">
-									<%= HtmlUtil.escape(title) %>
-								</aui:a>
-							</p>
-
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 								<h5>
-									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>
+									<%= journalDisplayContext.getAbsolutePath(curArticle.getFolderId()) %>
 								</h5>
 							</c:if>
 
@@ -173,12 +176,29 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							/>
 						</c:if>
 
-						<liferay-ui:search-container-column-jsp
+						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand table-cell-minw-200 table-title"
-							href="<%= editURL %>"
 							name="title"
-							path="/article_title.jsp"
-						/>
+						>
+							<div class="autofit-row">
+								<div class="autofit-col pr-1">
+									<clay:sticker
+										cssClass="sticker-document"
+										displayType="secondary"
+										icon="web-content"
+									/>
+								</div>
+
+								<div class="autofit-col autofit-col-expand pl-1">
+									<div class="table-title">
+										<clay:link
+											href="<%= editURL %>"
+											label="<%= title %>"
+										/>
+									</div>
+								</div>
+							</div>
+						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand table-cell-minw-200 text-truncate"
@@ -190,7 +210,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
-								value="<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>"
+								value="<%= journalDisplayContext.getAbsolutePath(curArticle.getFolderId()) %>"
 							/>
 						</c:if>
 
@@ -307,25 +327,33 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							String createDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<span class="text-default">
-								<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curFolder.getUserName()), createDateDescription} %>" key="x-modified-x-ago" />
-							</span>
+							<div class="d-flex">
+								<c:choose>
+									<c:when test="<%= rowURL.toString() != StringPool.BLANK %>">
+										<clay:link
+											cssClass="d-block lfr-portal-tooltip text-dark text-truncate"
+											href="<%= rowURL.toString() %>"
+											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											title="<%= HtmlUtil.escape(curFolder.getName()) %>"
+										/>
+									</c:when>
+									<c:otherwise>
+										<span class="d-block lfr-portal-tooltip text-dark text-truncate" title="<%= HtmlUtil.escape(curFolder.getName()) %>">
+											<%= HtmlUtil.escape(curFolder.getName()) %>
+										</span>
+									</c:otherwise>
+								</c:choose>
+							</div>
 
-							<p class="font-weight-bold h5">
-								<aui:a href="<%= rowURL.toString() %>">
-									<%= HtmlUtil.escape(curFolder.getName()) %>
-								</aui:a>
-							</p>
+							<span class="text-secondary">
+								<liferay-ui:message arguments="<%= new String[] {createDateDescription, HtmlUtil.escape(curFolder.getUserName())} %>" key="modified-x-ago-by-x" />
+							</span>
 
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
 								<h5>
-									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>
+									<%= journalDisplayContext.getAbsolutePath(curFolder.getParentFolderId()) %>
 								</h5>
 							</c:if>
-
-							<span class="text-default">
-								<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curFolder.getStatus() %>" />
-							</span>
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text>
@@ -351,7 +379,13 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							colspan="<%= 2 %>"
 						>
 							<clay:horizontal-card
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
 								horizontalCard="<%= new JournalFolderHorizontalCard(curFolder, journalDisplayContext.getDisplayStyle(), renderRequest, renderResponse, searchContainer.getRowChecker(), trashHelper) %>"
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -365,10 +399,27 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand table-cell-minw-200 table-list-title"
-							href="<%= rowURL.toString() %>"
 							name="title"
-							value="<%= HtmlUtil.escape(curFolder.getName()) %>"
-						/>
+						>
+							<div class="autofit-row">
+								<div class="autofit-col pr-1">
+									<clay:sticker
+										cssClass="sticker-document"
+										displayType="secondary"
+										icon="folder"
+									/>
+								</div>
+
+								<div class="autofit-col autofit-col-expand pl-1">
+									<div class="table-title">
+										<clay:link
+											href="<%= rowURL.toString() %>"
+											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
+										/>
+									</div>
+								</div>
+							</div>
+						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand table-cell-minw-200 text-truncate"
@@ -380,7 +431,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
-								value="<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>"
+								value="<%= journalDisplayContext.getAbsolutePath(curFolder.getParentFolderId()) %>"
 							/>
 						</c:if>
 
@@ -439,26 +490,23 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 	/>
 </liferay-ui:search-container>
 
-<aui:script use="liferay-journal-navigation">
-	var journalNavigation = new Liferay.Portlet.JournalNavigation({
-		editEntryUrl: '<portlet:actionURL />',
-		form: {
-			method: 'POST',
-			node: A.one(document.<portlet:namespace />fm),
-		},
-		moveEntryUrl:
-			'<portlet:renderURL><portlet:param name="mvcPath" value="/move_articles_and_folders.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>',
-		namespace: '<portlet:namespace />',
-		searchContainerId: 'articles',
-	});
+<portlet:renderURL var="moveEntryURL">
+	<portlet:param name="mvcPath" value="/move_articles_and_folders.jsp" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:renderURL>
 
-	var clearJournalNavigationHandles = function (event) {
-		if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
-			journalNavigation.destroy();
+<portlet:actionURL var="editEntryURL" />
 
-			Liferay.detach('destroyPortlet', clearJournalNavigationHandles);
-		}
-	};
-
-	Liferay.on('destroyPortlet', clearJournalNavigationHandles);
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"editEntryURL", editEntryURL
+		).put(
+			"moveEntryURL", moveEntryURL
+		).put(
+			"searchContainerId", "articles"
+		).build()
+	%>'
+	module="js/Navigation"
+	servletContext="<%= application %>"
+/>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.info.collection.provider;
@@ -43,12 +34,10 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,10 +53,7 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 	public InfoPage<BlogsEntry> getCollectionInfoPage(
 		CollectionQuery collectionQuery) {
 
-		Optional<Object> relatedItemOptional =
-			collectionQuery.getRelatedItemObjectOptional();
-
-		Object relatedItem = relatedItemOptional.orElse(null);
+		Object relatedItem = collectionQuery.getRelatedItem();
 
 		if (!(relatedItem instanceof AssetCategory)) {
 			return InfoPage.of(
@@ -77,6 +63,8 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 		AssetEntryQuery assetEntryQuery = _getAssetEntryQuery(collectionQuery);
 
 		try {
+			List<BlogsEntry> blogsEntries = new ArrayList<>();
+
 			AssetCategory assetCategory = (AssetCategory)relatedItem;
 
 			SearchContext searchContext = _getSearchContext(assetCategory);
@@ -85,26 +73,26 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 				searchContext, assetEntryQuery, assetEntryQuery.getStart(),
 				assetEntryQuery.getEnd());
 
-			Long count = _assetHelper.searchCount(
-				searchContext, assetEntryQuery);
-
 			List<SearchResult> searchResults =
 				SearchResultUtil.getSearchResults(
 					hits, LocaleUtil.getDefault());
 
-			Stream<SearchResult> stream = searchResults.stream();
+			for (SearchResult searchResult : searchResults) {
+				BlogsEntry blogsEntry = _toBlogsEntry(searchResult);
+
+				if (blogsEntry == null) {
+					continue;
+				}
+
+				blogsEntries.add(blogsEntry);
+			}
+
+			Long count = _assetHelper.searchCount(
+				searchContext, assetEntryQuery);
 
 			return InfoPage.of(
-				stream.map(
-					this::_toBlogsEntryOptional
-				).filter(
-					Optional::isPresent
-				).map(
-					Optional::get
-				).collect(
-					Collectors.toList()
-				),
-				collectionQuery.getPagination(), count.intValue());
+				blogsEntries, collectionQuery.getPagination(),
+				count.intValue());
 		}
 		catch (Exception exception) {
 			_log.error("Unable to get blogs entries", exception);
@@ -141,9 +129,7 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 			new long[] {serviceContext.getScopeGroupId()});
 		assetEntryQuery.setOrderByCol1(Field.MODIFIED_DATE);
 
-		Optional<Sort> sortOptional = collectionQuery.getSortOptional();
-
-		Sort sort = sortOptional.orElse(null);
+		Sort sort = collectionQuery.getSort();
 
 		if ((sort != null) && sort.isReverse()) {
 			assetEntryQuery.setOrderByType1("ASC");
@@ -178,12 +164,9 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 			serviceContext.getScopeGroupId(), null, serviceContext.getUserId());
 	}
 
-	private Optional<BlogsEntry> _toBlogsEntryOptional(
-		SearchResult searchResult) {
-
+	private BlogsEntry _toBlogsEntry(SearchResult searchResult) {
 		try {
-			return Optional.of(
-				_blogsEntryService.getEntry(searchResult.getClassPK()));
+			return _blogsEntryService.getEntry(searchResult.getClassPK());
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -193,7 +176,7 @@ public class BlogsEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 					exception);
 			}
 
-			return Optional.empty();
+			return null;
 		}
 	}
 

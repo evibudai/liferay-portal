@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.definition.internal.export.builder;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.workflow.kaleo.definition.Action;
+import com.liferay.portal.workflow.kaleo.definition.ActionType;
 import com.liferay.portal.workflow.kaleo.definition.AddressRecipient;
 import com.liferay.portal.workflow.kaleo.definition.AssigneesRecipient;
 import com.liferay.portal.workflow.kaleo.definition.Assignment;
@@ -38,9 +30,11 @@ import com.liferay.portal.workflow.kaleo.definition.RecipientType;
 import com.liferay.portal.workflow.kaleo.definition.ResourceActionAssignment;
 import com.liferay.portal.workflow.kaleo.definition.RoleAssignment;
 import com.liferay.portal.workflow.kaleo.definition.RoleRecipient;
+import com.liferay.portal.workflow.kaleo.definition.ScriptAction;
 import com.liferay.portal.workflow.kaleo.definition.ScriptAssignment;
 import com.liferay.portal.workflow.kaleo.definition.ScriptRecipient;
 import com.liferay.portal.workflow.kaleo.definition.Timer;
+import com.liferay.portal.workflow.kaleo.definition.UpdateStatusAction;
 import com.liferay.portal.workflow.kaleo.definition.UserAssignment;
 import com.liferay.portal.workflow.kaleo.definition.UserRecipient;
 import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
@@ -58,6 +52,7 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTimerLocalService;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Reference;
@@ -239,14 +234,24 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 		Set<Action> actions = new HashSet<>();
 
 		for (KaleoAction kaleoAction : kaleoActions) {
-			Action action = new Action(
-				kaleoAction.getName(), kaleoAction.getDescription(),
-				kaleoAction.getExecutionType(), kaleoAction.getScript(),
-				kaleoAction.getScriptLanguage(),
-				kaleoAction.getScriptRequiredContexts(),
-				kaleoAction.getPriority());
+			if (Objects.equals(kaleoAction.getType(), ActionType.SCRIPT)) {
+				actions.add(
+					new ScriptAction(
+						kaleoAction.getName(), kaleoAction.getDescription(),
+						kaleoAction.getExecutionType(), kaleoAction.getScript(),
+						kaleoAction.getScriptLanguage(),
+						kaleoAction.getScriptRequiredContexts(),
+						kaleoAction.getPriority()));
+			}
+			else if (Objects.equals(
+						kaleoAction.getType(), ActionType.UPDATE_STATUS)) {
 
-			actions.add(action);
+				actions.add(
+					new UpdateStatusAction(
+						kaleoAction.getName(), kaleoAction.getDescription(),
+						kaleoAction.getExecutionType(), kaleoAction.getStatus(),
+						kaleoAction.getPriority()));
+			}
 		}
 
 		return actions;

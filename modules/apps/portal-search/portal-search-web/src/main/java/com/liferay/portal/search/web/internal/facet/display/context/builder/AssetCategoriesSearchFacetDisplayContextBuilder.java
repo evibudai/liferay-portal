@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.facet.display.context.builder;
@@ -18,6 +9,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.Facet;
@@ -30,6 +22,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetCategoriesSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
+import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.io.Serializable;
 
@@ -40,11 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.RenderRequest;
 
@@ -136,6 +125,10 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 		_maxTerms = maxTerms;
 	}
 
+	public void setOrder(String order) {
+		_order = order;
+	}
+
 	public void setPaginationStartParameterName(
 		String paginationStartParameterName) {
 
@@ -151,15 +144,17 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	}
 
 	public void setParameterValues(String... parameterValues) {
-		_selectedCategoryIds = Stream.of(
-			Objects.requireNonNull(parameterValues)
-		).map(
-			GetterUtil::getLong
-		).filter(
-			categoryId -> categoryId > 0
-		).collect(
-			Collectors.toList()
-		);
+		_selectedCategoryIds = TransformUtil.transformToList(
+			parameterValues,
+			parameterValue -> {
+				long categoryId = GetterUtil.getLong(parameterValue);
+
+				if (categoryId <= 0) {
+					return null;
+				}
+
+				return categoryId;
+			});
 	}
 
 	public void setPortal(Portal portal) {
@@ -184,17 +179,8 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	}
 
 	protected List<BucketDisplayContext> getEmptyBucketDisplayContexts() {
-		Stream<Long> categoryIdsStream = _selectedCategoryIds.stream();
-
-		return categoryIdsStream.map(
-			this::_getEmptyBucketDisplayContext
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			_selectedCategoryIds, this::_getEmptyBucketDisplayContext);
 	}
 
 	protected String getFirstParameterValueString() {
@@ -206,13 +192,7 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	}
 
 	protected List<String> getParameterValueStrings() {
-		Stream<Long> categoryIdsStream = _selectedCategoryIds.stream();
-
-		return categoryIdsStream.map(
-			String::valueOf
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(_selectedCategoryIds, String::valueOf);
 	}
 
 	protected double getPopularity(
@@ -346,8 +326,20 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 
 			vocabularyBucketDisplayContexts.add(bucketDisplayContext);
 
+			if (_order != null) {
+				vocabularyBucketDisplayContexts.sort(
+					BucketDisplayContextComparatorFactoryUtil.
+						getBucketDisplayContextComparator(_order));
+			}
+
 			bucketDisplayContextsMap.put(
 				vocabularyName, vocabularyBucketDisplayContexts);
+		}
+
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
 		}
 
 		assetCategoriesSearchFacetDisplayContext.setBucketDisplayContexts(
@@ -359,6 +351,10 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	}
 
 	private List<Tuple> _collectBuckets(Facet facet) {
+		if (facet == null) {
+			return Collections.emptyList();
+		}
+
 		FacetCollector facetCollector = facet.getFacetCollector();
 
 		List<TermCollector> termCollectors = facetCollector.getTermCollectors();
@@ -421,15 +417,16 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 		return null;
 	}
 
-	private Optional<BucketDisplayContext> _getEmptyBucketDisplayContext(
+	private BucketDisplayContext _getEmptyBucketDisplayContext(
 		long assetCategoryId) {
 
-		return Optional.ofNullable(
-			_fetchAssetCategory(assetCategoryId)
-		).map(
-			assetCategory -> buildBucketDisplayContext(
-				assetCategory, 0, true, 1)
-		);
+		AssetCategory assetCategory = _fetchAssetCategory(assetCategoryId);
+
+		if (assetCategory == null) {
+			return null;
+		}
+
+		return buildBucketDisplayContext(assetCategory, 0, true, 1);
 	}
 
 	private boolean _isCloud() {
@@ -441,9 +438,8 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	}
 
 	private void _removeExcludedGroup() {
-		Stream<Tuple> stream = _buckets.stream();
-
-		_buckets = stream.filter(
+		_buckets = ListUtil.filter(
+			_buckets,
 			tuple -> {
 				if (_excludedGroupId == 0) {
 					return true;
@@ -456,10 +452,7 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 				}
 
 				return true;
-			}
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private List<String> _sortVocabularyNames(Set<String> vocabularyNamesSet) {
@@ -482,6 +475,7 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 	private int _frequencyThreshold;
 	private Locale _locale;
 	private int _maxTerms;
+	private String _order;
 	private String _paginationStartParameterName;
 	private String _parameterName;
 	private Portal _portal;

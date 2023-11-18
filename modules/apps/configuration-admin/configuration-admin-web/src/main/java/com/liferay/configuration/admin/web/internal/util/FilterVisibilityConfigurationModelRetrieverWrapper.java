@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.configuration.admin.web.internal.util;
@@ -53,12 +44,12 @@ public class FilterVisibilityConfigurationModelRetrieverWrapper
 		String pid, ExtendedObjectClassDefinition.Scope scope,
 		Serializable scopePK) {
 
-		if (!ConfigurationVisibilityUtil.isVisible(pid, scope, scopePK)) {
-			return null;
+		if (ConfigurationVisibilityUtil.isVisible(pid, scope, scopePK)) {
+			return _configurationModelRetriever.getConfiguration(
+				pid, scope, scopePK);
 		}
 
-		return _configurationModelRetriever.getConfiguration(
-			pid, scope, scopePK);
+		return null;
 	}
 
 	@Override
@@ -123,14 +114,14 @@ public class FilterVisibilityConfigurationModelRetrieverWrapper
 			ExtendedObjectClassDefinition.Scope scope, Serializable scopePK)
 		throws IOException {
 
-		if (!ConfigurationVisibilityUtil.isVisible(
+		if (ConfigurationVisibilityUtil.isVisible(
 				factoryConfigurationModel, scope, scopePK)) {
 
-			return Collections.emptyList();
+			return _configurationModelRetriever.getFactoryInstances(
+				factoryConfigurationModel, scope, scopePK);
 		}
 
-		return _configurationModelRetriever.getFactoryInstances(
-			factoryConfigurationModel, scope, scopePK);
+		return Collections.emptyList();
 	}
 
 	private void _filterVisibility(

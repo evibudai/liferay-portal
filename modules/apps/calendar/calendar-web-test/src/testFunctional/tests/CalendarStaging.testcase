@@ -1,7 +1,7 @@
 @component-name = "portal-calendar"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Calendar";
@@ -10,58 +10,48 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		Site.addBlankCP(siteName = "Site Name");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Staging Test Page");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Staging Test Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.addPage(
-			pageName = "Staging Test Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Staging Test Page",
+			widgetName = "Calendar");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Staging Test Page",
-			sitePageType = "Widget Page");
-
-		Navigator.gotoSitePage(
-			pageName = "Staging Test Page",
-			siteName = "Site Name");
-
-		Portlet.addPG(
-			pageName = "Staging Test Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/site-name/staging-test-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Staging Test Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
+			JSONCalendar.tearDown();
 
 			Site.tearDownCP();
 		}
 	}
 
 	@description = "This is a use case for LPS-52083."
-	@priority = "3"
+	@priority = 3
 	test AddEvent {
 		CalendarNavigator.gotoAddEvent();
 
@@ -127,9 +117,9 @@ definition {
 
 		CalendarEvent.viewAvailableCalendars(availableCalendarList = "Test Test");
 
-		Navigator.openURL();
-
-		Navigator.openSiteURL(siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
 
 		CalendarNavigator.gotoView(viewType = "Day");
 
@@ -141,7 +131,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-74684."
-	@priority = "5"
+	@priority = 5
 	test InviteUserViaUnpublishedEventAndViewNoResponse {
 		property portal.acceptance = "true";
 
@@ -226,10 +216,8 @@ definition {
 			userCalendarName = "Test Test");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SchedulePublishToLiveWithEventAndResource {
-		property portal.upstream = "quarantine";
-
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
@@ -302,7 +290,7 @@ definition {
 			pageName = "Staging Test Page",
 			siteName = "Site Name");
 
-		while ((IsElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC", value1 = "Site Name Staged Event")) && (maxIterations = "200")) {
+		while ((IsElementNotPresent(key_eventTitle = "Site Name Staged Event", locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC")) && (maxIterations = "200")) {
 			Refresh();
 		}
 

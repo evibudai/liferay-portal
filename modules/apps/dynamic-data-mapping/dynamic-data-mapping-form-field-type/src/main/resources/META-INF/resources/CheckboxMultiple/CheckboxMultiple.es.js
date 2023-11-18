@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayCheckbox} from '@clayui/form';
@@ -58,6 +49,7 @@ const Switcher = ({
 );
 
 const CheckboxMultiple = ({
+	accessibleProps,
 	disabled,
 	inline,
 	isSwitcher,
@@ -97,7 +89,7 @@ const CheckboxMultiple = ({
 	};
 
 	return (
-		<div className="lfr-ddm-checkbox-multiple">
+		<div {...accessibleProps} className="lfr-ddm-checkbox-multiple">
 			{options.map((option, index) => (
 				<Toggle
 					checked={displayValues.includes(option.value)}
@@ -143,6 +135,9 @@ const Main = ({
 }) => (
 	<FieldBase name={name} readOnly={readOnly} {...otherProps}>
 		<CheckboxMultiple
+			accessibleProps={{
+				'aria-required': otherProps.required,
+			}}
 			disabled={readOnly}
 			inline={inline}
 			isSwitcher={showAsSwitcher}

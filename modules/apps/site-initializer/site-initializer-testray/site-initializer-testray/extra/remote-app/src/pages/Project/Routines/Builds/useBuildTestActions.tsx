@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useRef} from 'react';
@@ -21,7 +12,6 @@ import i18n from '../../../../i18n';
 import {Liferay} from '../../../../services/liferay';
 import {
 	TestrayCaseResult,
-	deleteResource,
 	testrayCaseResultImpl,
 } from '../../../../services/rest';
 import {Action} from '../../../../types';
@@ -40,12 +30,11 @@ const useBuildTestActions = () => {
 						<UserListView
 							listViewProps={{
 								managementToolbarProps: {
-									addButton: undefined,
 									display: {columns: false},
 								},
 							}}
 							tableProps={{
-								onClickRow: (user) => {
+								onClickRow: (user) =>
 									testrayCaseResultImpl
 										.assignTo(caseResult, user.id)
 										.then(() =>
@@ -58,8 +47,7 @@ const useBuildTestActions = () => {
 										)
 										.then(form.onSuccess)
 										.catch(form.onError)
-										.finally(state.onClose);
-								},
+										.finally(state.onClose),
 							}}
 						/>
 					),
@@ -68,6 +56,7 @@ const useBuildTestActions = () => {
 				}),
 			icon: 'user',
 			name: i18n.translate('assign'),
+			permission: 'UPDATE',
 		},
 		{
 			action: (caseResult, mutate) => {
@@ -96,12 +85,14 @@ const useBuildTestActions = () => {
 						? 'unassign-myself'
 						: 'assign-to-me'
 				),
+			permission: 'UPDATE',
 		},
 		{
 			action: ({id}, mutate) =>
-				deleteResource(`/caseresults/${id}`)
+				testrayCaseResultImpl
+					.removeResource(id)
 					?.then(() => removeItemFromList(mutate, id))
-					.then(form.onSave)
+					.then(form.onSuccess)
 					.catch(form.onError),
 			icon: 'trash',
 			name: i18n.translate('delete'),

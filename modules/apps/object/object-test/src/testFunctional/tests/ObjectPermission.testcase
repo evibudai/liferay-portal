@@ -16,21 +16,21 @@ definition {
 
 		JSONRole.deleteRole(roleTitle = "Regular Role");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view and access the Picklist portlet with the Access in Control Panel permission"
-	@priority = "4"
+	@priority = 4
 	test CanAccessPicklistWithAccessPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -56,19 +56,23 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		ObjectPortlet.assertHeader(objectLabel = "Picklists");
+		AssertElementPresent(
+			key_objectLabel = "Picklists",
+			locator1 = "ObjectPortlet#OBJECT_PORTLET_HEADER");
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-135390 - Verify it is possible to add a Picklist with the Add permission"
-	@priority = "4"
+	@priority = 4
 	test CanAddPicklistWithAddPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -110,10 +114,11 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is possible to update a single Picklist permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanDefineSinglePicklistPermissionsWithPermissionsPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanDefineSinglePicklistPermissionsWithPermissionsPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -147,7 +152,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -159,7 +164,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Picklist.gotoPicklists();
 
@@ -167,7 +172,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to delete a Picklist with the Delete permission"
-	@priority = "4"
+	@priority = 4
 	test CanDeletePicklistWithDeletePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -177,14 +182,14 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
 
 		for (var resourceAction : list "DELETE,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com.liferay.list.type.model.ListTypeDefinition",
 				roleTitle = "Regular Role");
 		}
@@ -211,20 +216,20 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "Delete");
+			menuItem = "Delete",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistNotPresent(picklistName = "Picklist Test");
 	}
 
 	@description = "LPS-146757 - Verify it is possible to delete a single Object Entry with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSingleObjectEntryWithDeletePermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CanDeleteSingleObjectEntryWithDeletePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -250,18 +255,13 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		Role.definePermissionCP(
-			permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX",
-			permissionDefinitionValue = "",
-			permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-			permissionNavigationValue = "Custom Objects",
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
 			roleTitle = "Regular Role",
-			roleType = "Regular");
+			roleType = "regular");
 
 		Navigator.openURL();
 
@@ -286,7 +286,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "DELETE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -300,10 +300,11 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to delete a single Object with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSingleObjectWithDeletePermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanDeleteSingleObjectWithDeletePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -340,7 +341,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "DELETE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -350,14 +351,17 @@ definition {
 
 		CreateObject.deleteObjectViaUI(objectLabel = "Custom Object 148930");
 
-		CreateObject.assertObjectNotPresent(objectLabel = "Custom Object 148930");
+		AssertElementNotPresent(
+			key_tabName = "Custom Object 148930",
+			locator1 = "ObjectAdmin#ANY_TAB_ON_ENTRY");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to delete a single Picklist with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSinglePicklistWithDeletePermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanDeleteSinglePicklistWithDeletePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -391,7 +395,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "DELETE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -400,17 +404,18 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Custom Picklist 148938",
-			picklistOption = "Delete");
+			menuItem = "Delete",
+			picklistName = "Custom Picklist 148938");
 
 		Picklist.assertPicklistNotPresent(picklistName = "Custom Picklist 148938");
 	}
 
 	@description = "LPS-135390 - Verify it is possible to edit its own Object entry with only the Add Object Entry permission"
-	@priority = "5"
+	@priority = 5
 	test CanEditItsOwnEntryWithOnlyAddPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanEditItsOwnEntryWithOnlyAddPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -431,20 +436,19 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -487,7 +491,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to add a Picklist without the Add permission"
-	@priority = "5"
+	@priority = 5
 	test CannotAddPicklistWithoutAddPermission {
 		property portal.acceptance = "true";
 
@@ -495,7 +499,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -525,9 +529,10 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to update a single Picklist permissions created by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDefineSinglePicklistPermissionsWithoutPermissionsOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotDefineSinglePicklistPermissionsWithoutPermissionsOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -580,7 +585,7 @@ definition {
 			owner = "true",
 			permissionsList = "PERMISSIONS");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -596,12 +601,12 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to delete a single Object Entry create by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteOwnSingleObjectEntryWithoutDeleteOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CannotDeleteOwnSingleObjectEntryWithoutDeleteOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -620,20 +625,19 @@ definition {
 
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -666,7 +670,7 @@ definition {
 			owner = "true",
 			permissionsList = "DELETE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -676,7 +680,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to delete a Picklist without the Delete permission"
-	@priority = "4"
+	@priority = 4
 	test CannotDeletePicklistWithoutDeletePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -686,7 +690,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -721,9 +725,10 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to delete a single Object created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteSingleObjectWithoutDeleteOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotDeleteSingleObjectWithoutDeleteOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
@@ -762,7 +767,7 @@ definition {
 			fieldLabelName = "Custom Object 148934",
 			pluralLabelName = "Custom Objects 148934");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -778,7 +783,7 @@ definition {
 			owner = "true",
 			permissionsList = "DELETE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -794,9 +799,10 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to delete a single Picklist created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteSinglePicklistWithoutDeleteOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotDeleteSinglePicklistWithoutDeleteOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -848,7 +854,7 @@ definition {
 			owner = "true",
 			permissionsList = "DELETE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -858,12 +864,12 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to update a single Object Entry permissions create by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateOwnSingleObjectEntryWithoutPermissionsOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateOwnSingleObjectEntryWithoutPermissionsOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -882,20 +888,19 @@ definition {
 
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -928,7 +933,7 @@ definition {
 			owner = "true",
 			permissionsList = "PERMISSIONS");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -938,11 +943,12 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to update a single Object Entry create by the user if the Update Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateOwnSingleObjectEntryWithoutUpdateOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateOwnSingleObjectEntryWithoutUpdateOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -961,20 +967,19 @@ definition {
 
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1007,27 +1012,27 @@ definition {
 			owner = "true",
 			permissionsList = "UPDATE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
 		ObjectPortlet.viewEntryDetails(entry = "Entry Test");
 
-		ObjectAdmin.viewFieldValueDisabled(fieldValue = "Entry Test");
+		AssertElementPresent(
+			key_fieldValue = "Entry Test",
+			locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 
 		AssertElementNotPresent(locator1 = "Button#SAVE");
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to update a Picklist without the Update permission"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdatePicklistWithoutUpdatePermission {
-		property portal.acceptance = "quarantine";
-
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.addPicklistItemViaAPI(
-			itemKey = "ItemTest",
-			itemName = "Picklist Item",
+			itemKey = "itemTest",
+			itemName = "Item Test",
 			picklistName = "Picklist Test");
 
 		JSONRole.addRegularRole(
@@ -1036,7 +1041,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1067,23 +1072,34 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		WaitForElementPresent(
+			key_pageNumber = 1,
+			locator1 = "ObjectPortlet#ANY_PAGE");
+
+		Picklist.optionsPicklist(
+			menuItem = "View",
+			picklistName = "Picklist Test");
+
+		SelectFrame(locator1 = "Picklist#IFRAME_PICKLIST_MODAL");
+
+		Click(
+			key_picklistName = "Item Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.assertDisabledPicklistName();
 
 		Picklist.assertDisabledSaveButton();
 
-		CreateObject.viewObject(labelName = "Picklist Item");
-
-		Picklist.assertDisabledPicklistItem(keyName = "ItemTest");
+		Picklist.assertDisabledPicklistItem(keyName = "itemTest");
 
 		Picklist.assertDisabledSaveButton();
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to update a single Object permissions created by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSingleObjectPermissionWithoutPermissionsOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSingleObjectPermissionWithoutPermissionsOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1124,7 +1140,7 @@ definition {
 			fieldLabelName = "Custom Object 148937",
 			pluralLabelName = "Custom Objects 148937");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1140,7 +1156,7 @@ definition {
 			owner = "true",
 			permissionsList = "PERMISSIONS");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1156,9 +1172,10 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to update a single Object created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSingleObjectWithoutUpdateOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSingleObjectWithoutUpdateOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1204,7 +1221,7 @@ definition {
 			fieldLabelName = "Custom Object 148935",
 			pluralLabelName = "Custom Objects 148935");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1214,7 +1231,7 @@ definition {
 			owner = "true",
 			permissionsList = "UPDATE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1222,14 +1239,14 @@ definition {
 
 		CreateObject.assertDisabledAllFields();
 
-		CreateObject.assertDisabledPublishObjectButton();
+		AssertElementPresent(locator1 = "CreateObject#DISABLED_PUBLISH_OBJECT_BUTTON");
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to update a single Picklist created by the user if the Update Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSinglePicklistWithoutUpdateOwnerPermission {
-		property portal.acceptance = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSinglePicklistWithoutUpdateOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1281,11 +1298,13 @@ definition {
 			owner = "true",
 			permissionsList = "UPDATE");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
 		Picklist.gotoPicklistView(picklistName = "Picklist Test");
+
+		SelectFrame(locator1 = "Picklist#IFRAME_PICKLIST_MODAL");
 
 		Picklist.assertDisabledPicklistName();
 
@@ -1293,10 +1312,10 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to view a single Object Entry create by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewOwnSingleObjectEntryWithoutViewOwnerPermission {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CannotViewOwnSingleObjectEntryWithoutViewOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -1315,20 +1334,19 @@ definition {
 
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1361,7 +1379,7 @@ definition {
 			owner = "true",
 			permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1369,7 +1387,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to view a Picklist without the View permission"
-	@priority = "4"
+	@priority = 4
 	test CannotViewPicklistWithoutViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -1377,7 +1395,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1407,9 +1425,10 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to View a single Object created by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewSingleObjectWithoutViewOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotViewSingleObjectWithoutViewOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1455,7 +1474,7 @@ definition {
 			fieldLabelName = "Custom Object 148936",
 			pluralLabelName = "Custom Objects 148936");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1465,17 +1484,20 @@ definition {
 			owner = "true",
 			permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
-		CreateObject.assertCustomObjectNotPresent(labelName = "Custom Object 148936");
+		AssertElementNotPresent(
+			key_labelName = "Custom Object 148936",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to view a single Picklist created by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewSinglePicklistWithoutViewOwnerPermission {
-		property test.name.skip.portal.instance = "ObjectPermission#CannotViewSinglePicklistWithoutViewOwnerPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1527,7 +1549,7 @@ definition {
 			owner = "true",
 			permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1535,7 +1557,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to update a Picklist with the Update permission"
-	@priority = "4"
+	@priority = 4
 	test CanUpdatePicklistWithUpdatePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -1545,14 +1567,14 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
 
 		for (var resourceAction : list "UPDATE,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com.liferay.list.type.model.ListTypeDefinition",
 				roleTitle = "Regular Role");
 		}
@@ -1578,11 +1600,13 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		Click(
+			key_picklistName = "Picklist Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1590,13 +1614,13 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to update a single Object Entry permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectEntryPermissionsPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectEntryPermissionsPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -1622,18 +1646,13 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		Role.definePermissionCP(
-			permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX",
-			permissionDefinitionValue = "",
-			permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-			permissionNavigationValue = "Custom Objects",
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
 			roleTitle = "Regular Role",
-			roleType = "Regular");
+			roleType = "regular");
 
 		Navigator.openURL();
 
@@ -1658,7 +1677,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -1670,7 +1689,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -1678,13 +1697,13 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to update a single Object Entry with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectEntryWithUpdatePermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectEntryWithUpdatePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -1710,18 +1729,13 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		Role.definePermissionCP(
-			permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX",
-			permissionDefinitionValue = "",
-			permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-			permissionNavigationValue = "Custom Objects",
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
 			roleTitle = "Regular Role",
-			roleType = "Regular");
+			roleType = "regular");
 
 		Navigator.openURL();
 
@@ -1746,7 +1760,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "UPDATE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -1766,10 +1780,11 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to update a single Object permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectPermissionsWithPermissionsPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectPermissionsWithPermissionsPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1806,7 +1821,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -1818,18 +1833,21 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
-		CreateObject.assertObjectNotPresent(objectLabel = "Custom Object 148933");
+		AssertElementNotPresent(
+			key_tabName = "Custom Object 148933",
+			locator1 = "ObjectAdmin#ANY_TAB_ON_ENTRY");
 	}
 
 	@description = "LPS-146758 - Verify it is possible to update a single Object with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectWithUpdatePermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectWithUpdatePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1866,7 +1884,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "UPDATE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -1882,14 +1900,17 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Update Custom Object");
+		AssertElementPresent(
+			key_labelName = "Update Custom Object",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to update a single Picklist with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSinglePicklistWithUpdatePermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSinglePicklistWithUpdatePermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -1923,7 +1944,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "UPDATE,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -1931,11 +1952,13 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Custom Picklist 148939");
+		Click(
+			key_picklistName = "Custom Picklist 148939",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Custom Picklist");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Picklist.gotoPicklists();
 
@@ -1943,13 +1966,13 @@ definition {
 	}
 
 	@description = "LPS-140342 - Verify it is possible view and edit its own Picklist with only the Add Picklist permission"
-	@priority = "4"
+	@priority = 4
 	test CanViewAndEditPicklistWithAddPicklistPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1989,11 +2012,13 @@ definition {
 
 		Picklist.assertPicklist(picklistName = "Picklist Test");
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		Click(
+			key_picklistName = "Picklist Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -2001,10 +2026,11 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view its own Object entry with only the Add Object Entry permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewItsOwnEntryWithOnlyAddPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanViewItsOwnEntryWithOnlyAddPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -2025,31 +2051,25 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		for (var resourceActionIndex : list "APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX,RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Regular Role",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Regular Role",
+			roleType = "regular");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
-
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = "userea@liferay.com");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "Regular Role",
@@ -2069,7 +2089,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view a Picklist with the View permission"
-	@priority = "4"
+	@priority = 4
 	test CanViewPicklistWithViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -2077,7 +2097,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -2112,13 +2132,12 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to view a single Object Entry with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSingleObjectEntryWithViewPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
-		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ObjectPermission#CanViewSingleObjectEntryWithViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -2144,18 +2163,13 @@ definition {
 			roleKey = "Regular Role",
 			roleTitle = "Regular Role");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		Role.definePermissionCP(
-			permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_APPLICATION_PERMISSION_ACCESS_CONTROL_PANEL_CHECKBOX",
-			permissionDefinitionValue = "",
-			permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-			permissionNavigationValue = "Custom Objects",
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
 			roleTitle = "Regular Role",
-			roleType = "Regular");
+			roleType = "regular");
 
 		Navigator.openURL();
 
@@ -2180,7 +2194,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -2192,10 +2206,11 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to view a single Object with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSingleObjectWithViewPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanViewSingleObjectWithViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -2232,7 +2247,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -2240,14 +2255,17 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Custom Object 148932");
+		AssertElementPresent(
+			key_labelName = "Custom Object 148932",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to view a single Picklist with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSinglePicklistWithViewPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#CanViewSinglePicklistWithViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",
@@ -2281,7 +2299,7 @@ definition {
 
 		ObjectCustomViews.selectPermissionToRegularRole(permissionsList = "PERMISSIONS,VIEW");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -2292,11 +2310,12 @@ definition {
 		Picklist.assertPicklist(picklistName = "Custom Picklist 148940");
 	}
 
-	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "Add Object Entry" activated can add new object entries and view its own entries"
-	@priority = "5"
+	@description = "LPS-146756 - Verify that a guest user with the resource permission action of 'Add Object Entry' activated can add new object entries and view its own entries"
+	@priority = 5
 	test GuestCanAddObjectEntriesWithAddPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#GuestCanAddObjectEntriesWithAddPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -2322,7 +2341,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -2353,27 +2372,19 @@ definition {
 			permissionFlagged = "true",
 			roleTitle = "Guest");
 
-		Navigator.openURL();
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_OBJECT_ENTRY",
+			resourceName = "com.liferay.object#${objectId}",
+			roleTitle = "Guest",
+			roleType = "regular");
 
-		for (var resourceActionIndex : list "RESOURCE_PERMISSION_ADD_ENTRY_CHECKBOX,RESOURCE_PERMISSIONS_VIEW_CHECKBOX") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
-
-			Role.definePermissionCP(
-				permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_${resourceActionIndex}",
-				permissionDefinitionValue = "",
-				permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-				permissionNavigationValue = "Custom Objects",
-				roleTitle = "Guest",
-				roleType = "Regular");
-		}
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+			roleTitle = "Guest",
+			roleType = "regular");
 
 		Navigator.openURL();
 
@@ -2387,7 +2398,7 @@ definition {
 			locator1 = "ObjectAdmin#ENTRY_STRING_VALUE_FIELD",
 			value1 = "Entry Test");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -2397,10 +2408,11 @@ definition {
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "Add Object Entry" unactivated can't add new object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCannotAddObjectEntriesWithoutAddPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#GuestCannotAddObjectEntriesWithoutAddPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 148949",
@@ -2426,7 +2438,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 148949");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -2454,14 +2466,15 @@ definition {
 
 		Navigator.gotoPage(pageName = "Object Page");
 
-		ObjectPortlet.assertPlusButtonIsNotPresent();
+		AssertElementNotPresent(locator1 = "Button#PLUS");
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "View"  unactivated can't vizualize object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCannotViewObjectEntriesWithoutViewPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#GuestCannotViewObjectEntriesWithoutViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 148948",
@@ -2487,7 +2500,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 148948");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -2519,10 +2532,11 @@ definition {
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "View" activated can vizualize object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCanViewObjectEntriesWithViewPermission {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "ObjectPermission#GuestCanViewObjectEntriesWithViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
@@ -2548,7 +2562,7 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object");
 
-		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_BUTTON");
+		Check.checkToggleSwitch(locator1 = "ObjectPortlet#VIEW_WIDGET_IN_PAGE_BUILDER_TOGGLE");
 
 		CreateObject.saveObject();
 
@@ -2579,20 +2593,13 @@ definition {
 			permissionFlagged = "true",
 			roleTitle = "Guest");
 
-		Navigator.openURL();
+		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
-
-		Role.definePermissionCP(
-			permissionDefinitionKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS_RESOURCE_PERMISSIONS_VIEW_CHECKBOX",
-			permissionDefinitionValue = "",
-			permissionNavigationKey = "CONTROL_PANEL_CUSTOM_OBJECTS_PERMISSIONS",
-			permissionNavigationValue = "Custom Objects",
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
 			roleTitle = "Guest",
-			roleType = "Regular");
+			roleType = "regular");
 
 		Navigator.openURL();
 

@@ -3,20 +3,6 @@
 
 @import 'common_main';
 
-html#{$cadmin-selector} {
-	.portlet-blogs {
-		.cadmin {
-			.info-bar-container {
-				min-height: 35px;
-
-				.info-bar-center {
-					margin-top: 5px;
-				}
-			}
-		}
-	}
-}
-
 .portlet-blogs {
 	.taglib-custom-attributes-list {
 		margin-bottom: 1em;
@@ -37,6 +23,10 @@ html#{$cadmin-selector} {
 	.entry-body {
 		img {
 			max-width: 100%;
+		}
+
+		img[data-cke-saved-src]:not([data-fileentryid]) {
+			visibility: hidden;
 		}
 
 		.cover-image-container {
@@ -250,9 +240,9 @@ html#{$cadmin-selector} {
 			resize: none;
 
 			&::placeholder {
-				border-color: #b0b4bb;
+				border-color: $secondary;
 				border-left: 2px solid;
-				color: #b0b4bb;
+				color: $secondary;
 				padding-left: 10px;
 			}
 

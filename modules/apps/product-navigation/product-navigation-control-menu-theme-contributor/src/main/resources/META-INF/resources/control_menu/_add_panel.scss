@@ -2,7 +2,9 @@ html#{$cadmin-selector} {
 	body.sidenav-transition {
 		#wrapper {
 			@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-				@include transition(padding 0.5s ease);
+				@media (prefers-reduced-motion: no-preference) {
+					@include transition(padding 0.5s ease);
+				}
 			}
 		}
 	}
@@ -16,25 +18,10 @@ html#{$cadmin-selector} {
 	}
 
 	.cadmin {
-		&.lfr-add-panel.open-admin-panel.sidenav-menu-slider {
-			visibility: visible;
-			width: $admin-panel-width;
-		}
-
 		&.lfr-admin-panel {
 			&.sidenav-menu-slider {
-				/* stylelint-disable */
-				top: calc(
-					#{$has-control-menu-margin-top-desktop} + var(--change-tracking-indicator-height, 0px)
-				);
+				top: var(--control-menu-container-height);
 				z-index: $admin-panel-zindex;
-
-				@include media-breakpoint-down(xs, $cadmin-grid-breakpoints) {
-					top: calc(
-						#{$has-control-menu-margin-top-mobile} + var(--change-tracking-indicator-height, 0px)
-					);
-				}
-				/* stylelint-enable */
 
 				.product-menu {
 					width: $admin-panel-width;

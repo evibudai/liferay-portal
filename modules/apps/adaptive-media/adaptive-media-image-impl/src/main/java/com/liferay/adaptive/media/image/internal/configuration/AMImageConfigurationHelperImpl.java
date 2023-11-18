@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.configuration;
@@ -19,23 +10,19 @@ import com.liferay.adaptive.media.exception.AMImageConfigurationException.Invali
 import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
-import com.liferay.adaptive.media.image.constants.AMImageDestinationNames;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
+import com.liferay.journal.util.JournalContent;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
-import com.liferay.portal.kernel.messaging.Destination;
-import com.liferay.portal.kernel.messaging.DestinationConfiguration;
-import com.liferay.portal.kernel.messaging.DestinationFactory;
-import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.PortletPreferencesSettings;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsException;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
@@ -46,18 +33,14 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.ValidatorException;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -106,7 +89,7 @@ public class AMImageConfigurationHelperImpl
 
 		_updateConfiguration(companyId, updatedAMImageConfigurationEntries);
 
-		_triggerConfigurationEvent(amImageConfigurationEntry);
+		_journalContent.clearCache();
 
 		return amImageConfigurationEntry;
 	}
@@ -115,15 +98,12 @@ public class AMImageConfigurationHelperImpl
 	public void deleteAMImageConfigurationEntry(long companyId, String uuid)
 		throws InvalidStateAMImageConfigurationException, IOException {
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			getAMImageConfigurationEntry(companyId, uuid);
 
-		if (!amImageConfigurationEntryOptional.isPresent()) {
+		if (amImageConfigurationEntry == null) {
 			return;
 		}
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
 
 		if (amImageConfigurationEntry.isEnabled()) {
 			throw new InvalidStateAMImageConfigurationException();
@@ -136,17 +116,12 @@ public class AMImageConfigurationHelperImpl
 	public void disableAMImageConfigurationEntry(long companyId, String uuid)
 		throws IOException {
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			getAMImageConfigurationEntry(companyId, uuid);
 
-		if (!amImageConfigurationEntryOptional.isPresent()) {
-			return;
-		}
+		if ((amImageConfigurationEntry == null) ||
+			!amImageConfigurationEntry.isEnabled()) {
 
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
-
-		if (!amImageConfigurationEntry.isEnabled()) {
 			return;
 		}
 
@@ -172,24 +147,19 @@ public class AMImageConfigurationHelperImpl
 
 		_updateConfiguration(companyId, updatedAMImageConfigurationEntries);
 
-		_triggerConfigurationEvent(amImageConfigurationEntry);
+		_journalContent.clearCache();
 	}
 
 	@Override
 	public void enableAMImageConfigurationEntry(long companyId, String uuid)
 		throws IOException {
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			getAMImageConfigurationEntry(companyId, uuid);
 
-		if (!amImageConfigurationEntryOptional.isPresent()) {
-			return;
-		}
+		if ((amImageConfigurationEntry == null) ||
+			amImageConfigurationEntry.isEnabled()) {
 
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
-
-		if (amImageConfigurationEntry.isEnabled()) {
 			return;
 		}
 
@@ -215,7 +185,7 @@ public class AMImageConfigurationHelperImpl
 
 		_updateConfiguration(companyId, updatedAMImageConfigurationEntries);
 
-		_triggerConfigurationEvent(amImageConfigurationEntry);
+		_journalContent.clearCache();
 	}
 
 	@Override
@@ -223,15 +193,12 @@ public class AMImageConfigurationHelperImpl
 			long companyId, String uuid)
 		throws IOException {
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			getAMImageConfigurationEntry(companyId, uuid);
 
-		if (!amImageConfigurationEntryOptional.isPresent()) {
+		if (amImageConfigurationEntry == null) {
 			return;
 		}
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
 
 		_amImageEntryLocalService.deleteAMImageEntries(
 			companyId, amImageConfigurationEntry);
@@ -249,23 +216,23 @@ public class AMImageConfigurationHelperImpl
 
 		_updateConfiguration(companyId, updatedAMImageConfigurationEntries);
 
-		_triggerConfigurationEvent(amImageConfigurationEntry);
+		_journalContent.clearCache();
 	}
 
 	@Override
 	public Collection<AMImageConfigurationEntry> getAMImageConfigurationEntries(
 		long companyId) {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
+		List<AMImageConfigurationEntry> amImageConfigurationEntries =
 			_getAMImageConfigurationEntries(companyId);
 
-		return amImageConfigurationEntryStream.filter(
-			AMImageConfigurationEntry::isEnabled
-		).sorted(
-			Comparator.comparing(AMImageConfigurationEntry::getName)
-		).collect(
-			Collectors.toList()
-		);
+		amImageConfigurationEntries = ListUtil.filter(
+			amImageConfigurationEntries, AMImageConfigurationEntry::isEnabled);
+
+		amImageConfigurationEntries.sort(
+			Comparator.comparing(AMImageConfigurationEntry::getName));
+
+		return amImageConfigurationEntries;
 	}
 
 	@Override
@@ -273,29 +240,36 @@ public class AMImageConfigurationHelperImpl
 		long companyId,
 		Predicate<? super AMImageConfigurationEntry> predicate) {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
+		List<AMImageConfigurationEntry> amImageConfigurationEntries =
 			_getAMImageConfigurationEntries(companyId);
 
-		return amImageConfigurationEntryStream.filter(
-			predicate
-		).sorted(
-			Comparator.comparing(AMImageConfigurationEntry::getName)
-		).collect(
-			Collectors.toList()
-		);
+		amImageConfigurationEntries = ListUtil.filter(
+			amImageConfigurationEntries,
+			(Predicate<AMImageConfigurationEntry>)predicate);
+
+		amImageConfigurationEntries.sort(
+			Comparator.comparing(AMImageConfigurationEntry::getName));
+
+		return amImageConfigurationEntries;
 	}
 
 	@Override
-	public Optional<AMImageConfigurationEntry> getAMImageConfigurationEntry(
+	public AMImageConfigurationEntry getAMImageConfigurationEntry(
 		long companyId, String configurationEntryUUID) {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
+		List<AMImageConfigurationEntry> amImageConfigurationEntries =
 			_getAMImageConfigurationEntries(companyId);
 
-		return amImageConfigurationEntryStream.filter(
+		amImageConfigurationEntries = ListUtil.filter(
+			amImageConfigurationEntries,
 			amImageConfigurationEntry -> configurationEntryUUID.equals(
-				amImageConfigurationEntry.getUUID())
-		).findFirst();
+				amImageConfigurationEntry.getUUID()));
+
+		if (amImageConfigurationEntries.isEmpty()) {
+			return null;
+		}
+
+		return amImageConfigurationEntries.get(0);
 	}
 
 	@Override
@@ -315,22 +289,22 @@ public class AMImageConfigurationHelperImpl
 			getAMImageConfigurationEntries(
 				companyId, amImageConfigurationEntry -> true);
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
-			amImageConfigurationEntries.stream();
+		AMImageConfigurationEntry oldAMImageConfigurationEntry = null;
 
-		Optional<AMImageConfigurationEntry>
-			oldAMImageConfigurationEntryOptional =
-				amImageConfigurationEntryStream.filter(
-					amImageConfigurationEntry -> oldUuid.equals(
-						amImageConfigurationEntry.getUUID())
-				).findFirst();
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				amImageConfigurationEntries) {
 
-		AMImageConfigurationEntry oldAMImageConfigurationEntry =
-			oldAMImageConfigurationEntryOptional.orElseThrow(
-				() ->
-					new AMImageConfigurationException.
-						NoSuchAMImageConfigurationException(
-							"{uuid=" + oldUuid + "}"));
+			if (oldUuid.equals(amImageConfigurationEntry.getUUID())) {
+				oldAMImageConfigurationEntry = amImageConfigurationEntry;
+
+				break;
+			}
+		}
+
+		if (oldAMImageConfigurationEntry == null) {
+			throw new AMImageConfigurationException.
+				NoSuchAMImageConfigurationException("{uuid=" + oldUuid + "}");
+		}
 
 		if (!name.equals(oldAMImageConfigurationEntry.getName())) {
 			_checkDuplicatesName(amImageConfigurationEntries, name);
@@ -356,29 +330,13 @@ public class AMImageConfigurationHelperImpl
 
 		_updateConfiguration(companyId, updatedAMImageConfigurationEntries);
 
-		_triggerConfigurationEvent(
-			new AMImageConfigurationEntry[] {
-				oldAMImageConfigurationEntry, amImageConfigurationEntry
-			});
+		_journalContent.clearCache();
 
 		return amImageConfigurationEntry;
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		DestinationConfiguration destinationConfiguration =
-			new DestinationConfiguration(
-				DestinationConfiguration.DESTINATION_TYPE_SYNCHRONOUS,
-				AMImageDestinationNames.ADAPTIVE_MEDIA_IMAGE_CONFIGURATION);
-
-		Destination destination = _destinationFactory.createDestination(
-			destinationConfiguration);
-
-		_destinationServiceRegistration = bundleContext.registerService(
-			Destination.class, destination,
-			MapUtil.singletonDictionary(
-				"destination.name", destination.getName()));
-
 		_portalCache =
 			(PortalCache<Long, Serializable>)_multiVMPool.getPortalCache(
 				AMImageConfigurationHelperImpl.class.getName());
@@ -386,8 +344,6 @@ public class AMImageConfigurationHelperImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_destinationServiceRegistration.unregister();
-
 		_multiVMPool.removePortalCache(
 			AMImageConfigurationHelperImpl.class.getName());
 	}
@@ -397,17 +353,20 @@ public class AMImageConfigurationHelperImpl
 			String name)
 		throws AMImageConfigurationException {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
-			amImageConfigurationEntries.stream();
+		AMImageConfigurationEntry duplicateNameAMImageConfigurationEntry = null;
 
-		Optional<AMImageConfigurationEntry>
-			duplicateNameAMImageConfigurationEntryOptional =
-				amImageConfigurationEntryStream.filter(
-					amImageConfigurationEntry -> name.equals(
-						amImageConfigurationEntry.getName())
-				).findFirst();
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				amImageConfigurationEntries) {
 
-		if (duplicateNameAMImageConfigurationEntryOptional.isPresent()) {
+			if (name.equals(amImageConfigurationEntry.getName())) {
+				duplicateNameAMImageConfigurationEntry =
+					amImageConfigurationEntry;
+
+				break;
+			}
+		}
+
+		if (duplicateNameAMImageConfigurationEntry != null) {
 			throw new AMImageConfigurationException.
 				DuplicateAMImageConfigurationNameException();
 		}
@@ -418,17 +377,20 @@ public class AMImageConfigurationHelperImpl
 			String uuid)
 		throws AMImageConfigurationException {
 
-		Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
-			amImageConfigurationEntries.stream();
+		AMImageConfigurationEntry duplicateUuidAMImageConfigurationEntry = null;
 
-		Optional<AMImageConfigurationEntry>
-			duplicateUuidAMImageConfigurationEntryOptional =
-				amImageConfigurationEntryStream.filter(
-					amImageConfigurationEntry -> uuid.equals(
-						amImageConfigurationEntry.getUUID())
-				).findFirst();
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				amImageConfigurationEntries) {
 
-		if (duplicateUuidAMImageConfigurationEntryOptional.isPresent()) {
+			if (uuid.equals(amImageConfigurationEntry.getUUID())) {
+				duplicateUuidAMImageConfigurationEntry =
+					amImageConfigurationEntry;
+
+				break;
+			}
+		}
+
+		if (duplicateUuidAMImageConfigurationEntry != null) {
 			throw new AMImageConfigurationException.
 				DuplicateAMImageConfigurationUuidException();
 		}
@@ -481,39 +443,32 @@ public class AMImageConfigurationHelperImpl
 		}
 	}
 
-	private Stream<AMImageConfigurationEntry> _getAMImageConfigurationEntries(
+	private List<AMImageConfigurationEntry> _getAMImageConfigurationEntries(
 		long companyId) {
 
 		ArrayList<AMImageConfigurationEntry> amImageConfigurationEntries =
 			(ArrayList<AMImageConfigurationEntry>)_portalCache.get(companyId);
 
 		if (amImageConfigurationEntries != null) {
-			return amImageConfigurationEntries.stream();
+			return amImageConfigurationEntries;
 		}
 
 		try {
-			Settings settings = SettingsFactoryUtil.getSettings(
-				new CompanyServiceSettingsLocator(
-					companyId, AMImageCompanyConfiguration.class.getName()));
-
-			Optional<String[]> nullableImageVariantsOptional =
-				_getNullableImageVariants(settings);
-
-			String[] imageVariants = nullableImageVariantsOptional.orElseGet(
-				() -> settings.getValues("imageVariants", new String[0]));
-
-			amImageConfigurationEntries = Stream.of(
-				imageVariants
-			).map(
-				_amImageConfigurationEntryParser::parse
-			).collect(
-				Collectors.toCollection(ArrayList::new)
-			);
+			amImageConfigurationEntries =
+				(ArrayList<AMImageConfigurationEntry>)
+					TransformUtil.transformToList(
+						_getImageVariants(
+							FallbackKeysSettingsUtil.getSettings(
+								new CompanyServiceSettingsLocator(
+									companyId,
+									AMImageCompanyConfiguration.class.
+										getName()))),
+						_amImageConfigurationEntryParser::parse);
 
 			PortalCacheHelperUtil.putWithoutReplicator(
 				_portalCache, companyId, amImageConfigurationEntries);
 
-			return amImageConfigurationEntries.stream();
+			return amImageConfigurationEntries;
 		}
 		catch (SettingsException settingsException) {
 			throw new AMRuntimeException.InvalidConfiguration(
@@ -521,7 +476,7 @@ public class AMImageConfigurationHelperImpl
 		}
 	}
 
-	private Optional<String[]> _getNullableImageVariants(Settings settings) {
+	private String[] _getImageVariants(Settings settings) {
 		PortletPreferencesSettings portletPreferencesSettings =
 			(PortletPreferencesSettings)settings;
 
@@ -530,7 +485,13 @@ public class AMImageConfigurationHelperImpl
 
 		Map<String, String[]> map = portletPreferences.getMap();
 
-		return Optional.ofNullable(map.get("imageVariants"));
+		String[] imageVariants = map.get("imageVariants");
+
+		if (imageVariants == null) {
+			imageVariants = settings.getValues("imageVariants", new String[0]);
+		}
+
+		return imageVariants;
 	}
 
 	private final boolean _isPositiveNumber(String s) {
@@ -558,50 +519,32 @@ public class AMImageConfigurationHelperImpl
 		}
 	}
 
-	private void _triggerConfigurationEvent(Object payload) {
-		Message message = new Message();
-
-		message.setPayload(payload);
-
-		_messageBus.sendMessage(
-			AMImageDestinationNames.ADAPTIVE_MEDIA_IMAGE_CONFIGURATION,
-			message);
-	}
-
 	private void _updateConfiguration(
 			long companyId,
 			List<AMImageConfigurationEntry> amImageConfigurationEntries)
 		throws IOException {
 
 		try {
-			Settings settings = SettingsFactoryUtil.getSettings(
+			Settings settings = FallbackKeysSettingsUtil.getSettings(
 				new CompanyServiceSettingsLocator(
 					companyId, AMImageCompanyConfiguration.class.getName()));
 
 			ModifiableSettings modifiableSettings =
 				settings.getModifiableSettings();
 
-			Stream<AMImageConfigurationEntry> amImageConfigurationEntryStream =
-				amImageConfigurationEntries.stream();
-
-			List<String> imageVariants = amImageConfigurationEntryStream.map(
-				_amImageConfigurationEntryParser::getConfigurationString
-			).collect(
-				Collectors.toList()
-			);
-
 			modifiableSettings.setValues(
-				"imageVariants", imageVariants.toArray(new String[0]));
+				"imageVariants",
+				TransformUtil.transformToArray(
+					amImageConfigurationEntries,
+					_amImageConfigurationEntryParser::getConfigurationString,
+					String.class));
 
 			modifiableSettings.store();
 
-			amImageConfigurationEntryStream =
-				amImageConfigurationEntries.stream();
-
 			_portalCache.put(
 				companyId,
-				amImageConfigurationEntryStream.collect(
-					Collectors.toCollection(ArrayList::new)));
+				(ArrayList<AMImageConfigurationEntry>)
+					amImageConfigurationEntries);
 		}
 		catch (SettingsException | ValidatorException exception) {
 			throw new AMRuntimeException.InvalidConfiguration(exception);
@@ -619,12 +562,7 @@ public class AMImageConfigurationHelperImpl
 	private AMImageEntryLocalService _amImageEntryLocalService;
 
 	@Reference
-	private DestinationFactory _destinationFactory;
-
-	private ServiceRegistration<Destination> _destinationServiceRegistration;
-
-	@Reference
-	private MessageBus _messageBus;
+	private JournalContent _journalContent;
 
 	@Reference
 	private MultiVMPool _multiVMPool;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.type.controller.collection.internal.display.context;
@@ -37,11 +28,10 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.WindowStateException;
@@ -127,7 +117,7 @@ public class CollectionItemsDetailDisplayContext {
 
 		PortletURL portletURL = PortletProviderUtil.getPortletURL(
 			_liferayRenderRequest, AssetListEntry.class.getName(),
-			PortletProvider.Action.BROWSE);
+			PortletProvider.Action.VIEW);
 
 		if (portletURL == null) {
 			return StringPool.BLANK;
@@ -146,10 +136,11 @@ public class CollectionItemsDetailDisplayContext {
 		}
 
 		portletURL.setParameter("redirect", _themeDisplay.getURLCurrent());
+		portletURL.setParameter(
+			"backURLTitle", layout.getName(_themeDisplay.getLocale()));
 		portletURL.setParameter("collectionPK", collectionPK);
 		portletURL.setParameter("collectionType", collectionType);
 		portletURL.setParameter("showActions", String.valueOf(Boolean.TRUE));
-
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL.toString();
@@ -165,35 +156,29 @@ public class CollectionItemsDetailDisplayContext {
 		}
 
 		return _assetListAssetEntryProvider.getAssetEntriesCount(
-			assetListEntry, 0);
+			assetListEntry, new long[] {SegmentsEntryConstants.ID_DEFAULT},
+			null, null, StringPool.BLANK, StringPool.BLANK);
 	}
 
 	private long _getInfoCollectionProviderItemCount(String collectionPK) {
-		List<InfoCollectionProvider<?>> infoCollectionProviders =
-			(List<InfoCollectionProvider<?>>)
-				(List<?>)_infoItemServiceRegistry.getAllInfoItemServices(
-					InfoCollectionProvider.class);
+		for (InfoCollectionProvider<?> infoCollectionProvider :
+				(List<InfoCollectionProvider<?>>)
+					(List<?>)_infoItemServiceRegistry.getAllInfoItemServices(
+						InfoCollectionProvider.class)) {
 
-		Stream<InfoCollectionProvider<?>> stream =
-			infoCollectionProviders.stream();
+			if (!Objects.equals(
+					infoCollectionProvider.getKey(), collectionPK)) {
 
-		Optional<InfoCollectionProvider<?>> infoCollectionProviderOptional =
-			stream.filter(
-				infoCollectionProvider -> Objects.equals(
-					infoCollectionProvider.getKey(), collectionPK)
-			).findFirst();
+				continue;
+			}
 
-		if (!infoCollectionProviderOptional.isPresent()) {
-			return 0;
+			InfoPage<?> infoPage = infoCollectionProvider.getCollectionInfoPage(
+				new CollectionQuery());
+
+			return infoPage.getTotalCount();
 		}
 
-		InfoCollectionProvider<?> infoCollectionProvider =
-			infoCollectionProviderOptional.get();
-
-		InfoPage<?> infoPage = infoCollectionProvider.getCollectionInfoPage(
-			new CollectionQuery());
-
-		return infoPage.getTotalCount();
+		return 0;
 	}
 
 	private final AssetListAssetEntryProvider _assetListAssetEntryProvider;

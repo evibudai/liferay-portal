@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
@@ -18,13 +9,12 @@ import Container from '../../../components/Layout/Container';
 import ListView, {ListViewProps} from '../../../components/ListView';
 import {TableProps} from '../../../components/Table';
 import {ListViewContextProviderProps} from '../../../context/ListViewContext';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {FormModal} from '../../../hooks/useFormModal';
 import i18n from '../../../i18n';
-import {filters} from '../../../schema/filter';
-import {testrayCaseRest} from '../../../services/rest';
+import {testrayCaseImpl} from '../../../services/rest';
 import {Action} from '../../../types';
 import dayjs from '../../../util/date';
-import {searchUtil} from '../../../util/search';
 import useCaseActions from './useCaseActions';
 
 type CaseListViewProps = {
@@ -54,10 +44,10 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
 				addButton: () => navigate('create', {state: {back: pathname}}),
-				filterFields: filters.case as any,
+				filterSchema: 'cases',
 				title: i18n.translate('cases'),
 			}}
-			resource={testrayCaseRest.resource}
+			resource={testrayCaseImpl.resource}
 			tableProps={{
 				actions,
 				columns: [
@@ -100,13 +90,18 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 						render: (component) => component?.name,
 						value: i18n.translate('component'),
 					},
+					{
+						key: 'description',
+						render: (description) => description,
+						value: i18n.translate('description'),
+					},
 					{key: 'issues', value: i18n.translate('issues')},
 				],
 				navigateTo: ({id}) => id?.toString(),
 				...tableProps,
 			}}
 			transformData={(response) =>
-				testrayCaseRest.transformDataFromList(response)
+				testrayCaseImpl.transformDataFromList(response)
 			}
 			variables={variables}
 			{...listViewProps}
@@ -129,13 +124,14 @@ const Cases = () => {
 							caseType: false,
 							dateCreated: false,
 							dateModified: false,
+							description: false,
 							issues: false,
 							team: false,
 						},
 					},
 				}}
 				variables={{
-					filter: searchUtil.eq('projectId', projectId as string),
+					filter: SearchBuilder.eq('projectId', projectId as string),
 				}}
 			/>
 		</Container>

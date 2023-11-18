@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.checkstyle.check;
@@ -17,6 +8,7 @@ package com.liferay.source.formatter.checkstyle.check;
 import antlr.CommonASTWithHiddenTokens;
 import antlr.CommonHiddenStreamToken;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -59,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Hugo Huijser
@@ -516,16 +506,9 @@ public abstract class BaseCheck extends AbstractCheck {
 	}
 
 	protected List<String> getNames(DetailAST detailAST, boolean recursive) {
-		List<DetailAST> childDetailASTs = getAllChildTokens(
-			detailAST, recursive, TokenTypes.IDENT);
-
-		Stream<DetailAST> stream = childDetailASTs.stream();
-
-		return stream.map(
-			DetailAST::getText
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			getAllChildTokens(detailAST, recursive, TokenTypes.IDENT),
+			DetailAST::getText);
 	}
 
 	protected String getPackageName(DetailAST detailAST) {
@@ -659,6 +642,40 @@ public abstract class BaseCheck extends AbstractCheck {
 		}
 
 		return startLineNumber;
+	}
+
+	protected DetailAST getTypeArgumentsDetailAST(DetailAST detailAST) {
+		DetailAST parentDetailAST = detailAST.getParent();
+
+		if ((parentDetailAST.getType() == TokenTypes.EXTENDS_CLAUSE) ||
+			(parentDetailAST.getType() == TokenTypes.IMPLEMENTS_CLAUSE)) {
+
+			if (detailAST.getType() == TokenTypes.DOT) {
+				return detailAST.findFirstToken(TokenTypes.TYPE_ARGUMENTS);
+			}
+
+			DetailAST nextSiblingDetailAST = detailAST.getNextSibling();
+
+			if ((nextSiblingDetailAST != null) &&
+				(nextSiblingDetailAST.getType() == TokenTypes.TYPE_ARGUMENTS)) {
+
+				return nextSiblingDetailAST;
+			}
+
+			return null;
+		}
+
+		DetailAST childDetailAST = detailAST.getFirstChild();
+
+		if (childDetailAST == null) {
+			return null;
+		}
+
+		if (childDetailAST.getType() == TokenTypes.DOT) {
+			return childDetailAST.findFirstToken(TokenTypes.TYPE_ARGUMENTS);
+		}
+
+		return detailAST.findFirstToken(TokenTypes.TYPE_ARGUMENTS);
 	}
 
 	protected String getTypeName(

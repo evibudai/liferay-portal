@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.item.selector.web.internal;
@@ -21,6 +12,7 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.PortletItemSelectorView;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.portal.kernel.language.Language;
@@ -33,8 +25,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletURL;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -84,18 +74,17 @@ public class AssetListPortletItemSelectorView
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
-		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher("/view.jsp");
-
-		servletRequest.setAttribute(
-			AssetListEntryItemSelectorDisplayContext.class.getName(),
-			new AssetListEntryItemSelectorDisplayContext(
-				(HttpServletRequest)servletRequest, _infoItemServiceRegistry,
-				_infoSearchClassMapperRegistry, itemSelectedEventName,
-				_language, portletURL,
-				infoCollectionProviderItemSelectorCriterion));
-
-		requestDispatcher.include(servletRequest, servletResponse);
+		_itemSelectorViewDescriptorRenderer.renderHTML(
+			servletRequest, servletResponse,
+			infoCollectionProviderItemSelectorCriterion, portletURL,
+			itemSelectedEventName, search,
+			new AssetListItemSelectorViewDescriptor(
+				new AssetListEntryItemSelectorDisplayContext(
+					(HttpServletRequest)servletRequest,
+					_infoItemServiceRegistry, _infoSearchClassMapperRegistry,
+					_language, portletURL,
+					infoCollectionProviderItemSelectorCriterion),
+				(HttpServletRequest)servletRequest));
 	}
 
 	private static final List<ItemSelectorReturnType>
@@ -109,11 +98,11 @@ public class AssetListPortletItemSelectorView
 	private InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;
 
 	@Reference
-	private Language _language;
+	private ItemSelectorViewDescriptorRenderer
+		<InfoCollectionProviderItemSelectorCriterion>
+			_itemSelectorViewDescriptorRenderer;
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.asset.list.item.selector.web)"
-	)
-	private ServletContext _servletContext;
+	@Reference
+	private Language _language;
 
 }

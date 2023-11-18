@@ -36,11 +36,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>PICKLIST_KEBAB_MENU_OPTION</td>
-		<td>//button[(@class='dropdown-item') and contains(.,'${key_picklistOption}')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>UPDATE_PICKLIST_NAME</td>
 		<td>//input[@aria-describedby] | //*[text()='Name']/..//input[@type="text"]</td>
 		<td></td>
@@ -56,23 +51,18 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>GOTO_PICKLIST_VIEW</td>
-		<td>//button[(@class='dropdown-item') and contains(.,'View')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>ADD_ITEM_BUTTON</td>
 		<td>//button[@title='Add Item']</td>
 		<td></td>
 	</tr>
 	<tr>
-		<td>ADD_PICKLIST_ITEM_NAME</td>
-		<td>//input[@id='locale']</td>
+		<td>ASSERT_PICKLIST</td>
+		<td>//div[contains(@class,'table-list-title') and contains(.,'${key_picklistName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
-		<td>ADD_PICKLIST_ITEM_KEY</td>
-		<td>//input[(@name='name' and @class='form-control' and @type='text')]</td>
+		<td>ADD_PICKLIST_ITEM_NAME_AND_KEY</td>
+		<td>//*[contains(@class,'modal-body')] //label[text()='${key_selectField}']/..//input</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -98,11 +88,6 @@
 	<tr>
 		<td>IFRAME_PICKLIST_ITEM_MODAL</td>
 		<td>//div[contains(@class,'modal-content')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>PICKLIST_ITEM_KEBAB_MENU_OPTION</td>
-		<td>//div[contains(.,'${key_itemKey}')]/..//button[contains(.,'${key_picklistItemOption}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -158,6 +143,16 @@
 	<tr>
 		<td>DIV_PICKLIST_MODAL</td>
 		<td>//div[@class=('fade modal d-block show')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>PICKLIST_NAME</td>
+		<td>//div[contains(@class, 'dnd-tbody')]//*[contains(text(), '${key_picklistItemName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>IMPORT_PICKLIST</td>
+		<td>//div[contains(@class, 'dropdown')]//button//*[name()='svg'][contains(@class,'download')]</td>
 		<td></td>
 	</tr>
 </tbody>

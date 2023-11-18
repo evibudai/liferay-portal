@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.auto.tagger.internal.helper;
@@ -48,11 +39,8 @@ public class AssetAutoTaggerHelper {
 
 		List<AssetAutoTagProvider<?>> assetAutoTagProviders = new ArrayList<>();
 
-		ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
-			serviceTrackerMap = _getServiceTrackerMap();
-
 		List<AssetAutoTagProvider<?>> generalAssetAutoTagProviders =
-			serviceTrackerMap.getService("*");
+			_serviceTrackerMap.getService("*");
 
 		if (ListUtil.isNotEmpty(generalAssetAutoTagProviders)) {
 			assetAutoTagProviders.addAll(generalAssetAutoTagProviders);
@@ -60,7 +48,7 @@ public class AssetAutoTaggerHelper {
 
 		if (Validator.isNotNull(className)) {
 			List<AssetAutoTagProvider<?>> classNameAssetAutoTagProviders =
-				serviceTrackerMap.getService(className);
+				_serviceTrackerMap.getService(className);
 
 			if (ListUtil.isNotEmpty(classNameAssetAutoTagProviders)) {
 				assetAutoTagProviders.addAll(classNameAssetAutoTagProviders);
@@ -71,17 +59,11 @@ public class AssetAutoTaggerHelper {
 	}
 
 	public List<AssetAutoTagProvider<?>> getAssetEntryAssetAutoTagProviders() {
-		ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
-			serviceTrackerMap = _getServiceTrackerMap();
-
-		return serviceTrackerMap.getService(AssetEntry.class.getName());
+		return _serviceTrackerMap.getService(AssetEntry.class.getName());
 	}
 
 	public Set<String> getClassNames() {
-		ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
-			serviceTrackerMap = _getServiceTrackerMap();
-
-		return serviceTrackerMap.keySet();
+		return _serviceTrackerMap.keySet();
 	}
 
 	public boolean isAutoTaggable(AssetEntry assetEntry) {
@@ -107,14 +89,16 @@ public class AssetAutoTaggerHelper {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_bundleContext = bundleContext;
+		_serviceTrackerMap =
+			(ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>)
+				(ServiceTrackerMap)ServiceTrackerMapFactory.openMultiValueMap(
+					bundleContext, AssetAutoTagProvider.class,
+					"model.class.name");
 	}
 
 	@Deactivate
-	protected synchronized void deactivate() {
-		if (_serviceTrackerMap != null) {
-			_serviceTrackerMap.close();
-		}
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	private AssetAutoTaggerConfiguration _getAssetAutoTaggerConfiguration(
@@ -126,30 +110,6 @@ public class AssetAutoTaggerHelper {
 				_groupLocalService.getGroup(assetEntry.getGroupId()));
 	}
 
-	private ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
-		_getServiceTrackerMap() {
-
-		ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
-			serviceTrackerMap = _serviceTrackerMap;
-
-		if (serviceTrackerMap != null) {
-			return serviceTrackerMap;
-		}
-
-		synchronized (this) {
-			if (_serviceTrackerMap == null) {
-				_serviceTrackerMap =
-					(ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>)
-						(ServiceTrackerMap)
-							ServiceTrackerMapFactory.openMultiValueMap(
-								_bundleContext, AssetAutoTagProvider.class,
-								"model.class.name");
-			}
-
-			return _serviceTrackerMap;
-		}
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetAutoTaggerHelper.class);
 
@@ -157,12 +117,10 @@ public class AssetAutoTaggerHelper {
 	private AssetAutoTaggerConfigurationFactory
 		_assetAutoTaggerConfigurationFactory;
 
-	private BundleContext _bundleContext;
-
 	@Reference
 	private GroupLocalService _groupLocalService;
 
-	private volatile ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
+	private ServiceTrackerMap<String, List<AssetAutoTagProvider<?>>>
 		_serviceTrackerMap;
 
 }

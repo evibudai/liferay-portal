@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -35,6 +26,7 @@ const pageApplicationId = PAGE;
  */
 
 function dxp(analytics) {
+	const Liferay = window.Liferay;
 
 	/**
 	 * Sends view duration information on the window unload event
@@ -88,7 +80,7 @@ function dxp(analytics) {
 		return mode === PARAM_VIEW_MODE;
 	}
 
-	if (window.Liferay) {
+	if (Liferay) {
 		const searchParams = getSearchParams();
 
 		if (
@@ -99,7 +91,7 @@ function dxp(analytics) {
 			return analytics._disposeInternal();
 		}
 
-		if (window.Liferay.SPA) {
+		if (Liferay.SPA) {
 			const loadingStartMarks = window.performance.getEntriesByName(
 				MARK_LOAD_EVENT_START
 			);
@@ -113,14 +105,14 @@ function dxp(analytics) {
 				);
 
 				createMark(MARK_LOAD_EVENT_START);
-				window.Liferay.on('beforeNavigate', createLoadMark);
+				Liferay.on('beforeNavigate', createLoadMark);
 			}
 
 			if (document.readyState === 'complete') {
 				sendLoadEvent();
 			}
 
-			window.Liferay.once('beforeNavigate', sendUnloadEvent);
+			Liferay.once('beforeNavigate', sendUnloadEvent);
 		}
 	}
 }

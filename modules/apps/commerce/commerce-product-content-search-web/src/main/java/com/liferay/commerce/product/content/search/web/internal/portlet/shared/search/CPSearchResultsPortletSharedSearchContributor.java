@@ -1,29 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.search.web.internal.portlet.shared.search;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.search.web.internal.configuration.CPSearchResultsPortletInstanceConfiguration;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.petra.string.StringPool;
+import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -33,7 +25,6 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.generic.BooleanClauseImpl;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -42,7 +33,7 @@ import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 
-import java.util.Optional;
+import java.util.NoSuchElementException;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -67,14 +58,20 @@ public class CPSearchResultsPortletSharedSearchContributor
 		try {
 			_contribute(portletSharedSearchSettings);
 
+			String paginationStartParameterName =
+				portletSharedSearchSettings.getPaginationStartParameterName();
+
+			if (paginationStartParameterName == null) {
+				throw new NoSuchElementException(
+					"Pagination start parameter name is null for portlet ID " +
+						portletSharedSearchSettings.getPortletId());
+			}
+
 			SearchRequestBuilder searchRequestBuilder =
 				portletSharedSearchSettings.getSearchRequestBuilder();
 
-			Optional<String> paginationStartParameterNameOptional =
-				portletSharedSearchSettings.getPaginationStartParameterName();
-
 			searchRequestBuilder.paginationStartParameterName(
-				paginationStartParameterNameOptional.get());
+				paginationStartParameterName);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
@@ -95,11 +92,9 @@ public class CPSearchResultsPortletSharedSearchContributor
 			_commerceChannelLocalService.fetchCommerceChannelBySiteGroupId(
 				themeDisplay.getScopeGroupId());
 
-		Optional<String> parameterValueOptional =
-			portletSharedSearchSettings.getParameter71("q");
-
 		portletSharedSearchSettings.setKeywords(
-			parameterValueOptional.orElse(StringPool.BLANK));
+			GetterUtil.getString(
+				portletSharedSearchSettings.getParameter("q")));
 
 		portletSharedSearchSettings.addCondition(
 			new BooleanClauseImpl<Query>(
@@ -130,16 +125,16 @@ public class CPSearchResultsPortletSharedSearchContributor
 			searchContext.setAttribute(
 				"commerceChannelGroupId", commerceChannel.getGroupId());
 
-			CommerceAccount commerceAccount =
-				_commerceAccountHelper.getCurrentCommerceAccount(
+			AccountEntry accountEntry =
+				_commerceAccountHelper.getCurrentAccountEntry(
 					commerceChannel.getGroupId(),
 					_portal.getHttpServletRequest(renderRequest));
 
-			if (commerceAccount != null) {
+			if (accountEntry != null) {
 				searchContext.setAttribute(
 					"commerceAccountGroupIds",
-					_commerceAccountHelper.getCommerceAccountGroupIds(
-						commerceAccount.getCommerceAccountId()));
+					_accountGroupLocalService.getAccountGroupIds(
+						accountEntry.getAccountEntryId()));
 			}
 		}
 
@@ -149,12 +144,11 @@ public class CPSearchResultsPortletSharedSearchContributor
 
 		queryConfig.setHighlightEnabled(false);
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
 		CPSearchResultsPortletInstanceConfiguration
 			cpSearchResultsPortletInstanceConfiguration =
-				portletDisplay.getPortletInstanceConfiguration(
-					CPSearchResultsPortletInstanceConfiguration.class);
+				_configurationProvider.getPortletInstanceConfiguration(
+					CPSearchResultsPortletInstanceConfiguration.class,
+					themeDisplay);
 
 		_paginate(
 			cpSearchResultsPortletInstanceConfiguration,
@@ -171,48 +165,51 @@ public class CPSearchResultsPortletSharedSearchContributor
 		portletSharedSearchSettings.setPaginationStartParameterName(
 			paginationStartParameterName);
 
-		Optional<String> paginationStartParameterValueOptional =
-			portletSharedSearchSettings.getParameter71(
+		String paginationStartParameterValue =
+			portletSharedSearchSettings.getParameter(
 				paginationStartParameterName);
 
-		Optional<Integer> paginationStartOptional =
-			paginationStartParameterValueOptional.map(Integer::valueOf);
+		if (paginationStartParameterValue != null) {
+			portletSharedSearchSettings.setPaginationStart(
+				Integer.valueOf(paginationStartParameterValue));
+		}
 
-		paginationStartOptional.ifPresent(
-			portletSharedSearchSettings::setPaginationStart);
+		String paginationDeltaParameterValue =
+			portletSharedSearchSettings.getParameter("delta");
 
-		String paginationDeltaParameterName = "delta";
+		if (paginationDeltaParameterValue != null) {
+			portletSharedSearchSettings.setPaginationDelta(
+				Integer.valueOf(paginationDeltaParameterValue));
 
-		Optional<String> paginationDeltaParameterValueOptional =
-			portletSharedSearchSettings.getParameter71(
-				paginationDeltaParameterName);
-
-		Optional<Integer> paginationDeltaOptional =
-			paginationDeltaParameterValueOptional.map(Integer::valueOf);
+			return;
+		}
 
 		int configurationPaginationDelta =
 			cpSearchResultsPortletInstanceConfiguration.paginationDelta();
 
-		Optional<PortletPreferences> portletPreferencesOptional =
-			portletSharedSearchSettings.getPortletPreferences71();
+		PortletPreferences portletPreferences =
+			portletSharedSearchSettings.getPortletPreferences();
 
-		if (portletPreferencesOptional.isPresent()) {
-			PortletPreferences portletPreferences =
-				portletPreferencesOptional.get();
-
+		if (portletPreferences != null) {
 			configurationPaginationDelta = GetterUtil.getInteger(
 				portletPreferences.getValue("paginationDelta", null));
 		}
 
 		portletSharedSearchSettings.setPaginationDelta(
-			paginationDeltaOptional.orElse(configurationPaginationDelta));
+			configurationPaginationDelta);
 	}
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Portal _portal;

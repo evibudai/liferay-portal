@@ -1,31 +1,32 @@
 definition {
 
-	@summary = "Helper function to get the child KB resource primKey"
 	macro _getChildKBResourcePrimKey {
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderName)) {
 			var parentResourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
 		else {
 			var parentResourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/get-kb-articles \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d parentResourcePrimKey=${parentResourcePrimKey} \
 				-d status=0 \
@@ -34,17 +35,16 @@ definition {
 				-d -orderByComparator=
 		''';
 
-		var resourcePrimKey = JSONCurlUtil.post("${curl}", "$.[?(@['title'] == '${kbChildArticleTitle}')]['resourcePrimKey']");
+		var resourcePrimKey = JSONCurlUtil.post(${curl}, "$.[?(@['title'] == '${kbChildArticleTitle}')]['resourcePrimKey']");
 
-		if ("${resourcePrimKey}" == "") {
+		if (${resourcePrimKey} == "") {
 			fail("FAIL. Cannot find resourcePrimKey.");
 		}
 		else {
-			return "${resourcePrimKey}";
+			return ${resourcePrimKey};
 		}
 	}
 
-	@summary = "Helper function to get the KB resource primKey"
 	macro _getKBResourcePrimKey {
 		if (!(isSet(site))) {
 			var site = "true";
@@ -52,21 +52,22 @@ definition {
 
 		if (isSet(folderName)) {
 			var folderId = JSONKnowledgeBase.getFolderIdByFolderName(
-				folderName = "${folderName}",
-				groupName = "${groupName}");
+				folderName = ${folderName},
+				groupName = ${groupName});
 		}
 		else {
-			var folderId = "0";
+			var folderId = 0;
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/get-kb-articles \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d parentResourcePrimKey=${folderId} \
 				-d status=0 \
@@ -75,17 +76,16 @@ definition {
 				-d -orderByComparator=
 		''';
 
-		var resourcePrimKey = JSONCurlUtil.post("${curl}", "$.[?(@['title'] == '${kbArticleTitle}')]['resourcePrimKey']");
+		var resourcePrimKey = JSONCurlUtil.post(${curl}, "$.[?(@['title'] == '${kbArticleTitle}')]['resourcePrimKey']");
 
-		if ("${resourcePrimKey}" == "") {
+		if (${resourcePrimKey} == "") {
 			fail("FAIL. Cannot find resourcePrimKey.");
 		}
 		else {
-			return "${resourcePrimKey}";
+			return ${resourcePrimKey};
 		}
 	}
 
-	@summary = "This calls the JSON WS API to add a kB article"
 	macro addkBArticle {
 		var portalURL = JSONCompany.getPortalURL();
 
@@ -94,50 +94,53 @@ definition {
 
 			if (isSet(parentFolderName)) {
 				var parentFolderId = JSONKnowledgeBase.getFolderIdByFolderName(
-					folderName = "${parentFolderName}",
-					groupName = "${groupName}");
+					folderName = ${parentFolderName},
+					groupName = ${groupName});
 			}
 			else {
-				var parentFolderId = "0";
+				var parentFolderId = 0;
 			}
 
 			var folderId = JSONKnowledgeBase.getFolderIdByFolderName(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				parentFolderId = "${parentFolderId}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				parentFolderId = ${parentFolderId});
 		}
 		else {
-			var folderId = "0";
+			var folderId = 0;
 		}
 
 		if (isSet(groupName)) {
 			var serviceContext = JSONServiceContextUtil.setServiceContext(
-				addGuestPermissions = "${addGuestPermissions}",
-				assetCategoryIds = "${assetCategoryIds}",
-				assetTagNames = "${assetTagNames}",
-				groupName = "${groupName}");
+				addGuestPermissions = ${addGuestPermissions},
+				assetCategoryIds = ${assetCategoryIds},
+				assetTagNames = ${assetTagNames},
+				groupName = ${groupName});
 		}
 
 		if (!(isSet(urlTitle))) {
 			var urlTitle = "";
 		}
 
+		if (!(isSet(kbDescription))) {
+			var kbDescription = "";
+		}
+
 		if (!(isSet(expirationDate)) || !(isSet(reviewDate))) {
-			var displayDateYear = DateUtil.getCurrentYear();
+			var reviewDate = "2099-01-01T01:01:00Z";
+			var expirationDate = "2099-01-01T01:01:00Z";
+		}
 
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var reviewDate = "${displayDateYear}-01-01T01:01:00Z";
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var expirationDate = "${displayDateYear}-01-01T01:01:00Z";
+		if (!(isSet(displayDate))) {
+			var displayDate = "2020-01-01T01:01:00Z";
 		}
 
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
@@ -145,9 +148,10 @@ definition {
 				-d title=${kbArticleTitle} \
 				-d urlTitle=${urlTitle} \
 				-d content=<p>${kbArticleContent}</p> \
-				-d description= \
+				-d description=${kbDescription} \
 				-d sections= \
 				-d sourceURL= \
+				-d displayDate=${displayDate} \
 				-d expirationDate=${expirationDate} \
 				-d reviewDate=${reviewDate} \
 				-d selectedFileNames= \
@@ -160,40 +164,39 @@ definition {
 
 		echo("## * Description: ${kbArticleContent}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to add a kB child article"
 	macro addkBChildArticle {
 		var portalURL = JSONCompany.getPortalURL();
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
 
 		if (isSet(folderName)) {
 			var parentResourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
 		else {
 			var parentResourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
 
 		if (!(isSet(expirationDate)) || !(isSet(reviewDate))) {
-			var displayDateYear = DateUtil.getCurrentYear();
-
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var reviewDate = "${displayDateYear}-01-01T01:01:00Z";
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var expirationDate = "${displayDateYear}-01-01T01:01:00Z";
+			var reviewDate = "2099-01-01T01:01:00Z";
+			var expirationDate = "2099-01-01T01:01:00Z";
 		}
+
+		if (!(isSet(displayDate))) {
+			var displayDate = "2020-01-01T01:01:00Z";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
@@ -204,6 +207,7 @@ definition {
 				-d description= \
 				-d sections= \
 				-d sourceURL= \
+				-d displayDate=${displayDate} \
 				-d expirationDate=${expirationDate} \
 				-d reviewDate=${reviewDate}
 				-d selectedFileNames= \
@@ -215,10 +219,9 @@ definition {
 
 		echo("## * Description: ${kbChildArticleContent}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to add a kB folder"
 	macro addkBFolder {
 		var portalURL = JSONCompany.getPortalURL();
 
@@ -226,11 +229,11 @@ definition {
 			Variables.assertDefined(parameterList = "${parentFolderName},${groupName}");
 
 			var folderId = JSONKnowledgeBase.getFolderIdByFolderName(
-				folderName = "${parentFolderName}",
-				groupName = "${groupName}");
+				folderName = ${parentFolderName},
+				groupName = ${groupName});
 		}
 		else {
-			var folderId = "0";
+			var folderId = 0;
 		}
 
 		if (!(isSet(site))) {
@@ -242,8 +245,8 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
 
 		var curl = '''
@@ -263,42 +266,41 @@ definition {
 
 		echo("## * Description: ${kbFolderDescription}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to add a kB grandchild article"
 	macro addkBGrandchildArticle {
 		var portalURL = JSONCompany.getPortalURL();
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
 
 		if (isSet(folderName)) {
 			var parentResourcePrimKey = JSONKnowledgeBase._getChildKBResourcePrimKey(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				kbChildArticleTitle = "${kbChildArticleTitle}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				kbChildArticleTitle = ${kbChildArticleTitle});
 		}
 		else {
 			var parentResourcePrimKey = JSONKnowledgeBase._getChildKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				kbChildArticleTitle = "${kbChildArticleTitle}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				kbChildArticleTitle = ${kbChildArticleTitle});
 		}
 
 		if (!(isSet(expirationDate)) || !(isSet(reviewDate))) {
-			var displayDateYear = DateUtil.getCurrentYear();
-
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var reviewDate = "${displayDateYear}-01-01T01:01:00Z";
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var expirationDate = "${displayDateYear}-01-01T01:01:00Z";
+			var reviewDate = "2099-01-01T01:01:00Z";
+			var expirationDate = "2099-01-01T01:01:00Z";
 		}
+
+		if (!(isSet(displayDate))) {
+			var displayDate = "2020-01-01T01:01:00Z";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
@@ -309,6 +311,7 @@ definition {
 				-d description= \
 				-d sections= \
 				-d sourceURL= \
+				-d displayDate=${displayDate} \
 				-d expirationDate=${expirationDate} \
 				-d reviewDate=${reviewDate}
 				-d selectedFileNames= \
@@ -320,16 +323,16 @@ definition {
 
 		echo("## * Description: ${kbGrandchildArticleContent}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to add a kB template"
 	macro addkBTemplate {
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbtemplate/add-kb-template \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d portletId=0 \
 				-d title=${kbTemplateTitle} \
 				-d content=${kbTemplateContent}
@@ -341,87 +344,112 @@ definition {
 
 		echo("## * Description: ${kbTemplateContent}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to get the 'folderId' for the folder '${folderName}'"
 	macro getFolderIdByFolderName {
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		if (!(isSet(parentFolderId))) {
-			var parentFolderId = "0";
+			var parentFolderId = 0;
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbfolder/get-kb-folders \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d parentKBFolderId=${parentFolderId} \
 				-d "start=-1" \
 				-d "end=-1"
 		''';
 
-		var kbFolderId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${folderName}')]['kbFolderId']");
+		var kbFolderId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${folderName}')]['kbFolderId']");
 
-		if ("${kbFolderId}" == "") {
+		if (${kbFolderId} == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {
-			return "${kbFolderId}";
+			return ${kbFolderId};
 		}
 	}
 
-	@summary = "This calls the JSON WS API to edit a kB article"
+	macro removeKBArticle {
+		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		if (isSet(folderName)) {
+			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
+		}
+		else {
+			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
+		}
+
+		var curl = '''
+			${portalURL}/api/jsonws/kb.kbarticle/delete-kb-article \
+				-u ${userLoginInfo} \
+				-d resourcePrimKey=${resourcePrimKey}
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
 	macro updateKBArticle {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderName)) {
 			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
 		else {
 			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle});
 		}
 
 		if (isSet(groupName)) {
 			var serviceContext = JSONServiceContextUtil.setServiceContext(
-				addGuestPermissions = "${addGuestPermissions}",
-				assetCategoryIds = "${assetCategoryIds}",
-				assetTagNames = "${assetTagNames}",
-				groupName = "${groupName}");
+				addGuestPermissions = ${addGuestPermissions},
+				assetCategoryIds = ${assetCategoryIds},
+				assetTagNames = ${assetTagNames},
+				groupName = ${groupName});
 		}
 
 		if (!(isSet(expirationDate)) || !(isSet(reviewDate))) {
-			var displayDateYear = DateUtil.getCurrentYear();
-
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var reviewDate = "${displayDateYear}-01-01T01:01:00Z";
-			var displayDateYear = ${displayDateYear} + 1;
-
-			var expirationDate = "${displayDateYear}-01-01T01:01:00Z";
+			var reviewDate = "2099-01-01T01:01:00Z";
+			var expirationDate = "2099-01-01T01:01:00Z";
 		}
+
+		if (!(isSet(displayDate))) {
+			var displayDate = "2020-01-01T01:01:00Z";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/update-kb-article \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d resourcePrimKey=${resourcePrimKey} \
 				-d title=${newKbArticleTitle} \
 				-d content=<p>${newKbArticleContent}</p> \
 				-d description= \
 				-d sections= \
 				-d sourceURL= \
+				-d displayDate=${displayDate} \
 				-d expirationDate=${expirationDate} \
 				-d reviewDate=${reviewDate} \
 				-d selectedFileNames= \
@@ -435,28 +463,33 @@ definition {
 
 		echo("## * Content: ${newKbArticleContent}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
 	macro uploadAttachmentToArticle {
 		var portalURL = JSONCompany.getPortalURL();
 		var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-			groupName = "${groupName}",
-			kbArticleTitle = "${kbArticleTitle}");
+			groupName = ${groupName},
+			kbArticleTitle = ${kbArticleTitle});
 		var baseDir = PropsUtil.get("test.base.dir.name");
 		var dependenciesDir = PropsUtil.get("test.dependencies.dir.name");
 
 		var filePath = "${baseDir}${dependenciesDir}/${sourceFileName}";
 
+		if (!(isSet(externalReferenceCode))) {
+			var externalReferenceCode = "";
+		}
+
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/knowledge-base-articles/${resourcePrimKey}/knowledge-base-attachments \
-			-H accept: application/json \
-			-H Content-Type: multipart/form-data \
-			-u test@liferay.com:test \
-			-F file=@${filePath}
+				-H accept: application/json \
+				-H Content-Type: multipart/form-data \
+				-F knowledgeBaseAttachment={"externalReferenceCode": "${externalReferenceCode}"} \
+				-u test@liferay.com:test \
+				-F file=@${filePath}
 		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
 }

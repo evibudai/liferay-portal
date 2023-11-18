@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -29,14 +20,11 @@ page import="com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil"
 page import="com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplayFactoryUtil" %><%@
+page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.CompanyConstants" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.search.Indexer" %><%@
-page import="com.liferay.portal.kernel.search.IndexerClassNameComparator" %><%@
-page import="com.liferay.portal.kernel.search.IndexerRegistryUtil" %><%@
-page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.PropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.admin.web.internal.constants.SearchAdminWebKeys" %><%@
 page import="com.liferay.portal.search.admin.web.internal.display.context.IndexActionsDisplayContext" %><%@
@@ -45,9 +33,7 @@ page import="com.liferay.product.navigation.control.menu.constants.ProductNaviga
 
 <%@ page import="java.io.Serializable" %>
 
-<%@ page import="java.util.ArrayList" %><%@
-page import="java.util.Collections" %><%@
-page import="java.util.HashMap" %><%@
+<%@ page import="java.util.HashMap" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %>
 
@@ -57,6 +43,11 @@ page import="java.util.Map" %>
 	<portlet:param name="mvcRenderCommandName" value="/portal_search_admin/view" />
 	<portlet:param name="tabs1" value="index-actions" />
 </portlet:renderURL>
+
+<%
+IndexActionsDisplayContext indexActionsDisplayContext = (IndexActionsDisplayContext)request.getAttribute(SearchAdminWebKeys.INDEX_ACTIONS_DISPLAY_CONTEXT);
+SearchAdminDisplayContext searchAdminDisplayContext = (SearchAdminDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
+%>
 
 <aui:form
 	action='<%=
@@ -74,6 +65,18 @@ page import="java.util.Map" %>
 	<%
 	Map<String, BackgroundTaskDisplay> classNameToBackgroundTaskDisplayMap = new HashMap<>();
 
+	List<BackgroundTask> indexReindexerBackgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(CompanyConstants.SYSTEM, "com.liferay.portal.search.internal.background.task.ReindexIndexReindexerBackgroundTaskExecutor", BackgroundTaskConstants.STATUS_IN_PROGRESS);
+
+	if (!indexReindexerBackgroundTasks.isEmpty()) {
+		for (BackgroundTask backgroundTask : indexReindexerBackgroundTasks) {
+			Map<String, Serializable> taskContextMap = backgroundTask.getTaskContextMap();
+
+			String className = (String)taskContextMap.get("className");
+
+			classNameToBackgroundTaskDisplayMap.put(className, BackgroundTaskDisplayFactoryUtil.getBackgroundTaskDisplay(backgroundTask));
+		}
+	}
+
 	List<BackgroundTask> reindexPortalBackgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(CompanyConstants.SYSTEM, "com.liferay.portal.search.internal.background.task.ReindexPortalBackgroundTaskExecutor", BackgroundTaskConstants.STATUS_IN_PROGRESS);
 
 	List<BackgroundTask> reindexSingleBackgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(CompanyConstants.SYSTEM, "com.liferay.portal.search.internal.background.task.ReindexSingleIndexerBackgroundTaskExecutor", BackgroundTaskConstants.STATUS_IN_PROGRESS);
@@ -87,8 +90,6 @@ page import="java.util.Map" %>
 			classNameToBackgroundTaskDisplayMap.put(className, BackgroundTaskDisplayFactoryUtil.getBackgroundTaskDisplay(backgroundTask));
 		}
 	}
-
-	IndexActionsDisplayContext indexActionsDisplayContext = (IndexActionsDisplayContext)request.getAttribute(SearchAdminWebKeys.INDEX_ACTIONS_DISPLAY_CONTEXT);
 	%>
 
 	<clay:container-fluid
@@ -100,7 +101,7 @@ page import="java.util.Map" %>
 				size="4"
 			>
 				<react:component
-					module="js/ExecutionScope.es"
+					module="js/execution_options/index"
 					props="<%= indexActionsDisplayContext.getData() %>"
 				/>
 			</clay:col>
@@ -114,10 +115,15 @@ page import="java.util.Map" %>
 					</h2>
 
 					<ul class="list-group">
+						<li class="list-group-header">
+							<h3 class="list-group-header-title">
+								<liferay-ui:message key="global" />
+							</h3>
+						</li>
 						<li class="list-group-item list-group-item-flex">
 							<div class="autofit-col autofit-col-expand">
 								<p class="list-group-title">
-									<liferay-ui:message key="reindex-search-indexes" />
+									<liferay-ui:message key="all-search-indexes" />
 								</p>
 							</div>
 
@@ -140,7 +146,7 @@ page import="java.util.Map" %>
 										long timeout = ParamUtil.getLong(request, "timeout");
 										%>
 
-										<aui:button cssClass="save-server-button" data-blocking='<%= ParamUtil.getBoolean(request, "blocking") %>' data-cmd="reindex" data-timeout="<%= (timeout == 0) ? StringPool.BLANK : timeout %>" value="execute" />
+										<aui:button cssClass="save-server-button" data-blocking='<%= ParamUtil.getBoolean(request, "blocking") %>' data-cmd="reindex" data-timeout="<%= (timeout == 0) ? StringPool.BLANK : timeout %>" disabled="<%= !reindexSingleBackgroundTasks.isEmpty() %>" value="reindex" />
 									</c:when>
 									<c:otherwise>
 										<%= backgroundTaskDisplay.renderDisplayTemplate() %>
@@ -151,76 +157,86 @@ page import="java.util.Map" %>
 						<li class="list-group-item list-group-item-flex">
 							<div class="autofit-col autofit-col-expand">
 								<p class="list-group-title">
-									<liferay-ui:message key="reindex-spell-check-dictionaries" />
+									<liferay-ui:message key="all-spell-check-dictionaries" />
 								</p>
 							</div>
 
-							<div class="autofit-col">
-								<aui:button cssClass="save-server-button" data-cmd="reindexDictionaries" value="execute" />
+							<div class="autofit-col index-action-wrapper" data-type="spellCheck">
+								<aui:button cssClass="save-server-button" data-cmd="reindexDictionaries" data-concurrent-disabled="<%= true %>" disabled="<%= !reindexPortalBackgroundTasks.isEmpty() %>" value="reindex" />
 							</div>
 						</li>
 
-						<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-163688")) %>'>
-							<li class="list-group-item list-group-item-flex">
-								<div class="autofit-col autofit-col-expand">
-									<p class="list-group-title">
-										<liferay-ui:message arguments="<%= indexActionsDisplayContext.getTextEmbeddingServiceStatus() %>" key="reindex-text-embeddings-x" />
-									</p>
-								</div>
+						<%
+						Map<String, List<Indexer<?>>> indexersMap = searchAdminDisplayContext.getIndexersMap();
 
-								<div class="autofit-col">
-									<aui:button cssClass="save-server-button" data-cmd="reindexTextEmbeddings" value="execute" />
-								</div>
+						for (Map.Entry<String, List<Indexer<?>>> entry : indexersMap.entrySet()) {
+							List<Indexer<?>> indexers = entry.getValue();
+						%>
+
+							<li class="list-group-header">
+								<h3 class="list-group-header-title">
+									<liferay-ui:message key='<%= "model.resource." + entry.getKey() %>' />
+								</h3>
 							</li>
-						</c:if>
+
+							<%
+							for (Indexer<?> indexer : indexers) {
+								backgroundTaskDisplay = classNameToBackgroundTaskDisplayMap.get(indexer.getClassName());
+							%>
+
+								<li class="list-group-item list-group-item-flex">
+									<div class="autofit-col autofit-col-expand">
+										<p class="list-group-title" style="word-break: break-word;">
+											<liferay-ui:message key='<%= "model.resource." + indexer.getClassName() %>' /> (<%= indexer.getClassName() %>)
+										</p>
+									</div>
+
+									<div class="autofit-col index-action-wrapper" data-type="<%= indexer.getClassName() %>">
+										<c:choose>
+											<c:when test="<%= (backgroundTaskDisplay == null) || !backgroundTaskDisplay.hasPercentage() %>">
+												<aui:button cssClass="save-server-button" data-classname="<%= indexer.getClassName() %>" data-cmd="reindex" data-concurrent-disabled="<%= true %>" data-displayname='<%= LanguageUtil.get(request, "model.resource." + indexer.getClassName()) %>' disabled="<%= !indexer.isIndexerEnabled() || !reindexPortalBackgroundTasks.isEmpty() %>" value="reindex" />
+											</c:when>
+											<c:otherwise>
+												<%= backgroundTaskDisplay.renderDisplayTemplate() %>
+											</c:otherwise>
+										</c:choose>
+									</div>
+								</li>
 
 						<%
-						List<Indexer<?>> indexers = new ArrayList<>(IndexerRegistryUtil.getIndexers());
+							}
+						}
+						%>
 
-						Collections.sort(indexers, new IndexerClassNameComparator(true));
+						<li class="list-group-header">
+							<h3 class="list-group-header-title">
+								<liferay-ui:message key="search-tuning" />
+							</h3>
+						</li>
 
-						for (Indexer<?> indexer : indexers) {
-							backgroundTaskDisplay = classNameToBackgroundTaskDisplayMap.get(indexer.getClassName());
+						<%
+						List<String> indexReindexerClassNames = searchAdminDisplayContext.getIndexReindexerClassNames();
+
+						for (String indexReindexerClassName : indexReindexerClassNames) {
+							backgroundTaskDisplay = classNameToBackgroundTaskDisplayMap.get(indexReindexerClassName);
 						%>
 
 							<li class="list-group-item list-group-item-flex">
 								<div class="autofit-col autofit-col-expand">
-									<p class="list-group-title">
-										<liferay-ui:message arguments="<%= indexer.getClassName() %>" key="reindex-x" />
+									<p class="list-group-title" style="word-break: break-word;">
+										<liferay-ui:message key='<%= "model.resource." + indexReindexerClassName %>' /> (<%= indexReindexerClassName %>)
 									</p>
 								</div>
 
-								<div class="autofit-col index-action-wrapper" data-type="<%= indexer.getClassName() %>">
+								<div class="autofit-col index-action-wrapper" data-type="<%= indexReindexerClassName %>">
 									<c:choose>
 										<c:when test="<%= (backgroundTaskDisplay == null) || !backgroundTaskDisplay.hasPercentage() %>">
-											<aui:button cssClass="save-server-button" data-classname="<%= indexer.getClassName() %>" data-cmd="reindex" disabled="<%= !indexer.isIndexerEnabled() %>" value="execute" />
+											<aui:button cssClass="save-server-button" data-classname="<%= indexReindexerClassName %>" data-cmd="reindexIndexReindexer" data-concurrent-disabled="<%= true %>" data-displayname='<%= LanguageUtil.get(request, "model.resource." + indexReindexerClassName) %>' disabled="<%= !reindexPortalBackgroundTasks.isEmpty() %>" value="reindex" />
 										</c:when>
 										<c:otherwise>
 											<%= backgroundTaskDisplay.renderDisplayTemplate() %>
 										</c:otherwise>
 									</c:choose>
-								</div>
-							</li>
-
-						<%
-						}
-
-						SearchAdminDisplayContext searchAdminDisplayContext = (SearchAdminDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
-
-						List<String> indexReindexerClassNames = searchAdminDisplayContext.getIndexReindexerClassNames();
-
-						for (String indexReindexerClassName : indexReindexerClassNames) {
-						%>
-
-							<li class="list-group-item list-group-item-flex">
-								<div class="autofit-col autofit-col-expand">
-									<p class="list-group-title">
-										<liferay-ui:message arguments="<%= indexReindexerClassName %>" key="reindex-x" />
-									</p>
-								</div>
-
-								<div class="autofit-col index-action-wrapper" data-type="<%= indexReindexerClassName %>">
-									<aui:button cssClass="save-server-button" data-classname="<%= indexReindexerClassName %>" data-cmd="reindexIndexReindexer" value="execute" />
 								</div>
 							</li>
 
@@ -239,6 +255,11 @@ page import="java.util.Map" %>
 	new Liferay.Portlet.Admin({
 		controlMenuCategoryKey:
 			'<%= ProductNavigationControlMenuCategoryKeys.TOOLS %>',
+		elasticSearchDiskSpace: {
+			availableDiskSpace: <%= indexActionsDisplayContext.getAvailableDiskSpace() %>,
+			currentDiskSpaceUsed: <%= indexActionsDisplayContext.getCurrentDiskSpaceUsed() %>,
+			isLowOnDiskSpace: <%= indexActionsDisplayContext.isLowOnDiskSpace() %>,
+		},
 		form: document.<portlet:namespace />fm,
 		indexActionWrapperSelector: '.index-action-wrapper',
 		indexActionsPanel:

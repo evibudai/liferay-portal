@@ -20,7 +20,7 @@
 </tr>
 <tr>
 	<td>DISABLED_ADD_EVENT_BUTTON</td>
-	<td>//*[contains(@class,'link-disabled')]</td>
+	<td>//*[@disabled]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,7 +61,7 @@
 </tr>
 <tr>
 	<td>EDIT_PENCIL</td>
-	<td>//button[contains(@class,'btn-secondary')]//*[contains(@class,'pencil')]</td>
+	<td>//div[contains(@class,'filter-info-root')]//button</td>
 	<td></td>
 </tr>
 <tr>
@@ -138,6 +138,14 @@
 <tr>
 	<td>COLUMN_BREAKDOWN_VALUES</td>
 	<td>xpath=(//td[contains(@class,'align-top')]//span[@data-tooltip])[${index}]</td>
+	<td></td>
+</tr>
+
+<!-- EVENT ANALYSIS DROPDOWN -->
+
+<tr>
+	<td>DROPDOWN_BY_INDEX</td>
+	<td>//ul[contains(@class,'dropdown-menu')]//li[${key_index}]</td>
 	<td></td>
 </tr>
 </tbody>

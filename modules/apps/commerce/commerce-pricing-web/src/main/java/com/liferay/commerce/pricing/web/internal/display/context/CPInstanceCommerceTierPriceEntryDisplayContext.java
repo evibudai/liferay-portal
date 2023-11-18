@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.web.internal.display.context;
@@ -22,10 +13,10 @@ import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayCont
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
+import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -47,11 +38,13 @@ public class CPInstanceCommerceTierPriceEntryDisplayContext
 	public CPInstanceCommerceTierPriceEntryDisplayContext(
 		ActionHelper actionHelper,
 		CommercePriceListActionHelper commercePriceListActionHelper,
+		CPInstanceLocalService cpInstanceLocalService,
 		HttpServletRequest httpServletRequest) {
 
 		super(actionHelper, httpServletRequest);
 
 		_commercePriceListActionHelper = commercePriceListActionHelper;
+		_cpInstanceLocalService = cpInstanceLocalService;
 	}
 
 	public CommercePriceEntry getCommercePriceEntry() throws PortalException {
@@ -114,7 +107,10 @@ public class CPInstanceCommerceTierPriceEntryDisplayContext
 		CommercePriceEntry commercePriceEntry = getCommercePriceEntry();
 
 		if (commercePriceEntry != null) {
-			CPInstance cpInstance = commercePriceEntry.getCPInstance();
+			CPInstance cpInstance =
+				_cpInstanceLocalService.fetchCProductInstance(
+					commercePriceEntry.getCProductId(),
+					commercePriceEntry.getCPInstanceUuid());
 
 			if (cpInstance != null) {
 				CPDefinition cpDefinition = cpInstance.getCPDefinition();
@@ -166,7 +162,8 @@ public class CPInstanceCommerceTierPriceEntryDisplayContext
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
 				dropdownItem.setHref(_getAddCommerceTierPriceEntryURL());
-				dropdownItem.setLabel(StringPool.BLANK);
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add-new-price-tier"));
 				dropdownItem.setTarget("modal-lg");
 			}
 		).build();
@@ -218,5 +215,6 @@ public class CPInstanceCommerceTierPriceEntryDisplayContext
 	private final CommercePriceListActionHelper _commercePriceListActionHelper;
 	private CommerceTierPriceEntry _commerceTierPriceEntry;
 	private CPInstance _cpInstance;
+	private final CPInstanceLocalService _cpInstanceLocalService;
 
 }

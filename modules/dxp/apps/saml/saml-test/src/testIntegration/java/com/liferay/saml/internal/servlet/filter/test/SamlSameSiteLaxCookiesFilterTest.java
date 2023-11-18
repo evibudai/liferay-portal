@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.internal.servlet.filter.test;
@@ -37,9 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -69,15 +57,18 @@ public class SamlSameSiteLaxCookiesFilterTest {
 			"SAMLResponse", "TEST_SAMLRESPONSE"
 		).build();
 
-		Set<Map.Entry<String, String>> entrySet = _paramsMap.entrySet();
+		StringBundler sb = new StringBundler(4 * _paramsMap.size());
 
-		Stream<Map.Entry<String, String>> stream = entrySet.stream();
+		for (Map.Entry<String, String> entry : _paramsMap.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append("=");
+			sb.append(entry.getValue());
+			sb.append("&");
+		}
 
-		_postBody = stream.map(
-			entry -> StringBundler.concat(entry.getKey(), "=", entry.getValue())
-		).collect(
-			Collectors.joining("&")
-		);
+		sb.setIndex(sb.index() - 1);
+
+		_postBody = sb.toString();
 	}
 
 	@Test
@@ -127,7 +118,7 @@ public class SamlSameSiteLaxCookiesFilterTest {
 			httpCookie -> Assert.assertFalse(
 				"New JSESSIONID cookie received, so session was undesirably " +
 					"invalidated",
-				Objects.equals("JSESSIONID", httpCookie.getName())));
+				Objects.equals(httpCookie.getName(), "JSESSIONID")));
 
 		Map<String, String> paramsMap = new HashMap<>(_paramsMap);
 

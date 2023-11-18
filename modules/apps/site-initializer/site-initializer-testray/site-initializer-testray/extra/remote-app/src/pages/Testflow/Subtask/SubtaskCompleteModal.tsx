@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useEffect} from 'react';
 import {useForm} from 'react-hook-form';
-import {useOutletContext} from 'react-router-dom';
-import {KeyedMutator} from 'swr';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -26,84 +17,65 @@ import i18n from '../../../i18n';
 import yupSchema, {yupResolver} from '../../../schema/yup';
 import {Liferay} from '../../../services/liferay';
 import {
-	MessageBoardMessage,
 	TestraySubTask,
 	TestraySubTaskIssue,
-	TestrayTask,
 	liferayMessageBoardImpl,
 	testraySubTaskImpl,
 } from '../../../services/rest';
 import {testraySubtaskIssuesImpl} from '../../../services/rest/TestraySubtaskIssues';
-import {searchUtil} from '../../../util/search';
 import {CaseResultStatuses} from '../../../util/statuses';
 
 type SubtaskForm = typeof yupSchema.subtask.__outputType;
 
 type SubTaskCompleteModalProps = {
 	modal: FormModalOptions;
-	mutate?: KeyedMutator<any>;
+	revalidateSubtask: () => void;
 	subtask: TestraySubTask;
-};
-
-type OutletContext = {
-	mbMessage: MessageBoardMessage;
-	mergedSubtaskNames: string;
-	mutateSubtask: KeyedMutator<any>;
-	testraySubtask: TestraySubTask;
-	testrayTask: TestrayTask;
 };
 
 const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 	modal: {observer, onClose, onError, onSave},
-	mutate,
+	revalidateSubtask,
 	subtask,
 }) => {
-	const {mutateSubtask, testraySubtask} = useOutletContext<OutletContext>();
+	const {
+		data: subTaskIssuesResponse,
+		revalidate: revalidateSubtaskIssues,
+	} = useFetch(testraySubtaskIssuesImpl.resource, {
+		params: {
+			filter: SearchBuilder.eq('subtaskId', subtask.id),
+		},
+		transformData: (response) =>
+			testraySubtaskIssuesImpl.transformDataFromList(response),
+	});
 
-	const subTaskId = testraySubtask ? testraySubtask.id : subtask.id;
-
-	const subTaskMbMessageId = testraySubtask
-		? testraySubtask?.mbMessageId
-		: subtask?.mbMessageId;
-
-	const subTaskMbThredId = testraySubtask
-		? testraySubtask?.mbThreadId
-		: subtask?.mbThreadId;
-
-	const {data, mutate: mutateSubtaskIssues} = useFetch(
-		`${testraySubtaskIssuesImpl.resource}&filter=${searchUtil.eq(
-			'subtaskId',
-			subTaskId
-		)}`,
-		(response) => testraySubtaskIssuesImpl.transformDataFromList(response)
+	const {data: mbMessage} = useFetch(
+		liferayMessageBoardImpl.getMessagesIdURL(subtask.mbMessageId)
 	);
 
-	const {data: mbMessage, mutate: mutateComment} = useFetch(
-		subTaskMbMessageId
-			? liferayMessageBoardImpl.getMessagesIdURL(subTaskMbMessageId)
-			: null
-	);
-
-	const subtaskIssues = data?.items || [];
+	const subtaskIssues = subTaskIssuesResponse?.items || [];
 
 	const issues = subtaskIssues
 		.map((subtaskIssue: TestraySubTaskIssue) => subtaskIssue?.issue?.name)
 		.join(', ');
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
+		setValue,
 	} = useForm<SubtaskForm>({
 		defaultValues: {
-			comment: mbMessage?.articleBody,
 			dueStatus: CaseResultStatuses.FAILED,
-			issues,
 		},
 		resolver: yupResolver(yupSchema.subtask),
 	});
 
-	const _onSubmit = ({comment, dueStatus, issues = ''}: SubtaskForm) => {
+	const _onSubmit = async ({
+		comment,
+		dueStatus,
+		issues = '',
+	}: SubtaskForm) => {
 		const _issues = issues
 			.split(',')
 			.map((name) => name.trim())
@@ -111,19 +83,34 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 
 		const commentSubtask = {
 			comment,
-			mbMessageId: subTaskMbMessageId,
-			mbThreadId: subTaskMbThredId,
+			mbMessageId: subtask.mbMessageId,
+			mbThreadId: subtask.mbThreadId,
 			userId: Number(Liferay.ThemeDisplay.getUserId()),
 		};
 
-		testraySubTaskImpl
-			.complete(dueStatus as string, _issues, commentSubtask, subTaskId)
-			.then(mutateSubtask || mutate)
-			.then(mutateSubtaskIssues)
-			.then(mutateComment)
-			.then(() => onSave())
-			.catch(() => onError);
+		try {
+			await testraySubTaskImpl.complete(
+				dueStatus as string,
+				_issues,
+				commentSubtask,
+				subtask?.id
+			);
+
+			revalidateSubtask();
+
+			revalidateSubtaskIssues();
+
+			onSave();
+		}
+		catch (error) {
+			onError(error);
+		}
 	};
+
+	useEffect(() => {
+		setValue('comment', mbMessage?.articleBody);
+		setValue('issues', issues);
+	}, [issues, mbMessage, setValue]);
 
 	const inputProps = {
 		errors,
@@ -136,6 +123,7 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}
@@ -150,10 +138,22 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 					label={i18n.translate('case-results-status')}
 					name="dueStatus"
 					options={[
-						{label: 'Blocked', value: CaseResultStatuses.BLOCKED},
-						{label: 'Failed', value: CaseResultStatuses.FAILED},
-						{label: 'Passed', value: CaseResultStatuses.PASSED},
-						{label: 'Test Fix', value: CaseResultStatuses.TEST_FIX},
+						{
+							label: i18n.translate('blocked'),
+							value: CaseResultStatuses.BLOCKED,
+						},
+						{
+							label: i18n.translate('failed'),
+							value: CaseResultStatuses.FAILED,
+						},
+						{
+							label: i18n.translate('passed'),
+							value: CaseResultStatuses.PASSED,
+						},
+						{
+							label: i18n.translate('test-fix'),
+							value: CaseResultStatuses.TEST_FIX,
+						},
 					]}
 					register={register}
 				/>

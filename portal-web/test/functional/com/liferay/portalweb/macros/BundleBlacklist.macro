@@ -1,26 +1,35 @@
 definition {
 
 	macro blacklistModuleAndComponentConfiguration {
+		if (${label} == "Blacklist Component Names") {
+			var key_text = "ComponentNames";
+		}
+		else {
+			if (${label} == "Blacklist Bundle Symbolic Names") {
+				var key_text = "BundleSymbolicNames";
+			}
+		}
+
 		Type(
-			key_label = "${label}",
-			locator1 = "TextArea#ANY_LABELED",
-			value1 = "${symbolicName}");
+			key_text = ${key_text},
+			locator1 = "TextArea#ANY",
+			value1 = ${symbolicName});
 
 		SystemSettings.saveConfiguration();
 	}
 
 	macro viewProductMenuBlacklistedModule {
+		WaitForConsoleTextPresent(value1 = ${consoleText});
+
 		ApplicationsMenuHelper.openApplicationsMenu();
 
-		Navigator.gotoNavTab(navTab = "${panel}");
+		Navigator.gotoNavTab(navTab = ${panel});
 
 		AssertElementNotPresent(
-			key_category = "${category}",
-			key_portlet = "${portlet}",
+			key_category = ${category},
+			key_portlet = ${portlet},
 			locator1 = "ApplicationsMenu#PORTLET",
-			value1 = "${portlet}");
-
-		AssertConsoleTextPresent(value1 = "${consoleText}");
+			value1 = ${portlet});
 	}
 
 }

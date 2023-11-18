@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.model.impl;
@@ -35,6 +26,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
+
+import java.math.BigDecimal;
 
 import java.sql.Blob;
 import java.sql.Types;
@@ -75,9 +68,9 @@ public class CommerceInventoryBookedQuantityModelImpl
 		{"mvccVersion", Types.BIGINT}, {"CIBookedQuantityId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"sku", Types.VARCHAR},
-		{"quantity", Types.INTEGER}, {"expirationDate", Types.TIMESTAMP},
-		{"bookedNote", Types.VARCHAR}
+		{"modifiedDate", Types.TIMESTAMP}, {"bookedNote", Types.VARCHAR},
+		{"expirationDate", Types.TIMESTAMP}, {"quantity", Types.DECIMAL},
+		{"sku", Types.VARCHAR}, {"unitOfMeasureKey", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -91,14 +84,15 @@ public class CommerceInventoryBookedQuantityModelImpl
 		TABLE_COLUMNS_MAP.put("userName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
-		TABLE_COLUMNS_MAP.put("sku", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("quantity", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("expirationDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("bookedNote", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("expirationDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("quantity", Types.DECIMAL);
+		TABLE_COLUMNS_MAP.put("sku", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("unitOfMeasureKey", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CIBookedQuantity (mvccVersion LONG default 0 not null,CIBookedQuantityId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,sku VARCHAR(75) null,quantity INTEGER,expirationDate DATE null,bookedNote VARCHAR(75) null)";
+		"create table CIBookedQuantity (mvccVersion LONG default 0 not null,CIBookedQuantityId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,bookedNote VARCHAR(75) null,expirationDate DATE null,quantity BIGDECIMAL null,sku VARCHAR(75) null,unitOfMeasureKey VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table CIBookedQuantity";
 
@@ -133,12 +127,18 @@ public class CommerceInventoryBookedQuantityModelImpl
 	public static final long SKU_COLUMN_BITMASK = 4L;
 
 	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UNITOFMEASUREKEY_COLUMN_BITMASK = 8L;
+
+	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMMERCEINVENTORYBOOKEDQUANTITYID_COLUMN_BITMASK =
-		8L;
+		16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -233,108 +233,131 @@ public class CommerceInventoryBookedQuantityModelImpl
 	public Map<String, Function<CommerceInventoryBookedQuantity, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceInventoryBookedQuantity, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<CommerceInventoryBookedQuantity, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<CommerceInventoryBookedQuantity, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceInventoryBookedQuantity, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String,
-					 Function<CommerceInventoryBookedQuantity, Object>>();
-		Map<String, BiConsumer<CommerceInventoryBookedQuantity, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CommerceInventoryBookedQuantity, ?>>();
+		private static final Map
+			<String, Function<CommerceInventoryBookedQuantity, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceInventoryBookedQuantity::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceInventoryBookedQuantity, Long>)
-				CommerceInventoryBookedQuantity::setMvccVersion);
-		attributeGetterFunctions.put(
-			"commerceInventoryBookedQuantityId",
-			CommerceInventoryBookedQuantity::
-				getCommerceInventoryBookedQuantityId);
-		attributeSetterBiConsumers.put(
-			"commerceInventoryBookedQuantityId",
-			(BiConsumer<CommerceInventoryBookedQuantity, Long>)
+		static {
+			Map<String, Function<CommerceInventoryBookedQuantity, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String,
+						 Function<CommerceInventoryBookedQuantity, Object>>();
+
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceInventoryBookedQuantity::getMvccVersion);
+			attributeGetterFunctions.put(
+				"commerceInventoryBookedQuantityId",
 				CommerceInventoryBookedQuantity::
-					setCommerceInventoryBookedQuantityId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceInventoryBookedQuantity::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceInventoryBookedQuantity, Long>)
-				CommerceInventoryBookedQuantity::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CommerceInventoryBookedQuantity::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceInventoryBookedQuantity, Long>)
-				CommerceInventoryBookedQuantity::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CommerceInventoryBookedQuantity::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceInventoryBookedQuantity, String>)
-				CommerceInventoryBookedQuantity::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceInventoryBookedQuantity::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceInventoryBookedQuantity, Date>)
-				CommerceInventoryBookedQuantity::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceInventoryBookedQuantity::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceInventoryBookedQuantity, Date>)
-				CommerceInventoryBookedQuantity::setModifiedDate);
-		attributeGetterFunctions.put(
-			"sku", CommerceInventoryBookedQuantity::getSku);
-		attributeSetterBiConsumers.put(
-			"sku",
-			(BiConsumer<CommerceInventoryBookedQuantity, String>)
-				CommerceInventoryBookedQuantity::setSku);
-		attributeGetterFunctions.put(
-			"quantity", CommerceInventoryBookedQuantity::getQuantity);
-		attributeSetterBiConsumers.put(
-			"quantity",
-			(BiConsumer<CommerceInventoryBookedQuantity, Integer>)
-				CommerceInventoryBookedQuantity::setQuantity);
-		attributeGetterFunctions.put(
-			"expirationDate",
-			CommerceInventoryBookedQuantity::getExpirationDate);
-		attributeSetterBiConsumers.put(
-			"expirationDate",
-			(BiConsumer<CommerceInventoryBookedQuantity, Date>)
-				CommerceInventoryBookedQuantity::setExpirationDate);
-		attributeGetterFunctions.put(
-			"bookedNote", CommerceInventoryBookedQuantity::getBookedNote);
-		attributeSetterBiConsumers.put(
-			"bookedNote",
-			(BiConsumer<CommerceInventoryBookedQuantity, String>)
-				CommerceInventoryBookedQuantity::setBookedNote);
+					getCommerceInventoryBookedQuantityId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceInventoryBookedQuantity::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CommerceInventoryBookedQuantity::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceInventoryBookedQuantity::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceInventoryBookedQuantity::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate",
+				CommerceInventoryBookedQuantity::getModifiedDate);
+			attributeGetterFunctions.put(
+				"bookedNote", CommerceInventoryBookedQuantity::getBookedNote);
+			attributeGetterFunctions.put(
+				"expirationDate",
+				CommerceInventoryBookedQuantity::getExpirationDate);
+			attributeGetterFunctions.put(
+				"quantity", CommerceInventoryBookedQuantity::getQuantity);
+			attributeGetterFunctions.put(
+				"sku", CommerceInventoryBookedQuantity::getSku);
+			attributeGetterFunctions.put(
+				"unitOfMeasureKey",
+				CommerceInventoryBookedQuantity::getUnitOfMeasureKey);
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CommerceInventoryBookedQuantity, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceInventoryBookedQuantity, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String,
+						 BiConsumer<CommerceInventoryBookedQuantity, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceInventoryBookedQuantity, Long>)
+					CommerceInventoryBookedQuantity::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"commerceInventoryBookedQuantityId",
+				(BiConsumer<CommerceInventoryBookedQuantity, Long>)
+					CommerceInventoryBookedQuantity::
+						setCommerceInventoryBookedQuantityId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceInventoryBookedQuantity, Long>)
+					CommerceInventoryBookedQuantity::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceInventoryBookedQuantity, Long>)
+					CommerceInventoryBookedQuantity::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceInventoryBookedQuantity, String>)
+					CommerceInventoryBookedQuantity::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceInventoryBookedQuantity, Date>)
+					CommerceInventoryBookedQuantity::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceInventoryBookedQuantity, Date>)
+					CommerceInventoryBookedQuantity::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"bookedNote",
+				(BiConsumer<CommerceInventoryBookedQuantity, String>)
+					CommerceInventoryBookedQuantity::setBookedNote);
+			attributeSetterBiConsumers.put(
+				"expirationDate",
+				(BiConsumer<CommerceInventoryBookedQuantity, Date>)
+					CommerceInventoryBookedQuantity::setExpirationDate);
+			attributeSetterBiConsumers.put(
+				"quantity",
+				(BiConsumer<CommerceInventoryBookedQuantity, BigDecimal>)
+					CommerceInventoryBookedQuantity::setQuantity);
+			attributeSetterBiConsumers.put(
+				"sku",
+				(BiConsumer<CommerceInventoryBookedQuantity, String>)
+					CommerceInventoryBookedQuantity::setSku);
+			attributeSetterBiConsumers.put(
+				"unitOfMeasureKey",
+				(BiConsumer<CommerceInventoryBookedQuantity, String>)
+					CommerceInventoryBookedQuantity::setUnitOfMeasureKey);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -483,6 +506,65 @@ public class CommerceInventoryBookedQuantityModelImpl
 
 	@JSON
 	@Override
+	public String getBookedNote() {
+		if (_bookedNote == null) {
+			return "";
+		}
+		else {
+			return _bookedNote;
+		}
+	}
+
+	@Override
+	public void setBookedNote(String bookedNote) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_bookedNote = bookedNote;
+	}
+
+	@JSON
+	@Override
+	public Date getExpirationDate() {
+		return _expirationDate;
+	}
+
+	@Override
+	public void setExpirationDate(Date expirationDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_expirationDate = expirationDate;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public Date getOriginalExpirationDate() {
+		return getColumnOriginalValue("expirationDate");
+	}
+
+	@JSON
+	@Override
+	public BigDecimal getQuantity() {
+		return _quantity;
+	}
+
+	@Override
+	public void setQuantity(BigDecimal quantity) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_quantity = quantity;
+	}
+
+	@JSON
+	@Override
 	public String getSku() {
 		if (_sku == null) {
 			return "";
@@ -512,32 +594,22 @@ public class CommerceInventoryBookedQuantityModelImpl
 
 	@JSON
 	@Override
-	public int getQuantity() {
-		return _quantity;
+	public String getUnitOfMeasureKey() {
+		if (_unitOfMeasureKey == null) {
+			return "";
+		}
+		else {
+			return _unitOfMeasureKey;
+		}
 	}
 
 	@Override
-	public void setQuantity(int quantity) {
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_quantity = quantity;
-	}
-
-	@JSON
-	@Override
-	public Date getExpirationDate() {
-		return _expirationDate;
-	}
-
-	@Override
-	public void setExpirationDate(Date expirationDate) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_expirationDate = expirationDate;
+		_unitOfMeasureKey = unitOfMeasureKey;
 	}
 
 	/**
@@ -545,28 +617,8 @@ public class CommerceInventoryBookedQuantityModelImpl
 	 *             #getColumnOriginalValue(String)}
 	 */
 	@Deprecated
-	public Date getOriginalExpirationDate() {
-		return getColumnOriginalValue("expirationDate");
-	}
-
-	@JSON
-	@Override
-	public String getBookedNote() {
-		if (_bookedNote == null) {
-			return "";
-		}
-		else {
-			return _bookedNote;
-		}
-	}
-
-	@Override
-	public void setBookedNote(String bookedNote) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_bookedNote = bookedNote;
+	public String getOriginalUnitOfMeasureKey() {
+		return getColumnOriginalValue("unitOfMeasureKey");
 	}
 
 	public long getColumnBitmask() {
@@ -637,11 +689,13 @@ public class CommerceInventoryBookedQuantityModelImpl
 		commerceInventoryBookedQuantityImpl.setUserName(getUserName());
 		commerceInventoryBookedQuantityImpl.setCreateDate(getCreateDate());
 		commerceInventoryBookedQuantityImpl.setModifiedDate(getModifiedDate());
-		commerceInventoryBookedQuantityImpl.setSku(getSku());
-		commerceInventoryBookedQuantityImpl.setQuantity(getQuantity());
+		commerceInventoryBookedQuantityImpl.setBookedNote(getBookedNote());
 		commerceInventoryBookedQuantityImpl.setExpirationDate(
 			getExpirationDate());
-		commerceInventoryBookedQuantityImpl.setBookedNote(getBookedNote());
+		commerceInventoryBookedQuantityImpl.setQuantity(getQuantity());
+		commerceInventoryBookedQuantityImpl.setSku(getSku());
+		commerceInventoryBookedQuantityImpl.setUnitOfMeasureKey(
+			getUnitOfMeasureKey());
 
 		commerceInventoryBookedQuantityImpl.resetOriginalValues();
 
@@ -669,14 +723,16 @@ public class CommerceInventoryBookedQuantityModelImpl
 			this.<Date>getColumnOriginalValue("createDate"));
 		commerceInventoryBookedQuantityImpl.setModifiedDate(
 			this.<Date>getColumnOriginalValue("modifiedDate"));
-		commerceInventoryBookedQuantityImpl.setSku(
-			this.<String>getColumnOriginalValue("sku"));
-		commerceInventoryBookedQuantityImpl.setQuantity(
-			this.<Integer>getColumnOriginalValue("quantity"));
-		commerceInventoryBookedQuantityImpl.setExpirationDate(
-			this.<Date>getColumnOriginalValue("expirationDate"));
 		commerceInventoryBookedQuantityImpl.setBookedNote(
 			this.<String>getColumnOriginalValue("bookedNote"));
+		commerceInventoryBookedQuantityImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
+		commerceInventoryBookedQuantityImpl.setQuantity(
+			this.<BigDecimal>getColumnOriginalValue("quantity"));
+		commerceInventoryBookedQuantityImpl.setSku(
+			this.<String>getColumnOriginalValue("sku"));
+		commerceInventoryBookedQuantityImpl.setUnitOfMeasureKey(
+			this.<String>getColumnOriginalValue("unitOfMeasureKey"));
 
 		return commerceInventoryBookedQuantityImpl;
 	}
@@ -800,15 +856,14 @@ public class CommerceInventoryBookedQuantityModelImpl
 				Long.MIN_VALUE;
 		}
 
-		commerceInventoryBookedQuantityCacheModel.sku = getSku();
+		commerceInventoryBookedQuantityCacheModel.bookedNote = getBookedNote();
 
-		String sku = commerceInventoryBookedQuantityCacheModel.sku;
+		String bookedNote =
+			commerceInventoryBookedQuantityCacheModel.bookedNote;
 
-		if ((sku != null) && (sku.length() == 0)) {
-			commerceInventoryBookedQuantityCacheModel.sku = null;
+		if ((bookedNote != null) && (bookedNote.length() == 0)) {
+			commerceInventoryBookedQuantityCacheModel.bookedNote = null;
 		}
-
-		commerceInventoryBookedQuantityCacheModel.quantity = getQuantity();
 
 		Date expirationDate = getExpirationDate();
 
@@ -821,13 +876,24 @@ public class CommerceInventoryBookedQuantityModelImpl
 				Long.MIN_VALUE;
 		}
 
-		commerceInventoryBookedQuantityCacheModel.bookedNote = getBookedNote();
+		commerceInventoryBookedQuantityCacheModel.quantity = getQuantity();
 
-		String bookedNote =
-			commerceInventoryBookedQuantityCacheModel.bookedNote;
+		commerceInventoryBookedQuantityCacheModel.sku = getSku();
 
-		if ((bookedNote != null) && (bookedNote.length() == 0)) {
-			commerceInventoryBookedQuantityCacheModel.bookedNote = null;
+		String sku = commerceInventoryBookedQuantityCacheModel.sku;
+
+		if ((sku != null) && (sku.length() == 0)) {
+			commerceInventoryBookedQuantityCacheModel.sku = null;
+		}
+
+		commerceInventoryBookedQuantityCacheModel.unitOfMeasureKey =
+			getUnitOfMeasureKey();
+
+		String unitOfMeasureKey =
+			commerceInventoryBookedQuantityCacheModel.unitOfMeasureKey;
+
+		if ((unitOfMeasureKey != null) && (unitOfMeasureKey.length() == 0)) {
+			commerceInventoryBookedQuantityCacheModel.unitOfMeasureKey = null;
 		}
 
 		return commerceInventoryBookedQuantityCacheModel;
@@ -903,16 +969,18 @@ public class CommerceInventoryBookedQuantityModelImpl
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
-	private String _sku;
-	private int _quantity;
-	private Date _expirationDate;
 	private String _bookedNote;
+	private Date _expirationDate;
+	private BigDecimal _quantity;
+	private String _sku;
+	private String _unitOfMeasureKey;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceInventoryBookedQuantity, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -945,10 +1013,11 @@ public class CommerceInventoryBookedQuantityModelImpl
 		_columnOriginalValues.put("userName", _userName);
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
-		_columnOriginalValues.put("sku", _sku);
-		_columnOriginalValues.put("quantity", _quantity);
-		_columnOriginalValues.put("expirationDate", _expirationDate);
 		_columnOriginalValues.put("bookedNote", _bookedNote);
+		_columnOriginalValues.put("expirationDate", _expirationDate);
+		_columnOriginalValues.put("quantity", _quantity);
+		_columnOriginalValues.put("sku", _sku);
+		_columnOriginalValues.put("unitOfMeasureKey", _unitOfMeasureKey);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -987,13 +1056,15 @@ public class CommerceInventoryBookedQuantityModelImpl
 
 		columnBitmasks.put("modifiedDate", 64L);
 
-		columnBitmasks.put("sku", 128L);
+		columnBitmasks.put("bookedNote", 128L);
 
-		columnBitmasks.put("quantity", 256L);
+		columnBitmasks.put("expirationDate", 256L);
 
-		columnBitmasks.put("expirationDate", 512L);
+		columnBitmasks.put("quantity", 512L);
 
-		columnBitmasks.put("bookedNote", 1024L);
+		columnBitmasks.put("sku", 1024L);
+
+		columnBitmasks.put("unitOfMeasureKey", 2048L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

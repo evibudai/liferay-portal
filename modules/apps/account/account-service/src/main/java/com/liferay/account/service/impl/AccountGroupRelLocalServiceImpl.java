@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service.impl;
@@ -19,15 +10,25 @@ import com.liferay.account.exception.DuplicateAccountGroupRelException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.model.AccountGroupRelTable;
+import com.liferay.account.model.AccountGroupTable;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.account.service.base.AccountGroupRelLocalServiceBaseImpl;
+import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Date;
 import java.util.List;
@@ -74,7 +75,20 @@ public class AccountGroupRelLocalServiceImpl
 		AccountGroup accountGroup = _accountGroupLocalService.getAccountGroup(
 			accountGroupId);
 
-		User user = GuestOrUserUtil.getGuestOrUser(accountGroup.getCompanyId());
+		User user = null;
+
+		try {
+			user = GuestOrUserUtil.getGuestOrUser(accountGroup.getCompanyId());
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(portalException);
+			}
+		}
+
+		if (user == null) {
+			user = _userLocalService.getGuestUser(accountGroup.getCompanyId());
+		}
 
 		accountGroupRel.setCompanyId(user.getCompanyId());
 		accountGroupRel.setUserId(user.getUserId());
@@ -160,6 +174,44 @@ public class AccountGroupRelLocalServiceImpl
 	}
 
 	@Override
+	public List<AccountGroupRel> getAccountGroupRels(
+		String className, long classPK, String keywords, int start, int end) {
+
+		return dslQuery(
+			DSLQueryFactoryUtil.select(
+				AccountGroupRelTable.INSTANCE
+			).from(
+				AccountGroupRelTable.INSTANCE
+			).innerJoinON(
+				AccountGroupTable.INSTANCE,
+				AccountGroupTable.INSTANCE.accountGroupId.eq(
+					AccountGroupRelTable.INSTANCE.accountGroupId)
+			).where(
+				() -> {
+					Predicate predicate =
+						AccountGroupRelTable.INSTANCE.classNameId.eq(
+							_classNameLocalService.getClassNameId(className)
+						).and(
+							AccountGroupRelTable.INSTANCE.classPK.eq(classPK)
+						);
+
+					if (Validator.isNotNull(keywords)) {
+						return Predicate.withParentheses(
+							predicate.and(
+								_customSQL.getKeywordsPredicate(
+									DSLFunctionFactoryUtil.lower(
+										AccountGroupTable.INSTANCE.name),
+									_customSQL.keywords(keywords, true))));
+					}
+
+					return predicate;
+				}
+			).limit(
+				start, end
+			));
+	}
+
+	@Override
 	public List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
 		long accountGroupId) {
 
@@ -186,6 +238,9 @@ public class AccountGroupRelLocalServiceImpl
 		return accountGroupRelPersistence.countByAccountGroupId(accountGroupId);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountGroupRelLocalServiceImpl.class);
+
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
 
@@ -194,5 +249,11 @@ public class AccountGroupRelLocalServiceImpl
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CustomSQL _customSQL;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

@@ -1,33 +1,37 @@
 definition {
 
-	@summary = "Add a basic tag"
 	macro addTag {
-		Variables.assertDefined(parameterList = "${groupName},${tagName}");
+		Variables.assertDefined(parameterList = ${tagName});
 
-		var groupId = JSONAssettagSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		if (!(isSet(groupId))) {
+			var groupId = JSONAssettagSetter.setGroupId(
+				groupName = ${groupName},
+				site = ${site});
+		}
 
 		JSONAssettagAPI._addTag(
-			groupId = "${groupId}",
-			tagName = "${tagName}");
+			groupId = ${groupId},
+			tagName = ${tagName});
 	}
 
-	@summary = "Get a basic tag ID"
 	macro getTagId {
 		Variables.assertDefined(parameterList = "${groupName},${tagName}");
 
 		var groupId = JSONAssettagSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
 		var tagId = JSONAssettagAPI._getTagId(
-			groupId = "${groupId}",
-			tagName = "${tagName}");
+			groupId = ${groupId},
+			tagName = ${tagName});
 
 		echo("## tagId: ${tagId}");
 
-		return "${tagId}";
+		return ${tagId};
 	}
 
 }

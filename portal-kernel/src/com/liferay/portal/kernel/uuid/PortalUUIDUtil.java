@@ -1,18 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.uuid;
+
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.security.SecureRandomUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+
+import java.util.UUID;
 
 /**
  * @author Brian Wing Shun Chan
@@ -21,29 +19,26 @@ package com.liferay.portal.kernel.uuid;
 public class PortalUUIDUtil {
 
 	public static String fromJsSafeUuid(String jsSafeUuid) {
-		return _portalUUID.fromJsSafeUuid(jsSafeUuid);
+		return StringUtil.replace(
+			jsSafeUuid, StringPool.DOUBLE_UNDERLINE, StringPool.DASH);
 	}
 
 	public static String generate() {
-		return _portalUUID.generate();
+		UUID uuid = new UUID(
+			SecureRandomUtil.nextLong(), SecureRandomUtil.nextLong());
+
+		return uuid.toString();
 	}
 
 	public static String generate(byte[] bytes) {
-		return _portalUUID.generate(bytes);
-	}
+		UUID uuid = UUID.nameUUIDFromBytes(bytes);
 
-	public static PortalUUID getPortalUUID() {
-		return _portalUUID;
+		return uuid.toString();
 	}
 
 	public static String toJsSafeUuid(String uuid) {
-		return _portalUUID.toJsSafeUuid(uuid);
+		return StringUtil.replace(
+			uuid, CharPool.DASH, StringPool.DOUBLE_UNDERLINE);
 	}
-
-	public void setPortalUUID(PortalUUID portalUUID) {
-		_portalUUID = portalUUID;
-	}
-
-	private static PortalUUID _portalUUID;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.display.context;
@@ -19,6 +10,7 @@ import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayContext;
 import com.liferay.commerce.product.item.selector.criterion.CPDefinitionItemSelectorCriterion;
+import com.liferay.commerce.product.item.selector.criterion.LayoutPageTemplateEntryItemSelectorCriterion;
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
@@ -31,10 +23,13 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -48,6 +43,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collections;
+
+import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -63,7 +60,9 @@ public class CPDefinitionDisplayLayoutDisplayContext
 		CPDefinitionService cpDefinitionService,
 		CPDisplayLayoutService cpDisplayLayoutService,
 		GroupLocalService groupLocalService, ItemSelector itemSelector,
-		LayoutLocalService layoutLocalService) {
+		LayoutLocalService layoutLocalService,
+		LayoutPageTemplateEntryLocalService
+			layoutPageTemplateEntryLocalService) {
 
 		super(actionHelper, httpServletRequest);
 
@@ -73,6 +72,8 @@ public class CPDefinitionDisplayLayoutDisplayContext
 		_groupLocalService = groupLocalService;
 		_itemSelector = itemSelector;
 		_layoutLocalService = layoutLocalService;
+		_layoutPageTemplateEntryLocalService =
+			layoutPageTemplateEntryLocalService;
 	}
 
 	public String getAddProductDisplayPageURL() throws Exception {
@@ -159,7 +160,37 @@ public class CPDefinitionDisplayLayoutDisplayContext
 		return layout;
 	}
 
-	public String getDisplayPageItemSelectorUrl() throws PortalException {
+	public String getLayoutBreadcrumb(CPDisplayLayout cpDisplayLayout)
+		throws PortalException {
+
+		if (cpDisplayLayout == null) {
+			return StringPool.BLANK;
+		}
+
+		String layoutUuid = cpDisplayLayout.getLayoutUuid();
+
+		if (Validator.isNull(layoutUuid)) {
+			return StringPool.BLANK;
+		}
+
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		Layout selLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+			layoutUuid, commerceChannel.getSiteGroupId(), false);
+
+		if (selLayout == null) {
+			selLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+				layoutUuid, commerceChannel.getSiteGroupId(), true);
+		}
+
+		if (selLayout != null) {
+			return selLayout.getBreadcrumb(cpRequestHelper.getLocale());
+		}
+
+		return StringPool.BLANK;
+	}
+
+	public String getLayoutItemSelectorUrl() throws PortalException {
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 			RequestBackedPortletURLFactoryUtil.create(
 				cpRequestHelper.getRenderRequest());
@@ -167,9 +198,6 @@ public class CPDefinitionDisplayLayoutDisplayContext
 		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
 			new LayoutItemSelectorCriterion();
 
-		layoutItemSelectorCriterion.setShowHiddenPages(true);
-		layoutItemSelectorCriterion.setShowPrivatePages(true);
-		layoutItemSelectorCriterion.setShowPublicPages(true);
 		layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			Collections.<ItemSelectorReturnType>singletonList(
 				new UUIDItemSelectorReturnType()));
@@ -180,8 +208,92 @@ public class CPDefinitionDisplayLayoutDisplayContext
 			_itemSelector.getItemSelectorURL(
 				requestBackedPortletURLFactory,
 				_groupLocalService.getGroup(commerceChannel.getSiteGroupId()),
-				commerceChannel.getSiteGroupId(), "selectDisplayPage",
+				commerceChannel.getSiteGroupId(), "selectLayout",
 				layoutItemSelectorCriterion));
+	}
+
+	public String getLayoutPageTemplateEntryItemSelectorUrl()
+		throws PortalException {
+
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			RequestBackedPortletURLFactoryUtil.create(
+				cpRequestHelper.getRenderRequest());
+
+		LayoutPageTemplateEntryItemSelectorCriterion
+			layoutPageTemplateEntryItemSelectorCriterion =
+				new LayoutPageTemplateEntryItemSelectorCriterion();
+
+		layoutPageTemplateEntryItemSelectorCriterion.
+			setDesiredItemSelectorReturnTypes(
+				Collections.<ItemSelectorReturnType>singletonList(
+					new UUIDItemSelectorReturnType()));
+
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		PortletURL itemSelectorURL = PortletURLBuilder.create(
+			_itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory,
+				_groupLocalService.getGroup(commerceChannel.getSiteGroupId()),
+				commerceChannel.getSiteGroupId(),
+				"selectLayoutPageTemplateEntry",
+				layoutPageTemplateEntryItemSelectorCriterion)
+		).setParameter(
+			"commerceChannelId", commerceChannel.getCommerceChannelId()
+		).setParameter(
+			"commerceChannelSiteGroupId", commerceChannel.getSiteGroupId()
+		).buildPortletURL();
+
+		CPDisplayLayout cpDisplayLayout = getCPDisplayLayout();
+
+		if ((cpDisplayLayout != null) &&
+			Validator.isNotNull(
+				cpDisplayLayout.getLayoutPageTemplateEntryUuid())) {
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntryByUuidAndGroupId(
+						cpDisplayLayout.getLayoutPageTemplateEntryUuid(),
+						commerceChannel.getSiteGroupId());
+
+			if (layoutPageTemplateEntry != null) {
+				itemSelectorURL.setParameter(
+					"layoutPageTemplateEntryId",
+					String.valueOf(
+						layoutPageTemplateEntry.
+							getLayoutPageTemplateEntryId()));
+			}
+		}
+
+		return String.valueOf(itemSelectorURL);
+	}
+
+	public String getLayoutPageTemplateEntryName(
+		CPDisplayLayout cpDisplayLayout) {
+
+		if (cpDisplayLayout == null) {
+			return StringPool.BLANK;
+		}
+
+		String layoutPageTemplateEntryUuid =
+			cpDisplayLayout.getLayoutPageTemplateEntryUuid();
+
+		if (Validator.isNull(layoutPageTemplateEntryUuid)) {
+			return StringPool.BLANK;
+		}
+
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		LayoutPageTemplateEntry selLayoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByUuidAndGroupId(
+					layoutPageTemplateEntryUuid,
+					commerceChannel.getSiteGroupId());
+
+		if (selLayoutPageTemplateEntry != null) {
+			return selLayoutPageTemplateEntry.getName();
+		}
+
+		return StringPool.BLANK;
 	}
 
 	public String getProductItemSelectorUrl() {
@@ -221,5 +333,7 @@ public class CPDefinitionDisplayLayoutDisplayContext
 	private final GroupLocalService _groupLocalService;
 	private final ItemSelector _itemSelector;
 	private final LayoutLocalService _layoutLocalService;
+	private final LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
 
 }

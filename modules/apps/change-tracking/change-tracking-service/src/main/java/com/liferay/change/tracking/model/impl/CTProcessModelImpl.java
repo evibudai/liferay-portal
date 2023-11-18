@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.model.impl;
@@ -75,7 +66,7 @@ public class CTProcessModelImpl
 		{"mvccVersion", Types.BIGINT}, {"ctProcessId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"createDate", Types.TIMESTAMP}, {"ctCollectionId", Types.BIGINT},
-		{"backgroundTaskId", Types.BIGINT}
+		{"backgroundTaskId", Types.BIGINT}, {"type_", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -89,10 +80,11 @@ public class CTProcessModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("backgroundTaskId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("type_", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CTProcess (mvccVersion LONG default 0 not null,ctProcessId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,ctCollectionId LONG,backgroundTaskId LONG)";
+		"create table CTProcess (mvccVersion LONG default 0 not null,ctProcessId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,ctCollectionId LONG,backgroundTaskId LONG,type_ INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table CTProcess";
 
@@ -121,11 +113,17 @@ public class CTProcessModelImpl
 	public static final long CTCOLLECTIONID_COLUMN_BITMASK = 2L;
 
 	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long TYPE_COLUMN_BITMASK = 4L;
+
+	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 4L;
+	public static final long CREATEDATE_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -216,59 +214,80 @@ public class CTProcessModelImpl
 	public Map<String, Function<CTProcess, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CTProcess, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CTProcess, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CTProcess, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CTProcess, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<CTProcess, Object>>();
-		Map<String, BiConsumer<CTProcess, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<CTProcess, ?>>();
+		private static final Map<String, Function<CTProcess, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", CTProcess::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CTProcess, Long>)CTProcess::setMvccVersion);
-		attributeGetterFunctions.put("ctProcessId", CTProcess::getCtProcessId);
-		attributeSetterBiConsumers.put(
-			"ctProcessId",
-			(BiConsumer<CTProcess, Long>)CTProcess::setCtProcessId);
-		attributeGetterFunctions.put("companyId", CTProcess::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<CTProcess, Long>)CTProcess::setCompanyId);
-		attributeGetterFunctions.put("userId", CTProcess::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<CTProcess, Long>)CTProcess::setUserId);
-		attributeGetterFunctions.put("createDate", CTProcess::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CTProcess, Date>)CTProcess::setCreateDate);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CTProcess::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CTProcess, Long>)CTProcess::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"backgroundTaskId", CTProcess::getBackgroundTaskId);
-		attributeSetterBiConsumers.put(
-			"backgroundTaskId",
-			(BiConsumer<CTProcess, Long>)CTProcess::setBackgroundTaskId);
+		static {
+			Map<String, Function<CTProcess, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<CTProcess, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CTProcess::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctProcessId", CTProcess::getCtProcessId);
+			attributeGetterFunctions.put("companyId", CTProcess::getCompanyId);
+			attributeGetterFunctions.put("userId", CTProcess::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", CTProcess::getCreateDate);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CTProcess::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"backgroundTaskId", CTProcess::getBackgroundTaskId);
+			attributeGetterFunctions.put("type", CTProcess::getType);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CTProcess, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CTProcess, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<CTProcess, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CTProcess, Long>)CTProcess::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctProcessId",
+				(BiConsumer<CTProcess, Long>)CTProcess::setCtProcessId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CTProcess, Long>)CTProcess::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<CTProcess, Long>)CTProcess::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CTProcess, Date>)CTProcess::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CTProcess, Long>)CTProcess::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"backgroundTaskId",
+				(BiConsumer<CTProcess, Long>)CTProcess::setBackgroundTaskId);
+			attributeSetterBiConsumers.put(
+				"type", (BiConsumer<CTProcess, Integer>)CTProcess::setType);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -412,6 +431,31 @@ public class CTProcessModelImpl
 		_backgroundTaskId = backgroundTaskId;
 	}
 
+	@JSON
+	@Override
+	public int getType() {
+		return _type;
+	}
+
+	@Override
+	public void setType(int type) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_type = type;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public int getOriginalType() {
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("type_"));
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -475,6 +519,7 @@ public class CTProcessModelImpl
 		ctProcessImpl.setCreateDate(getCreateDate());
 		ctProcessImpl.setCtCollectionId(getCtCollectionId());
 		ctProcessImpl.setBackgroundTaskId(getBackgroundTaskId());
+		ctProcessImpl.setType(getType());
 
 		ctProcessImpl.resetOriginalValues();
 
@@ -498,6 +543,7 @@ public class CTProcessModelImpl
 			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		ctProcessImpl.setBackgroundTaskId(
 			this.<Long>getColumnOriginalValue("backgroundTaskId"));
+		ctProcessImpl.setType(this.<Integer>getColumnOriginalValue("type_"));
 
 		return ctProcessImpl;
 	}
@@ -594,6 +640,8 @@ public class CTProcessModelImpl
 
 		ctProcessCacheModel.backgroundTaskId = getBackgroundTaskId();
 
+		ctProcessCacheModel.type = getType();
+
 		return ctProcessCacheModel;
 	}
 
@@ -662,10 +710,14 @@ public class CTProcessModelImpl
 	private Date _createDate;
 	private long _ctCollectionId;
 	private long _backgroundTaskId;
+	private int _type;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<CTProcess, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<CTProcess, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -697,6 +749,17 @@ public class CTProcessModelImpl
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("backgroundTaskId", _backgroundTaskId);
+		_columnOriginalValues.put("type_", _type);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("type_", "type");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -723,6 +786,8 @@ public class CTProcessModelImpl
 		columnBitmasks.put("ctCollectionId", 32L);
 
 		columnBitmasks.put("backgroundTaskId", 64L);
+
+		columnBitmasks.put("type_", 128L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

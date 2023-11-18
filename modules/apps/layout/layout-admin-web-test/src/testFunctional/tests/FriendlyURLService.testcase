@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -19,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +30,7 @@ definition {
 	}
 
 	@description = "This ensures that accessing an old friendlyURL in the default language after publishing the new friendly URL will redirect the user to the new URL."
-	@priority = "5"
+	@priority = 5
 	test CanAccessOldFriendlyURLAfterPublishing {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -62,7 +62,7 @@ definition {
 	}
 
 	@description = "This ensures that accessing an old localized friendlyURL after publishing the new friendly URL will redirect the user to the new URL."
-	@priority = "5"
+	@priority = 5
 	test CanAccessOldLocalizedFriendlyURLAfterPublishing {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -116,9 +116,9 @@ definition {
 	}
 
 	@description = "This test covers LPS-125475. The default page will be displayed when accessing a page through a language without a specific layout."
-	@priority = "3"
+	@priority = 3
 	test CanAccessWithSpecificDisabledLanguageAfterSettingLocally {
-		property custom.properties = "locales.enabled=zh_CN,en_US,en_AU,fr_FR,de_DE,it_IT,ja_JP,pt_BR,es_ES${line.separator}locales=zh_CN,en_US,en_AU,fr_FR,de_DE,it_IT,ja_JP,pt_BR,es_ES,ru_RU,pl_PL,sv_SE,hu_HU,ar_SA,nb_NO,hr_HR,fi_FI,nl_NL,cs_CZ";
+		property custom.properties = "locales=zh_CN,en_US,en_AU,fr_FR,de_DE,it_IT,ja_JP,pt_BR,es_ES,ru_RU,pl_PL,sv_SE,hu_HU,ar_SA,nb_NO,hr_HR,fi_FI,nl_NL,cs_CZ${line.separator}locales.enabled=zh_CN,en_US,en_AU,fr_FR,de_DE,it_IT,ja_JP,pt_BR,es_ES";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -134,7 +134,7 @@ definition {
 	}
 
 	@description = "This ensures that a user can add friendlyURL with escape character in a web content."
-	@priority = "3"
+	@priority = 3
 	test CanAddFriendlyURLWithEscapeCharacter {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -175,8 +175,156 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "WC WebContent Title");
 	}
 
+	@description = "This ensures that Users can re-add the same friendly URL for different languages in a layout."
+	@priority = 5
+	test CanReAddSameFriendlyURLForDifferentLanguageInLayoutAfterRemoveTheTranslation {
+		var portalURL = PropsUtil.get("portal.url");
+
+		PagesAdmin.openToConfigurePublicPage(
+			groupName = "Test Site Name",
+			layoutName = "Test Source Page",
+			siteURLKey = "test-site-name");
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			friendlyURLLocalizedList = "es-ES",
+			localizedFriendlyURLList = "/prueba",
+			localizedNameList = "Prueba");
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			friendlyURLLocalizedList = "ca-ES",
+			localizedFriendlyURLList = "/prueba",
+			localizedNameList = "Prueba");
+
+		Navigator.openSpecificURL(url = "${portalURL}/es/web/test-site-name/prueba");
+
+		AssertLocation(value1 = "${portalURL}/es/web/test-site-name/prueba");
+
+		Navigator.openSpecificURL(url = "${portalURL}/en/web/test-site-name");
+
+		PagesAdmin.openToConfigurePublicPage(
+			groupName = "Test Site Name",
+			layoutName = "Test Source Page",
+			siteURLKey = "test-site-name");
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			configureWithoutSave = "true",
+			friendlyURLLocalizedList = "es-ES",
+			localizedFriendlyURLList = "",
+			localizedNameList = "");
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			configureWithoutSave = "true",
+			friendlyURLLocalizedList = "ca-ES",
+			localizedFriendlyURLList = "",
+			localizedNameList = "");
+
+		PortletEntry.changeLocale(
+			fieldName = "Friendly URL",
+			locale = "en-US");
+
+		PortletEntry.save();
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			friendlyURLLocalizedList = "es-ES",
+			localizedFriendlyURLList = "/prueba",
+			localizedNameList = "Prueba");
+
+		PagesAdmin.addLocalizedFriendlyURL(
+			friendlyURLLocalizedList = "ca-ES",
+			localizedFriendlyURLList = "/prueba",
+			localizedNameList = "Prueba");
+
+		Navigator.openSpecificURL(url = "${portalURL}/es/web/test-site-name/prueba");
+
+		AssertLocation(value1 = "${portalURL}/es/web/test-site-name/prueba");
+	}
+
+	@description = "This ensures that Users can re-add the same friendly URL for different languages in web content."
+	@priority = 5
+	test CanReAddSameFriendlyURLForDifferentLanguageInWebContentAfterRemoveTheTranslation {
+		var portalURL = PropsUtil.get("portal.url");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Test Site Name",
+			layoutName = "Test Source Page",
+			widgetName = "Asset Publisher");
+
+		Navigator.openSitePage(
+			pageName = "Test Source Page",
+			siteName = "Test Site Name");
+
+		AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Set as the Default Asset Publisher for This Page");
+
+		JSONWebcontent.addWebContent(
+			content = "Web Content Content",
+			groupName = "Test Site Name",
+			title = "Web Content Article");
+
+		WebContentNavigator.openToEditWCInSite(
+			groupName = "Test Site Name",
+			siteURLKey = "test-site-name",
+			version = "1.1",
+			webContentTitle = "Web Content Article");
+
+		WebContent.editDisplayPage(
+			pageName = "Test Source Page",
+			pageType = "Pages");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "prueba");
+
+		PortletEntry.changeLocale(locale = "ca-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "prueba");
+
+		PortletEntry.publish();
+
+		Navigator.openSpecificURL(url = "${portalURL}/es/web/test-site-name/-/prueba");
+
+		AssetPublisherPortlet.viewAssetPG(assetTitle = "Web Content Article");
+
+		Navigator.openSpecificURL(url = "${portalURL}/en/web/test-site-name");
+
+		WebContentNavigator.openToEditWCInSite(
+			groupName = "Test Site Name",
+			siteURLKey = "test-site-name",
+			version = "1.1",
+			webContentTitle = "Web Content Article");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "");
+
+		PortletEntry.changeLocale(locale = "ca-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.openToEditWCInSite(
+			groupName = "Test Site Name",
+			siteURLKey = "test-site-name",
+			version = "1.1",
+			webContentTitle = "Web Content Article");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "prueba");
+
+		PortletEntry.changeLocale(locale = "ca-ES");
+
+		WebContent.editFriendlyURL(webContentFriendlyURL = "prueba");
+
+		PortletEntry.publish();
+
+		Navigator.openSpecificURL(url = "${portalURL}/es/web/test-site-name/-/prueba");
+
+		AssetPublisherPortlet.viewAssetPG(assetTitle = "Web Content Article");
+	}
+
 	@description = "This ensures that a user is redirected to the updated friendlyURL when he accesses the former friendlyURL."
-	@priority = "5"
+	@priority = 5
 	test CanRedirectToUpdatedFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -197,7 +345,7 @@ definition {
 	}
 
 	@description = "This ensures that a user is redirected to the updated localized friendlyURL when he accesses the former localized friendlyURL."
-	@priority = "5"
+	@priority = 5
 	test CanRedirectToUpdatedLocalizedFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -221,7 +369,7 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL can be removed from the history."
-	@priority = "5"
+	@priority = 5
 	test CanRemoveOldFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -242,11 +390,11 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name/test-page");
 
-		AssertTextPresent(value1 = "The requested resource could not be found.");
+		AssertTextPresent(value1 = "The requested address was not found on the system.");
 	}
 
 	@description = "This ensures that the friendlyURL of web content can be reset to default."
-	@priority = "4"
+	@priority = 4
 	test CanResetFriendlyURLToDefault {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -297,7 +445,7 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL can be restored from the history."
-	@priority = "5"
+	@priority = 5
 	test CanRestoreOldFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -326,7 +474,7 @@ definition {
 	}
 
 	@description = "This ensures that both the active URL and old friendlyURL can be viewed from the history."
-	@priority = "5"
+	@priority = 5
 	test CanViewFriendlyURLsFromHistory {
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -355,7 +503,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-116068. It ensures that both the active URL and old friendlyURL can be viewed from the history of a default page."
-	@priority = "5"
+	@priority = 5
 	test CanViewFriendlyURLsViaDefaultPage {
 		PagesAdmin.openToConfigurePublicPage(
 			groupName = "Guest",
@@ -380,7 +528,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-119836. It ensures the localized URL with special characters can be escaped correctly and viewed in friendly URL history."
-	@priority = "4"
+	@priority = 4
 	test CanViewFriendlyURLWithSpecialCharacters {
 		property portal.acceptance = "false";
 
@@ -430,7 +578,7 @@ definition {
 	}
 
 	@description = "This ensures that both the localized active URL and old friendlyURL can be viewed from the history."
-	@priority = "5"
+	@priority = 5
 	test CanViewLocalizedFriendlyURLsFromHistory {
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -468,7 +616,7 @@ definition {
 	}
 
 	@description = "This ensures that the multiple old friendlyURLs can be viewed from the history. This test also covers the first old friendlyURL is the last one."
-	@priority = "5"
+	@priority = 5
 	test CanViewMultipleOldFriendlyURLsFromHistory {
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -493,7 +641,7 @@ definition {
 	}
 
 	@description = "This ensures that only the active URL can be viewed by default language from the history after localization without friendlyURL."
-	@priority = "5"
+	@priority = 5
 	test CanViewURLsAfterLocalizationWithoutFriendlyURL {
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -526,7 +674,7 @@ definition {
 	}
 
 	@description = "This ensures that a previous friendlyURL of web content can be deleted when updating."
-	@priority = "4"
+	@priority = 4
 	test CanViewWCWithLatestFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -566,9 +714,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name/-/friendlyUrl");
 
-		AssertTextEquals(
-			locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-			value1 = "Not Found");
+		AssertTextPresent(value1 = "The requested address was not found on the system.");
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name/-/editedfriendlyUrl");
 
@@ -576,7 +722,7 @@ definition {
 	}
 
 	@description = "This ensures that the default URL of the document will be displayed when accessing a document stored in the current site asset."
-	@priority = "5"
+	@priority = 5
 	test DefaultURLIsDisplayedWhenAccessingDocumentInCurrentSite {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -622,11 +768,12 @@ definition {
 	}
 
 	@description = "This ensures that the permanent redirection can be performed when accessing the old friendly URL of a blog entry displayed with a display page template."
-	@priority = "4"
+	@priority = 4
 	test PermanentRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "FriendlyURLService#PermanentRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -671,10 +818,11 @@ definition {
 	}
 
 	@description = "This ensures that the permanent redirection can be performed when accessing the old friendly URL of a page."
-	@priority = "4"
+	@priority = 4
 	test PermanentRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
-		property test.name.skip.portal.instance = "FriendlyURLService#PermanentRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -704,11 +852,12 @@ definition {
 	}
 
 	@description = "This ensures that the temporary redirection can be performed when accessing the old friendly URL of a blog entry displayed with a display page template."
-	@priority = "4"
+	@priority = 4
 	test TemporaryRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "FriendlyURLService#TemporaryRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -755,10 +904,11 @@ definition {
 	}
 
 	@description = "This ensures that the temporary redirection can be performed when accessing the old friendly URL of a page."
-	@priority = "4"
+	@priority = 4
 	test TemporaryRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
-		property test.name.skip.portal.instance = "FriendlyURLService#TemporaryRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -786,7 +936,7 @@ definition {
 	}
 
 	@description = "This ensures that the friendly URL will contain the group info to identify the attribution of the document when accessing other site documents."
-	@priority = "5"
+	@priority = 5
 	test URLIsDisplayedWithGroupWhenAccessingDocumentInOtherSite {
 		var portalURL = PropsUtil.get("portal.url");
 

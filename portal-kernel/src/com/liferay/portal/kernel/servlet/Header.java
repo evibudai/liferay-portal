@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.servlet;
 
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.util.CookieUtil;
 
 import java.io.Externalizable;
@@ -77,7 +69,8 @@ public class Header implements Externalizable {
 		String key, HttpServletResponse httpServletResponse) {
 
 		if (_type == Type.COOKIE) {
-			httpServletResponse.addCookie(_cookieValue);
+			CookiesManagerUtil.addCookie(
+				_cookieValue, null, httpServletResponse);
 		}
 		else if (_type == Type.DATE) {
 			httpServletResponse.addDateHeader(key, _dateValue);
@@ -129,9 +122,8 @@ public class Header implements Externalizable {
 		else if (_type == Type.STRING) {
 			return _stringValue.equals(header._stringValue);
 		}
-		else {
-			throw new IllegalStateException("Invalid type " + _type);
-		}
+
+		throw new IllegalStateException("Invalid type " + _type);
 	}
 
 	@Override
@@ -148,9 +140,8 @@ public class Header implements Externalizable {
 		else if (_type == Type.STRING) {
 			return _stringValue.hashCode();
 		}
-		else {
-			throw new IllegalStateException("Invalid type " + _type);
-		}
+
+		throw new IllegalStateException("Invalid type " + _type);
 	}
 
 	@Override
@@ -181,7 +172,8 @@ public class Header implements Externalizable {
 		String key, HttpServletResponse httpServletResponse) {
 
 		if (_type == Type.COOKIE) {
-			httpServletResponse.addCookie(_cookieValue);
+			CookiesManagerUtil.addCookie(
+				_cookieValue, null, httpServletResponse);
 		}
 		else if (_type == Type.DATE) {
 			httpServletResponse.setDateHeader(key, _dateValue);
@@ -211,9 +203,8 @@ public class Header implements Externalizable {
 		else if (_type == Type.STRING) {
 			return _stringValue;
 		}
-		else {
-			throw new IllegalStateException("Invalid type " + _type);
-		}
+
+		throw new IllegalStateException("Invalid type " + _type);
 	}
 
 	@Override

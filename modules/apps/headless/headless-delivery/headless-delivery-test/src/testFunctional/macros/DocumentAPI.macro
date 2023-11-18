@@ -1,12 +1,17 @@
 definition {
 
 	macro _addDocument {
-		Variables.assertDefined(parameterList = "${filePath}");
+		Variables.assertDefined(parameterList = ${filePath});
 
 		var portalURL = JSONCompany.getPortalURL();
 
-		if (isSet(assetLibraryId)) {
+		if (isSet(depotName)) {
+			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
+
 			var api = "asset-libraries/${assetLibraryId}/documents";
+		}
+		else if (isSet(documentFolderId)) {
+			var api = "document-folders/${documentFolderId}/documents";
 		}
 		else {
 			var api = "sites/${siteId}/documents";
@@ -16,25 +21,46 @@ definition {
 			var externalReferenceCode = "";
 		}
 
-		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/${api} \
-			-u test@liferay.com:test \
-			-H Content-Type: multipart/form-data \
-            -F document={"externalReferenceCode": "${externalReferenceCode}"} \
-			-F file=@${filePath} 
-		''';
+		if (!(isSet(assetCategoryIds))) {
+			var assetCategoryIds = 0;
+		}
 
-		var curl = JSONCurlUtil.post("${curl}");
+		if (!(isSet(fileName))) {
+			var curl = '''
+				${portalURL}/o/headless-delivery/v1.0/${api} \
+					-u test@liferay.com:test \
+					-H Content-Type: multipart/form-data \
+					-F document={"externalReferenceCode": "${externalReferenceCode}", "taxonomyCategoryIds": [${assetCategoryIds}]} \
+						-F file=@${filePath}
+			''';
+		}
+		else {
+			if (!(isSet(title))) {
+				var title = ${fileName};
+			}
 
-		return "${curl}";
+			var curl = '''
+				${portalURL}/o/headless-delivery/v1.0/${api} \
+					-u test@liferay.com:test \
+					-H Content-Type: multipart/form-data \
+					-F document={"title": "${title}", "fileName": "${fileName}", "externalReferenceCode": "${externalReferenceCode}", "taxonomyCategoryIds": [${assetCategoryIds}]} \
+						-F file=@${filePath}
+			''';
+		}
+
+		var curl = JSONCurlUtil.post(${curl});
+
+		return ${curl};
 	}
 
 	macro _deleteDocumentsByErcInAssetLibrary {
-		Variables.assertDefined(parameterList = "${externalReferenceCode}");
+		Variables.assertDefined(parameterList = ${externalReferenceCode});
 
 		var portalURL = JSONCompany.getPortalURL();
 
-		if (isSet(assetLibraryId)) {
+		if (isSet(depotName)) {
+			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
+
 			var api = "asset-libraries/${assetLibraryId}/documents/by-external-reference-code/${externalReferenceCode}";
 		}
 		else {
@@ -43,33 +69,42 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/${api} \
-			-u test@liferay.com:test \
-			-H accept: application/json
+				-u test@liferay.com:test \
+				-H accept: application/json
 		''';
 
-		var curl = JSONCurlUtil.delete("${curl}");
+		var curl = JSONCurlUtil.delete(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _filterDocumentInAssetLibrary {
-		Variables.assertDefined(parameterList = "${assetLibraryId},${filtervalue}");
+	macro _filterDocument {
+		Variables.assertDefined(parameterList = ${filtervalue});
 
 		var portalURL = JSONCompany.getPortalURL();
 
+		if (isSet(depotName)) {
+			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
+
+			var api = "asset-libraries/${assetLibraryId}/documents?filter=${filtervalue}";
+		}
+		else {
+			var api = "sites/${siteId}/documents/?filter=${filtervalue}";
+		}
+
 		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/asset-libraries/${assetLibraryId}/documents?filter=${filtervalue} \
-			-u test@liferay.com:test \
-			-H accept: application/json
+			${portalURL}/o/headless-delivery/v1.0/${api} \
+				-u test@liferay.com:test \
+				-H accept: application/json
 		''';
 
-		var curl = JSONCurlUtil.get("${curl}");
+		var curl = JSONCurlUtil.get(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
 	macro _getDocumentsByDifferentParameters {
-		Variables.assertDefined(parameterList = "${documentId}");
+		Variables.assertDefined(parameterList = ${documentId});
 
 		var portalURL = JSONCompany.getPortalURL();
 
@@ -82,57 +117,63 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/${api} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
 		''';
 
-		var curl = JSONCurlUtil.get("${curl}");
+		var curl = JSONCurlUtil.get(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
 	macro _getDocumentsByErcInAssetLibrary {
-		Variables.assertDefined(parameterList = "${assetLibraryId},${externalReferenceCode}");
+		Variables.assertDefined(parameterList = ${externalReferenceCode});
 
 		var portalURL = JSONCompany.getPortalURL();
 
+		if (!(isSet(assetLibraryId))) {
+			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
+		}
+
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/asset-libraries/${assetLibraryId}/documents/by-external-reference-code/${externalReferenceCode} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
 		''';
 
-		var curl = JSONCurlUtil.get("${curl}");
+		var curl = JSONCurlUtil.get(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
 	macro _updateDocumentByErc {
-		Variables.assertDefined(parameterList = "${externalReferenceCode}");
+		Variables.assertDefined(parameterList = ${externalReferenceCode});
 
 		if (!(isSet(filePath) || isSet(title) || isSet(updateExternalReferenceCode))) {
 			TestUtils.fail(message = "Please set at least one property to update the document.");
 		}
 
-		if (isSet(assetLibraryId)) {
+		if (isSet(depotName)) {
+			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
+
 			var api = "asset-libraries/${assetLibraryId}/documents/by-external-reference-code/${externalReferenceCode}";
 		}
 		else {
-			var api = "asset-libraries/${siteId}/documents/by-external-reference-code/${externalReferenceCode}";
+			var api = "sites/${siteId}/documents/by-external-reference-code/${externalReferenceCode}";
 		}
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/${api} \
-			-u test@liferay.com:test \
+				-u test@liferay.com:test \
 		''';
 		var delimiter = " ";
 
 		if (isSet(filePath)) {
 			var fileBody = "-F file=@\"${filePath}\"";
 
-			var curl = StringUtil.add("${curl}", "${fileBody}", "${delimiter}");
+			var curl = StringUtil.add(${curl}, ${fileBody}, ${delimiter});
 		}
 
 		if (isSet(title) && isSet(updateExternalReferenceCode)) {
@@ -140,7 +181,7 @@ definition {
 				-F document={"externalReferenceCode": "${updateExternalReferenceCode}", "title": "${title}"}
 			''';
 
-			var curl = StringUtil.add("${curl}", "${documentBody}", "${delimiter}");
+			var curl = StringUtil.add(${curl}, ${documentBody}, ${delimiter});
 		}
 		else {
 			if (isSet(title)) {
@@ -154,122 +195,325 @@ definition {
 				''';
 			}
 
-			var curl = StringUtil.add("${curl}", "${documentBody}", "${delimiter}");
+			var curl = StringUtil.add(${curl}, ${documentBody}, ${delimiter});
 		}
 
-		var curl = JSONCurlUtil.put("${curl}");
+		var curl = JSONCurlUtil.put(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
 	macro addDocumentInAssetLibraryByUploadFile {
-		Variables.assertDefined(parameterList = "${assetLibraryId},${filePath}");
+		Variables.assertDefined(parameterList = "${depotName},${filePath}");
 
 		var response = DocumentAPI._addDocument(
-			assetLibraryId = "${assetLibraryId}",
-			externalReferenceCode = "${externalReferenceCode}",
-			filePath = "${filePath}");
+			depotName = ${depotName},
+			externalReferenceCode = ${externalReferenceCode},
+			fileName = ${fileName},
+			filePath = ${filePath},
+			title = ${dmDocumentTitle});
 
-		return "${response}";
+		return ${response};
+	}
+
+	macro addDocumentWithFileInDocumentFolder {
+		Variables.assertDefined(parameterList = "${documentFolderId},${filePath}");
+
+		var response = DocumentAPI._addDocument(
+			documentFolderId = ${documentFolderId},
+			externalReferenceCode = ${externalReferenceCode},
+			filePath = ${filePath},
+			ileName = ${fileName},
+			title = ${dmDocumentTitle});
+
+		return ${response};
+	}
+
+	macro addDocumentWithFileInSite {
+		Variables.assertDefined(parameterList = ${siteId});
+
+		if (isSet(sourceFileName)) {
+			var filePath = TestCase.getDependenciesDirPath(fileName = ${sourceFileName});
+			var fileName = ${sourceFileName};
+		}
+
+		var response = DocumentAPI._addDocument(
+			assetCategoryIds = ${assetCategoryIds},
+			externalReferenceCode = ${externalReferenceCode},
+			fileName = ${fileName},
+			filePath = ${filePath},
+			siteId = ${siteId},
+			title = ${dmDocumentTitle});
+
+		return ${response};
+	}
+
+	macro assertDMPermissions {
+		var response = DocumentAPI.getDMPermissionsWithDocumentID(documentId = ${documentId});
+
+		var actualDMPermissions = JSONUtil.getWithJSONPath(${response}, "$..items[?(@.roleName == '${roleName}')].actionIds");
+
+		echo("####actualDMPermissions: '${actualDMPermissions}'");
+
+		TestUtils.assertEquals(
+			actual = ${actualDMPermissions},
+			expected = ${expectedDMPermissions});
 	}
 
 	macro assertExternalReferenceCodeWithCorrectValue {
 		if (!(isSet(expectedExternalReferenceCodeValue))) {
-			var expectedExternalReferenceCodeValue = DocumentAPI.getUuidOfCreatedDocument(responseToParse = "${responseToParse}");
+			var expectedExternalReferenceCodeValue = DocumentAPI.getUuidOfCreatedDocument(responseToParse = ${responseToParse});
 		}
 
-		var actualExternalReferenceCodeValue = JSONUtil.getWithJSONPath("${responseToParse}", "$..externalReferenceCode");
+		var actualExternalReferenceCodeValue = JSONUtil.getWithJSONPath(${responseToParse}, "$..externalReferenceCode");
 
 		TestUtils.assertEquals(
-			actual = "${actualExternalReferenceCodeValue}",
-			expected = "${expectedExternalReferenceCodeValue}");
+			actual = ${actualExternalReferenceCodeValue},
+			expected = ${expectedExternalReferenceCodeValue});
 	}
 
 	macro assertProperDocumentTotalCount {
-		Variables.assertDefined(parameterList = "${expectedDocumentTotalCount}");
+		Variables.assertDefined(parameterList = ${expectedDocumentTotalCount});
 
-		var response = DocumentAPI._filterDocumentInAssetLibrary(
-			assetLibraryId = "${assetLibraryId}",
-			filtervalue = "${filtervalue}");
+		var response = DocumentAPI._filterDocument(
+			depotName = ${depotName},
+			filtervalue = ${filtervalue},
+			siteId = ${siteId});
 
-		var actualDocumentTotalCount = JSONUtil.getWithJSONPath("${response}", "$..['totalCount']");
+		var actualDocumentTotalCount = JSONUtil.getWithJSONPath(${response}, "$..['totalCount']");
 
 		TestUtils.assertEquals(
-			actual = "${actualDocumentTotalCount}",
-			expected = "${expectedDocumentTotalCount}");
+			actual = ${actualDocumentTotalCount},
+			expected = ${expectedDocumentTotalCount});
 	}
 
 	macro deleteDocumentInAssetLibrary {
-		Variables.assertDefined(parameterList = "${assetLibraryId}");
+		Variables.assertDefined(parameterList = ${depotName});
 
 		if (!(isSet(externalReferenceCode))) {
-			Variables.assertDefined(parameterList = "${responseToParse}");
+			Variables.assertDefined(parameterList = ${responseToParse});
 
-			var externalReferenceCode = DocumentAPI.getUuidOfCreatedDocument(responseToParse = "${responseToParse}");
+			var externalReferenceCode = DocumentAPI.getUuidOfCreatedDocument(responseToParse = ${responseToParse});
 		}
 
 		DocumentAPI._deleteDocumentsByErcInAssetLibrary(
-			assetLibraryId = "${assetLibraryId}",
-			externalReferenceCode = "${externalReferenceCode}");
+			depotName = ${depotName},
+			externalReferenceCode = ${externalReferenceCode});
+	}
+
+	macro getDMPermissionsWithDocumentID {
+		Variables.assertDefined(parameterList = ${documentId});
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/documents/${documentId}/permissions \
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}'
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
 	}
 
 	macro getDocumentsByDifferentParameters {
 		var response = DocumentAPI._getDocumentsByDifferentParameters(
-			documentId = "${documentId}",
-			parameter = "${parameter}",
-			parameterValue = "${parameterValue}");
+			documentId = ${documentId},
+			parameter = ${parameter},
+			parameterValue = ${parameterValue});
 
-		return "${response}";
+		return ${response};
 	}
 
 	macro getDocumentsByErcInAssetLibrary {
 		var response = DocumentAPI._getDocumentsByErcInAssetLibrary(
-			assetLibraryId = "${assetLibraryId}",
-			externalReferenceCode = "${externalReferenceCode}");
+			assetLibraryId = ${assetLibraryId},
+			depotName = ${depotName},
+			externalReferenceCode = ${externalReferenceCode});
 
-		return "${response}";
+		return ${response};
+	}
+
+	macro getFileNameOfDocument {
+		var documentFileName = JSONUtil.getWithJSONPath(${responseToParse}, "$.['fileName']");
+
+		return ${documentFileName};
 	}
 
 	macro getIdOfCreatedDocument {
 		var response = DocumentAPI.addDocumentInAssetLibraryByUploadFile(
-			assetLibraryId = "${assetLibraryId}",
-			externalReferenceCode = "${externalReferenceCode}",
-			filePath = "${filePath}");
+			depotName = ${depotName},
+			dmDocumentTitle = ${dmDocumentTitle},
+			externalReferenceCode = ${externalReferenceCode},
+			fileName = ${fileName},
+			filePath = ${filePath});
 
-		var documentId = JSONUtil.getWithJSONPath("${response}", "$.['id']");
+		var documentId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${documentId}";
+		return ${documentId};
+	}
+
+	macro getRatedDocumentsWithDepotID {
+		Variables.assertDefined(parameterList = ${depotId});
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/asset-libraries/${depotId}/documents/rated-by-me \
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}'
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	macro getRatedDocumentsWithSiteID {
+		Variables.assertDefined(parameterList = ${siteId});
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/documents/rated-by-me \
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}'
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
 	}
 
 	macro getTitleOfDocument {
-		var documentTitle = JSONUtil.getWithJSONPath("${responseToParse}", "$.['title']");
+		var documentTitle = JSONUtil.getWithJSONPath(${responseToParse}, "$.['title']");
 
-		return "${documentTitle}";
+		return ${documentTitle};
 	}
 
 	macro getUuidOfCreatedDocument {
-		Variables.assertDefined(parameterList = "${responseToParse}");
+		Variables.assertDefined(parameterList = ${responseToParse});
 
-		var contentURL = JSONUtil.getWithJSONPath("${responseToParse}", "$.['contentUrl']");
+		var contentURL = JSONUtil.getWithJSONPath(${responseToParse}, "$.['contentUrl']");
 
-		var contentURLSubString = StringUtil.extractFirst("${contentURL}", "?");
+		var contentURLSubString = StringUtil.extractFirst(${contentURL}, "?");
 
-		var documentUuid = StringUtil.extractLast("${contentURLSubString}", "/");
+		var documentUuid = StringUtil.extractLast(${contentURLSubString}, "/");
 
-		return "${documentUuid}";
+		return ${documentUuid};
+	}
+
+	macro postRatingWithDocumentID {
+		Variables.assertDefined(parameterList = ${documentId});
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/documents/${documentId}/my-rating \
+				-H 'Content-Type: application/json' \
+				-u '${userEmailAddress}:${userPassword}' \
+				-d '{
+					"creator": {},
+					"ratingValue": ${ratingValue}
+				}'
+		''';
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+	macro putDMPermissionsWithDocumentID {
+		var portalURL = JSONCompany.getPortalURL();
+		var body = '''
+			[
+  				{
+    				"actionIds": [
+   					   "${actionIds}"
+   					 ],
+   					 "roleName": "${roleName}"
+ 				 }
+			]
+					''';
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/documents/${documentId}/permissions \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d ${body}
+		''';
+
+		var response = JSONCurlUtil.put(${curl});
+
+		return ${response};
+	}
+
+	macro updateDocumentByDocumentId {
+		Variables.assertDefined(parameterList = ${documentId});
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/documents/${documentId} \
+				-u test@liferay.com:test \
+				-F document={"title": "${title}", "fileName": "${fileName}"}
+		''';
+
+		var response = JSONCurlUtil.put(${curl});
+
+		return ${response};
 	}
 
 	macro updateDocumentByErcInAssetLibrary {
-		Variables.assertDefined(parameterList = "${assetLibraryId}");
+		Variables.assertDefined(parameterList = ${depotName});
 
 		var response = DocumentAPI._updateDocumentByErc(
-			assetLibraryId = "${assetLibraryId}",
-			externalReferenceCode = "${externalReferenceCode}",
-			filePath = "${filePath}",
-			title = "${title}",
-			updateExternalReferenceCode = "${updateExternalReferenceCode}");
+			depotName = ${depotName},
+			externalReferenceCode = ${externalReferenceCode},
+			filePath = ${filePath},
+			title = ${title},
+			updateExternalReferenceCode = ${updateExternalReferenceCode});
 
-		return "${response}";
+		return ${response};
 	}
 
 }

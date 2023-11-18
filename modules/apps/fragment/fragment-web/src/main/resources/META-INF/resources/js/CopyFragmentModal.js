@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -25,7 +16,7 @@ export default function CopyFragmentModal({
 	addFragmentCollectionURL,
 	contributedEntryKeys,
 	copyFragmentEntriesURL,
-	fragmentCollections,
+	fragmentCollections = [],
 	fragmentEntryIds,
 	portletNamespace,
 }) {
@@ -75,6 +66,13 @@ export default function CopyFragmentModal({
 				if (response.redirected) {
 					navigate(response.url);
 				}
+
+				openToast({
+					message: Liferay.Language.get(
+						'the-fragment-was-copied-successfully'
+					),
+					type: 'success',
+				});
 			})
 			.catch(() => {
 				openToast({
@@ -98,7 +96,6 @@ export default function CopyFragmentModal({
 				<ClayModal.Body>
 					{errors.error && (
 						<ClayAlert
-							className="mb-0"
 							displayType="danger"
 							title={Liferay.Language.get('error')}
 						>
@@ -112,6 +109,7 @@ export default function CopyFragmentModal({
 							copyFragments={copyFragments}
 							errors={errors}
 							formId={formId}
+							fragmentCollections={fragmentCollections}
 							portletNamespace={portletNamespace}
 							setErrors={setErrors}
 							showNoFragmentCollectionMessage={
@@ -216,9 +214,10 @@ function FragmentSetSelector({
 			>
 				<ClaySelectWithOption
 					id={`${portletNamespace}fragment-sets`}
-					onChange={(event) =>
-						setSelectedFragmentCollection(event.target.value)
-					}
+					onChange={(event) => {
+						setErrors({...errors, fragmentSets: null});
+						setSelectedFragmentCollection(event.target.value);
+					}}
 					options={items}
 					value={selectedFragmentCollection}
 				/>
@@ -232,14 +231,13 @@ function FragmentSetForm({
 	copyFragments,
 	errors,
 	formId,
+	fragmentCollections,
 	portletNamespace,
 	setErrors,
 	showNoFragmentCollectionMessage,
 }) {
-	const [name, setName] = useState(
-		showNoFragmentCollectionMessage
-			? Liferay.Language.get('untitled-set')
-			: ''
+	const [name, setName] = useState(() =>
+		getDefaultFragmentSetName(fragmentCollections)
 	);
 	const [description, setDescription] = useState('');
 
@@ -294,7 +292,10 @@ function FragmentSetForm({
 				<ClayInput
 					id={`${portletNamespace}name`}
 					name={`${portletNamespace}name`}
-					onChange={(event) => setName(event.target.value)}
+					onChange={(event) => {
+						setErrors({...errors, name: null});
+						setName(event.target.value);
+					}}
 					required
 					type="text"
 					value={name}
@@ -315,4 +316,20 @@ function FragmentSetForm({
 			</FormField>
 		</ClayForm>
 	);
+}
+
+function getDefaultFragmentSetName(fragmentCollections) {
+	const nameIsUsed = (collections, name) =>
+		collections.some((collection) => collection.name === name);
+
+	let name = Liferay.Language.get('untitled-set');
+	let suffix = 0;
+
+	while (nameIsUsed(fragmentCollections, name)) {
+		suffix++;
+
+		name = `${Liferay.Language.get('untitled-set')} ${suffix}`;
+	}
+
+	return name;
 }

@@ -1,31 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
+import {ClayToggle} from '@clayui/form';
 import {useModal} from '@clayui/modal';
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 
 import {fetchProperties, updatecommerceSyncEnabled} from '../../utils/api';
-import {NOT_FOUND_GIF} from '../../utils/constants';
-import {useRequest} from '../../utils/useRequest';
-import StateRenderer, {
-	EmptyStateComponent,
-	ErrorStateComponent,
-} from '../StateRenderer';
+import {OrderBy} from '../../utils/filter';
+import TableContext, {Events, useData, useDispatch} from '../table/Context';
+import {Table} from '../table/Table';
+import {EColumnAlign, TColumn, TItem} from '../table/types';
 import AssignModal from './AssignModal';
 import CreatePropertyModal from './CreatePropertyModal';
-import PropertiesTable from './PropertiesTable';
+
+export type TDataSource = {
+	commerceChannelIds: number[];
+	dataSourceId?: string;
+	siteIds: number[];
+};
 
 export type TProperty = {
 	channelId: string;
@@ -34,14 +29,148 @@ export type TProperty = {
 	name: string;
 };
 
-type TDataSource = {
-	commerceChannelIds: number[];
-	dataSourceId: string;
-	siteIds: number[];
+enum EColumn {
+	AssignButton = 'assignButton',
+	CommerceChannelIds = 'commerceChannelIds',
+	CreateDate = 'createDate',
+	Name = 'name',
+	SiteIds = 'siteIds',
+	ToggleSwitch = 'toggleSwitch',
+}
+
+const columns: TColumn[] = [
+	{
+		expanded: true,
+		id: EColumn.Name,
+		label: Liferay.Language.get('available-properties'),
+	},
+	{
+		align: EColumnAlign.Right,
+		id: EColumn.CommerceChannelIds,
+		label: Liferay.Language.get('channels'),
+		sortable: false,
+	},
+	{
+		align: EColumnAlign.Right,
+		id: EColumn.SiteIds,
+		label: Liferay.Language.get('sites'),
+		sortable: false,
+	},
+	{
+		align: EColumnAlign.Right,
+		id: EColumn.ToggleSwitch,
+		label: Liferay.Language.get('Commerce'),
+		sortable: false,
+	},
+	{
+		id: EColumn.CreateDate,
+		label: Liferay.Language.get('create-date'),
+		show: false,
+	},
+	{
+		align: EColumnAlign.Right,
+		id: EColumn.AssignButton,
+		label: '',
+		sortable: false,
+	},
+];
+
+const getTotalCommerceChannels = (enabled: boolean, value: string): string =>
+	enabled ? value : '-';
+
+const ToggleSwitch = ({
+	item,
+	property: {channelId},
+}: {
+	item: TItem;
+	property: TProperty;
+}) => {
+	const [
+		,
+		{value: totalCommerceChannels},
+		,
+		{value: commerceSyncEnabled},
+	] = item.columns;
+	const [toggle, setToggle] = useState<boolean>(
+		commerceSyncEnabled as boolean
+	);
+	const dispatch = useDispatch();
+
+	return (
+		<ClayToggle
+			onToggle={async () => {
+				const newValue = !toggle;
+				const {ok} = await updatecommerceSyncEnabled({
+					channelId,
+					commerceSyncEnabled: newValue,
+				});
+
+				if (ok) {
+					dispatch({
+						payload: {
+							columns: [
+								{
+									column: {
+										cellRenderer: () => (
+											<span>
+												{getTotalCommerceChannels(
+													newValue,
+													totalCommerceChannels as string
+												)}
+											</span>
+										),
+									},
+									index: 1,
+								},
+								{
+									column: {
+										value: newValue,
+									},
+									index: 3,
+								},
+							],
+							id: item.id,
+						},
+						type: Events.ChangeItem,
+					});
+
+					setToggle(newValue);
+				}
+			}}
+			role="toggle-switch"
+			toggled={toggle}
+			value={EColumn.ToggleSwitch}
+		/>
+	);
+};
+
+const getSafeProperty = (
+	property: TProperty
+): {
+	channelId: string;
+	commerceSyncEnabled: boolean;
+	dataSources: TDataSource[];
+	name: string;
+} => {
+	if (property.dataSources.length) {
+		return property;
+	}
+
+	return {
+		...property,
+		dataSources: [
+			{
+				commerceChannelIds: [],
+				siteIds: [],
+			},
+		],
+	};
 };
 
 const Properties: React.FC = () => {
-	const [properties, setProperties] = useState<TProperty[]>([]);
+	const {reload} = useData();
+	const dispatch = useDispatch();
+
 	const {
 		observer: assignModalObserver,
 		onOpenChange: onAssignModalOpenChange,
@@ -52,118 +181,155 @@ const Properties: React.FC = () => {
 		onOpenChange: onCreatePropertyModalOpenChange,
 		open: createPropertyModalOpen,
 	} = useModal();
-	const [selectedProperty, setSelectedProperty] = useState<TProperty>(
-		properties[0]
-	);
 
-	const {data, error, loading, refetch} = useRequest<{
-		items: TProperty[];
-	}>(fetchProperties);
-
-	useEffect(() => {
-		if (data?.items) {
-			setProperties(data.items);
-		}
-	}, [data]);
-
-	const handleCloseModal = async (closeFn: (value: boolean) => void) => {
-		const {items} = await fetchProperties();
-
-		setProperties(items);
-
-		Liferay.Util.openToast({
-			message: Liferay.Language.get(
-				'properties-settings-have-been-saved'
-			),
-		});
-
-		closeFn(false);
-	};
+	const [selectedProperty, setSelectedProperty] = useState<TProperty>();
 
 	return (
 		<>
-			<StateRenderer
-				empty={!properties.length}
-				error={error}
-				loading={loading}
-			>
-				<StateRenderer.Error>
-					<ErrorStateComponent
-						className="empty-state-border mb-0 pb-5"
-						onClickRefetch={refetch}
-					/>
-				</StateRenderer.Error>
-
-				<StateRenderer.Empty>
-					<EmptyStateComponent
-						className="empty-state-border"
-						description={Liferay.Language.get(
-							'create-a-property-to-add-sites-and-channels'
-						)}
-						imgSrc={NOT_FOUND_GIF}
-						title={Liferay.Language.get('create-a-new-property')}
-					>
+			<Table<TProperty>
+				addItemTitle={Liferay.Language.get('create-a-new-property')}
+				columns={columns}
+				emptyState={{
+					contentRenderer: () => (
 						<ClayButton
 							displayType="secondary"
 							onClick={() =>
 								onCreatePropertyModalOpenChange(true)
 							}
-							type="button"
 						>
 							{Liferay.Language.get('new-property')}
 						</ClayButton>
-					</EmptyStateComponent>
-				</StateRenderer.Empty>
+					),
+					description: Liferay.Language.get(
+						'create-a-property-to-add-sites-and-channels'
+					),
+					noResultsTitle: Liferay.Language.get(
+						'no-properties-were-found'
+					),
+					title: Liferay.Language.get('create-a-new-property'),
+				}}
+				mapperItems={(items) =>
+					items.map((property) => {
+						const safeProperty = getSafeProperty(property);
+						const {
+							channelId,
+							commerceSyncEnabled,
+							dataSources: [{commerceChannelIds, siteIds}],
+							name,
+						} = safeProperty;
 
-				<StateRenderer.Success>
-					<div className="text-right">
-						<ClayButton
-							displayType="secondary"
-							onClick={() =>
-								onCreatePropertyModalOpenChange(true)
-							}
-							type="button"
-						>
-							{Liferay.Language.get('new-property')}
-						</ClayButton>
-					</div>
+						return {
+							columns: [
+								{
+									id: EColumn.Name,
+									value: name,
+								},
+								{
+									cellRenderer: (item: any) => (
+										<span>
+											{getTotalCommerceChannels(
+												commerceSyncEnabled,
+												item.columns[1].value
+											)}
+										</span>
+									),
+									id: EColumn.CommerceChannelIds,
+									value: commerceChannelIds.length,
+								},
+								{
+									id: EColumn.SiteIds,
+									value: siteIds.length,
+								},
+								{
+									cellRenderer: (item) => (
+										<ToggleSwitch
+											item={item}
+											property={property}
+										/>
+									),
+									id: EColumn.ToggleSwitch,
+									value: commerceSyncEnabled,
+								},
+								{
+									id: EColumn.CreateDate,
+									value: 'createDate',
+								},
+								{
+									cellRenderer: (item) => (
+										<ClayButton
+											displayType="secondary"
+											onClick={() => {
+												setSelectedProperty({
+													...property,
+													commerceSyncEnabled: item
+														.columns[3]
+														.value as boolean,
+												});
+												onAssignModalOpenChange(true);
+											}}
+											role="assign-button"
+										>
+											{Liferay.Language.get('assign')}
+										</ClayButton>
+									),
+									id: EColumn.AssignButton,
+									value: 'assignButton',
+								},
+							],
+							id: channelId,
+						};
+					})
+				}
+				onAddItem={() => onCreatePropertyModalOpenChange(true)}
+				requestFn={fetchProperties}
+				showCheckbox={false}
+			/>
 
-					<PropertiesTable
-						onAssign={(index: number) => {
-							setSelectedProperty(properties[index]);
-							onAssignModalOpenChange(true);
-						}}
-						onCommerceSwitchChange={async (index: number) => {
-							const newProperties = [...properties];
-							const {
-								channelId,
-								commerceSyncEnabled,
-							} = newProperties[index];
-
-							const {ok} = await updatecommerceSyncEnabled({
-								channelId,
-								commerceSyncEnabled: !commerceSyncEnabled,
-							});
-
-							if (ok) {
-								newProperties[
-									index
-								].commerceSyncEnabled = !commerceSyncEnabled;
-
-								setProperties(newProperties);
-							}
-						}}
-						properties={properties}
-					/>
-				</StateRenderer.Success>
-			</StateRenderer>
-
-			{assignModalOpen && (
+			{selectedProperty && assignModalOpen && (
 				<AssignModal
 					observer={assignModalObserver}
 					onCancel={() => onAssignModalOpenChange(false)}
-					onSubmit={() => handleCloseModal(onAssignModalOpenChange)}
-					property={selectedProperty}
+					onSubmit={({commerceChannelIds, siteIds}) => {
+						Liferay.Util.openToast({
+							message: Liferay.Language.get(
+								'properties-settings-have-been-saved'
+							),
+						});
+
+						onAssignModalOpenChange(false);
+
+						dispatch({
+							payload: {
+								columns: [
+									{
+										column: {
+											cellRenderer: () => (
+												<span>
+													{getTotalCommerceChannels(
+														selectedProperty?.commerceSyncEnabled,
+														String(
+															commerceChannelIds.length
+														)
+													)}
+												</span>
+											),
+											value: commerceChannelIds.length,
+										},
+										index: 1,
+									},
+									{
+										column: {
+											value: siteIds.length,
+										},
+										index: 2,
+									},
+								],
+								id: selectedProperty?.channelId,
+							},
+							type: Events.ChangeItem,
+						});
+					}}
+					property={getSafeProperty(selectedProperty)}
 				/>
 			)}
 
@@ -171,13 +337,32 @@ const Properties: React.FC = () => {
 				<CreatePropertyModal
 					observer={createPropertyModalObserver}
 					onCancel={() => onCreatePropertyModalOpenChange(false)}
-					onSubmit={() =>
-						handleCloseModal(onCreatePropertyModalOpenChange)
-					}
+					onSubmit={() => {
+						Liferay.Util.openToast({
+							message: Liferay.Language.get(
+								'properties-settings-have-been-saved'
+							),
+						});
+
+						onCreatePropertyModalOpenChange(false);
+
+						reload();
+					}}
 				/>
 			)}
 		</>
 	);
 };
 
-export default Properties;
+const PropertiesWrapper = () => (
+	<TableContext
+		initialFilter={{
+			type: OrderBy.Desc,
+			value: EColumn.CreateDate,
+		}}
+	>
+		<Properties />
+	</TableContext>
+);
+
+export default PropertiesWrapper;

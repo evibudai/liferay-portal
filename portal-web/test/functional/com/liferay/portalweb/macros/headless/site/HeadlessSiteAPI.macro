@@ -1,0 +1,45 @@
+definition {
+
+	macro _addSite {
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = JSONUtil2.getDefaultUserEmail();
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = JSONUtil2.getDefaultUserPassword();
+		}
+
+		var data = "\"name\": \"${siteName}\"";
+
+		if (isSet(membershipType)) {
+			var data = StringUtil.add(${data}, ",\"membershipType\": \"${membershipType}\"", "");
+		}
+
+		if (isSet(parentSiteKey)) {
+			var data = StringUtil.add(${data}, ",\"parentSiteKey\": \"${parentSiteKey}\"", "");
+		}
+
+		if (isSet(templateType)) {
+			var data = StringUtil.add(${data}, ",\"templateKey\": \"${templateKey}\",\"templateType\": \"${templateType}\"", "");
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-site/v1.0/sites \
+				-u ${userEmailAddress}:${userPassword} \
+				-H accept: application/json \
+				-H Content-Type: application/json \
+				-d {
+					${data}
+				}
+		''';
+
+		var siteId = JSONCurlUtil.post(${curl}, "$.id");
+
+		return ${siteId};
+	}
+
+}

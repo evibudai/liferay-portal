@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.notifications;
@@ -37,7 +28,7 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Locale;
@@ -64,6 +55,55 @@ public class ExportImportUserNotificationHandler
 
 	@Override
 	protected String getBody(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return _getMessage(userNotificationEvent, serviceContext);
+	}
+
+	@Override
+	protected String getLink(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(
+			userNotificationEvent.getPayload());
+
+		long backgroundTaskId = jsonObject.getLong("backgroundTaskId");
+
+		BackgroundTask backgroundTask =
+			_backgroundTaskLocalService.fetchBackgroundTask(backgroundTaskId);
+
+		if (backgroundTask == null) {
+			return StringPool.BLANK;
+		}
+
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				serviceContext.getRequest(),
+				ExportImportPortletKeys.EXPORT_IMPORT,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/view_export_import.jsp"
+		).setBackURL(
+			serviceContext.getCurrentURL()
+		).setParameter(
+			"backgroundTaskId", backgroundTaskId
+		).buildString();
+	}
+
+	@Override
+	protected String getTitle(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return _getMessage(userNotificationEvent, serviceContext);
+	}
+
+	private String _getMessage(
 			UserNotificationEvent userNotificationEvent,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -106,7 +146,7 @@ public class ExportImportUserNotificationHandler
 		}
 		else {
 			return "Unable to process notification: " +
-				_html.escape(jsonObject.toString());
+				HtmlUtil.escape(jsonObject.toString());
 		}
 
 		long backgroundTaskId = jsonObject.getLong("backgroundTaskId");
@@ -121,38 +161,6 @@ public class ExportImportUserNotificationHandler
 		return _language.format(locale, message, processName);
 	}
 
-	@Override
-	protected String getLink(
-			UserNotificationEvent userNotificationEvent,
-			ServiceContext serviceContext)
-		throws Exception {
-
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			userNotificationEvent.getPayload());
-
-		long backgroundTaskId = jsonObject.getLong("backgroundTaskId");
-
-		BackgroundTask backgroundTask =
-			_backgroundTaskLocalService.fetchBackgroundTask(backgroundTaskId);
-
-		if (backgroundTask == null) {
-			return StringPool.BLANK;
-		}
-
-		return PortletURLBuilder.create(
-			PortletURLFactoryUtil.create(
-				serviceContext.getRequest(),
-				ExportImportPortletKeys.EXPORT_IMPORT,
-				PortletRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/view_export_import.jsp"
-		).setBackURL(
-			serviceContext.getCurrentURL()
-		).setParameter(
-			"backgroundTaskId", backgroundTaskId
-		).buildString();
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		ExportImportUserNotificationHandler.class);
 
@@ -165,9 +173,6 @@ public class ExportImportUserNotificationHandler
 	@Reference
 	private ExportImportConfigurationLocalService
 		_exportImportConfigurationLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private JSONFactory _jsonFactory;

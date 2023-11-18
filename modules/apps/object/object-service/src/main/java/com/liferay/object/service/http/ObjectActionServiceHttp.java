@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.http;
@@ -51,13 +42,15 @@ import com.liferay.portal.kernel.util.MethodKey;
 public class ObjectActionServiceHttp {
 
 	public static com.liferay.object.model.ObjectAction addObjectAction(
-			HttpPrincipal httpPrincipal, long objectDefinitionId,
-			boolean active, String conditionExpression, String description,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long objectDefinitionId, boolean active, String conditionExpression,
+			String description,
 			java.util.Map<java.util.Locale, String> errorMessageMap,
 			java.util.Map<java.util.Locale, String> labelMap, String name,
 			String objectActionExecutorKey, String objectActionTriggerKey,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				parametersUnicodeProperties)
+				parametersUnicodeProperties,
+			boolean system)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -66,10 +59,10 @@ public class ObjectActionServiceHttp {
 				_addObjectActionParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, objectDefinitionId, active, conditionExpression,
-				description, errorMessageMap, labelMap, name,
-				objectActionExecutorKey, objectActionTriggerKey,
-				parametersUnicodeProperties);
+				methodKey, externalReferenceCode, objectDefinitionId, active,
+				conditionExpression, description, errorMessageMap, labelMap,
+				name, objectActionExecutorKey, objectActionTriggerKey,
+				parametersUnicodeProperties, system);
 
 			Object returnObj = null;
 
@@ -180,8 +173,9 @@ public class ObjectActionServiceHttp {
 	}
 
 	public static com.liferay.object.model.ObjectAction updateObjectAction(
-			HttpPrincipal httpPrincipal, long objectActionId, boolean active,
-			String conditionExpression, String description,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long objectActionId, boolean active, String conditionExpression,
+			String description,
 			java.util.Map<java.util.Locale, String> errorMessageMap,
 			java.util.Map<java.util.Locale, String> labelMap, String name,
 			String objectActionExecutorKey, String objectActionTriggerKey,
@@ -195,9 +189,9 @@ public class ObjectActionServiceHttp {
 				_updateObjectActionParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, objectActionId, active, conditionExpression,
-				description, errorMessageMap, labelMap, name,
-				objectActionExecutorKey, objectActionTriggerKey,
+				methodKey, externalReferenceCode, objectActionId, active,
+				conditionExpression, description, errorMessageMap, labelMap,
+				name, objectActionExecutorKey, objectActionTriggerKey,
 				parametersUnicodeProperties);
 
 			Object returnObj = null;
@@ -233,10 +227,11 @@ public class ObjectActionServiceHttp {
 
 	private static final Class<?>[] _addObjectActionParameterTypes0 =
 		new Class[] {
-			long.class, boolean.class, String.class, String.class,
+			String.class, long.class, boolean.class, String.class, String.class,
 			java.util.Map.class, java.util.Map.class, String.class,
 			String.class, String.class,
-			com.liferay.portal.kernel.util.UnicodeProperties.class
+			com.liferay.portal.kernel.util.UnicodeProperties.class,
+			boolean.class
 		};
 	private static final Class<?>[] _deleteObjectActionParameterTypes1 =
 		new Class[] {long.class};
@@ -244,7 +239,7 @@ public class ObjectActionServiceHttp {
 		new Class[] {long.class};
 	private static final Class<?>[] _updateObjectActionParameterTypes3 =
 		new Class[] {
-			long.class, boolean.class, String.class, String.class,
+			String.class, long.class, boolean.class, String.class, String.class,
 			java.util.Map.class, java.util.Map.class, String.class,
 			String.class, String.class,
 			com.liferay.portal.kernel.util.UnicodeProperties.class

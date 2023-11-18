@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.upgrade.v3_18_0;
@@ -25,7 +16,7 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,45 +30,40 @@ import java.util.Locale;
  */
 public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 
-	public ObjectFieldUpgradeProcess(PortalUUID portalUUID) {
-		_portalUUID = portalUUID;
-	}
-
 	@Override
 	protected void doUpgrade() throws Exception {
-		String selectSQL = SQLTransformer.transform(
-			StringBundler.concat(
-				"select ObjectDefinition.companyId, ",
-				"ObjectDefinition.dbTableName, ",
-				"ObjectDefinition.objectDefinitionId, ",
-				"ObjectDefinition.userName, ObjectDefinition.userId, ",
-				"ObjectDefinition.system_ from ObjectDefinition where ",
-				"ObjectDefinition.objectDefinitionId not in (select distinct ",
-				"ObjectField.objectDefinitionId from ObjectField where ",
-				"(ObjectField.name = 'creator' or ObjectField.name = ",
-				"'createDate' or ObjectField.name = 'id' or ObjectField.name ",
-				"= 'modifiedDate' or ObjectField.name = 'status') and ",
-				"ObjectField.system_ = [$TRUE$])"));
-
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				selectSQL);
+				SQLTransformer.transform(
+					StringBundler.concat(
+						"select ObjectDefinition.companyId, ",
+						"ObjectDefinition.dbTableName, ",
+						"ObjectDefinition.objectDefinitionId, ",
+						"ObjectDefinition.userName, ObjectDefinition.userId, ",
+						"ObjectDefinition.system_ from ObjectDefinition where ",
+						"ObjectDefinition.objectDefinitionId not in (select ",
+						"distinct ObjectField.objectDefinitionId from ",
+						"ObjectField where (ObjectField.name = 'creator' or ",
+						"ObjectField.name = 'createDate' or ObjectField.name ",
+						"= 'id' or ObjectField.name = 'modifiedDate' or ",
+						"ObjectField.name = 'status') and ObjectField.system_ ",
+						"= [$TRUE$])")));
+			PreparedStatement preparedStatement2 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					StringBundler.concat(
+						"insert into ObjectField (mvccVersion, uuid_, ",
+						"objectFieldId, companyId, userId, userName, ",
+						"createDate, modifiedDate, externalReferenceCode, ",
+						"listTypeDefinitionId, objectDefinitionId, ",
+						"businessType, dbColumnName, dbTableName, dbType, ",
+						"defaultValue, indexed, indexedAsKeyWord, ",
+						"indexedLanguageId, label, name, relationshipType, ",
+						"required, state_, system_) values (?, ?, ?, ?, ?, ?, ",
+						"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ",
+						"?, ?)"));
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
-			String insertSQL = StringBundler.concat(
-				"insert into ObjectField (mvccVersion, uuid_, objectFieldId, ",
-				"companyId, userId, userName, createDate, modifiedDate, ",
-				"externalReferenceCode, listTypeDefinitionId, ",
-				"objectDefinitionId, businessType, dbColumnName, dbTableName, ",
-				"dbType, defaultValue, indexed, indexedAsKeyWord, ",
-				"indexedLanguageId, label, name, relationshipType, required, ",
-				"state_, system_) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ",
-				"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
 			while (resultSet.next()) {
-				PreparedStatement preparedStatement2 =
-					AutoBatchPreparedStatementUtil.concurrentAutoBatch(
-						connection, insertSQL);
-
 				long companyId = resultSet.getLong("companyId");
 				String dbTableName = resultSet.getString("dbTableName");
 				Locale defaultLocale = LocaleUtil.fromLanguageId(
@@ -170,9 +156,9 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 						},
 						"Label"),
 					"status");
-
-				preparedStatement2.executeBatch();
 			}
+
+			preparedStatement2.executeBatch();
 		}
 	}
 
@@ -185,7 +171,7 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 
 		preparedStatement.setLong(1, 0);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		preparedStatement.setString(2, uuid);
 
@@ -203,19 +189,17 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 		preparedStatement.setString(14, dbTableName);
 		preparedStatement.setString(15, dbType);
 		preparedStatement.setString(16, null);
-		preparedStatement.setInt(17, 0);
-		preparedStatement.setInt(18, 0);
+		preparedStatement.setBoolean(17, false);
+		preparedStatement.setBoolean(18, false);
 		preparedStatement.setString(19, null);
 		preparedStatement.setString(20, label);
 		preparedStatement.setString(21, name);
 		preparedStatement.setString(22, null);
-		preparedStatement.setInt(23, 0);
-		preparedStatement.setInt(24, 0);
-		preparedStatement.setInt(25, 1);
+		preparedStatement.setBoolean(23, false);
+		preparedStatement.setBoolean(24, false);
+		preparedStatement.setBoolean(25, true);
 
 		preparedStatement.addBatch();
 	}
-
-	private final PortalUUID _portalUUID;
 
 }

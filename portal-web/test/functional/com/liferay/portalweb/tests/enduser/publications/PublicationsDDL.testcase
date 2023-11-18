@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -15,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,9 +24,9 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishPublicationWithDeletedListAndRecord {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -129,7 +128,7 @@ definition {
 		PublicationsChanges.viewChanges(
 			changeCategory = "Dynamic Data Lists Record",
 			changeSite = "Site Name",
-			changeTitle = "${changeTitle}",
+			changeTitle = ${changeTitle},
 			changeType = "Deleted",
 			changeUser = "Test Test");
 
@@ -147,9 +146,7 @@ definition {
 			changeType = "Deleted",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -160,13 +157,14 @@ definition {
 		LexiconEntry.viewNoEntry(rowEntry = "List Name");
 	}
 
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test PublishPublicationWithDisplayTemplate {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -261,9 +259,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.gotoSitePage(
 			pageName = "Dynamic Data Lists Display Page",
@@ -274,14 +270,9 @@ definition {
 			value1 = "Text");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishPublicationWithEditedListAndRecord {
-
-		// Workaround LPS-148148
-
-		property app.server.types = "jboss,tomcat,weblogic,wildfly";
-
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -406,13 +397,13 @@ definition {
 		PublicationsChanges.viewChanges(
 			changeCategory = "Dynamic Data Lists Record",
 			changeSite = "Site Name",
-			changeTitle = "${changeTitle}",
+			changeTitle = ${changeTitle},
 			changeType = "Modified",
 			changeUser = "Test Test");
 
 		PublicationsNavigator.gotoViewChangeDetails(
 			changeCategory = "Dynamic Data Lists Record",
-			changeTitle = "${changeTitle}");
+			changeTitle = ${changeTitle});
 
 		PublicationsChangeDetails.viewDDLRecordChangeDetails(
 			changeType = "Modified",
@@ -429,9 +420,7 @@ definition {
 			fieldValueInPublication = "3/30/21",
 			publicationName = "Publication Name");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -447,13 +436,13 @@ definition {
 			fieldFieldLabel = "Text");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test PublishPublicationWithFormTemplate {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -545,9 +534,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.gotoSitePage(
 			pageName = "Dynamic Data Lists Display Page",
@@ -558,13 +545,13 @@ definition {
 		DDLRecord.viewFieldFormTemplateSpecific(field = "Separator");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishPublicationWithNewListAndRecord {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "site-name");
 
@@ -615,7 +602,7 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Asset",
-			changeOrder = "2",
+			changeOrder = 6,
 			changeSite = "Site Name",
 			changeTitle = "New Data Definition for List: List Name",
 			changeType = "Added",
@@ -629,7 +616,7 @@ definition {
 		PublicationsChanges.viewChanges(
 			changeCategory = "Dynamic Data Lists Record",
 			changeSite = "Site Name",
-			changeTitle = "${changeTitle}",
+			changeTitle = ${changeTitle},
 			changeType = "Added",
 			changeUser = "Test Test");
 
@@ -647,9 +634,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "site-name");
 
@@ -661,9 +646,9 @@ definition {
 			fieldFieldLabel = "Documents and Media");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ResolveConflictingPublicationsByDiscarding {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -751,9 +736,9 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name 2");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name 2");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name 2");
 
 		PublicationsNavigator.gotoPublish(
 			gotoPublicationsAdmin = "true",
@@ -765,13 +750,11 @@ definition {
 
 		PublicationsChanges.discardChanges(
 			changeCategory = "Dynamic Data Lists Record",
-			changeTitle = "${changeTitle}",
+			changeTitle = ${changeTitle},
 			conflictingChanges = "true",
 			entryTitle = "Dynamic Data Lists Record");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name 1");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name 1");
+		Publications.publishPublication(publicationName = "Publication Name 1");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 

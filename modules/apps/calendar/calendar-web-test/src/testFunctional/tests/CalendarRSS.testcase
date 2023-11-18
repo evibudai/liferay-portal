@@ -1,7 +1,7 @@
 @component-name = "portal-calendar"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Calendar";
@@ -10,28 +10,27 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 
 		CalendarNavigator.gotoAddEvent();
 
@@ -49,19 +48,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -71,23 +66,24 @@ definition {
 
 	@description = "This is a use case for LPS-67928."
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test DeleteEventAndViewFeed {
-		property test.name.skip.portal.instance = "CalendarRSS#DeleteEventAndViewFeed";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		Calendar.chooseSiteCalendarMenulistOption(
 			menuListOption = "RSS",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Current Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Navigator.closeWindow();
 
@@ -97,36 +93,36 @@ definition {
 
 		Calendar.chooseSiteCalendarMenulistOption(
 			menuListOption = "RSS",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventNotPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Current Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Navigator.closeWindow();
 	}
 
 	@description = "This is a use case for LPS-67928."
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test DisableFeedForSiteCalendar {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		Calendar.chooseSiteCalendarMenulistOption(
 			menuListOption = "RSS",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Current Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		var rssURL = selenium.getLocation();
 
@@ -144,19 +140,19 @@ definition {
 
 		Calendar.viewSiteCalendarNoMenulistOption(
 			menuListOption = "RSS",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
-		Calendar.viewNoRSS(rssURL = "${rssURL}");
+		Calendar.viewNoRSS(rssURL = ${rssURL});
 	}
 
 	@description = "This is a use case for LPS-67928."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test ViewSiteCalendarFeed {
 		property portal.acceptance = "true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		CalendarNavigator.gotoPreviousDay();
 
@@ -172,29 +168,29 @@ definition {
 
 		Calendar.chooseSiteCalendarMenulistOption(
 			menuListOption = "RSS",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventNotPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Past Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Current Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Calendar.viewRSSFeedEventPresent(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Future Day Event",
 			pageName = "Calendar Page",
-			siteCalendarName = "${siteName}",
-			siteName = "${siteName}");
+			siteCalendarName = ${siteName},
+			siteName = ${siteName});
 
 		Navigator.closeWindow();
 	}

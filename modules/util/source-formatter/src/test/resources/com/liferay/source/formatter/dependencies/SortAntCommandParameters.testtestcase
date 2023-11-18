@@ -1,0 +1,7 @@
+definition {
+
+	test CanImportEntryWithImageAfterCleaningDB {
+		AntCommands.runCommand("build-test.xml", "move-file -Dtofile=${deployFolder}/${fileName} -Dfile=${sourceFilePath}");
+	}
+
+}

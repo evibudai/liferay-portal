@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.data.provider.internal;
@@ -42,7 +33,6 @@ import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
 
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.junit.Assert;
@@ -99,10 +89,8 @@ public class DDMDataProviderInvokerImplTest {
 		DDMDataProviderResponse ddmDataProviderResponse =
 			ddmDataProviderInvokeCommand.run();
 
-		Optional<String> optional = ddmDataProviderResponse.getOutputOptional(
-			"output", String.class);
-
-		Assert.assertEquals("value", optional.get());
+		Assert.assertEquals(
+			"value", ddmDataProviderResponse.getOutput("output", String.class));
 	}
 
 	@Test
@@ -118,18 +106,16 @@ public class DDMDataProviderInvokerImplTest {
 				"2"
 			).build();
 
-		Optional<DDMDataProviderInstance> optional = Optional.empty();
-
 		Mockito.when(
-			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstanceOptional("2")
+			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstance("2")
 		).thenReturn(
-			optional
+			null
 		);
 
 		DDMDataProvider ddmDataProvider = Mockito.mock(DDMDataProvider.class);
 
 		Mockito.when(
-			ddmDataProviderInvokerImpl.getDDMDataProvider("2", optional)
+			ddmDataProviderInvokerImpl.getDDMDataProvider("2", null)
 		).thenReturn(
 			ddmDataProvider
 		);
@@ -152,10 +138,8 @@ public class DDMDataProviderInvokerImplTest {
 		DDMDataProviderResponse ddmDataProviderResponse =
 			ddmDataProviderInvokerImpl.doInvoke(ddmDataProviderRequest);
 
-		Optional<Number> outputOptional =
-			ddmDataProviderResponse.getOutputOptional("output", Number.class);
-
-		Assert.assertEquals(2, outputOptional.get());
+		Assert.assertEquals(
+			2, (int)ddmDataProviderResponse.getOutput("output", Number.class));
 	}
 
 	@Test
@@ -174,19 +158,17 @@ public class DDMDataProviderInvokerImplTest {
 		DDMDataProviderInstance ddmDataProviderInstance = Mockito.mock(
 			DDMDataProviderInstance.class);
 
-		Optional<DDMDataProviderInstance> optional = Optional.of(
-			ddmDataProviderInstance);
-
 		Mockito.when(
-			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstanceOptional("1")
+			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstance("1")
 		).thenReturn(
-			optional
+			ddmDataProviderInstance
 		);
 
 		DDMDataProvider ddmDataProvider = Mockito.mock(DDMDataProvider.class);
 
 		Mockito.when(
-			ddmDataProviderInvokerImpl.getDDMDataProvider("1", optional)
+			ddmDataProviderInvokerImpl.getDDMDataProvider(
+				"1", ddmDataProviderInstance)
 		).thenReturn(
 			ddmDataProvider
 		);
@@ -211,10 +193,8 @@ public class DDMDataProviderInvokerImplTest {
 		DDMDataProviderResponse ddmDataProviderResponse =
 			ddmDataProviderInvokerImpl.doInvoke(ddmDataProviderRequest);
 
-		Optional<String> outputOptional =
-			ddmDataProviderResponse.getOutputOptional("test", String.class);
-
-		Assert.assertEquals("value", outputOptional.get());
+		Assert.assertEquals(
+			"value", ddmDataProviderResponse.getOutput("test", String.class));
 	}
 
 	@Test
@@ -235,11 +215,8 @@ public class DDMDataProviderInvokerImplTest {
 			null
 		);
 
-		Optional<DDMDataProviderInstance> optional =
-			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstanceOptional(
-				"test");
-
-		Assert.assertFalse(optional.isPresent());
+		Assert.assertNull(
+			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstance("test"));
 	}
 
 	@Test
@@ -253,11 +230,8 @@ public class DDMDataProviderInvokerImplTest {
 		ddmDataProviderInvokerImpl.ddmDataProviderInstanceService =
 			ddmDataProviderInstanceService;
 
-		Optional<DDMDataProviderInstance> optional =
-			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstanceOptional(
-				"1");
-
-		Assert.assertFalse(optional.isPresent());
+		Assert.assertNull(
+			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstance("1"));
 
 		Mockito.verify(
 			ddmDataProviderInstanceService, Mockito.times(1)
@@ -292,11 +266,8 @@ public class DDMDataProviderInvokerImplTest {
 			ddmDataProviderInstance
 		);
 
-		Optional<DDMDataProviderInstance> optional =
-			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstanceOptional(
-				"1");
-
-		Assert.assertTrue(optional.isPresent());
+		Assert.assertNotNull(
+			ddmDataProviderInvokerImpl.fetchDDMDataProviderInstance("1"));
 
 		Mockito.verify(
 			ddmDataProviderInstanceService, Mockito.times(1)
@@ -337,7 +308,7 @@ public class DDMDataProviderInvokerImplTest {
 		);
 
 		DDMDataProvider result = ddmDataProviderInvokerImpl.getDDMDataProvider(
-			"1", Optional.empty());
+			"1", null);
 
 		Assert.assertNotNull(result);
 
@@ -376,10 +347,9 @@ public class DDMDataProviderInvokerImplTest {
 			ddmDataProvider
 		);
 
-		DDMDataProvider result = ddmDataProviderInvokerImpl.getDDMDataProvider(
-			"1", Optional.of(ddmDataProviderInstance));
-
-		Assert.assertNotNull(result);
+		Assert.assertNotNull(
+			ddmDataProviderInvokerImpl.getDDMDataProvider(
+				"1", ddmDataProviderInstance));
 
 		Mockito.verify(
 			ddmDataProviderRegistry, Mockito.times(1)

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.web.internal.portlet.action;
@@ -18,13 +9,13 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.redirect.model.RedirectEntry;
 import com.liferay.redirect.service.RedirectEntryLocalService;
 import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
 import com.liferay.redirect.web.internal.display.context.RedirectEntryInfoPanelDisplayContext;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -49,18 +40,20 @@ public class InfoPanelMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		LongStream longStream = Arrays.stream(
-			ParamUtil.getLongValues(resourceRequest, "rowIds"));
+		List<RedirectEntry> redirectEntries = new ArrayList<>();
+
+		for (long redirectEntryId :
+				ParamUtil.getLongValues(resourceRequest, "rowIds")) {
+
+			redirectEntries.add(
+				_redirectEntryLocalService.fetchRedirectEntry(redirectEntryId));
+		}
 
 		resourceRequest.setAttribute(
 			RedirectEntryInfoPanelDisplayContext.class.getName(),
 			new RedirectEntryInfoPanelDisplayContext(
 				_portal.getLiferayPortletRequest(resourceRequest),
-				longStream.mapToObj(
-					_redirectEntryLocalService::fetchRedirectEntry
-				).collect(
-					Collectors.toList()
-				)));
+				redirectEntries));
 
 		include(resourceRequest, resourceResponse, "/info_panel.jsp");
 	}

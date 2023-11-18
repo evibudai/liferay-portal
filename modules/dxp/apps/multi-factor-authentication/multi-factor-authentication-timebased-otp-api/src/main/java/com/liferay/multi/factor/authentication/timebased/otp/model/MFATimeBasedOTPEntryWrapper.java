@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.timebased.otp.model;
@@ -56,6 +47,7 @@ public class MFATimeBasedOTPEntryWrapper
 		attributes.put("lastFailIP", getLastFailIP());
 		attributes.put("lastSuccessDate", getLastSuccessDate());
 		attributes.put("lastSuccessIP", getLastSuccessIP());
+		attributes.put("lastValidTOTP", getLastValidTOTP());
 		attributes.put("sharedSecret", getSharedSecret());
 
 		return attributes;
@@ -134,6 +126,12 @@ public class MFATimeBasedOTPEntryWrapper
 
 		if (lastSuccessIP != null) {
 			setLastSuccessIP(lastSuccessIP);
+		}
+
+		String lastValidTOTP = (String)attributes.get("lastValidTOTP");
+
+		if (lastValidTOTP != null) {
+			setLastValidTOTP(lastValidTOTP);
 		}
 
 		String sharedSecret = (String)attributes.get("sharedSecret");
@@ -216,6 +214,16 @@ public class MFATimeBasedOTPEntryWrapper
 	@Override
 	public String getLastSuccessIP() {
 		return model.getLastSuccessIP();
+	}
+
+	/**
+	 * Returns the last valid totp of this mfa time based otp entry.
+	 *
+	 * @return the last valid totp of this mfa time based otp entry
+	 */
+	@Override
+	public String getLastValidTOTP() {
+		return model.getLastValidTOTP();
 	}
 
 	/**
@@ -371,6 +379,16 @@ public class MFATimeBasedOTPEntryWrapper
 	@Override
 	public void setLastSuccessIP(String lastSuccessIP) {
 		model.setLastSuccessIP(lastSuccessIP);
+	}
+
+	/**
+	 * Sets the last valid totp of this mfa time based otp entry.
+	 *
+	 * @param lastValidTOTP the last valid totp of this mfa time based otp entry
+	 */
+	@Override
+	public void setLastValidTOTP(String lastValidTOTP) {
+		model.setLastValidTOTP(lastValidTOTP);
 	}
 
 	/**

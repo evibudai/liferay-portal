@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.model.impl;
@@ -75,14 +66,14 @@ public class KBCommentModelImpl
 	public static final String TABLE_NAME = "KBComment";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"kbCommentId", Types.BIGINT}, {"groupId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"classNameId", Types.BIGINT},
-		{"classPK", Types.BIGINT}, {"content", Types.VARCHAR},
-		{"userRating", Types.INTEGER}, {"lastPublishDate", Types.TIMESTAMP},
-		{"status", Types.INTEGER}
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"kbCommentId", Types.BIGINT},
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"classNameId", Types.BIGINT}, {"classPK", Types.BIGINT},
+		{"content", Types.VARCHAR}, {"userRating", Types.INTEGER},
+		{"lastPublishDate", Types.TIMESTAMP}, {"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -90,6 +81,7 @@ public class KBCommentModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("kbCommentId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -107,7 +99,7 @@ public class KBCommentModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table KBComment (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,kbCommentId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,content STRING null,userRating INTEGER,lastPublishDate DATE null,status INTEGER)";
+		"create table KBComment (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,kbCommentId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,content STRING null,userRating INTEGER,lastPublishDate DATE null,status INTEGER,primary key (kbCommentId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table KBComment";
 
@@ -261,85 +253,112 @@ public class KBCommentModelImpl
 	public Map<String, Function<KBComment, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<KBComment, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<KBComment, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<KBComment, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<KBComment, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<KBComment, Object>>();
-		Map<String, BiConsumer<KBComment, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<KBComment, ?>>();
+		private static final Map<String, Function<KBComment, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", KBComment::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<KBComment, Long>)KBComment::setMvccVersion);
-		attributeGetterFunctions.put("uuid", KBComment::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<KBComment, String>)KBComment::setUuid);
-		attributeGetterFunctions.put("kbCommentId", KBComment::getKbCommentId);
-		attributeSetterBiConsumers.put(
-			"kbCommentId",
-			(BiConsumer<KBComment, Long>)KBComment::setKbCommentId);
-		attributeGetterFunctions.put("groupId", KBComment::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId", (BiConsumer<KBComment, Long>)KBComment::setGroupId);
-		attributeGetterFunctions.put("companyId", KBComment::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<KBComment, Long>)KBComment::setCompanyId);
-		attributeGetterFunctions.put("userId", KBComment::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<KBComment, Long>)KBComment::setUserId);
-		attributeGetterFunctions.put("userName", KBComment::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<KBComment, String>)KBComment::setUserName);
-		attributeGetterFunctions.put("createDate", KBComment::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<KBComment, Date>)KBComment::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", KBComment::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<KBComment, Date>)KBComment::setModifiedDate);
-		attributeGetterFunctions.put("classNameId", KBComment::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<KBComment, Long>)KBComment::setClassNameId);
-		attributeGetterFunctions.put("classPK", KBComment::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK", (BiConsumer<KBComment, Long>)KBComment::setClassPK);
-		attributeGetterFunctions.put("content", KBComment::getContent);
-		attributeSetterBiConsumers.put(
-			"content", (BiConsumer<KBComment, String>)KBComment::setContent);
-		attributeGetterFunctions.put("userRating", KBComment::getUserRating);
-		attributeSetterBiConsumers.put(
-			"userRating",
-			(BiConsumer<KBComment, Integer>)KBComment::setUserRating);
-		attributeGetterFunctions.put(
-			"lastPublishDate", KBComment::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<KBComment, Date>)KBComment::setLastPublishDate);
-		attributeGetterFunctions.put("status", KBComment::getStatus);
-		attributeSetterBiConsumers.put(
-			"status", (BiConsumer<KBComment, Integer>)KBComment::setStatus);
+		static {
+			Map<String, Function<KBComment, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<KBComment, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", KBComment::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", KBComment::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", KBComment::getUuid);
+			attributeGetterFunctions.put(
+				"kbCommentId", KBComment::getKbCommentId);
+			attributeGetterFunctions.put("groupId", KBComment::getGroupId);
+			attributeGetterFunctions.put("companyId", KBComment::getCompanyId);
+			attributeGetterFunctions.put("userId", KBComment::getUserId);
+			attributeGetterFunctions.put("userName", KBComment::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", KBComment::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", KBComment::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", KBComment::getClassNameId);
+			attributeGetterFunctions.put("classPK", KBComment::getClassPK);
+			attributeGetterFunctions.put("content", KBComment::getContent);
+			attributeGetterFunctions.put(
+				"userRating", KBComment::getUserRating);
+			attributeGetterFunctions.put(
+				"lastPublishDate", KBComment::getLastPublishDate);
+			attributeGetterFunctions.put("status", KBComment::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<KBComment, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<KBComment, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<KBComment, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<KBComment, Long>)KBComment::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<KBComment, Long>)KBComment::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<KBComment, String>)KBComment::setUuid);
+			attributeSetterBiConsumers.put(
+				"kbCommentId",
+				(BiConsumer<KBComment, Long>)KBComment::setKbCommentId);
+			attributeSetterBiConsumers.put(
+				"groupId", (BiConsumer<KBComment, Long>)KBComment::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<KBComment, Long>)KBComment::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<KBComment, Long>)KBComment::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<KBComment, String>)KBComment::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<KBComment, Date>)KBComment::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<KBComment, Date>)KBComment::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<KBComment, Long>)KBComment::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK", (BiConsumer<KBComment, Long>)KBComment::setClassPK);
+			attributeSetterBiConsumers.put(
+				"content",
+				(BiConsumer<KBComment, String>)KBComment::setContent);
+			attributeSetterBiConsumers.put(
+				"userRating",
+				(BiConsumer<KBComment, Integer>)KBComment::setUserRating);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<KBComment, Date>)KBComment::setLastPublishDate);
+			attributeSetterBiConsumers.put(
+				"status", (BiConsumer<KBComment, Integer>)KBComment::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -355,6 +374,21 @@ public class KBCommentModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -754,6 +788,7 @@ public class KBCommentModelImpl
 		KBCommentImpl kbCommentImpl = new KBCommentImpl();
 
 		kbCommentImpl.setMvccVersion(getMvccVersion());
+		kbCommentImpl.setCtCollectionId(getCtCollectionId());
 		kbCommentImpl.setUuid(getUuid());
 		kbCommentImpl.setKbCommentId(getKbCommentId());
 		kbCommentImpl.setGroupId(getGroupId());
@@ -780,6 +815,8 @@ public class KBCommentModelImpl
 
 		kbCommentImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		kbCommentImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		kbCommentImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
 		kbCommentImpl.setKbCommentId(
 			this.<Long>getColumnOriginalValue("kbCommentId"));
@@ -882,6 +919,8 @@ public class KBCommentModelImpl
 		KBCommentCacheModel kbCommentCacheModel = new KBCommentCacheModel();
 
 		kbCommentCacheModel.mvccVersion = getMvccVersion();
+
+		kbCommentCacheModel.ctCollectionId = getCtCollectionId();
 
 		kbCommentCacheModel.uuid = getUuid();
 
@@ -1012,6 +1051,7 @@ public class KBCommentModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _kbCommentId;
 	private long _groupId;
@@ -1031,8 +1071,9 @@ public class KBCommentModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<KBComment, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<KBComment, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1058,6 +1099,7 @@ public class KBCommentModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put("kbCommentId", _kbCommentId);
 		_columnOriginalValues.put("groupId", _groupId);
@@ -1097,33 +1139,35 @@ public class KBCommentModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("uuid_", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("kbCommentId", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("groupId", 8L);
+		columnBitmasks.put("kbCommentId", 8L);
 
-		columnBitmasks.put("companyId", 16L);
+		columnBitmasks.put("groupId", 16L);
 
-		columnBitmasks.put("userId", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("userName", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("createDate", 128L);
+		columnBitmasks.put("userName", 128L);
 
-		columnBitmasks.put("modifiedDate", 256L);
+		columnBitmasks.put("createDate", 256L);
 
-		columnBitmasks.put("classNameId", 512L);
+		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("classPK", 1024L);
+		columnBitmasks.put("classNameId", 1024L);
 
-		columnBitmasks.put("content", 2048L);
+		columnBitmasks.put("classPK", 2048L);
 
-		columnBitmasks.put("userRating", 4096L);
+		columnBitmasks.put("content", 4096L);
 
-		columnBitmasks.put("lastPublishDate", 8192L);
+		columnBitmasks.put("userRating", 8192L);
 
-		columnBitmasks.put("status", 16384L);
+		columnBitmasks.put("lastPublishDate", 16384L);
+
+		columnBitmasks.put("status", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.notification;
@@ -54,11 +45,11 @@ import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PrefsPropsUtil;
 
 import java.io.Writer;
 
@@ -247,7 +238,7 @@ public class DDMFormEmailNotificationSender {
 		DDMFormInstanceSettings formInstancetings =
 			ddmFormInstance.getSettingsModel();
 
-		String defaultEmailFromAddress = PrefsPropsUtil.getString(
+		String defaultEmailFromAddress = _prefsProps.getString(
 			ddmFormInstance.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_ADDRESS);
 
 		return GetterUtil.getString(
@@ -260,7 +251,7 @@ public class DDMFormEmailNotificationSender {
 		DDMFormInstanceSettings formInstancetings =
 			ddmFormInstance.getSettingsModel();
 
-		String defaultEmailFromName = PrefsPropsUtil.getString(
+		String defaultEmailFromName = _prefsProps.getString(
 			ddmFormInstance.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_NAME);
 
 		return GetterUtil.getString(
@@ -576,6 +567,9 @@ public class DDMFormEmailNotificationSender {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PrefsProps _prefsProps;
 
 	@Reference
 	private UserLocalService _userLocalService;

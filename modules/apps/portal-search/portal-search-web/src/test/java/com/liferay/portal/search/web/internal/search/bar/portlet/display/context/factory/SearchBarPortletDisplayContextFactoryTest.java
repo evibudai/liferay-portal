@@ -1,25 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.bar.portlet.display.context.factory;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -30,6 +23,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.rest.configuration.SearchSuggestionsCompanyConfiguration;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -43,22 +37,21 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portlet.PortletPreferencesImpl;
 
-import java.util.Optional;
-
-import javax.portlet.PortletException;
 import javax.portlet.PortletPreferences;
-import javax.portlet.ReadOnlyException;
 import javax.portlet.RenderRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -71,15 +64,26 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() {
+		_configurationProviderUtilMockedStatic = Mockito.mockStatic(
+			ConfigurationProviderUtil.class);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_configurationProviderUtilMockedStatic.close();
+	}
+
 	@Before
-	public void setUp() {
+	public void setUp() throws ConfigurationException {
 		_setUpLanguageUtil();
 		_setUpPortal();
 		_setUpThemeDisplay();
 	}
 
 	@Test
-	public void testDestinationBlank() throws PortletException {
+	public void testDestinationBlank() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(StringPool.BLANK);
@@ -87,14 +91,14 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertFalse(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
 	}
 
 	@Test
-	public void testDestinationNull() throws PortletException {
+	public void testDestinationNull() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(null);
@@ -102,14 +106,14 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertFalse(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
 	}
 
 	@Test
-	public void testDestinationUnreachable() throws PortletException {
+	public void testDestinationUnreachable() throws Exception {
 		String destination = RandomTestUtil.randomString();
 
 		_whenLayoutLocalServiceFetchLayoutByFriendlyURL(destination, null);
@@ -121,7 +125,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertTrue(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
@@ -147,7 +151,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertEquals(
 			layoutFriendlyURL, searchBarPortletDisplayContext.getSearchURL());
@@ -175,7 +179,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertEquals(
 			layoutFriendlyURL, searchBarPortletDisplayContext.getSearchURL());
@@ -185,7 +189,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	}
 
 	@Test
-	public void testSamePageNoDestination() throws PortletException {
+	public void testSamePageNoDestination() throws Exception {
 		Mockito.doReturn(
 			"http://example.com/web/guest/home?param=arg"
 		).when(
@@ -199,7 +203,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertFalse(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
@@ -209,7 +213,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	}
 
 	@Test
-	public void testScopeParameterName() throws ReadOnlyException {
+	public void testScopeParameterName() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(null, "sp", null);
@@ -217,14 +221,14 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertEquals(
 			"sp", searchBarPortletDisplayContext.getScopeParameterName());
 	}
 
 	@Test
-	public void testScopeParameterNameDefault() throws ReadOnlyException {
+	public void testScopeParameterNameDefault() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(null, null, null);
@@ -232,7 +236,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertEquals(
 			_DEFAULT_SCOPE_PARAMETER_NAME,
@@ -240,7 +244,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	}
 
 	@Test
-	public void testSearchScopePreferenceDefault() throws ReadOnlyException {
+	public void testSearchScopePreferenceDefault() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(null, null, null);
@@ -249,7 +253,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	}
 
 	@Test
-	public void testSearchScopePreferenceEverything() throws ReadOnlyException {
+	public void testSearchScopePreferenceEverything() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(
@@ -260,7 +264,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	@Test
 	public void testSearchScopePreferenceLetTheUserChooseEverything()
-		throws ReadOnlyException {
+		throws Exception {
 
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
@@ -272,7 +276,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	@Test
 	public void testSearchScopePreferenceLetTheUserChooseInvalidScopeParam()
-		throws ReadOnlyException {
+		throws Exception {
 
 		expectedException.expect(IllegalArgumentException.class);
 		expectedException.expectMessage(
@@ -289,7 +293,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	@Test
 	public void testSearchScopePreferenceLetTheUserChooseNoScopeParam()
-		throws ReadOnlyException {
+		throws Exception {
 
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
@@ -301,7 +305,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	@Test
 	public void testSearchScopePreferenceLetTheUserChooseThisSite()
-		throws ReadOnlyException {
+		throws Exception {
 
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
@@ -312,7 +316,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 	}
 
 	@Test
-	public void testSearchScopePreferenceThisSite() throws ReadOnlyException {
+	public void testSearchScopePreferenceThisSite() throws Exception {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				_createSearchBarPortletDisplayContextFactory(
@@ -367,7 +371,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
-				_searchBarPrecedenceHelper);
+				_searchBarPrecedenceHelper, _searchCapabilities);
 
 		Assert.assertEquals(
 			expectedLetTheUserChoose,
@@ -395,7 +399,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	private SearchBarPortletDisplayContextFactory
 			_createSearchBarPortletDisplayContextFactory(String destination)
-		throws ReadOnlyException {
+		throws Exception {
 
 		return _createSearchBarPortletDisplayContextFactory(
 			destination, null, null, null);
@@ -405,7 +409,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			_createSearchBarPortletDisplayContextFactory(
 				String scope, String scopeParameterName,
 				String scopeParameterValue)
-		throws ReadOnlyException {
+		throws Exception {
 
 		return _createSearchBarPortletDisplayContextFactory(
 			null, scope, scopeParameterName, scopeParameterValue);
@@ -415,9 +419,15 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			_createSearchBarPortletDisplayContextFactory(
 				String destination, String scope, String scopeParameterName,
 				String scopeParameterValue)
-		throws ReadOnlyException {
+		throws Exception {
 
 		RenderRequest renderRequest = Mockito.mock(RenderRequest.class);
+
+		Mockito.when(
+			renderRequest.getAttribute(WebKeys.THEME_DISPLAY)
+		).thenReturn(
+			_themeDisplay
+		);
 
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
@@ -452,12 +462,6 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			portletPreferences
 		);
 
-		Mockito.when(
-			renderRequest.getAttribute(WebKeys.THEME_DISPLAY)
-		).thenReturn(
-			_themeDisplay
-		);
-
 		PortletSharedSearchResponse portletSharedSearchResponse = Mockito.mock(
 			PortletSharedSearchResponse.class);
 
@@ -465,6 +469,12 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			_portletSharedSearchRequest.search(renderRequest)
 		).thenReturn(
 			portletSharedSearchResponse
+		);
+
+		Mockito.when(
+			_searchBarPortletInstanceConfiguration.destination()
+		).thenReturn(
+			destination
 		);
 
 		Mockito.when(
@@ -477,7 +487,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			portletSharedSearchResponse.getParameter(
 				Mockito.eq(scopeParameterName), Mockito.any())
 		).thenReturn(
-			Optional.ofNullable(scopeParameterValue)
+			scopeParameterValue
 		);
 
 		SearchResponse searchResponse = Mockito.mock(SearchResponse.class);
@@ -531,27 +541,36 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		);
 	}
 
-	private void _setUpThemeDisplay() {
+	private void _setUpThemeDisplay() throws ConfigurationException {
 		Mockito.when(
 			_themeDisplay.getScopeGroup()
 		).thenReturn(
 			_group
 		);
 
-		try {
-			Mockito.when(
-				_portletDisplay.getPortletInstanceConfiguration(Mockito.any())
-			).thenReturn(
-				Mockito.mock(SearchBarPortletInstanceConfiguration.class)
-			);
-		}
-		catch (Exception exception) {
-		}
+		Mockito.when(
+			_portletDisplay.getPortletResource()
+		).thenReturn(
+			"test"
+		);
+
+		Mockito.when(
+			_portletDisplay.getThemeDisplay()
+		).thenReturn(
+			_themeDisplay
+		);
 
 		Mockito.when(
 			_themeDisplay.getPortletDisplay()
 		).thenReturn(
 			_portletDisplay
+		);
+
+		_configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			_searchBarPortletInstanceConfiguration
 		);
 	}
 
@@ -586,6 +605,9 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 	private static final String _DEFAULT_SCOPE_PARAMETER_NAME = "scope";
 
+	private static MockedStatic<ConfigurationProviderUtil>
+		_configurationProviderUtilMockedStatic;
+
 	private final Group _group = Mockito.mock(Group.class);
 	private final LayoutLocalService _layoutLocalService = Mockito.mock(
 		LayoutLocalService.class);
@@ -596,8 +618,13 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		Mockito.mock(PortletPreferencesLookup.class);
 	private final PortletSharedSearchRequest _portletSharedSearchRequest =
 		Mockito.mock(PortletSharedSearchRequest.class);
+	private final SearchBarPortletInstanceConfiguration
+		_searchBarPortletInstanceConfiguration = Mockito.mock(
+			SearchBarPortletInstanceConfiguration.class);
 	private final SearchBarPrecedenceHelper _searchBarPrecedenceHelper =
 		Mockito.mock(SearchBarPrecedenceHelper.class);
+	private final SearchCapabilities _searchCapabilities = Mockito.mock(
+		SearchCapabilities.class);
 	private final SearchSuggestionsCompanyConfiguration
 		_searchSuggestionsCompanyConfiguration = Mockito.mock(
 			SearchSuggestionsCompanyConfiguration.class);

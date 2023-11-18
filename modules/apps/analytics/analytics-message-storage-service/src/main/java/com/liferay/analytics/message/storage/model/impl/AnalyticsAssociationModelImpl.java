@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.storage.model.impl;
@@ -70,10 +61,10 @@ public class AnalyticsAssociationModelImpl
 	public static final String TABLE_NAME = "AnalyticsAssociation";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"analyticsAssociationId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"userId", Types.BIGINT},
-		{"associationClassName", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"analyticsAssociationId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"userId", Types.BIGINT}, {"associationClassName", Types.VARCHAR},
 		{"associationClassPK", Types.BIGINT}, {"className", Types.VARCHAR},
 		{"classPK", Types.BIGINT}
 	};
@@ -83,6 +74,7 @@ public class AnalyticsAssociationModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("analyticsAssociationId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
@@ -95,7 +87,7 @@ public class AnalyticsAssociationModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AnalyticsAssociation (mvccVersion LONG default 0 not null,analyticsAssociationId LONG not null primary key,companyId LONG,createDate DATE null,modifiedDate DATE null,userId LONG,associationClassName VARCHAR(75) null,associationClassPK LONG,className VARCHAR(75) null,classPK LONG)";
+		"create table AnalyticsAssociation (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,analyticsAssociationId LONG not null,companyId LONG,createDate DATE null,modifiedDate DATE null,userId LONG,associationClassName VARCHAR(75) null,associationClassPK LONG,className VARCHAR(75) null,classPK LONG,primary key (analyticsAssociationId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table AnalyticsAssociation";
@@ -233,96 +225,119 @@ public class AnalyticsAssociationModelImpl
 	public Map<String, Function<AnalyticsAssociation, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AnalyticsAssociation, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<AnalyticsAssociation, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<AnalyticsAssociation, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AnalyticsAssociation, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<AnalyticsAssociation, Object>>();
-		Map<String, BiConsumer<AnalyticsAssociation, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<AnalyticsAssociation, ?>>();
+		private static final Map<String, Function<AnalyticsAssociation, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", AnalyticsAssociation::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setMvccVersion);
-		attributeGetterFunctions.put(
-			"analyticsAssociationId",
-			AnalyticsAssociation::getAnalyticsAssociationId);
-		attributeSetterBiConsumers.put(
-			"analyticsAssociationId",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setAnalyticsAssociationId);
-		attributeGetterFunctions.put(
-			"companyId", AnalyticsAssociation::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setCompanyId);
-		attributeGetterFunctions.put(
-			"createDate", AnalyticsAssociation::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<AnalyticsAssociation, Date>)
-				AnalyticsAssociation::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", AnalyticsAssociation::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<AnalyticsAssociation, Date>)
-				AnalyticsAssociation::setModifiedDate);
-		attributeGetterFunctions.put("userId", AnalyticsAssociation::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setUserId);
-		attributeGetterFunctions.put(
-			"associationClassName",
-			AnalyticsAssociation::getAssociationClassName);
-		attributeSetterBiConsumers.put(
-			"associationClassName",
-			(BiConsumer<AnalyticsAssociation, String>)
-				AnalyticsAssociation::setAssociationClassName);
-		attributeGetterFunctions.put(
-			"associationClassPK", AnalyticsAssociation::getAssociationClassPK);
-		attributeSetterBiConsumers.put(
-			"associationClassPK",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setAssociationClassPK);
-		attributeGetterFunctions.put(
-			"className", AnalyticsAssociation::getClassName);
-		attributeSetterBiConsumers.put(
-			"className",
-			(BiConsumer<AnalyticsAssociation, String>)
-				AnalyticsAssociation::setClassName);
-		attributeGetterFunctions.put(
-			"classPK", AnalyticsAssociation::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<AnalyticsAssociation, Long>)
-				AnalyticsAssociation::setClassPK);
+		static {
+			Map<String, Function<AnalyticsAssociation, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<AnalyticsAssociation, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", AnalyticsAssociation::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", AnalyticsAssociation::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"analyticsAssociationId",
+				AnalyticsAssociation::getAnalyticsAssociationId);
+			attributeGetterFunctions.put(
+				"companyId", AnalyticsAssociation::getCompanyId);
+			attributeGetterFunctions.put(
+				"createDate", AnalyticsAssociation::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", AnalyticsAssociation::getModifiedDate);
+			attributeGetterFunctions.put(
+				"userId", AnalyticsAssociation::getUserId);
+			attributeGetterFunctions.put(
+				"associationClassName",
+				AnalyticsAssociation::getAssociationClassName);
+			attributeGetterFunctions.put(
+				"associationClassPK",
+				AnalyticsAssociation::getAssociationClassPK);
+			attributeGetterFunctions.put(
+				"className", AnalyticsAssociation::getClassName);
+			attributeGetterFunctions.put(
+				"classPK", AnalyticsAssociation::getClassPK);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<AnalyticsAssociation, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AnalyticsAssociation, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<AnalyticsAssociation, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"analyticsAssociationId",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setAnalyticsAssociationId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<AnalyticsAssociation, Date>)
+					AnalyticsAssociation::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<AnalyticsAssociation, Date>)
+					AnalyticsAssociation::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setUserId);
+			attributeSetterBiConsumers.put(
+				"associationClassName",
+				(BiConsumer<AnalyticsAssociation, String>)
+					AnalyticsAssociation::setAssociationClassName);
+			attributeSetterBiConsumers.put(
+				"associationClassPK",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setAssociationClassPK);
+			attributeSetterBiConsumers.put(
+				"className",
+				(BiConsumer<AnalyticsAssociation, String>)
+					AnalyticsAssociation::setClassName);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<AnalyticsAssociation, Long>)
+					AnalyticsAssociation::setClassPK);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -337,6 +352,20 @@ public class AnalyticsAssociationModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@Override
@@ -594,6 +623,7 @@ public class AnalyticsAssociationModelImpl
 			new AnalyticsAssociationImpl();
 
 		analyticsAssociationImpl.setMvccVersion(getMvccVersion());
+		analyticsAssociationImpl.setCtCollectionId(getCtCollectionId());
 		analyticsAssociationImpl.setAnalyticsAssociationId(
 			getAnalyticsAssociationId());
 		analyticsAssociationImpl.setCompanyId(getCompanyId());
@@ -618,6 +648,8 @@ public class AnalyticsAssociationModelImpl
 
 		analyticsAssociationImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		analyticsAssociationImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		analyticsAssociationImpl.setAnalyticsAssociationId(
 			this.<Long>getColumnOriginalValue("analyticsAssociationId"));
 		analyticsAssociationImpl.setCompanyId(
@@ -716,6 +748,8 @@ public class AnalyticsAssociationModelImpl
 			new AnalyticsAssociationCacheModel();
 
 		analyticsAssociationCacheModel.mvccVersion = getMvccVersion();
+
+		analyticsAssociationCacheModel.ctCollectionId = getCtCollectionId();
 
 		analyticsAssociationCacheModel.analyticsAssociationId =
 			getAnalyticsAssociationId();
@@ -831,6 +865,7 @@ public class AnalyticsAssociationModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _analyticsAssociationId;
 	private long _companyId;
 	private Date _createDate;
@@ -844,7 +879,8 @@ public class AnalyticsAssociationModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<AnalyticsAssociation, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -870,6 +906,7 @@ public class AnalyticsAssociationModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put(
 			"analyticsAssociationId", _analyticsAssociationId);
 		_columnOriginalValues.put("companyId", _companyId);
@@ -896,23 +933,25 @@ public class AnalyticsAssociationModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("analyticsAssociationId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("analyticsAssociationId", 4L);
 
-		columnBitmasks.put("createDate", 8L);
+		columnBitmasks.put("companyId", 8L);
 
-		columnBitmasks.put("modifiedDate", 16L);
+		columnBitmasks.put("createDate", 16L);
 
-		columnBitmasks.put("userId", 32L);
+		columnBitmasks.put("modifiedDate", 32L);
 
-		columnBitmasks.put("associationClassName", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("associationClassPK", 128L);
+		columnBitmasks.put("associationClassName", 128L);
 
-		columnBitmasks.put("className", 256L);
+		columnBitmasks.put("associationClassPK", 256L);
 
-		columnBitmasks.put("classPK", 512L);
+		columnBitmasks.put("className", 512L);
+
+		columnBitmasks.put("classPK", 1024L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

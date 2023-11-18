@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.template;
@@ -20,12 +11,13 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.template.TemplateContextContributor;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.internal.template.servlet.RESTClientHttpRequest;
 import com.liferay.portal.vulcan.internal.template.servlet.RESTClientHttpResponse;
 
 import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -50,22 +42,18 @@ public class RESTClientTemplateContextContributor
 		Map<String, Object> contextObjects,
 		HttpServletRequest httpServletRequest) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)contextObjects.get(
-			"themeDisplay");
-
 		contextObjects.put(
-			"restClient",
-			new RESTClient(httpServletRequest, themeDisplay.getResponse()));
+			"restClient", new RESTClient(contextObjects, httpServletRequest));
 	}
 
 	public class RESTClient {
 
 		public RESTClient(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse) {
+			Map<String, Object> contextObjects,
+			HttpServletRequest httpServletRequest) {
 
+			_contextObjects = contextObjects;
 			_httpServletRequest = httpServletRequest;
-			_httpServletResponse = httpServletResponse;
 		}
 
 		public Object get(String path) throws Exception {
@@ -76,17 +64,27 @@ public class RESTClientTemplateContextContributor
 			RequestDispatcher requestDispatcher =
 				servletContext.getRequestDispatcher(Portal.PATH_MODULE + path);
 
-			requestDispatcher.forward(
-				new RESTClientHttpRequest(_httpServletRequest),
-				new RESTClientHttpResponse(
-					new PipingServletResponse(
-						_httpServletResponse, unsyncStringWriter)));
+			HttpServletResponse httpServletResponse = new PipingServletResponse(
+				new RESTClientHttpResponse(), unsyncStringWriter);
 
-			return _jsonFactory.looseDeserialize(unsyncStringWriter.toString());
+			requestDispatcher.forward(
+				new RESTClientHttpRequest(_contextObjects, _httpServletRequest),
+				httpServletResponse);
+
+			String responseString = unsyncStringWriter.toString();
+
+			if (Objects.equals(
+					httpServletResponse.getContentType(),
+					ContentTypes.APPLICATION_JSON)) {
+
+				return _jsonFactory.looseDeserialize(responseString);
+			}
+
+			return responseString;
 		}
 
+		private final Map<String, Object> _contextObjects;
 		private final HttpServletRequest _httpServletRequest;
-		private final HttpServletResponse _httpServletResponse;
 
 	}
 

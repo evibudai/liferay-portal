@@ -1,34 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
-
-import com.github.difflib.DiffUtils;
-import com.github.difflib.UnifiedDiffUtils;
-import com.github.difflib.patch.Patch;
 
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.util.Dom4JUtil;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.PropsUtil;
+import com.liferay.poshi.core.util.TestUtil;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.StringReader;
-
-import java.util.LinkedList;
-import java.util.List;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -103,6 +86,19 @@ public class PoshiElementFactoryTest {
 	}
 
 	@Test
+	public void testPoshiScriptFunctionFormat() throws Exception {
+		String actualFileName = "UnformattedPoshiScriptFunction.function";
+		String expectedFileName = "PoshiScriptFunction.function";
+
+		PoshiElement actualElement = _getPoshiElement(actualFileName);
+
+		_assertEqualStrings(
+			actualFileName, actualElement.toPoshiScript(), expectedFileName,
+			FileUtil.read(_getFile(expectedFileName)),
+			"Poshi script was not formatted correctly");
+	}
+
+	@Test
 	public void testPoshiScriptFunctionToXML() throws Exception {
 		String actualFileName = "PoshiScriptFunction.function";
 		String expectedFileName = "PoshiSyntaxFunction.function";
@@ -123,7 +119,7 @@ public class PoshiElementFactoryTest {
 			"PoshiScriptMacro.macro");
 
 		int[] expectedLineNumbers = {
-			4, 9, 11, 17, 19, 28, 29, 30, 32, 34, 38, 42, 46, 50, 54, 58
+			4, 9, 11, 17, 19, 29, 30, 31, 33, 35, 39, 43, 47, 51, 55, 59
 		};
 
 		int i = 0;
@@ -149,6 +145,19 @@ public class PoshiElementFactoryTest {
 	}
 
 	@Test
+	public void testPoshiScriptMacroFormat() throws Exception {
+		String actualFileName = "UnformattedPoshiScriptMacro.macro";
+		String expectedFileName = "PoshiScriptMacro.macro";
+
+		PoshiElement actualElement = _getPoshiElement(actualFileName);
+
+		_assertEqualStrings(
+			actualFileName, actualElement.toPoshiScript(), expectedFileName,
+			FileUtil.read(_getFile(expectedFileName)),
+			"Poshi script was not formatted correctly");
+	}
+
+	@Test
 	public void testPoshiScriptMacroToXML() throws Exception {
 		String actualFileName = "PoshiScriptMacro.macro";
 		String expectedFileName = "PoshiSyntaxMacro.macro";
@@ -159,6 +168,19 @@ public class PoshiElementFactoryTest {
 		_assertEqualElements(
 			actualFileName, actualElement, expectedFileName, expectedElement,
 			"Poshi script syntax does not translate to Poshi XML");
+	}
+
+	@Test
+	public void testPoshiScriptTestFormat() throws Exception {
+		String actualFileName = "UnformattedPoshiScript.testcase";
+		String expectedFileName = "PoshiScript.testcase";
+
+		PoshiElement actualElement = _getPoshiElement(actualFileName);
+
+		_assertEqualStrings(
+			actualFileName, actualElement.toPoshiScript(), expectedFileName,
+			FileUtil.read(_getFile(expectedFileName)),
+			"Poshi script was not formatted correctly");
 	}
 
 	@Test
@@ -221,7 +243,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLMacroFormat() throws Exception {
-		String actualFileName = "UnformattedPoshiScript.macro";
+		String actualFileName = "UnformattedPoshiScriptMacro.macro";
 		String expectedFileName = "PoshiSyntaxMacro.macro";
 
 		PoshiElement actualElement = _getPoshiElement(actualFileName);
@@ -316,7 +338,7 @@ public class PoshiElementFactoryTest {
 		}
 
 		if (compare != 0) {
-			_printDiffs(
+			TestUtil.printDiffs(
 				expectedFileName, Dom4JUtil.format(expectedElement),
 				actualFileName, Dom4JUtil.format(actualElement));
 
@@ -331,7 +353,7 @@ public class PoshiElementFactoryTest {
 		throws Exception {
 
 		if (!actualContent.equals(expectedContent)) {
-			_printDiffs(
+			TestUtil.printDiffs(
 				expectedFileName, expectedContent, actualFileName,
 				actualContent);
 
@@ -355,60 +377,9 @@ public class PoshiElementFactoryTest {
 		return new File(_BASE_DIR + fileName);
 	}
 
-	private List<String> _getLines(String s) throws Exception {
-		List<String> lines = new LinkedList<>();
-
-		String line = null;
-
-		BufferedReader bufferedReader = new BufferedReader(new StringReader(s));
-
-		while ((line = bufferedReader.readLine()) != null) {
-			lines.add(line);
-		}
-
-		bufferedReader.close();
-
-		return lines;
-	}
-
 	private PoshiElement _getPoshiElement(String fileName) throws Exception {
 		return (PoshiElement)PoshiNodeFactory.newPoshiNodeFromFile(
 			FileUtil.getURL(_getFile(fileName)));
-	}
-
-	private void _printDiffs(
-			String expectedFileName, String expectedContent,
-			String actualFileName, String actualContent)
-		throws Exception {
-
-		Patch<String> patch = DiffUtils.diff(
-			_getLines(expectedContent), _getLines(actualContent));
-
-		List<String> unifiedDiffLines = UnifiedDiffUtils.generateUnifiedDiff(
-			expectedFileName, "Generated from " + actualFileName,
-			_getLines(expectedContent), patch, 0);
-
-		for (String line : unifiedDiffLines) {
-			if (line.startsWith("+++") || line.startsWith("---")) {
-				System.out.println(line);
-
-				continue;
-			}
-
-			if (line.startsWith("+")) {
-				System.out.println("\033[32m" + line + "\033[0m");
-
-				continue;
-			}
-
-			if (line.startsWith("-")) {
-				System.out.println("\033[31m" + line + "\033[0m");
-
-				continue;
-			}
-
-			System.out.println(line);
-		}
 	}
 
 	private static final String _BASE_DIR =

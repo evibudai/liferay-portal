@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service.impl;
 
+import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.internal.background.task.CTPublishBackgroundTaskExecutor;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTProcess;
@@ -29,6 +21,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -52,12 +46,25 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CTProcess addCTProcess(long userId, long ctCollectionId)
 		throws PortalException {
 
+		return addCTProcess(
+			userId, ctCollectionId, CTConstants.CT_COLLECTION_ID_PRODUCTION,
+			null);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CTProcess addCTProcess(
+			long userId, long fromCTCollectionId, long toCTCollectionId,
+			long[] ctEntryIds)
+		throws PortalException {
+
 		CTCollection ctCollection = _ctCollectionPersistence.findByPrimaryKey(
-			ctCollectionId);
+			fromCTCollectionId);
 
 		if (ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) {
 			throw new IllegalStateException(
@@ -65,12 +72,14 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 					ctCollection);
 		}
 
-		ctCollection.setStatus(WorkflowConstants.STATUS_PENDING);
+		if (toCTCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			ctCollection.setStatus(WorkflowConstants.STATUS_PENDING);
 
-		ctCollection = _ctCollectionPersistence.update(ctCollection);
+			ctCollection = _ctCollectionPersistence.update(ctCollection);
 
-		_ctPreferencesLocalService.resetCTPreferences(
-			ctCollection.getCtCollectionId());
+			_ctPreferencesLocalService.resetCTPreferences(
+				ctCollection.getCtCollectionId());
+		}
 
 		long ctProcessId = counterLocalService.increment(
 			CTProcess.class.getName());
@@ -80,25 +89,40 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 		ctProcess.setCompanyId(ctCollection.getCompanyId());
 		ctProcess.setUserId(userId);
 		ctProcess.setCreateDate(new Date());
-		ctProcess.setCtCollectionId(ctCollectionId);
+		ctProcess.setCtCollectionId(fromCTCollectionId);
 
-		Company company = _companyLocalService.getCompany(
-			ctCollection.getCompanyId());
+		if (toCTCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			ctProcess.setType(CTConstants.CT_PROCESS_MOVE);
+		}
 
 		Map<String, Serializable> taskContextMap =
 			HashMapBuilder.<String, Serializable>put(
-				"ctCollectionId", ctCollectionId
+				"ctEntryIds", ctEntryIds
 			).put(
 				"ctProcessId", ctProcessId
+			).put(
+				"fromCTCollectionId", fromCTCollectionId
+			).put(
+				"toCTCollectionId", toCTCollectionId
 			).build();
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
+			Company company = _companyLocalService.getCompany(
+				ctCollection.getCompanyId());
+
+			String name = String.valueOf(fromCTCollectionId);
+
+			if (toCTCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+				name =
+					String.valueOf(fromCTCollectionId) + "_" +
+						String.valueOf(toCTCollectionId);
+			}
+
 			BackgroundTask backgroundTask =
 				_backgroundTaskLocalService.addBackgroundTask(
-					userId, company.getGroupId(),
-					String.valueOf(ctCollectionId), null,
+					userId, company.getGroupId(), name, null,
 					CTPublishBackgroundTaskExecutor.class, taskContextMap,
 					null);
 
@@ -108,6 +132,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 		return ctProcessPersistence.update(ctProcess);
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public CTProcess deleteCTProcess(CTProcess ctProcess) {
 		BackgroundTask backgroundTask =

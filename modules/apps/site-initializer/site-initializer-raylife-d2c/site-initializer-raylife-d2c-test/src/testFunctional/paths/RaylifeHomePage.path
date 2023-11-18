@@ -22,12 +22,12 @@
 </tr>
 <tr>
 	<td>HOME_PAGE_GET_A_QUOTE</td>
-	<td>//span[contains(text(), 'GET A QUOTE')]</td>
+	<td>//*[contains(text(), 'GET A QUOTE')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>HOME_PAGE_MESSAGE_MAX_NUMBER_CHARACTERS</td>
-	<td>//input[@maxlength='5']</td>
+	<td>//*[@maxlength='5']</td>
 	<td></td>
 </tr>
 <tr>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.search.spi.model.index.contributor;
@@ -30,7 +21,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.Portal;
@@ -48,7 +39,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lourdes Fernández Besada
  */
 @Component(
-	immediate = true,
 	property = "indexer.class.name=com.liferay.journal.model.JournalArticle",
 	service = ModelDocumentContributor.class
 )
@@ -58,7 +48,7 @@ public class JournalArticleModelDocumentContributor
 	@Override
 	public void contribute(Document document, JournalArticle journalArticle) {
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing article " + journalArticle);
+			_log.debug("Indexing journal article " + journalArticle);
 		}
 
 		_uidFactory.setUID(journalArticle, document);
@@ -74,13 +64,14 @@ public class JournalArticleModelDocumentContributor
 		DDMFormValues ddmFormValues = null;
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			_portal.getSiteGroupId(journalArticle.getGroupId()),
-			_portal.getClassNameId(JournalArticle.class),
-			journalArticle.getDDMStructureKey(), true);
+			journalArticle.getDDMStructureId());
 
 		if (ddmStructure != null) {
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, ddmStructure.getStructureId());
+
+			document.addKeyword(
+				"ddmStructureKey", ddmStructure.getStructureKey());
 
 			ddmFormValues = journalArticle.getDDMFormValues();
 
@@ -110,7 +101,7 @@ public class JournalArticleModelDocumentContributor
 		for (String descriptionAvailableLanguageId :
 				descriptionAvailableLanguageIds) {
 
-			String description = _html.stripHtml(
+			String description = HtmlUtil.stripHtml(
 				journalArticle.getDescription(descriptionAvailableLanguageId));
 
 			document.addText(
@@ -143,8 +134,6 @@ public class JournalArticleModelDocumentContributor
 			StringUtil.split(journalArticle.getTreePath(), CharPool.SLASH));
 		document.addKeyword(Field.VERSION, journalArticle.getVersion());
 		document.addKeyword(
-			"ddmStructureKey", journalArticle.getDDMStructureKey());
-		document.addKeyword(
 			"ddmTemplateKey", journalArticle.getDDMTemplateKey());
 
 		if (ddmFormValues != null) {
@@ -166,6 +155,8 @@ public class JournalArticleModelDocumentContributor
 
 		document.addKeyword(
 			"latest", JournalUtil.isLatestArticle(journalArticle));
+
+		document.addDate("reviewDate", journalArticle.getReviewDate());
 
 		// Scheduled listable articles should be visible in asset browser
 
@@ -200,8 +191,11 @@ public class JournalArticleModelDocumentContributor
 		document.addNumber(
 			"versionCount", GetterUtil.getDouble(journalArticle.getVersion()));
 
+		document.addKeyword(Field.UUID, journalArticle.getUuid());
+
 		if (_log.isDebugEnabled()) {
-			_log.debug("Document " + journalArticle + " indexed successfully");
+			_log.debug(
+				"Journal article " + journalArticle + " indexed successfully");
 		}
 	}
 
@@ -216,9 +210,6 @@ public class JournalArticleModelDocumentContributor
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private Language _language;

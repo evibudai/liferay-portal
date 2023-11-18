@@ -1,0 +1,13 @@
+{
+	"description": "",
+	"fragmentCompositionDefinitionPath": "page-definition.json",
+	"friendlyURL": "/publisher-dashboard",
+	"hidden": false,
+	"name": "Publisher",
+	"name_i18n": {
+		"en_US": "Publisher"
+	},
+	"private": false,
+	"system": false,
+	"type": "content"
+}

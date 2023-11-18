@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
@@ -108,6 +99,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	}
 
 	public int getAxisCount() {
+		if (ignore()) {
+			return 0;
+		}
+
 		JobProperty jobProperty = getJobProperty("test.batch.axis.count");
 
 		String jobPropertyValue = jobProperty.getValue();
@@ -236,9 +231,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		jsonObject = new JSONObject();
 
-		jsonObject.put("batch_name", getBatchName());
-		jsonObject.put("include_stable_test_suite", includeStableTestSuite);
-		jsonObject.put("job_properties", _getJobPropertiesMap());
+		jsonObject.put(
+			"batch_name", getBatchName()
+		).put(
+			"include_stable_test_suite", includeStableTestSuite
+		).put(
+			"job_properties", _getJobPropertiesMap()
+		);
 
 		JSONArray segmentJSONArray = new JSONArray();
 
@@ -248,13 +247,22 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			segmentJSONArray.put(segmentTestClassGroup.getJSONObject());
 		}
 
-		jsonObject.put("segments", segmentJSONArray);
-
-		jsonObject.put("test_release_bundle", testReleaseBundle);
-		jsonObject.put("test_relevant_changes", testRelevantChanges);
 		jsonObject.put(
-			"test_relevant_integration_unit_only",
-			testRelevantIntegrationUnitOnly);
+			"segments", segmentJSONArray
+		).put(
+			"test_hotfix_changes", testHotfixChanges
+		).put(
+			"test_release_bundle", testReleaseBundle
+		).put(
+			"test_relevant_changes", testRelevantChanges
+		).put(
+			"test_relevant_changes_in_stable", testRelevantChangesInStable
+		).put(
+			"test_relevant_junit_tests_only", testRelevantJUnitTestsOnly
+		).put(
+			"test_relevant_junit_tests_only_in_stable",
+			testRelevantJUnitTestsOnlyInStable
+		);
 
 		return jsonObject;
 	}
@@ -363,10 +371,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			}
 		}
 
-		testRelevantChanges = jsonObject.getBoolean("test_relevant_changes");
-		testReleaseBundle = jsonObject.getBoolean("test_release_bundle");
-		testRelevantIntegrationUnitOnly = jsonObject.getBoolean(
-			"test_relevant_integration_unit_only");
+		testHotfixChanges = jsonObject.optBoolean("test_hotfix_changes");
+		testRelevantChanges = jsonObject.optBoolean("test_relevant_changes");
+		testReleaseBundle = jsonObject.optBoolean("test_release_bundle");
+		testRelevantJUnitTestsOnly = jsonObject.optBoolean(
+			"test_relevant_junit_tests_only");
+		testRelevantJUnitTestsOnlyInStable = jsonObject.optBoolean(
+			"test_relevant_junit_tests_only_in_stable");
 
 		if (portalTestClassJob instanceof TestSuiteJob) {
 			TestSuiteJob testSuiteJob = (TestSuiteJob)portalTestClassJob;
@@ -396,10 +407,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			testSuiteName = null;
 		}
 
+		_setTestHotfixChanges();
 		_setTestReleaseBundle();
 		_setTestRelevantChanges();
+		_setTestRelevantChangesInStable();
 
-		_setTestRelevantIntegrationUnitOnly();
+		_setTestRelevantJUnitTestsOnly();
+		_setTestRelevantJUnitTestsOnlyInStable();
 
 		_setIncludeStableTestSuite();
 	}
@@ -574,39 +588,6 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return relevantIntegrationUnitBatchNames;
 	}
 
-	protected List<PathMatcher>
-		getRelevantIntegrationUnitIncludePathMatchers() {
-
-		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
-			new ArrayList<>();
-
-		for (String relevantIntegrationUnitBatchName :
-				getRelevantIntegrationUnitBatchNames()) {
-
-			JobProperty jobProperty = getJobProperty(
-				"test.batch.class.names.includes", getTestSuiteName(),
-				relevantIntegrationUnitBatchName,
-				JobProperty.Type.INCLUDE_GLOB);
-
-			if (!(jobProperty instanceof GlobJobProperty)) {
-				continue;
-			}
-
-			String jobPropertyValue = jobProperty.getValue();
-
-			if (jobPropertyValue == null) {
-				continue;
-			}
-
-			GlobJobProperty globJobProperty = (GlobJobProperty)jobProperty;
-
-			relevantIntegrationUnitIncludePathMatchers.addAll(
-				globJobProperty.getPathMatchers());
-		}
-
-		return relevantIntegrationUnitIncludePathMatchers;
-	}
-
 	protected List<File> getRequiredModuleDirs(List<File> moduleDirs) {
 		return _getRequiredModuleDirs(moduleDirs, new ArrayList<>(moduleDirs));
 	}
@@ -645,29 +626,16 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return testSuiteName;
 	}
 
-	protected boolean isIntegrationUnitTestFileModifiedOnly() {
-		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
-			getRelevantIntegrationUnitIncludePathMatchers();
-
-		List<File> modifiedFilesList =
-			portalGitWorkingDirectory.getModifiedFilesList();
-
-		if (relevantIntegrationUnitIncludePathMatchers.isEmpty() ||
-			modifiedFilesList.isEmpty()) {
-
-			return false;
+	protected boolean ignore() {
+		if (!isStableTestSuiteBatch() && testRelevantJUnitTestsOnly) {
+			return true;
 		}
 
-		for (File modifiedFile : modifiedFilesList) {
-			if (!JenkinsResultsParserUtil.isFileIncluded(
-					null, relevantIntegrationUnitIncludePathMatchers,
-					modifiedFile)) {
-
-				return false;
-			}
+		if (isStableTestSuiteBatch() && testRelevantJUnitTestsOnlyInStable) {
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean isRootCauseAnalysis() {
@@ -786,9 +754,12 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	protected JSONObject jsonObject;
 	protected final PortalGitWorkingDirectory portalGitWorkingDirectory;
 	protected final PortalTestClassJob portalTestClassJob;
+	protected boolean testHotfixChanges;
 	protected boolean testReleaseBundle;
 	protected boolean testRelevantChanges;
-	protected boolean testRelevantIntegrationUnitOnly;
+	protected boolean testRelevantChangesInStable;
+	protected boolean testRelevantJUnitTestsOnly;
+	protected boolean testRelevantJUnitTestsOnlyInStable;
 	protected final String testSuiteName;
 
 	protected static final class CSVReport {
@@ -1136,6 +1107,12 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		includeStableTestSuite = testRelevantChanges;
 	}
 
+	private void _setTestHotfixChanges() {
+		Job job = getJob();
+
+		testHotfixChanges = job.testHotfixChanges();
+	}
+
 	private void _setTestReleaseBundle() {
 		Job job = getJob();
 
@@ -1148,14 +1125,34 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		testRelevantChanges = job.testRelevantChanges();
 	}
 
-	private void _setTestRelevantIntegrationUnitOnly() {
-		if (testRelevantChanges && isIntegrationUnitTestFileModifiedOnly()) {
-			testRelevantIntegrationUnitOnly = true;
+	private void _setTestRelevantChangesInStable() {
+		Job job = getJob();
+
+		testRelevantChangesInStable = job.testRelevantChangesInStable();
+	}
+
+	private void _setTestRelevantJUnitTestsOnly() {
+		Job job = getJob();
+
+		if (testRelevantChanges && job.isJUnitTestsModifiedOnly()) {
+			testRelevantJUnitTestsOnly = true;
 
 			return;
 		}
 
-		testRelevantIntegrationUnitOnly = false;
+		testRelevantJUnitTestsOnly = false;
+	}
+
+	private void _setTestRelevantJUnitTestsOnlyInStable() {
+		Job job = getJob();
+
+		if (testRelevantChangesInStable && job.isJUnitTestsModifiedOnly()) {
+			testRelevantJUnitTestsOnlyInStable = true;
+
+			return;
+		}
+
+		testRelevantJUnitTestsOnlyInStable = false;
 	}
 
 	private static final int _SEGMENT_MAX_CHILDREN_DEFAULT = 25;

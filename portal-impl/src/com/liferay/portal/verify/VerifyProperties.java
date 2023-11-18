@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.verify;
@@ -1525,6 +1516,19 @@ public class VerifyProperties {
 			"com.liferay.asset.tags.compiler.web"
 		},
 
+		// Text Extraction
+
+		{
+			"text.extraction.fork.process.enabled",
+			"text-extraction-fork-process-enabled",
+			"com.liferay.portal.tika"
+		},
+		{
+			"text.extraction.fork.process.mime.types",
+			"text-extraction-fork-process-mime-types",
+			"com.liferay.portal.tika"
+		},
+
 		// Translator
 
 		{
@@ -1625,14 +1629,20 @@ public class VerifyProperties {
 		{
 			"ical4j.validation.relaxed", "ical4j.validation.relaxed",
 			"com.liferay.calendar.service"
+		},
+
+		// Tika
+
+		{
+			"tika.config", "tika-config-xml", "com.liferay.portal.tika"
 		}
+
 	};
 
 	private static final String[] _OBSOLETE_PORTAL_KEYS = {
 		"aim.login", "aim.login", "amazon.access.key.id",
 		"amazon.associate.tag", "amazon.secret.access.key",
-		"asset.categories.properties.default",
-		"asset.entry.increment.view.counter.enabled", "asset.entry.validator",
+		"asset.categories.properties.default", "asset.entry.validator",
 		"asset.publisher.asset.entry.query.processors",
 		"asset.publisher.filter.unlistable.entries",
 		"asset.publisher.query.form.configuration",
@@ -1677,6 +1687,7 @@ public class VerifyProperties {
 		"captcha.engine.simplecaptcha.noise.producers",
 		"captcha.engine.simplecaptcha.text.producers",
 		"captcha.engine.simplecaptcha.word.renderers", "cas.validate.url",
+		"change.tracking.sql.transformer.cache.size",
 		"cluster.executor.heartbeat.interval",
 		"cluster.link.node.bootup.response.timeout",
 		"com.liferay.filters.doubleclick.DoubleClickFilter",
@@ -1684,6 +1695,7 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.doubleclick.DoubleClickFilter",
 		"com.liferay.portal.servlet.filters.charbufferpool." +
 			"CharBufferPoolFilter",
+		"com.liferay.portal.servlet.filters.i18n.I18nFilter",
 		"com.liferay.portal.servlet.filters.jsoncontenttype." +
 			"JSONContentTypeFilter",
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
@@ -1699,7 +1711,7 @@ public class VerifyProperties {
 		"control.panel.home.portlet.id",
 		"control.panel.navigation.max.organizations",
 		"control.panel.navigation.max.sites", "convert.processes",
-		"data.limit.max.dl.storage.size",
+		"counter.jdbc.prefix", "data.limit.max.dl.storage.size",
 		"data.limit.max.journal.article.count",
 		"data.limit.max.journal.folder.count",
 		"data.limit.max.mail.message.count",
@@ -1801,7 +1813,8 @@ public class VerifyProperties {
 		"hibernate.cache.use_structured_entries",
 		"hibernate.connection.release_mode",
 		"hibernate.session.factory.imported.class.name.regexp", "icq.jar",
-		"icq.login", "icq.password", "index.dump.compression.enabled",
+		"icq.login", "icq.password", "image.hook.impl",
+		"image.hook.file.system.root.dir", "index.dump.compression.enabled",
 		"index.filter.search.limit", "index.on.upgrade",
 		"index.portal.field.analyzer.enabled", "index.search.engine.id",
 		"index.search.highlight.enabled", "index.search.writer.max.queue.size",
@@ -1836,8 +1849,7 @@ public class VerifyProperties {
 		"jdbc.default.minIdle", "jdbc.default.minPoolSize",
 		"jdbc.default.numHelperThreads", "jdbc.default.removeAbandonedTimeout",
 		"jdbc.default.testWhileIdle",
-		"jdbc.default.timeBetweenEvictionRunsMillis",
-		"jdbc.default.transactionIsolation", "jdbc.default.useEquals",
+		"jdbc.default.timeBetweenEvictionRunsMillis", "jdbc.default.useEquals",
 		"jdbc.default.validationQuery", "json.deserializer.strict.mode",
 		"journal.article.form.add", "journal.article.form.default.values",
 		"journal.article.form.update", "journal.article.form.translate",
@@ -1888,9 +1900,11 @@ public class VerifyProperties {
 		"layout.url.friendliable[panel]", "layout.url.friendliable[url]",
 		"layout.view.page[control_panel]", "layout.view.page[embedded]",
 		"layout.view.page[link_to_layout]", "layout.view.page[panel]",
-		"layout.view.page[url]", "library.download.url.resin.jar",
-		"library.download.url.script-10.jar", "liferay.lib.global.shared.dir",
-		"liferay.web.portal.dir", "look.and.feel.modifiable", "lucene.analyzer",
+		"layout.view.page[url]", "ldap.clock.skew",
+		"ldap.ignore.user.search.filter.for.auth=true",
+		"library.download.url.resin.jar", "library.download.url.script-10.jar",
+		"liferay.lib.global.shared.dir", "liferay.web.portal.dir",
+		"look.and.feel.modifiable", "lucene.analyzer",
 		"lucene.cluster.index.loading.sync.timeout", "lucene.file.extractor",
 		"lucene.file.extractor.regexp.strip", "lucene.replicate.write",
 		"lucene.store.jdbc.auto.clean.up",
@@ -1904,7 +1918,11 @@ public class VerifyProperties {
 		"mail.hook.cyrus.delete.user", "mail.hook.cyrus.home",
 		"mail.hook.fusemail.account.type", "mail.hook.fusemail.group.parent",
 		"mail.hook.fusemail.password", "mail.hook.fusemail.url",
-		"mail.hook.fusemail.username",
+		"mail.hook.fusemail.username", "mail.hook.impl",
+		"mail.hook.sendmail.add.user", "mail.hook.sendmail.change.password",
+		"mail.hook.sendmail.delete.user", "mail.hook.sendmail.home",
+		"mail.hook.sendmail.virtusertable",
+		"mail.hook.sendmail.virtusertable.refresh", "mail.hook.shell.script",
 		"memory.cluster.scheduler.lock.cache.enabled",
 		"message.boards.email.message.added.signature",
 		"message.boards.email.message.updated.signature",
@@ -1944,6 +1962,7 @@ public class VerifyProperties {
 		"organizations.form.update.miscellaneous",
 		"organizations.indexer.enabled", "organizations.rootable",
 		"organizations.types", "permissions.object.blocking.cache",
+		"poller.notifications.timeout", "poller.request.timeout",
 		"portal.cache.manager.type.multi.vm",
 		"portal.cache.manager.type.single.vm", "portal.ctx",
 		"portal.fabric.enabled", "portal.fabric.agent.selector.class",
@@ -1990,6 +2009,17 @@ public class VerifyProperties {
 		"sites.form.add.miscellaneous", "sites.form.add.seo",
 		"sites.form.update.advanced", "sites.form.update.main",
 		"sites.form.update.miscellaneous", "sites.form.update.seo",
+		"sql.data.com.liferay.portal.kernel.model.Country.country.id",
+		"sql.data.com.liferay.portal.kernel.model.ListType.account.address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.account.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.company.address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.company.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.contact.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.organization.status",
+		"sql.data.com.liferay.portal.kernel.model.Region.region.id",
 		"staging.lock.enabled", "social.activity.sets.bundling.enabled",
 		"social.activity.sets.enabled", "social.bookmark.display.styles",
 		"social.bookmark.types", "spring.hibernate.data.source",
@@ -2217,7 +2247,8 @@ public class VerifyProperties {
 		{
 			"tags.asset.increment.view.counter.enabled",
 			"asset.entry.increment.view.counter.enabled"
-		}
+		},
+		{"sql.data.max.parameters", "database.max.parameters"}
 	};
 
 	private static final String[][] _RENAMED_SYSTEM_KEYS = {

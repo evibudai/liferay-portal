@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.publisher.web.internal.helper;
@@ -31,7 +22,10 @@ import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.Language;
@@ -43,7 +37,6 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -51,7 +44,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -74,7 +67,6 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portlet.StrictPortletPreferencesImpl;
-import com.liferay.sites.kernel.util.Sites;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
 import java.io.IOException;
@@ -91,7 +83,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -266,8 +257,12 @@ public class AssetPublisherWebHelper {
 		Locale defaultLocale = LocaleUtil.getSiteDefault();
 
 		if (Validator.isNull(emailAssetEntryAddedBodyMap.get(defaultLocale))) {
+			AssetPublisherPortletInstanceConfiguration
+				assetPublisherPortletInstanceConfiguration =
+					_getAssetPublisherPortletInstanceConfiguration();
+
 			LocalizedValuesMap emailAssetEntryAddedLocalizedBodyMap =
-				_assetPublisherPortletInstanceConfiguration.
+				assetPublisherPortletInstanceConfiguration.
 					emailAssetEntryAddedBody();
 
 			emailAssetEntryAddedBodyMap.put(
@@ -288,7 +283,11 @@ public class AssetPublisherWebHelper {
 			return GetterUtil.getBoolean(emailAssetEntryAddedEnabled);
 		}
 
-		return _assetPublisherPortletInstanceConfiguration.
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
+		return assetPublisherPortletInstanceConfiguration.
 			emailAssetEntryAddedEnabled();
 	}
 
@@ -306,8 +305,12 @@ public class AssetPublisherWebHelper {
 		if (Validator.isNull(
 				emailAssetEntryAddedSubjectMap.get(defaultLocale))) {
 
+			AssetPublisherPortletInstanceConfiguration
+				assetPublisherPortletInstanceConfiguration =
+					_getAssetPublisherPortletInstanceConfiguration();
+
 			LocalizedValuesMap emailAssetEntryAddedLocalizedSubjectMap =
-				_assetPublisherPortletInstanceConfiguration.
+				assetPublisherPortletInstanceConfiguration.
 					emailAssetEntryAddedSubject();
 
 			emailAssetEntryAddedSubjectMap.put(
@@ -387,17 +390,25 @@ public class AssetPublisherWebHelper {
 	public String getEmailFromAddress(
 		PortletPreferences portletPreferences, long companyId) {
 
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
 		return _portal.getEmailFromAddress(
 			portletPreferences, companyId,
-			_assetPublisherPortletInstanceConfiguration.emailFromAddress());
+			assetPublisherPortletInstanceConfiguration.emailFromAddress());
 	}
 
 	public String getEmailFromName(
 		PortletPreferences portletPreferences, long companyId) {
 
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
 		return _portal.getEmailFromName(
 			portletPreferences, companyId,
-			_assetPublisherPortletInstanceConfiguration.emailFromName());
+			assetPublisherPortletInstanceConfiguration.emailFromName());
 	}
 
 	public long getSubscriptionClassPK(
@@ -476,7 +487,7 @@ public class AssetPublisherWebHelper {
 
 			Group group = _groupLocalService.getGroup(groupId);
 
-			if (_sites.isContentSharingWithChildrenEnabled(group)) {
+			if (group.isContentSharingWithChildrenEnabled()) {
 				return true;
 			}
 
@@ -489,12 +500,12 @@ public class AssetPublisherWebHelper {
 			}
 
 			if (checkPermission) {
-				return _groupPermission.contains(
+				return GroupPermissionUtil.contains(
 					permissionChecker, group, ActionKeys.UPDATE);
 			}
 		}
 		else if ((groupId != companyGroupId) && checkPermission) {
-			return _groupPermission.contains(
+			return GroupPermissionUtil.contains(
 				permissionChecker, groupId, ActionKeys.UPDATE);
 		}
 
@@ -554,15 +565,7 @@ public class AssetPublisherWebHelper {
 	}
 
 	@Activate
-	@Modified
-	protected void activate(
-			BundleContext bundleContext, Map<String, Object> properties)
-		throws ConfigurationException {
-
-		_assetPublisherPortletInstanceConfiguration =
-			_configurationProvider.getSystemConfiguration(
-				AssetPublisherPortletInstanceConfiguration.class);
-
+	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerList = ServiceTrackerListFactory.open(
 			bundleContext, AssetEntryQueryProcessor.class);
 	}
@@ -601,6 +604,23 @@ public class AssetPublisherWebHelper {
 		}
 
 		return xml;
+	}
+
+	private AssetPublisherPortletInstanceConfiguration
+		_getAssetPublisherPortletInstanceConfiguration() {
+
+		return _assetPublisherPortletInstanceConfigurationDCLSingleton.
+			getSingleton(
+				() -> {
+					try {
+						return _configurationProvider.getSystemConfiguration(
+							AssetPublisherPortletInstanceConfiguration.class);
+					}
+					catch (ConfigurationException configurationException) {
+						return ReflectionUtil.throwException(
+							configurationException);
+					}
+				});
 	}
 
 	private Long[] _getClassTypeIds(
@@ -643,8 +663,9 @@ public class AssetPublisherWebHelper {
 	@Reference
 	private AssetPublisherHelper _assetPublisherHelper;
 
-	private volatile AssetPublisherPortletInstanceConfiguration
-		_assetPublisherPortletInstanceConfiguration;
+	private final DCLSingleton<AssetPublisherPortletInstanceConfiguration>
+		_assetPublisherPortletInstanceConfigurationDCLSingleton =
+			new DCLSingleton<>();
 
 	@Reference
 	private AssetRendererFactoryClassProvider
@@ -663,9 +684,6 @@ public class AssetPublisherWebHelper {
 	private GroupLocalService _groupLocalService;
 
 	@Reference
-	private GroupPermission _groupPermission;
-
-	@Reference
 	private Language _language;
 
 	@Reference
@@ -682,9 +700,6 @@ public class AssetPublisherWebHelper {
 
 	private volatile ServiceTrackerList<AssetEntryQueryProcessor>
 		_serviceTrackerList;
-
-	@Reference
-	private Sites _sites;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

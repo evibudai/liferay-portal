@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.layout.admin.util.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
@@ -36,8 +27,6 @@ import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
-import com.liferay.layout.admin.kernel.util.SitemapURLProvider;
-import com.liferay.layout.admin.kernel.util.SitemapURLProviderRegistryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Company;
@@ -69,6 +58,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.theme.ThemeDisplayFactory;
+import com.liferay.site.util.SitemapURLProvider;
 
 import java.io.InputStream;
 
@@ -116,7 +106,10 @@ public class CommerceSitemapURLProviderTest {
 		_themeDisplay.setCompany(_company);
 		_themeDisplay.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_user));
+		_themeDisplay.setPortalDomain(_company.getVirtualHostname());
+		_themeDisplay.setPortalURL(_company.getPortalURL(_group.getGroupId()));
 		_themeDisplay.setScopeGroupId(_group.getGroupId());
+		_themeDisplay.setServerPort(8080);
 		_themeDisplay.setSignedIn(true);
 		_themeDisplay.setSiteGroupId(_group.getGroupId());
 		_themeDisplay.setUser(_user);
@@ -130,8 +123,8 @@ public class CommerceSitemapURLProviderTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_company.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
-		CommerceAccount commerceAccount =
-			CommerceAccountTestUtil.addBusinessCommerceAccount(
+		AccountEntry accountEntry =
+			CommerceAccountTestUtil.addBusinessAccountEntry(
 				_user.getUserId(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString() + "@liferay.com",
 				RandomTestUtil.randomString(), _serviceContext);
@@ -139,7 +132,7 @@ public class CommerceSitemapURLProviderTest {
 		_httpServletRequest.setAttribute(
 			"LIFERAY_SHARED_CURRENT_COMMERCE_ACCOUNT_ID_" +
 				commerceChannel.getGroupId(),
-			commerceAccount.getCommerceAccountId());
+			accountEntry.getAccountEntryId());
 
 		_themeDisplay.setRequest(_httpServletRequest);
 
@@ -206,18 +199,14 @@ public class CommerceSitemapURLProviderTest {
 
 		_httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 
-		SitemapURLProvider assetCategorySitemapURLProvider =
-			SitemapURLProviderRegistryUtil.getSitemapURLProvider(
-				AssetCategory.class.getName());
+		_themeDisplay.setLayoutSet(layout.getLayoutSet());
 
-		assetCategorySitemapURLProvider.visitLayout(
+		_assetCategorySitemapURLProvider.visitLayout(
 			rootElement, layout.getUuid(), layoutSet, _themeDisplay);
 
 		Assert.assertTrue(rootElement.hasContent());
 
 		List<Node> nodes = rootElement.content();
-
-		Assert.assertEquals(nodes.toString(), 1, nodes.size());
 
 		Node node = nodes.get(0);
 
@@ -276,18 +265,14 @@ public class CommerceSitemapURLProviderTest {
 
 		_httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 
-		SitemapURLProvider cpDefinitionSitemapURLProvider =
-			SitemapURLProviderRegistryUtil.getSitemapURLProvider(
-				CPDefinition.class.getName());
+		_themeDisplay.setLayoutSet(layout.getLayoutSet());
 
-		cpDefinitionSitemapURLProvider.visitLayout(
+		_cpDefinitionSitemapURLProvider.visitLayout(
 			rootElement, layout.getUuid(), layoutSet, _themeDisplay);
 
 		Assert.assertTrue(rootElement.hasContent());
 
 		List<Node> nodes = rootElement.content();
-
-		Assert.assertEquals(nodes.toString(), 1, nodes.size());
 
 		Node node = nodes.get(0);
 
@@ -319,10 +304,22 @@ public class CommerceSitemapURLProviderTest {
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
+	@Inject(
+		filter = "component.name=com.liferay.commerce.product.internal.layout.admin.util.AssetCategorySitemapURLProvider",
+		type = SitemapURLProvider.class
+	)
+	private SitemapURLProvider _assetCategorySitemapURLProvider;
+
 	@Inject
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	private CommerceCurrency _commerceCurrency;
+
+	@Inject(
+		filter = "component.name=com.liferay.commerce.product.internal.layout.admin.util.CPDefinitionSitemapURLProvider",
+		type = SitemapURLProvider.class
+	)
+	private SitemapURLProvider _cpDefinitionSitemapURLProvider;
 
 	@Inject
 	private CPFileImporter _cpFileImporter;

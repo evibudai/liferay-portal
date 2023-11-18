@@ -1,29 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.web.internal.servlet.taglib;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.web.internal.constants.AnalyticsWebKeys;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
@@ -31,7 +23,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -68,7 +59,20 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (!_isAnalyticsTrackingEnabled(httpServletRequest, themeDisplay)) {
+		AnalyticsConfiguration analyticsConfiguration = null;
+
+		try {
+			analyticsConfiguration =
+				_analyticsSettingsManager.getAnalyticsConfiguration(
+					themeDisplay.getCompanyId());
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
+
+		if (!_isAnalyticsTrackingEnabled(
+				analyticsConfiguration, httpServletRequest, themeDisplay)) {
+
 			return;
 		}
 
@@ -80,20 +84,17 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			_serialize(
 				HashMapBuilder.put(
 					"dataSourceId",
-					_getLiferayAnalyticsDataSourceId(themeDisplay.getCompany())
+					analyticsConfiguration.liferayAnalyticsDataSourceId()
 				).put(
 					"endpointUrl",
-					_getLiferayAnalyticsEndpointURL(themeDisplay.getCompany())
+					analyticsConfiguration.liferayAnalyticsEndpointURL()
 				).put(
 					"projectId",
-					_getLiferayAnalyticsProjectId(themeDisplay.getCompany())
+					analyticsConfiguration.liferayAnalyticsProjectId()
 				).build()));
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS,
-			_serialize(
-				PrefsPropsUtil.getStringArray(
-					themeDisplay.getCompanyId(), "liferayAnalyticsGroupIds",
-					StringPool.COMMA)));
+			_serialize(analyticsConfiguration.syncedGroupIds()));
 
 		Layout layout = themeDisplay.getLayout();
 
@@ -143,59 +144,31 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		return group.getTypeSettingsProperty("analyticsChannelId");
 	}
 
-	private String _getLiferayAnalyticsDataSourceId(Company company) {
-		return PrefsPropsUtil.getString(
-			company.getCompanyId(), "liferayAnalyticsDataSourceId");
-	}
-
-	private String _getLiferayAnalyticsEndpointURL(Company company) {
-		return PrefsPropsUtil.getString(
-			company.getCompanyId(), "liferayAnalyticsEndpointURL");
-	}
-
-	private String _getLiferayAnalyticsProjectId(Company company) {
-		return PrefsPropsUtil.getString(
-			company.getCompanyId(), "liferayAnalyticsProjectId");
-	}
-
 	private boolean _isAnalyticsTrackingEnabled(
+		AnalyticsConfiguration analyticsConfiguration,
 		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
 
 		Layout layout = themeDisplay.getLayout();
 
-		if ((layout == null) || layout.isTypeControlPanel()) {
-			return false;
-		}
-
-		Company company = themeDisplay.getCompany();
-
-		if (Validator.isNull(_getLiferayAnalyticsDataSourceId(company)) ||
-			Validator.isNull(_getLiferayAnalyticsEndpointURL(company)) ||
+		if ((analyticsConfiguration == null) || (layout == null) ||
+			layout.isTypeControlPanel() ||
+			Validator.isNull(
+				analyticsConfiguration.liferayAnalyticsDataSourceId()) ||
+			Validator.isNull(
+				analyticsConfiguration.liferayAnalyticsEndpointURL()) ||
 			Objects.equals(
 				httpServletRequest.getRequestURI(), "/c/portal/api/jsonws")) {
 
 			return false;
 		}
 
-		String[] liferayAnalyticsGroupIds = PrefsPropsUtil.getStringArray(
-			company.getCompanyId(), "liferayAnalyticsGroupIds",
-			StringPool.COMMA);
+		String[] syncedGroupIds = analyticsConfiguration.syncedGroupIds();
 
 		if (_isSharedFormEnabled(
-				liferayAnalyticsGroupIds, layout.getGroup(),
-				httpServletRequest)) {
-
-			return true;
-		}
-
-		Group group = layout.getGroup();
-
-		boolean liferayAnalyticsEnableAllGroupIds = PrefsPropsUtil.getBoolean(
-			company.getCompanyId(), "liferayAnalyticsEnableAllGroupIds");
-
-		if (liferayAnalyticsEnableAllGroupIds ||
+				syncedGroupIds, layout.getGroup(), httpServletRequest) ||
+			analyticsConfiguration.liferayAnalyticsEnableAllGroupIds() ||
 			ArrayUtil.contains(
-				liferayAnalyticsGroupIds, String.valueOf(group.getGroupId()))) {
+				syncedGroupIds, String.valueOf(layout.getGroupId()))) {
 
 			return true;
 		}
@@ -235,6 +208,9 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsTopHeadJSPDynamicInclude.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

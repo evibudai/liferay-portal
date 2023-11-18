@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.portlet.shared.search;
@@ -22,12 +13,14 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
@@ -50,9 +43,7 @@ import com.liferay.portal.search.web.search.request.SearchSettingsContributor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
-import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -120,27 +111,19 @@ public class PortletSharedSearchRequestImpl
 	private SearchContainer<Document> _buildSearchContainer(
 		SearchSettings searchSettings, RenderRequest renderRequest) {
 
-		Optional<String> paginationStartParameterNameOptional =
-			searchSettings.getPaginationStartParameterName();
-
-		Optional<Integer> paginationStartOptional =
-			searchSettings.getPaginationStart();
-
-		Optional<Integer> paginationDeltaOptional =
-			searchSettings.getPaginationDelta();
-
 		PortletRequest portletRequest = renderRequest;
 
 		DisplayTerms displayTerms = null;
 		DisplayTerms searchTerms = null;
 
-		String curParam = paginationStartParameterNameOptional.orElse(
+		String curParam = GetterUtil.getString(
+			searchSettings.getPaginationStartParameterName(),
 			SearchContainer.DEFAULT_CUR_PARAM);
 
-		int cur = paginationStartOptional.orElse(0);
+		int cur = GetterUtil.getInteger(searchSettings.getPaginationStart());
 
-		int delta = paginationDeltaOptional.orElse(
-			SearchContainer.DEFAULT_DELTA);
+		int delta = GetterUtil.getInteger(
+			searchSettings.getPaginationDelta(), SearchContainer.DEFAULT_DELTA);
 
 		PortletURL portletURL = new NullPortletURL();
 
@@ -190,15 +173,12 @@ public class PortletSharedSearchRequestImpl
 
 		List<Portlet> portlets = new ArrayList<>();
 
-		List<com.liferay.portal.kernel.model.PortletPreferences>
-			portletPreferencesList =
-				portletPreferencesLocalService.getPortletPreferences(
-					PortletKeys.PREFS_OWNER_ID_DEFAULT,
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
+		List<PortletPreferences> portletPreferencesList =
+			portletPreferencesLocalService.getPortletPreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
 
-		for (com.liferay.portal.kernel.model.PortletPreferences
-				portletPreferences : portletPreferencesList) {
-
+		for (PortletPreferences portletPreferences : portletPreferencesList) {
 			Portlet portlet = portletLocalService.getPortletById(
 				companyId, portletPreferences.getPortletId());
 
@@ -255,14 +235,12 @@ public class PortletSharedSearchRequestImpl
 		Portlet portlet, ThemeDisplay themeDisplay,
 		RenderRequest renderRequest) {
 
-		Optional<PortletPreferences> portletPreferencesOptional =
-			portletPreferencesLookup.fetchPreferences(portlet, themeDisplay);
-
 		return searchSettings -> portletSharedSearchContributor.contribute(
 			new PortletSharedSearchSettingsImpl(
 				searchSettings, portlet.getPortletId(),
-				portletPreferencesOptional, portletSharedRequestHelper,
-				renderRequest));
+				portletPreferencesLookup.fetchPreferences(
+					portlet, themeDisplay),
+				portletSharedRequestHelper, renderRequest));
 	}
 
 	private List<SearchSettingsContributor> _getSearchSettingsContributors(

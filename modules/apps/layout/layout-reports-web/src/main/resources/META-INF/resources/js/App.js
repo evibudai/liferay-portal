@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEventListener} from '@liferay/frontend-js-react-web';
 import {setSessionValue} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import LayoutReports from './components/LayoutReports';
+import PageAudit from './components/PageAudit';
+import LayoutReports from './components/layout_reports/LayoutReports';
 import {StoreContextProvider} from './context/StoreContext';
 
 import '../css/main.scss';
@@ -24,22 +16,29 @@ import SidebarHeader from './components/SidebarHeader';
 import {ConstantsContextProvider} from './context/ConstantsContext';
 
 export default function App(props) {
-	const {portletNamespace} = props;
+	const {isPanelStateOpen} = props;
+	const [panelIsOpen, setPanelIsOpen] = useState(isPanelStateOpen);
 
 	const layoutReportsPanelToggle = document.getElementById(
-		`${portletNamespace}layoutReportsPanelToggleId`
+		`layoutReportsPanelToggleId`
+	);
+
+	const layoutReportsPanelId = document.getElementById(
+		`layoutReportsPanelId`
+	);
+
+	const sidenavInstance = Liferay.SideNavigation.instance(
+		layoutReportsPanelToggle
 	);
 
 	useEffect(() => {
-		const sidenavInstance = Liferay.SideNavigation.instance(
-			layoutReportsPanelToggle
-		);
-
 		sidenavInstance.on('open.lexicon.sidenav', () => {
 			setSessionValue(
 				'com.liferay.layout.reports.web_layoutReportsPanelState',
 				'open'
 			);
+
+			setPanelIsOpen(true);
 		});
 
 		sidenavInstance.on('closed.lexicon.sidenav', () => {
@@ -47,12 +46,27 @@ export default function App(props) {
 				'com.liferay.layout.reports.web_layoutReportsPanelState',
 				'closed'
 			);
+
+			setPanelIsOpen(false);
 		});
 
 		Liferay.once('screenLoad', () => {
 			Liferay.SideNavigation.destroy(layoutReportsPanelToggle);
 		});
-	}, [layoutReportsPanelToggle, portletNamespace]);
+	}, [layoutReportsPanelToggle, layoutReportsPanelId, sidenavInstance]);
+
+	useEffect(() => {
+		if (Liferay.FeatureFlags['LPS-187284']) {
+			if (panelIsOpen) {
+				Liferay.fire('PageAuditMenu:openPageAuditPanel');
+			}
+			else {
+				Liferay.fire('PageAuditMenu:closePageAuditPanel');
+			}
+		}
+
+		layoutReportsPanelToggle.setAttribute('aria-pressed', panelIsOpen);
+	}, [panelIsOpen, layoutReportsPanelToggle]);
 
 	const [eventTriggered, setEventTriggered] = useState(false);
 
@@ -73,11 +87,17 @@ export default function App(props) {
 	return (
 		<ConstantsContextProvider constants={props}>
 			<StoreContextProvider>
-				<SidebarHeader />
+				{Liferay.FeatureFlags['LPS-187284'] ? (
+					<PageAudit panelIsOpen={panelIsOpen} />
+				) : (
+					<>
+						<SidebarHeader />
 
-				<SidebarBody>
-					<LayoutReports eventTriggered={eventTriggered} />
-				</SidebarBody>
+						<SidebarBody>
+							<LayoutReports eventTriggered={eventTriggered} />
+						</SidebarBody>
+					</>
+				)}
 			</StoreContextProvider>
 		</ConstantsContextProvider>
 	);

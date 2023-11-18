@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0.factory;
@@ -52,6 +43,8 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.UriInfo;
+
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -79,11 +72,16 @@ public class ReindexStatusResourceFactoryImpl
 					throw new IllegalArgumentException("User is not set");
 				}
 
-				return _reindexStatusResourceProxyProviderFunction.apply(
+				Function<InvocationHandler, ReindexStatusResource>
+					reindexStatusResourceProxyProviderFunction =
+						ResourceProxyProviderFunctionHolder.
+							_reindexStatusResourceProxyProviderFunction;
+
+				return reindexStatusResourceProxyProviderFunction.apply(
 					(proxy, method, arguments) -> _invoke(
 						method, arguments, _checkPermissions,
 						_httpServletRequest, _httpServletResponse,
-						_preferredLocale, _user));
+						_preferredLocale, _uriInfo, _user));
 			}
 
 			@Override
@@ -123,6 +121,13 @@ public class ReindexStatusResourceFactoryImpl
 			}
 
 			@Override
+			public ReindexStatusResource.Builder uriInfo(UriInfo uriInfo) {
+				_uriInfo = uriInfo;
+
+				return this;
+			}
+
+			@Override
 			public ReindexStatusResource.Builder user(User user) {
 				_user = user;
 
@@ -133,6 +138,7 @@ public class ReindexStatusResourceFactoryImpl
 			private HttpServletRequest _httpServletRequest;
 			private HttpServletResponse _httpServletResponse;
 			private Locale _preferredLocale;
+			private UriInfo _uriInfo;
 			private User _user;
 
 		};
@@ -170,7 +176,7 @@ public class ReindexStatusResourceFactoryImpl
 			Method method, Object[] arguments, boolean checkPermissions,
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, Locale preferredLocale,
-			User user)
+			UriInfo uriInfo, User user)
 		throws Throwable {
 
 		String name = PrincipalThreadLocal.getName();
@@ -202,6 +208,7 @@ public class ReindexStatusResourceFactoryImpl
 		reindexStatusResource.setContextHttpServletRequest(httpServletRequest);
 		reindexStatusResource.setContextHttpServletResponse(
 			httpServletResponse);
+		reindexStatusResource.setContextUriInfo(uriInfo);
 		reindexStatusResource.setContextUser(user);
 		reindexStatusResource.setExpressionConvert(_expressionConvert);
 		reindexStatusResource.setFilterParserProvider(_filterParserProvider);
@@ -227,10 +234,6 @@ public class ReindexStatusResourceFactoryImpl
 			PermissionThreadLocal.setPermissionChecker(permissionChecker);
 		}
 	}
-
-	private static final Function<InvocationHandler, ReindexStatusResource>
-		_reindexStatusResourceProxyProviderFunction =
-			_getProxyProviderFunction();
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
@@ -267,6 +270,14 @@ public class ReindexStatusResourceFactoryImpl
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	private static class ResourceProxyProviderFunctionHolder {
+
+		private static final Function<InvocationHandler, ReindexStatusResource>
+			_reindexStatusResourceProxyProviderFunction =
+				_getProxyProviderFunction();
+
+	}
 
 	private class AcceptLanguageImpl implements AcceptLanguage {
 

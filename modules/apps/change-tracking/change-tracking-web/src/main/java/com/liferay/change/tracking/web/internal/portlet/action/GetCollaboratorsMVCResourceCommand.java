@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.portlet.action;
 
+import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
@@ -29,6 +21,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleTable;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.UserGroupRoleTable;
 import com.liferay.portal.kernel.model.UserTable;
@@ -75,10 +68,15 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IOException, PortalException {
 
-		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
-			ParamUtil.getLong(resourceRequest, "ctCollectionId"));
+		long ctCollectionId = ParamUtil.getLong(
+			resourceRequest, "ctCollectionId");
 
-		if (ctCollection == null) {
+		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
+			ctCollectionId);
+
+		if ((ctCollection == null) &&
+			(ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				_jsonFactory.createJSONArray());
@@ -91,36 +89,44 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		User owner = _userLocalService.fetchUser(ctCollection.getUserId());
+		User user = null;
 
-		if (owner != null) {
+		if (ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			user = _userLocalService.fetchUser(ctCollection.getUserId());
+		}
+
+		if (user != null) {
 			String portraitURL = StringPool.BLANK;
 
-			if (owner.getPortraitId() > 0) {
-				portraitURL = owner.getPortraitURL(themeDisplay);
+			if (user.getPortraitId() > 0) {
+				portraitURL = user.getPortraitURL(themeDisplay);
 			}
 
 			jsonArray.put(
 				JSONUtil.put(
-					"emailAddress", owner.getEmailAddress()
+					"emailAddress", user.getEmailAddress()
 				).put(
-					"fullName", owner.getFullName()
+					"fullName", user.getFullName()
 				).put(
 					"isCurrentUser",
-					owner.getUserId() == themeDisplay.getUserId()
+					user.getUserId() == themeDisplay.getUserId()
 				).put(
 					"isOwner", true
 				).put(
 					"portraitURL", portraitURL
 				).put(
-					"userId", owner.getUserId()
+					"userId", user.getUserId()
 				));
 		}
 
-		Group group = _groupLocalService.fetchGroup(
-			ctCollection.getCompanyId(),
-			_portal.getClassNameId(CTCollection.class),
-			ctCollection.getCtCollectionId());
+		Group group = null;
+
+		if (ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			group = _groupLocalService.fetchGroup(
+				ctCollection.getCompanyId(),
+				_portal.getClassNameId(CTCollection.class),
+				ctCollection.getCtCollectionId());
+		}
 
 		if (group == null) {
 			JSONPortletResponseUtil.writeJSON(
@@ -129,7 +135,7 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 			return;
 		}
 
-		Map<Long, Role> roleMap = new HashMap<>();
+		Map<Long, Role> roles = new HashMap<>();
 
 		for (Role role :
 				_roleLocalService.<List<Role>>dslQuery(
@@ -146,12 +152,12 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 							group.getGroupId())
 					))) {
 
-			roleMap.put(role.getRoleId(), role);
+			roles.put(role.getRoleId(), role);
 		}
 
-		Map<Long, User> userMap = new HashMap<>();
+		Map<Long, User> users = new HashMap<>();
 
-		for (User user :
+		for (User curUser :
 				_userLocalService.<List<User>>dslQuery(
 					DSLQueryFactoryUtil.select(
 						UserTable.INSTANCE
@@ -163,10 +169,14 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 							UserTable.INSTANCE.userId)
 					).where(
 						UserGroupRoleTable.INSTANCE.groupId.eq(
-							group.getGroupId())
+							group.getGroupId()
+						).and(
+							UserTable.INSTANCE.type.neq(
+								UserConstants.TYPE_ON_DEMAND_USER)
+						)
 					))) {
 
-			userMap.put(user.getUserId(), user);
+			users.put(curUser.getUserId(), curUser);
 		}
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
@@ -176,29 +186,29 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 				_userGroupRoleLocalService.getUserGroupRolesByGroup(
 					group.getGroupId())) {
 
-			Role role = roleMap.get(userGroupRole.getRoleId());
-			User user = userMap.get(userGroupRole.getUserId());
+			Role role = roles.get(userGroupRole.getRoleId());
+			User roleUser = users.get(userGroupRole.getUserId());
 
-			if ((role == null) || (user == null) ||
-				(user.getUserId() == ctCollection.getUserId())) {
+			if ((role == null) || (roleUser == null) ||
+				(roleUser.getUserId() == user.getUserId())) {
 
 				continue;
 			}
 
 			String portraitURL = StringPool.BLANK;
 
-			if (user.getPortraitId() > 0) {
-				portraitURL = user.getPortraitURL(themeDisplay);
+			if (roleUser.getPortraitId() > 0) {
+				portraitURL = roleUser.getPortraitURL(themeDisplay);
 			}
 
 			jsonArray.put(
 				JSONUtil.put(
-					"emailAddress", user.getEmailAddress()
+					"emailAddress", roleUser.getEmailAddress()
 				).put(
-					"fullName", user.getFullName()
+					"fullName", roleUser.getFullName()
 				).put(
 					"isCurrentUser",
-					user.getUserId() == themeDisplay.getUserId()
+					roleUser.getUserId() == themeDisplay.getUserId()
 				).put(
 					"isOwner", false
 				).put(
@@ -210,7 +220,7 @@ public class GetCollaboratorsMVCResourceCommand extends BaseMVCResourceCommand {
 				).put(
 					"roleValue", _getNameRole(role.getName())
 				).put(
-					"userId", user.getUserId()
+					"userId", roleUser.getUserId()
 				));
 		}
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.asset.auto.tagger.tensorflow.internal;
@@ -18,13 +9,13 @@ import com.liferay.asset.auto.tagger.AssetAutoTagProvider;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderProcessConfiguration;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.GetLabelProbabilitiesProcessCallable;
-import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorFlowDownloadUtil;
+import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorFlowDownloadHelper;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorFlowProcessHolder;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.repository.capabilities.TemporaryFileEntriesCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -39,8 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -73,10 +62,10 @@ public class TensorFlowImageAssetAutoTagProvider
 			if (tensorFlowImageAssetAutoTagProviderCompanyConfiguration.
 					enabled() &&
 				!_isTemporary(fileEntry) &&
-				TensorFlowDownloadUtil.isDownloaded()) {
+				_tensorFlowDownloadHelper.isDownloaded()) {
 
 				if (_labels == null) {
-					_labels = TensorFlowDownloadUtil.getLabels();
+					_labels = _tensorFlowDownloadHelper.getLabels();
 				}
 
 				FileVersion fileVersion = fileEntry.getFileVersion();
@@ -107,7 +96,8 @@ public class TensorFlowImageAssetAutoTagProvider
 		modified(properties);
 
 		_tensorFlowProcessHolder = new TensorFlowProcessHolder(
-			_processExecutor, bundleContext.getBundle());
+			bundleContext.getBundle(), _processExecutor,
+			_tensorFlowDownloadHelper);
 	}
 
 	@Deactivate
@@ -121,22 +111,6 @@ public class TensorFlowImageAssetAutoTagProvider
 			ConfigurableUtil.createConfigurable(
 				TensorFlowImageAssetAutoTagProviderProcessConfiguration.class,
 				properties);
-	}
-
-	private Stream<Integer> _getBestIndexesStream(
-		float[] probabilities, float confidenceThreshold) {
-
-		List<Integer> bestIndexes = new ArrayList<>();
-
-		for (int i = 0; i < probabilities.length; i++) {
-			if ((probabilities[i] >= confidenceThreshold) &&
-				(i < _labels.length)) {
-
-				bestIndexes.add(i);
-			}
-		}
-
-		return bestIndexes.stream();
 	}
 
 	private boolean _isSupportedMimeType(String mimeType) {
@@ -162,14 +136,17 @@ public class TensorFlowImageAssetAutoTagProvider
 			new GetLabelProbabilitiesProcessCallable(imageBytes, mimeType),
 			maximumNumberOfRelaunches, maximumNumberOfRelaunchesTimeout * 1000);
 
-		Stream<Integer> stream = _getBestIndexesStream(
-			labelProbabilities, confidenceThreshold);
+		List<String> labels = new ArrayList<>();
 
-		return stream.map(
-			i -> _labels[i]
-		).collect(
-			Collectors.toList()
-		);
+		for (int i = 0; i < labelProbabilities.length; i++) {
+			if ((labelProbabilities[i] >= confidenceThreshold) &&
+				(i < _labels.length)) {
+
+				labels.add(_labels[i]);
+			}
+		}
+
+		return labels;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -187,6 +164,9 @@ public class TensorFlowImageAssetAutoTagProvider
 
 	@Reference
 	private ProcessExecutor _processExecutor;
+
+	@Reference
+	private TensorFlowDownloadHelper _tensorFlowDownloadHelper;
 
 	private volatile TensorFlowImageAssetAutoTagProviderProcessConfiguration
 		_tensorFlowImageAssetAutoTagProviderProcessConfiguration;

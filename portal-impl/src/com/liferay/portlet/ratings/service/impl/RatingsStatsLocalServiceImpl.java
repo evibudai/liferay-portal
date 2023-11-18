@@ -1,27 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.ratings.service.impl;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portlet.ratings.service.base.RatingsStatsLocalServiceBaseImpl;
 import com.liferay.ratings.kernel.exception.NoSuchStatsException;
 import com.liferay.ratings.kernel.model.RatingsStats;
+import com.liferay.ratings.kernel.service.persistence.RatingsEntryPersistence;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -74,7 +68,7 @@ public class RatingsStatsLocalServiceImpl
 
 	@Override
 	public void deleteStats(String className, long classPK) {
-		long classNameId = classNameLocalService.getClassNameId(className);
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		try {
 			ratingsStatsPersistence.removeByC_C(classNameId, classPK);
@@ -85,13 +79,13 @@ public class RatingsStatsLocalServiceImpl
 			}
 		}
 
-		ratingsEntryPersistence.removeByC_C(classNameId, classPK);
+		_ratingsEntryPersistence.removeByC_C(classNameId, classPK);
 	}
 
 	@Override
 	public RatingsStats fetchStats(String className, long classPK) {
 		return ratingsStatsPersistence.fetchByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -104,12 +98,12 @@ public class RatingsStatsLocalServiceImpl
 		throws PortalException {
 
 		return ratingsStatsPersistence.findByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
 	public Map<Long, RatingsStats> getStats(String className, long[] classPKs) {
-		long classNameId = classNameLocalService.getClassNameId(className);
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		Map<Long, RatingsStats> ratingsStats = new HashMap<>();
 
@@ -124,5 +118,11 @@ public class RatingsStatsLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RatingsStatsLocalServiceImpl.class);
+
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@BeanReference(type = RatingsEntryPersistence.class)
+	private RatingsEntryPersistence _ratingsEntryPersistence;
 
 }

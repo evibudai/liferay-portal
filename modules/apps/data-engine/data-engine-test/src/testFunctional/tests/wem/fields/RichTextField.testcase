@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -24,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,7 +35,7 @@ definition {
 	}
 
 	@description = "This test verifies that a user can set Searchable as Disabled and as Text."
-	@priority = "4"
+	@priority = 4
 	test EditRichTextSearchable {
 		DataEngine.editFieldSearchable(
 			fieldFieldLabel = "Rich Text",
@@ -77,7 +77,7 @@ definition {
 	}
 
 	@description = "This test verifies if the user can repeat and exclude a Rich Text Field."
-	@priority = "5"
+	@priority = 5
 	test ExcludeRepeatedRichTextOnWebContent {
 		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Rich Text");
 
@@ -96,8 +96,8 @@ definition {
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
 
 		DataEngine.assertFieldRepeated(
-			fieldName = "RichText",
-			index = "2");
+			fieldName = "Rich Text",
+			index = 2);
 
 		Click(
 			key_fieldName = "RichText",
@@ -109,11 +109,11 @@ definition {
 
 		DataEngine.assertFieldRepeatedNotPresent(
 			fieldName = "RichText",
-			index = "2");
+			index = 2);
 	}
 
 	@description = "This test verifies if the user can write a text on the Rich Text Field."
-	@priority = "5"
+	@priority = 5
 	test InsertTextOnRichTextOnWebContent {
 		WebContentStructures.saveCP();
 
@@ -141,7 +141,7 @@ definition {
 	}
 
 	@description = "This test verifies that a user can localize the field data."
-	@priority = "4"
+	@priority = 4
 	test LocalizationOfRichTextPersists {
 		DataEngine.editFieldTip(
 			fieldFieldLabel = "Rich Text",
@@ -178,13 +178,9 @@ definition {
 	}
 
 	@description = "This test verifies that is not possible to publish a Web Content with an empty required Rich Text."
-	@priority = "4"
+	@priority = 4
 	test PublishWebContentWithEmptyRequiredRichText {
 		property portal.acceptance = "false";
-
-		DataEngine.addField(
-			fieldFieldLabel = "Rich Text",
-			fieldName = "Rich Text");
 
 		DataEngine.editFieldRequired(fieldFieldLabel = "Rich Text");
 
@@ -198,7 +194,9 @@ definition {
 			structureName = "WC Structure Name",
 			webContentTitle = "WebContent Title");
 
-		Click(locator1 = "Button#PUBLISH");
+		Click(
+			key_text = "Publish",
+			locator1 = "Button#ANY");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "TextInput#REQUIRED_ALERT",
@@ -206,7 +204,7 @@ definition {
 	}
 
 	@description = "This test ensure is possible to repeat a rich text on a Web Content."
-	@priority = "5"
+	@priority = 5
 	test RepeatRichTextOnWebContent {
 		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Rich Text");
 
@@ -221,12 +219,12 @@ definition {
 		DataEngine.addRepeatableField(fieldLabel = "Rich Text");
 
 		DataEngine.assertFieldRepeated(
-			fieldName = "RichText",
-			index = "2");
+			fieldName = "Rich Text",
+			index = 2);
 	}
 
 	@description = "This test verifies the field reference with valid and invalid characters."
-	@priority = "3"
+	@priority = 3
 	test SetFieldReferenceOfRichTextWithValidAndInvalidCharacters {
 		DataEngine.editFieldReference(
 			assertFieldReference = "TestValidReference",
@@ -256,7 +254,7 @@ definition {
 	}
 
 	@description = "This test verifies that a user can define a Field Label and a Help Text."
-	@priority = "5"
+	@priority = 5
 	test SetLabelOfRichTextAndHelpText {
 		DataEngine.editFieldLabel(
 			fieldFieldLabel = "Rich Text",
@@ -277,7 +275,7 @@ definition {
 	}
 
 	@description = "This test verifies that a user can see the Tip(Help Text) if it was defined."
-	@priority = "4"
+	@priority = 4
 	test VerifyHelpTextofRichTextOnWebContent {
 		DataEngine.editFieldTip(
 			fieldFieldLabel = "Rich Text",
@@ -296,7 +294,7 @@ definition {
 	}
 
 	@description = "This test verifies that a user can set the field as Required or Not Required on Web Content."
-	@priority = "4"
+	@priority = 4
 	test VerifyRichTextIsSetAsRequiredOnWebContent {
 		DataEngine.editFieldRequired(fieldFieldLabel = "Rich Text");
 

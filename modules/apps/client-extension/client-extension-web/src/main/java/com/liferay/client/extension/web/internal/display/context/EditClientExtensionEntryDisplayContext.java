@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.web.internal.display.context;
@@ -82,6 +73,16 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 			_clientExtensionEntry, _portletRequest, "externalReferenceCode");
 	}
 
+	public String getHelpLabel() {
+		ThemeDisplay themeDisplay = _getThemeDisplay();
+
+		return CETLabelUtil.getHelpLabel(themeDisplay.getLocale(), getType());
+	}
+
+	public String getLearnResourceKey() {
+		return CETLabelUtil.getLearnResourceKey(getType());
+	}
+
 	public String getName() {
 		return BeanParamUtil.getString(
 			_clientExtensionEntry, _portletRequest, "name");
@@ -95,7 +96,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 		boolean found = false;
 
 		if (Validator.isBlank(selectedPortletCategoryName)) {
-			selectedPortletCategoryName = "category.remote-apps";
+			selectedPortletCategoryName = "category.client-extensions";
 		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)_portletRequest.getAttribute(
@@ -116,7 +117,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 						portletCategory.getName())));
 
 			if (Objects.equals(
-					portletCategory.getName(), "category.remote-apps")) {
+					portletCategory.getName(), "category.client-extensions")) {
 
 				found = true;
 			}
@@ -126,10 +127,11 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 			selectOptions.add(
 				new SelectOption(
 					LanguageUtil.get(
-						themeDisplay.getLocale(), "category.remote-apps"),
-					"category.remote-apps",
+						themeDisplay.getLocale(), "category.client-extensions"),
+					"category.client-extensions",
 					Objects.equals(
-						selectedPortletCategoryName, "category.remote-apps")));
+						selectedPortletCategoryName,
+						"category.client-extensions")));
 		}
 
 		return ListUtil.sort(
@@ -177,10 +179,8 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
 		if (_clientExtensionEntry == null) {
-			return LanguageUtil.get(
-				_getHttpServletRequest(),
-				CETLabelUtil.getNewLabel(
-					themeDisplay.getLocale(), _cet.getType()));
+			return CETLabelUtil.getNewLabel(
+				themeDisplay.getLocale(), _cet.getType());
 		}
 
 		return _cet.getName(themeDisplay.getLocale());
@@ -194,9 +194,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	public String getTypeLabel() {
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		return LanguageUtil.get(
-			_getHttpServletRequest(),
-			CETLabelUtil.getTypeLabel(themeDisplay.getLocale(), getType()));
+		return CETLabelUtil.getTypeLabel(themeDisplay.getLocale(), getType());
 	}
 
 	public boolean isNew() {

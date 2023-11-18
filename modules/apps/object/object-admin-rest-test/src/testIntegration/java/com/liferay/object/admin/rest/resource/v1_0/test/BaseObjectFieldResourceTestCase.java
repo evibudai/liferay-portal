@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.client.resource.v1_0.ObjectFieldResource;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectFieldSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -66,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -190,6 +180,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 		objectField.setIndexedLanguageId(regex);
 		objectField.setListTypeDefinitionExternalReferenceCode(regex);
 		objectField.setName(regex);
+		objectField.setReadOnlyConditionExpression(regex);
 
 		String json = ObjectFieldSerDes.toJSON(objectField);
 
@@ -203,73 +194,91 @@ public abstract class BaseObjectFieldResourceTestCase {
 		Assert.assertEquals(
 			regex, objectField.getListTypeDefinitionExternalReferenceCode());
 		Assert.assertEquals(regex, objectField.getName());
+		Assert.assertEquals(
+			regex, objectField.getReadOnlyConditionExpression());
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage()
 		throws Exception {
 
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
-		String irrelevantObjectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getIrrelevantObjectDefinitionExternalReferenceCode();
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getIrrelevantExternalReferenceCode();
 
 		Page<ObjectField> page =
 			objectFieldResource.
-				getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-					objectDefinitionExternalReferenceCode, null, null,
-					Pagination.of(1, 10), null);
+				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+					externalReferenceCode, null, null, Pagination.of(1, 10),
+					null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
-		if (irrelevantObjectDefinitionExternalReferenceCode != null) {
+		if (irrelevantExternalReferenceCode != null) {
 			ObjectField irrelevantObjectField =
-				testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-					irrelevantObjectDefinitionExternalReferenceCode,
+				testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+					irrelevantExternalReferenceCode,
 					randomIrrelevantObjectField());
 
 			page =
 				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						irrelevantObjectDefinitionExternalReferenceCode, null,
-						null, Pagination.of(1, 2), null);
+					getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+						irrelevantExternalReferenceCode, null, null,
+						Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
 			assertEquals(
 				Arrays.asList(irrelevantObjectField),
 				(List<ObjectField>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		ObjectField objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		ObjectField objectField2 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		page =
 			objectFieldResource.
-				getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-					objectDefinitionExternalReferenceCode, null, null,
-					Pagination.of(1, 10), null);
+				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+					externalReferenceCode, null, null, Pagination.of(1, 10),
+					null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectField1, objectField2),
 			(List<ObjectField>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExpectedActions(
+				externalReferenceCode));
 
 		objectFieldResource.deleteObjectField(objectField1.getId());
 
 		objectFieldResource.deleteObjectField(objectField2.getId());
 	}
 
+	protected Map<String, Map<String, String>>
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithFilterDateTimeEquals()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilterDateTimeEquals()
 		throws Exception {
 
 		List<EntityField> entityFields = getEntityFields(
@@ -279,20 +288,20 @@ public abstract class BaseObjectFieldResourceTestCase {
 			return;
 		}
 
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
 
 		ObjectField objectField1 = randomObjectField();
 
 		objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, objectField1);
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, objectField1);
 
 		for (EntityField entityField : entityFields) {
 			Page<ObjectField> page =
 				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						objectDefinitionExternalReferenceCode, null,
+					getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+						externalReferenceCode, null,
 						getFilterString(entityField, "between", objectField1),
 						Pagination.of(1, 2), null);
 
@@ -303,34 +312,66 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithFilterDoubleEquals()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilterStringContains()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
 		}
 
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
 
 		ObjectField objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		ObjectField objectField2 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		for (EntityField entityField : entityFields) {
 			Page<ObjectField> page =
 				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						objectDefinitionExternalReferenceCode, null,
-						getFilterString(entityField, "eq", objectField1),
+					getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+						externalReferenceCode, null,
+						getFilterString(entityField, operator, objectField1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -340,66 +381,29 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithFilterStringEquals()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithPagination()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
-
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
 
 		ObjectField objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectField objectField2 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
-
-		for (EntityField entityField : entityFields) {
-			Page<ObjectField> page =
-				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						objectDefinitionExternalReferenceCode, null,
-						getFilterString(entityField, "eq", objectField1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(objectField1),
-				(List<ObjectField>)page.getItems());
-		}
-	}
-
-	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithPagination()
-		throws Exception {
-
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
-
-		ObjectField objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		ObjectField objectField2 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		ObjectField objectField3 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, randomObjectField());
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, randomObjectField());
 
 		Page<ObjectField> page1 =
 			objectFieldResource.
-				getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-					objectDefinitionExternalReferenceCode, null, null,
-					Pagination.of(1, 2), null);
+				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+					externalReferenceCode, null, null, Pagination.of(1, 2),
+					null);
 
 		List<ObjectField> objectFields1 = (List<ObjectField>)page1.getItems();
 
@@ -407,9 +411,9 @@ public abstract class BaseObjectFieldResourceTestCase {
 
 		Page<ObjectField> page2 =
 			objectFieldResource.
-				getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-					objectDefinitionExternalReferenceCode, null, null,
-					Pagination.of(2, 2), null);
+				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+					externalReferenceCode, null, null, Pagination.of(2, 2),
+					null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -419,9 +423,9 @@ public abstract class BaseObjectFieldResourceTestCase {
 
 		Page<ObjectField> page3 =
 			objectFieldResource.
-				getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-					objectDefinitionExternalReferenceCode, null, null,
-					Pagination.of(1, 3), null);
+				getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+					externalReferenceCode, null, null, Pagination.of(1, 3),
+					null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectField1, objectField2, objectField3),
@@ -429,10 +433,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSortDateTime()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSortDateTime()
 		throws Exception {
 
-		testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSort(
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, objectField1, objectField2) -> {
 				BeanTestUtil.setProperty(
@@ -442,10 +446,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSortDouble()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSortDouble()
 		throws Exception {
 
-		testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSort(
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, objectField1, objectField2) -> {
 				BeanTestUtil.setProperty(
@@ -456,10 +460,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSortInteger()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSortInteger()
 		throws Exception {
 
-		testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSort(
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, objectField1, objectField2) -> {
 				BeanTestUtil.setProperty(
@@ -470,10 +474,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSortString()
+	public void testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSortString()
 		throws Exception {
 
-		testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSort(
+		testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSort(
 			EntityField.Type.STRING,
 			(entityField, objectField1, objectField2) -> {
 				Class<?> clazz = objectField1.getClass();
@@ -523,7 +527,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected void
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPageWithSort(
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPageWithSort(
 				EntityField.Type type,
 				UnsafeTriConsumer
 					<EntityField, ObjectField, ObjectField, Exception>
@@ -536,8 +540,8 @@ public abstract class BaseObjectFieldResourceTestCase {
 			return;
 		}
 
-		String objectDefinitionExternalReferenceCode =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode();
+		String externalReferenceCode =
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode();
 
 		ObjectField objectField1 = randomObjectField();
 		ObjectField objectField2 = randomObjectField();
@@ -547,19 +551,19 @@ public abstract class BaseObjectFieldResourceTestCase {
 		}
 
 		objectField1 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, objectField1);
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, objectField1);
 
 		objectField2 =
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				objectDefinitionExternalReferenceCode, objectField2);
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				externalReferenceCode, objectField2);
 
 		for (EntityField entityField : entityFields) {
 			Page<ObjectField> ascPage =
 				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						objectDefinitionExternalReferenceCode, null, null,
-						Pagination.of(1, 2), entityField.getName() + ":asc");
+					getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+						externalReferenceCode, null, null, Pagination.of(1, 2),
+						entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(objectField1, objectField2),
@@ -567,9 +571,9 @@ public abstract class BaseObjectFieldResourceTestCase {
 
 			Page<ObjectField> descPage =
 				objectFieldResource.
-					getObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage(
-						objectDefinitionExternalReferenceCode, null, null,
-						Pagination.of(1, 2), entityField.getName() + ":desc");
+					getObjectDefinitionByExternalReferenceCodeObjectFieldsPage(
+						externalReferenceCode, null, null, Pagination.of(1, 2),
+						entityField.getName() + ":desc");
 
 			assertEquals(
 				Arrays.asList(objectField2, objectField1),
@@ -578,9 +582,8 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected ObjectField
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_addObjectField(
-				String objectDefinitionExternalReferenceCode,
-				ObjectField objectField)
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_addObjectField(
+				String externalReferenceCode, ObjectField objectField)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -588,7 +591,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected String
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getObjectDefinitionExternalReferenceCode()
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -596,20 +599,20 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected String
-			testGetObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectFieldsPage_getIrrelevantObjectDefinitionExternalReferenceCode()
+			testGetObjectDefinitionByExternalReferenceCodeObjectFieldsPage_getIrrelevantExternalReferenceCode()
 		throws Exception {
 
 		return null;
 	}
 
 	@Test
-	public void testPostObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectField()
+	public void testPostObjectDefinitionByExternalReferenceCodeObjectField()
 		throws Exception {
 
 		ObjectField randomObjectField = randomObjectField();
 
 		ObjectField postObjectField =
-			testPostObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectField_addObjectField(
+			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
 				randomObjectField);
 
 		assertEquals(randomObjectField, postObjectField);
@@ -617,7 +620,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected ObjectField
-			testPostObjectDefinitionByExternalReferenceCodeObjectDefinitionExternalReferenceCodeObjectField_addObjectField(
+			testPostObjectDefinitionByExternalReferenceCodeObjectField_addObjectField(
 				ObjectField objectField)
 		throws Exception {
 
@@ -653,7 +656,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantObjectField),
 				(List<ObjectField>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetObjectDefinitionObjectFieldsPage_getExpectedActions(
+					irrelevantObjectDefinitionId));
 		}
 
 		ObjectField objectField1 =
@@ -672,11 +678,35 @@ public abstract class BaseObjectFieldResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectField1, objectField2),
 			(List<ObjectField>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetObjectDefinitionObjectFieldsPage_getExpectedActions(
+				objectDefinitionId));
 
 		objectFieldResource.deleteObjectField(objectField1.getId());
 
 		objectFieldResource.deleteObjectField(objectField2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetObjectDefinitionObjectFieldsPage_getExpectedActions(
+				Long objectDefinitionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-fields/batch".
+				replace(
+					"{objectDefinitionId}",
+					String.valueOf(objectDefinitionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -715,44 +745,39 @@ public abstract class BaseObjectFieldResourceTestCase {
 	public void testGetObjectDefinitionObjectFieldsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetObjectDefinitionObjectFieldsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetObjectDefinitionObjectFieldsPageWithFilterStringContains()
+		throws Exception {
 
-		Long objectDefinitionId =
-			testGetObjectDefinitionObjectFieldsPage_getObjectDefinitionId();
-
-		ObjectField objectField1 =
-			testGetObjectDefinitionObjectFieldsPage_addObjectField(
-				objectDefinitionId, randomObjectField());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectField objectField2 =
-			testGetObjectDefinitionObjectFieldsPage_addObjectField(
-				objectDefinitionId, randomObjectField());
-
-		for (EntityField entityField : entityFields) {
-			Page<ObjectField> page =
-				objectFieldResource.getObjectDefinitionObjectFieldsPage(
-					objectDefinitionId, null,
-					getFilterString(entityField, "eq", objectField1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(objectField1),
-				(List<ObjectField>)page.getItems());
-		}
+		testGetObjectDefinitionObjectFieldsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetObjectDefinitionObjectFieldsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetObjectDefinitionObjectFieldsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetObjectDefinitionObjectFieldsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetObjectDefinitionObjectFieldsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetObjectDefinitionObjectFieldsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -774,7 +799,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 			Page<ObjectField> page =
 				objectFieldResource.getObjectDefinitionObjectFieldsPage(
 					objectDefinitionId, null,
-					getFilterString(entityField, "eq", objectField1),
+					getFilterString(entityField, operator, objectField1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1383,6 +1408,14 @@ public abstract class BaseObjectFieldResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("localized", additionalAssertFieldName)) {
+				if (objectField.getLocalized() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (objectField.getName() == null) {
 					valid = false;
@@ -1395,6 +1428,24 @@ public abstract class BaseObjectFieldResourceTestCase {
 					"objectFieldSettings", additionalAssertFieldName)) {
 
 				if (objectField.getObjectFieldSettings() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("readOnly", additionalAssertFieldName)) {
+				if (objectField.getReadOnly() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"readOnlyConditionExpression", additionalAssertFieldName)) {
+
+				if (objectField.getReadOnlyConditionExpression() == null) {
 					valid = false;
 				}
 
@@ -1450,6 +1501,13 @@ public abstract class BaseObjectFieldResourceTestCase {
 	}
 
 	protected void assertValid(Page<ObjectField> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ObjectField> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ObjectField> objectFields = page.getItems();
@@ -1464,6 +1522,25 @@ public abstract class BaseObjectFieldResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1673,6 +1750,17 @@ public abstract class BaseObjectFieldResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("localized", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						objectField1.getLocalized(),
+						objectField2.getLocalized())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						objectField1.getName(), objectField2.getName())) {
@@ -1689,6 +1777,30 @@ public abstract class BaseObjectFieldResourceTestCase {
 				if (!Objects.deepEquals(
 						objectField1.getObjectFieldSettings(),
 						objectField2.getObjectFieldSettings())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("readOnly", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						objectField1.getReadOnly(),
+						objectField2.getReadOnly())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"readOnlyConditionExpression", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectField1.getReadOnlyConditionExpression(),
+						objectField2.getReadOnlyConditionExpression())) {
 
 					return false;
 				}
@@ -1785,14 +1897,16 @@ public abstract class BaseObjectFieldResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1809,6 +1923,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1818,18 +1936,18 @@ public abstract class BaseObjectFieldResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1861,17 +1979,93 @@ public abstract class BaseObjectFieldResourceTestCase {
 		}
 
 		if (entityFieldName.equals("defaultValue")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectField.getDefaultValue()));
-			sb.append("'");
+			Object object = objectField.getDefaultValue();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectField.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = objectField.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1892,9 +2086,47 @@ public abstract class BaseObjectFieldResourceTestCase {
 		}
 
 		if (entityFieldName.equals("indexedLanguageId")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectField.getIndexedLanguageId()));
-			sb.append("'");
+			Object object = objectField.getIndexedLanguageId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1905,11 +2137,48 @@ public abstract class BaseObjectFieldResourceTestCase {
 		}
 
 		if (entityFieldName.equals("listTypeDefinitionExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					objectField.getListTypeDefinitionExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				objectField.getListTypeDefinitionExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1919,10 +2188,53 @@ public abstract class BaseObjectFieldResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("localized")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(objectField.getName()));
-			sb.append("'");
+			Object object = objectField.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1930,6 +2242,57 @@ public abstract class BaseObjectFieldResourceTestCase {
 		if (entityFieldName.equals("objectFieldSettings")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("readOnly")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("readOnlyConditionExpression")) {
+			Object object = objectField.getReadOnlyConditionExpression();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("relationshipType")) {
@@ -2013,7 +2376,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 				listTypeDefinitionExternalReferenceCode =
 					StringUtil.toLowerCase(RandomTestUtil.randomString());
 				listTypeDefinitionId = RandomTestUtil.randomLong();
+				localized = RandomTestUtil.randomBoolean();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				readOnlyConditionExpression = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				required = RandomTestUtil.randomBoolean();
 				state = RandomTestUtil.randomBoolean();
 				system = RandomTestUtil.randomBoolean();

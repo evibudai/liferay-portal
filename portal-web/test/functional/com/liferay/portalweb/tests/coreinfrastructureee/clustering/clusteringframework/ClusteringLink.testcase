@@ -4,6 +4,7 @@ definition {
 	property cluster.enabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property remote.elasticsearch.enabled = "true";
 	property test.assert.warning.exceptions = "true";
 	property testray.main.component.name = "Clustering";
 
@@ -14,57 +15,62 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test AutodetectClusteringAddress {
-		property test.name.skip.portal.instance = "ClusteringLink#AutodetectClusteringAddress";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "bind_addr=127.0.0.1");
 
 		AssertConsoleTextNotPresent(value1 = "Autodetecting JGroups outgoing IP address and interface for www.google.com:80");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CustomClusteringAddress {
 		property cluster.node.ip = "true";
-		property test.name.skip.portal.instance = "ClusteringLink#CustomClusteringAddress";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var ipAddress = PropsUtil.get("ip.address");
 
 		AssertConsoleTextPresent(value1 = "bind_addr=${ipAddress}");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CustomControlChannelPropertiesFile {
 		property custom.properties = "cluster.link.channel.properties.control=tcp.xml";
-		property test.name.skip.portal.instance = "ClusteringLink#CustomControlChannelPropertiesFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "Create a new JGroups channel");
 
 		AssertConsoleTextPresent(value1 = "properties: TCP");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CustomizeChannelNames {
 		property custom.properties = "cluster.link.channel.name.control=test-control-channel${line.separator}cluster.link.channel.name.transport.0=test-transport-channel";
-		property test.name.skip.portal.instance = "ClusteringLink#CustomizeChannelNames";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "channelName: test-control-channel");
 
 		AssertConsoleTextPresent(value1 = "channelName: test-transport-channel");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CustomTransportChannelPropertiesFile {
 		property cluster.enabled = "false";
-		property custom.properties = "cluster.link.enabled=true${line.separator}cluster.link.channel.properties.transport.0=tcp.xml";
-		property test.name.skip.portal.instance = "ClusteringLink#CustomTransportChannelPropertiesFile";
+		property custom.properties = "cluster.link.channel.properties.transport.0=tcp.xml${line.separator}cluster.link.enabled=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AssertConsoleTextPresent(value1 = "Create a new JGroups channel");
 

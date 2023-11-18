@@ -1,23 +1,13 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-String confirmMessage = (String)request.getAttribute("liferay-trash:empty:confirmMessage");
 String infoMessage = (String)request.getAttribute("liferay-trash:empty:infoMessage");
 int totalEntries = GetterUtil.getInteger(request.getAttribute("liferay-trash:empty:totalEntries"));
 %>
@@ -35,9 +25,9 @@ int totalEntries = GetterUtil.getInteger(request.getAttribute("liferay-trash:emp
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 			<clay:button
-				cssClass="trash-empty-button"
+				cssClass="align-baseline p-0"
 				displayType="link"
-				id='<%= liferayPortletResponse.getNamespace() + "empty" %>'
+				id='<%= namespace + "empty" %>'
 				label='<%= (String)request.getAttribute("liferay-trash:empty:emptyMessage") %>'
 				small="<%= true %>"
 				type="submit"
@@ -58,7 +48,8 @@ int totalEntries = GetterUtil.getInteger(request.getAttribute("liferay-trash:emp
 			event.preventDefault();
 
 			Liferay.Util.openConfirmModal({
-				message: '<%= UnicodeLanguageUtil.get(request, confirmMessage) %>',
+				message:
+					'<liferay-ui:message key='<%= (String)request.getAttribute("liferay-trash:empty:confirmMessage") %>' />',
 				onConfirm: (isConfirmed) => {
 					if (isConfirmed) {
 						var form = document.getElementById(

@@ -1,27 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.search.index.creation.helper;
 
-import com.liferay.portal.background.task.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.CountSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.CountSearchResponse;
@@ -58,6 +50,10 @@ public class WorkflowMetricsIndexCreator {
 	}
 
 	public void reindex(Company company) {
+		if (!_searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
+
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				CountSearchRequest countSearchRequest =
@@ -67,8 +63,6 @@ public class WorkflowMetricsIndexCreator {
 					_processWorkflowMetricsIndex.getIndexName(
 						company.getCompanyId()));
 				countSearchRequest.setQuery(_queries.booleanQuery());
-				countSearchRequest.setTypes(
-					_processWorkflowMetricsIndex.getIndexType());
 
 				CountSearchResponse countSearchResponse =
 					_searchEngineAdapter.execute(countSearchRequest);
@@ -77,7 +71,7 @@ public class WorkflowMetricsIndexCreator {
 					return null;
 				}
 
-				User user = company.getDefaultUser();
+				User user = company.getGuestUser();
 
 				_backgroundTaskLocalService.addBackgroundTask(
 					user.getUserId(), company.getGroupId(),
@@ -133,8 +127,11 @@ public class WorkflowMetricsIndexCreator {
 	@Reference
 	private Queries _queries;
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
-	private volatile SearchEngineAdapter _searchEngineAdapter;
+	@Reference
+	private SearchCapabilities _searchCapabilities;
+
+	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference(
 		target = "(workflow.metrics.index.entity.name=sla-instance-result)"

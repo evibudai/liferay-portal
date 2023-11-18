@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.scheduler;
@@ -83,17 +74,16 @@ public interface SchedulerEngine {
 			String groupName, StorageType storageType)
 		throws SchedulerException;
 
-	public void pause(String groupName, StorageType storageType)
-		throws SchedulerException;
-
 	public void pause(String jobName, String groupName, StorageType storageType)
-		throws SchedulerException;
-
-	public void resume(String groupName, StorageType storageType)
 		throws SchedulerException;
 
 	public void resume(
 			String jobName, String groupName, StorageType storageType)
+		throws SchedulerException;
+
+	public void run(
+			long companyId, String jobName, String groupName,
+			StorageType storageType)
 		throws SchedulerException;
 
 	public void schedule(
@@ -104,16 +94,6 @@ public interface SchedulerEngine {
 	public void shutdown() throws SchedulerException;
 
 	public void start() throws SchedulerException;
-
-	public void unschedule(String groupName, StorageType storageType)
-		throws SchedulerException;
-
-	public void unschedule(
-			String jobName, String groupName, StorageType storageType)
-		throws SchedulerException;
-
-	public void update(Trigger trigger, StorageType storageType)
-		throws SchedulerException;
 
 	public void validateTrigger(Trigger trigger, StorageType storageType)
 		throws SchedulerException;

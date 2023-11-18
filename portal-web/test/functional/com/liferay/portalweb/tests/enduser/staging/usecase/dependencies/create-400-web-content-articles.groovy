@@ -1,3 +1,5 @@
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.service.*
@@ -67,9 +69,15 @@ for (int i = startCount; i < numCount; i++) {
 	titleMap.put(locale, "Article_" + i);
 
 try {
-JournalArticleLocalServiceUtil.addArticle(userId, groupId, folderId,
+
+	DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
+			PortalUtil.getSiteGroupId(groupId),
+			PortalUtil.getClassNameId(com.liferay.journal.model.JournalArticle.class.getName()),
+			"BASIC-WEB-CONTENT", true);
+
+	JournalArticleLocalServiceUtil.addArticle(null, userId, groupId, folderId,
 				titleMap, descriptionMap,
-				content, "BASIC-WEB-CONTENT", "BASIC-WEB-CONTENT",
+				content, ddmStructure.getStructureId(), "BASIC-WEB-CONTENT",
 				serviceContext)
 } catch (PortalException e) {
 		e.printStackTrace();

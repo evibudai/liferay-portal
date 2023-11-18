@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.resource.v1_0.test;
@@ -59,6 +50,9 @@ public class SXPBlueprintResourceTest extends BaseSXPBlueprintResourceTestCase {
 				).put(
 					"elementInstances", JSONFactoryUtil.createJSONArray()
 				).put(
+					"externalReferenceCode",
+					sxpBlueprint.getExternalReferenceCode()
+				).put(
 					"schemaVersion", postSXPBlueprint.getSchemaVersion()
 				).put(
 					"title_i18n", JSONUtil.put("en_US", sxpBlueprint.getTitle())
@@ -101,6 +95,20 @@ public class SXPBlueprintResourceTest extends BaseSXPBlueprintResourceTestCase {
 	@Override
 	@Test
 	public void testGraphQLGetSXPBlueprint() throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSXPBlueprintByExternalReferenceCode()
+		throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSXPBlueprintByExternalReferenceCodeNotFound()
+		throws Exception {
 	}
 
 	@Ignore
@@ -173,6 +181,14 @@ public class SXPBlueprintResourceTest extends BaseSXPBlueprintResourceTestCase {
 	}
 
 	@Override
+	protected SXPBlueprint
+			testGetSXPBlueprintByExternalReferenceCode_addSXPBlueprint()
+		throws Exception {
+
+		return _addSXPBlueprint(randomSXPBlueprint());
+	}
+
+	@Override
 	protected SXPBlueprint testGetSXPBlueprintsPage_addSXPBlueprint(
 			SXPBlueprint sxpBlueprint)
 		throws Exception {
@@ -208,6 +224,29 @@ public class SXPBlueprintResourceTest extends BaseSXPBlueprintResourceTestCase {
 		throws Exception {
 
 		return _addSXPBlueprint(sxpBlueprint);
+	}
+
+	@Override
+	protected SXPBlueprint testPutSXPBlueprint_addSXPBlueprint()
+		throws Exception {
+
+		return _addSXPBlueprint(randomSXPBlueprint());
+	}
+
+	@Override
+	protected SXPBlueprint
+			testPutSXPBlueprintByExternalReferenceCode_addSXPBlueprint()
+		throws Exception {
+
+		return _addSXPBlueprint(randomSXPBlueprint());
+	}
+
+	@Override
+	protected SXPBlueprint
+			testPutSXPBlueprintByExternalReferenceCode_createSXPBlueprint()
+		throws Exception {
+
+		return _addSXPBlueprint(randomSXPBlueprint());
 	}
 
 	private SXPBlueprint _addSXPBlueprint(SXPBlueprint sxpBlueprint)

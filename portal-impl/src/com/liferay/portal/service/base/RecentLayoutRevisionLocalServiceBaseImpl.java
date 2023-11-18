@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.base;
@@ -36,7 +27,6 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.RecentLayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.RecentLayoutRevisionLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
@@ -46,8 +36,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -475,18 +463,12 @@ public abstract class RecentLayoutRevisionLocalServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.portal.kernel.model.RecentLayoutRevision",
+		RecentLayoutRevisionLocalServiceUtil.setService(
 			recentLayoutRevisionLocalService);
-
-		_setLocalServiceUtilService(recentLayoutRevisionLocalService);
 	}
 
 	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.portal.kernel.model.RecentLayoutRevision");
-
-		_setLocalServiceUtilService(null);
+		RecentLayoutRevisionLocalServiceUtil.setService(null);
 	}
 
 	/**
@@ -532,23 +514,6 @@ public abstract class RecentLayoutRevisionLocalServiceBaseImpl
 		}
 	}
 
-	private void _setLocalServiceUtilService(
-		RecentLayoutRevisionLocalService recentLayoutRevisionLocalService) {
-
-		try {
-			Field field =
-				RecentLayoutRevisionLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, recentLayoutRevisionLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
-	}
-
 	@BeanReference(type = RecentLayoutRevisionLocalService.class)
 	protected RecentLayoutRevisionLocalService recentLayoutRevisionLocalService;
 
@@ -563,9 +528,5 @@ public abstract class RecentLayoutRevisionLocalServiceBaseImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RecentLayoutRevisionLocalServiceBaseImpl.class);
-
-	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

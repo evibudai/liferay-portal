@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
@@ -21,6 +12,7 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -48,8 +40,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -59,18 +49,17 @@ import org.osgi.service.component.annotations.Reference;
 public abstract class BaseWorkflowMetricsIndexer {
 
 	public void addDocuments(List<Document> documents) {
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
+
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
 		documents.forEach(
 			document -> bulkDocumentRequest.addBulkableDocumentRequest(
 				new IndexDocumentRequest(
 					getIndexName(document.getLong("companyId")),
-					document.getString("uid"), document) {
-
-					{
-						setType(getIndexType());
-					}
-				}));
+					document.getString("uid"), document)));
 
 		if (ListUtil.isNotEmpty(
 				bulkDocumentRequest.getBulkableDocumentRequests())) {
@@ -98,14 +87,16 @@ public abstract class BaseWorkflowMetricsIndexer {
 	}
 
 	protected void addDocument(Document document) {
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
+
 		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
 			getIndexName(document.getLong("companyId")), document);
 
 		if (PortalRunMode.isTestMode()) {
 			indexDocumentRequest.setRefresh(true);
 		}
-
-		indexDocumentRequest.setType(getIndexType());
 
 		searchEngineAdapter.execute(indexDocumentRequest);
 	}
@@ -136,26 +127,24 @@ public abstract class BaseWorkflowMetricsIndexer {
 		DocumentBuilder documentBuilder, String fieldName,
 		Map<Locale, String> localizedMap) {
 
-		Stream.of(
-			localizedMap.entrySet()
-		).flatMap(
-			Set::stream
-		).forEach(
-			entry -> {
-				String localizedName = Field.getLocalizedName(
-					entry.getKey(), fieldName);
+		for (Map.Entry<Locale, String> entry : localizedMap.entrySet()) {
+			String localizedName = Field.getLocalizedName(
+				entry.getKey(), fieldName);
 
-				documentBuilder.setValue(
-					localizedName, entry.getValue()
-				).setValue(
-					Field.getSortableFieldName(localizedName), entry.getValue()
-				);
-			}
-		);
+			documentBuilder.setValue(
+				localizedName, entry.getValue()
+			).setValue(
+				Field.getSortableFieldName(localizedName), entry.getValue()
+			);
+		}
 	}
 
 	protected void updateDocuments(
 		long companyId, Map<String, Object> fieldsMap, Query filterQuery) {
+
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
@@ -168,7 +157,6 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 		searchSearchRequest.setSelectedFieldNames("uid");
 		searchSearchRequest.setSize(10000);
-		searchSearchRequest.setTypes(getIndexType());
 
 		SearchSearchResponse searchSearchResponse = searchEngineAdapter.execute(
 			searchSearchRequest);
@@ -181,33 +169,24 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
-		Stream.of(
-			searchHits.getSearchHits()
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).forEach(
-			document -> {
-				DocumentBuilder documentBuilder =
-					documentBuilderFactory.builder();
+		for (SearchHit searchHit : searchHits.getSearchHits()) {
+			Document document = searchHit.getDocument();
+			DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-				documentBuilder.setString("uid", document.getString("uid"));
+			documentBuilder.setString("uid", document.getString("uid"));
 
-				fieldsMap.forEach(documentBuilder::setValue);
+			fieldsMap.forEach(documentBuilder::setValue);
 
-				UpdateDocumentRequest updateDocumentRequest =
-					new UpdateDocumentRequest(
-						getIndexName(companyId), document.getString("uid"),
-						documentBuilder.build());
+			UpdateDocumentRequest updateDocumentRequest =
+				new UpdateDocumentRequest(
+					getIndexName(companyId), document.getString("uid"),
+					documentBuilder.build());
 
-				updateDocumentRequest.setType(getIndexType());
-				updateDocumentRequest.setUpsert(true);
+			updateDocumentRequest.setUpsert(true);
 
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					updateDocumentRequest);
-			}
-		);
+			bulkDocumentRequest.addBulkableDocumentRequest(
+				updateDocumentRequest);
+		}
 
 		if (ListUtil.isNotEmpty(
 				bulkDocumentRequest.getBulkableDocumentRequests())) {
@@ -229,13 +208,20 @@ public abstract class BaseWorkflowMetricsIndexer {
 	@Reference
 	protected Scripts scripts;
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
-	protected volatile SearchEngineAdapter searchEngineAdapter;
+	@Reference
+	protected SearchCapabilities searchCapabilities;
+
+	@Reference
+	protected SearchEngineAdapter searchEngineAdapter;
 
 	@Reference
 	protected WorkflowMetricsPortalExecutor workflowMetricsPortalExecutor;
 
 	private void _updateDocument(Document document) {
+		if (!searchCapabilities.isWorkflowMetricsSupported()) {
+			return;
+		}
+
 		UpdateDocumentRequest updateDocumentRequest = new UpdateDocumentRequest(
 			getIndexName(document.getLong("companyId")),
 			document.getString("uid"), document);
@@ -244,7 +230,6 @@ public abstract class BaseWorkflowMetricsIndexer {
 			updateDocumentRequest.setRefresh(true);
 		}
 
-		updateDocumentRequest.setType(getIndexType());
 		updateDocumentRequest.setUpsert(true);
 
 		searchEngineAdapter.execute(updateDocumentRequest);

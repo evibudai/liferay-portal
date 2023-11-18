@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -126,6 +117,15 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 
 			String tagFullName = tag.getFullName();
 
+			Matcher matcher = _taglibNamePattern.matcher(tagFullName);
+
+			if (matcher.find()) {
+				attributeValue = _moveLiteralStringInsideJPSExpression(
+					attributeValue);
+
+				tag.putAttribute(attributeName, attributeValue);
+			}
+
 			if (tagFullName.matches("\\w+")) {
 				tag.putAttribute(
 					attributeName,
@@ -149,6 +149,26 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 				tag.putAttribute(
 					attributeName,
 					StringUtil.replaceLast(attributeValue, ".toString()", ""));
+			}
+
+			if (isAttributeValue(_CHECK_CLAY_ALERT_MESSAGE_KEY, absolutePath) &&
+				tagFullName.equals("clay:alert") &&
+				attributeName.equals("message")) {
+
+				matcher = _languageUtilPattern.matcher(attributeValue);
+
+				if (matcher.find()) {
+					String languageKey = matcher.group(1);
+
+					if (languageKey.matches("\"[^\"]+\"")) {
+						tag.putAttribute(
+							attributeName, StringUtil.unquote(languageKey));
+					}
+					else {
+						tag.putAttribute(
+							attributeName, "<%= " + languageKey + " %>");
+					}
+				}
 			}
 
 			if (tagFullName.equals("liferay-ui:message") &&
@@ -416,14 +436,15 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 
 		outerLoop:
 		for (String tldFileName : tldFileNames) {
-			tldFileName = StringUtil.replace(
-				tldFileName, CharPool.BACK_SLASH, CharPool.SLASH);
-
 			File tldFile = new File(tldFileName);
 
 			String content = FileUtil.read(tldFile);
 
 			Document document = SourceUtil.readXML(content);
+
+			if (document == null) {
+				continue;
+			}
 
 			Element rootElement = document.getRootElement();
 
@@ -591,6 +612,50 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 		return false;
 	}
 
+	private String _moveLiteralStringInsideJPSExpression(
+		String attributeValue) {
+
+		if ((!attributeValue.contains("<%=") &&
+			 !attributeValue.contains("%>")) ||
+			(attributeValue.startsWith("<%=") &&
+			 attributeValue.endsWith("%>")) ||
+			(getLevel(attributeValue, "<%", "%>") != 0)) {
+
+			return attributeValue;
+		}
+
+		attributeValue = attributeValue.trim();
+
+		if (attributeValue.startsWith("<%=") && attributeValue.endsWith("%>")) {
+			return attributeValue;
+		}
+
+		int x = attributeValue.indexOf("<%=");
+
+		if (x > 0) {
+			String literalString = StringUtil.quote(
+				attributeValue.substring(0, x), StringPool.QUOTE);
+
+			attributeValue = StringBundler.concat(
+				"<%= ", literalString, " +", attributeValue.substring(x + 3));
+		}
+
+		x = attributeValue.lastIndexOf("%>");
+
+		if ((x != -1) && (x < (attributeValue.length() - 2))) {
+			String literalString = StringUtil.quote(
+				attributeValue.substring(x + 2), StringPool.QUOTE);
+
+			attributeValue = StringBundler.concat(
+				attributeValue.substring(0, x), "+ ", literalString, " %>");
+		}
+
+		return attributeValue;
+	}
+
+	private static final String _CHECK_CLAY_ALERT_MESSAGE_KEY =
+		"checkClayAlertMessage";
+
 	private static final String _JAVA_SOURCE_REPLACEMENT = "__JAVA_SOURCE__";
 
 	private static final String[] _SINGLE_LINE_TAG_WHITELIST = {
@@ -608,10 +673,14 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 
 	private static final Pattern _javaSourceInsideTagPattern = Pattern.compile(
 		"<%.*?%>");
+	private static final Pattern _languageUtilPattern = Pattern.compile(
+		"<%= LanguageUtil\\.get\\(\\w+, (.+)\\) %>");
 	private static final Pattern _messageArgumentArrayPattern = Pattern.compile(
 		"^(<%= )new \\w+\\[\\] \\{([^<>]+)\\}( %>)$");
 	private static final Pattern _styleAttributePattern = Pattern.compile(
 		"(\\A|\\W)([a-z\\-]+)\\s*:");
+	private static final Pattern _taglibNamePattern = Pattern.compile(
+		"(aui|c|chart|clay|display|liferay(-[\\w-]+)|portlet|soy):.+");
 
 	private List<String> _allFileNames;
 	private final Map<String, Map<String, String>> _classSetMethodsMap =

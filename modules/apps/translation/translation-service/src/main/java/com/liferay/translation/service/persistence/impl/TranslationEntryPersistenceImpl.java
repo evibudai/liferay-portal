@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.service.persistence.impl;
@@ -39,7 +30,7 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.translation.exception.NoSuchEntryException;
 import com.liferay.translation.model.TranslationEntry;
 import com.liferay.translation.model.TranslationEntryTable;
@@ -51,7 +42,6 @@ import com.liferay.translation.service.persistence.impl.constants.TranslationPer
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -720,21 +710,21 @@ public class TranslationEntryPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			TranslationEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			TranslationEntry.class);
 
 		if (result instanceof TranslationEntry) {
 			TranslationEntry translationEntry = (TranslationEntry)result;
@@ -744,6 +734,15 @@ public class TranslationEntryPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						TranslationEntry.class,
+						translationEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2148,21 +2147,21 @@ public class TranslationEntryPersistenceImpl
 
 		languageId = Objects.toString(languageId, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			TranslationEntry.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {classNameId, classPK, languageId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByC_C_L, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			TranslationEntry.class);
 
 		if (result instanceof TranslationEntry) {
 			TranslationEntry translationEntry = (TranslationEntry)result;
@@ -2173,6 +2172,15 @@ public class TranslationEntryPersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						TranslationEntry.class,
+						translationEntry.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2517,7 +2525,7 @@ public class TranslationEntryPersistenceImpl
 		translationEntry.setNew(true);
 		translationEntry.setPrimaryKey(translationEntryId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		translationEntry.setUuid(uuid);
 
@@ -2639,7 +2647,7 @@ public class TranslationEntryPersistenceImpl
 			(TranslationEntryModelImpl)translationEntry;
 
 		if (Validator.isNull(translationEntry.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			translationEntry.setUuid(uuid);
 		}
@@ -3291,30 +3299,14 @@ public class TranslationEntryPersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "languageId"}, false);
 
-		_setTranslationEntryUtilPersistence(this);
+		TranslationEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setTranslationEntryUtilPersistence(null);
+		TranslationEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(TranslationEntryImpl.class.getName());
-	}
-
-	private void _setTranslationEntryUtilPersistence(
-		TranslationEntryPersistence translationEntryPersistence) {
-
-		try {
-			Field field = TranslationEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, translationEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -3382,8 +3374,5 @@ public class TranslationEntryPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

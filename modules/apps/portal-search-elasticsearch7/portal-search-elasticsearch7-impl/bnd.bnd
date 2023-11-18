@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Search Elasticsearch 7 Implementation
 Bundle-SymbolicName: com.liferay.portal.search.elasticsearch7.impl
-Bundle-Version: 6.0.65
+Bundle-Version: 6.0.98
 Import-Package:\
 	!com.barchart.udt.*,\
 	\
@@ -70,7 +70,6 @@ Import-Package:\
 	!org.apache.commons.csv.*,\
 	!org.apache.commons.io.*,\
 	!org.apache.commons.lang.*,\
-	!org.apache.http.*,\
 	!org.apache.ivy.*,\
 	!org.apache.kafka.clients.producer.*,\
 	!org.apache.log.*,\
@@ -108,7 +107,6 @@ Import-Package:\
 	!org.jctools.queues.*,\
 	\
 	!org.joda.convert.*,\
-	!org.joda.time.*,\
 	\
 	!org.junit.*,\
 	\
@@ -127,6 +125,8 @@ Import-Package:\
 	!sun.security.*,\
 	\
 	com.liferay.portal.search.analysis,\
+	\
+	org.joda.time.format,\
 	\
 	*
 -dsannotations-options: inherit

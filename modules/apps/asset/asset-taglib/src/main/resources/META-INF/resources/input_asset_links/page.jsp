@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -19,10 +10,8 @@
 <liferay-util:buffer
 	var="removeLinkIcon"
 >
-	<liferay-ui:icon
-		icon="times-circle"
-		markupView="lexicon"
-		message="remove"
+	<clay:icon
+		symbol="times-circle"
 	/>
 </liferay-util:buffer>
 
@@ -50,7 +39,7 @@
 	/>
 
 	<liferay-ui:search-container-row
-		className="com.liferay.asset.kernel.model.AssetLink"
+		className="com.liferay.asset.link.model.AssetLink"
 		keyProperty="entryId2"
 		modelVar="assetLink"
 	>
@@ -75,10 +64,17 @@
 			</p>
 		</liferay-ui:search-container-column-text>
 
-		<liferay-ui:search-container-column-text
-			cssClass="text-right"
-		>
-			<a class="modify-link" data-rowId="<%= assetLinkEntry.getEntryId() %>" href="javascript:void(0);"><%= removeLinkIcon %></a>
+		<liferay-ui:search-container-column-text>
+			<clay:button
+				aria-label='<%= LanguageUtil.get(request, "remove") %>'
+				borderless="<%= true %>"
+				cssClass="float-right lfr-portal-tooltip modify-link"
+				data-rowId="<%= assetLinkEntry.getEntryId() %>"
+				displayType="secondary"
+				icon="times-circle"
+				title="remove"
+				type="button"
+			/>
 		</liferay-ui:search-container-column-text>
 	</liferay-ui:search-container-row>
 

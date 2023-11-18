@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
 
@@ -26,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -39,7 +39,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify if the user can write a text on the Rich Text Field (when uploading a Document Type)"
-	@priority = "5"
+	@priority = 5
 	test InsertTextOnRichTextOnUpload {
 		property portal.acceptance = "false";
 
@@ -71,7 +71,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user Can localize the field data"
-	@priority = "4"
+	@priority = 4
 	test LocalizationOfRichTextPersists {
 		property portal.acceptance = "false";
 
@@ -108,8 +108,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user Can repeat the field when it was set as 'repeatable' (when uploading a Document Type)"
-	@priority = "5"
+	@priority = 5
 	test RepeatRichTextOnUpload {
+		property ci.retries.disabled = "true";
 		property portal.acceptance = "false";
 
 		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Rich Text");
@@ -131,12 +132,12 @@ definition {
 			rowEntry = "DM Document Type");
 
 		DataEngine.assertFieldRepeated(
-			fieldName = "RichText",
-			index = "2");
+			fieldName = "Rich Text",
+			index = 2);
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user Can set the field name (Field Reference) with valid and invalid characters"
-	@priority = "4"
+	@priority = 4
 	test SetFieldReferenceOfRichTextWithValidAndInvalidCharacters {
 		property portal.acceptance = "false";
 
@@ -168,7 +169,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user Can define a Field Label and a Tip (Help Text)"
-	@priority = "5"
+	@priority = 5
 	test SetLabelTextOfRichTextAndHelpText {
 		property portal.acceptance = "false";
 
@@ -187,7 +188,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user can set Searchable as Disabled and as Text"
-	@priority = "4"
+	@priority = 4
 	test SetRichTextSearchableByTextAndDisable {
 		DataEngine.editFieldSearchable(
 			fieldFieldLabel = "Rich Text",
@@ -215,7 +216,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user can hide/show the field label"
-	@priority = "3"
+	@priority = 3
 	test ShowAndHideRichTextLabel {
 		DataEngine.toggleShowLabel(fieldLabel = "Rich Text");
 
@@ -239,7 +240,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify the Field set as 'Required' and that a user can upload a Document Type with rich text as a required field"
-	@priority = "4"
+	@priority = 4
 	test UploadWithRequiredRichText {
 		property portal.acceptance = "false";
 
@@ -256,7 +257,7 @@ definition {
 		Button.clickPublish();
 
 		AssertTextEquals.assertPartialText(
-			locator1 = "Message#WARNING_FEEDBACK",
+			locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 			value1 = "This field is required.");
 
 		CKEditor.addContentInWebContent(
@@ -269,7 +270,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98076. Verify that a user can see the Help Text on the Upload"
-	@priority = "4"
+	@priority = 4
 	test VerifyRichFieldHelpTextOnUpload {
 		DataEngine.editFieldTip(
 			fieldFieldLabel = "Rich Text",

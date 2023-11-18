@@ -4,38 +4,217 @@ definition {
 		Site.openSitesAdmin();
 
 		Site.addSiteTemplateCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			siteTemplateName = "Raylife AP");
+	}
+
+	macro assertApplicationNumber {
+		var applicationvalue = selenium.getText("RaylifeAP#APPLICATIONS_NUMBER");
+
+		AssertElementNotPresent(locator1 = ${applicationvalue});
+	}
+
+	macro assertClaimNumberVisible {
+		AssertVisible(locator1 = "RaylifeAP#CLAIM_NUMBER");
+	}
+
+	macro assertFieldRequiredMessage {
+		AssertElementPresent(
+			key_field = ${field},
+			locator1 = "RaylifeAP#FIELD_REQUIRED_MESSAGE");
+	}
+
+	macro assertNotViewFilterOptions {
+		for (var optionList : list ${options}) {
+			AssertNotVisible(
+				key_option = ${optionList},
+				locator1 = "RaylifeAP#RESPONSIVE_FILTER_OPTIONS");
+		}
 	}
 
 	macro assertPageHeader {
 		AssertElementPresent(
-			key_header = "${key_header}",
+			key_header = ${key_header},
 			locator1 = "RaylifeAP#COMPONENT_HEADER");
+	}
+
+	macro assertPolicyDetailPage {
+		AssertVisible(locator1 = "RaylifeAP#POLICY_DETAIL_TITLE");
+	}
+
+	macro assertQuantity {
+		var key_quantity = ${text};
+
+		AssertVisible(locator1 = "RaylifeAP#ASSERT_QUANTITY");
+	}
+
+	macro assertSettledStatus {
+		AssertVisible(locator1 = "RaylifeAP#SETTLED_STATUS");
+	}
+
+	macro assertTableElement {
+		AssertElementPresent(
+			key_colunmPosition = ${column},
+			key_linePosition = ${line},
+			key_text = ${text},
+			locator1 = "RaylifeAP#TABLE_ELEMENT_BY_POSITION");
+	}
+
+	macro assertTableValue {
+		AssertElementPresent(
+			key_product = ${product},
+			key_status = ${status},
+			locator1 = "RaylifeAP#APPLICATIONS_TABLE_KEBAB");
+	}
+
+	macro assertTextAtTable {
+		var key_linePosition = ${linePosition};
+		var key_colunmPosition = ${lineColunm};
+		var key_text = ${text};
+
+		AssertTextEquals(
+			locator1 = "RaylifeAP#TABLE_ELEMENT_BY_POSITION",
+			value1 = ${text});
+	}
+
+	macro assertViewFilterOptions {
+		for (var optionList : list ${options}) {
+			AssertVisible(
+				key_option = ${optionList},
+				locator1 = "RaylifeAP#RESPONSIVE_FILTER_OPTIONS");
+		}
 	}
 
 	macro assertVisibleSidebar {
 		AssertVisible(
-			key_menuSidebar = "${key_menuSidebar}",
+			key_menuSidebar = ${key_menuSidebar},
 			locator1 = "RaylifeAP#MENU_SIDEBAR");
+	}
+
+	macro clickInApplicationKebabOption {
+		Click(
+			key_product = ${product},
+			key_status = ${status},
+			locator1 = "RaylifeAP#APPLICATIONS_TABLE_KEBAB");
+
+		Click(
+			key_option = ${option},
+			locator1 = "RaylifeAP#KEBAB_OPTION");
+	}
+
+	macro clickInApplicationNumber {
+		Click(
+			key_product = ${product},
+			key_status = ${status},
+			locator1 = "RaylifeAP#APPLICATIONS_NUMBER_WITH_STATUS");
+	}
+
+	macro clickOnAllAplications {
+		Button.click(button = "All Applications");
+	}
+
+	macro clickOnBackToClaimsPage {
+		Click(locator1 = "RaylifeAP#CLAIM_BACK_BUTTON");
+	}
+
+	macro clickOnClaimNumber {
+		Click(locator1 = "RaylifeAP#CLAIM_NUMBER");
+	}
+
+	macro clickOnFilter {
+		Click(locator1 = "RaylifeAP#ICON_FILTER");
+	}
+
+	macro clickOnPolicyNumberOnClaimDetais {
+		Click(locator1 = "RaylifeAP#POLICY_NUMBER");
 	}
 
 	macro clickOnSubsectionTasks {
 		Click(
-			key_subsection = "${key_subsection}",
+			key_subsection = ${key_subsection},
 			locator1 = "RaylifeAP#TASKS_SECTION");
+	}
+
+	macro deleteAllCreatedEntries {
+		var entry = ${searchTerm};
+
+		ObjectAdmin.editObjectDeletionType(
+			deletionType = "Cascade",
+			field = "Deletion",
+			label = "Raylife Application",
+			labelName = "RaylifeQuote");
+
+		Site.openSitesAdmin();
+
+		ObjectAdmin.openObjectAdmin();
+
+		Search.searchCP(searchTerm = ${searchTerm});
+
+		if (IsElementPresent(key_entry = ${entry}, locator1 = "ObjectPortlet#ENTRY_KEBAB_MENU")) {
+			ObjectPortlet.deleteEntry(entry = ${searchTerm});
+		}
 	}
 
 	macro expandedSidebar {
 		MouseOver(
-			key_menuSidebar = "${key_menuSidebar}",
+			key_menuSidebar = ${key_menuSidebar},
 			locator1 = "RaylifeAP#MENU_SIDEBAR");
 	}
 
+	macro gotoEllipsisMenuItem {
+		Click.waitForMenuToggleJSClick(locator1 = "RaylifeAP#ANY_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = ${menuItem});
+	}
+
+	macro goToRaylifeAPSiteWithRefresh {
+		Navigator.openSiteURL(siteName = "Raylife AP");
+
+		Refresh();
+	}
+
+	macro goToRaylifeUserProfileMenu {
+		Click(locator1 = "UserBar#USER_AVATAR_ICON");
+
+		ScrollWebElementIntoView(
+			key_dropdownItem = "My Sites",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
+
+		Click(
+			key_dropdownItem = "My Sites",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Navigator.gotoNavItem(navItem = "My Sites");
+
+		SiteSelector.selectSite(site = ${raylifeSite});
+
+		Refresh();
+	}
+
 	macro mouseOverSidebar {
-		var key_menu = "${menu}";
+		var key_menu = ${menu};
 
 		MouseOver(locator1 = "RaylifeAP#MENU_SIDEBAR");
+	}
+
+	macro search {
+		WaitForElementPresent(locator1 = "RaylifeAP#SEARCH");
+
+		AssertElementPresent(locator1 = "RaylifeAP#SEARCH");
+
+		Type(
+			locator1 = "RaylifeAP#SEARCH",
+			value1 = ${searchTerm});
+
+		KeyPress(
+			locator1 = "RaylifeAP#SEARCH",
+			value1 = "\RETURN");
+
+		if (!(isSet(modal))) {
+			WaitForLiferayEvent.initializeLiferayEventLog();
+		}
 	}
 
 	macro signIn {
@@ -43,31 +222,15 @@ definition {
 			Type(
 				labelTitle = "Email Address",
 				locator1 = "RaylifeAP#SIGN_IN_FORM",
-				value1 = "${emailAddress}");
-		}
-		else {
-			Type(
-				labelTitle = "Email Address",
-				locator1 = "RaylifeAP#SIGN_IN_FORM",
-				value1 = "test@liferay.com");
+				value1 = ${emailAddress});
 		}
 
 		if (isSet(password)) {
 			Type(
 				labelTitle = "Password",
 				locator1 = "RaylifeAP#SIGN_IN_FORM",
-				value1 = "${password}");
+				value1 = ${password});
 		}
-		else {
-			Type(
-				labelTitle = "Password",
-				locator1 = "RaylifeAP#SIGN_IN_FORM",
-				value1 = "test");
-		}
-
-		Check(
-			inputFieldId = "rememberMe",
-			locator1 = "TextInput#INPUT_ID");
 
 		Click(locator1 = "Button#SIGN_IN");
 	}
@@ -82,8 +245,32 @@ definition {
 		MenuItem.clickNoError(menuItem = "Delete");
 
 		Click(locator1 = "Button#MODAL_DELETE");
+	}
 
-		Alert.viewSuccessMessage();
+	macro userAvatarFunctionality {
+		Click(locator1 = "RaylifeAP#USER_AVATAR");
+
+		Click(
+			key_option = ${option},
+			locator1 = "RaylifeAP#USER_AVATAR_OPTION");
+	}
+
+	macro userLoginInRaylife {
+		var passwordRaylife = "portal4all";
+		var email = "${email}@mailinator.com";
+
+		Navigator.openURL();
+
+		SignIn._signIn(
+			licenseExpired = "true",
+			userEmailAddress = ${email},
+			userPassword = ${passwordRaylife});
+
+		if (IsElementPresent(key_text = "I Agree", locator1 = "Button#ANY")) {
+			Button.click(button = "I Agree");
+
+			User.answerPasswordReminder();
+		}
 	}
 
 }

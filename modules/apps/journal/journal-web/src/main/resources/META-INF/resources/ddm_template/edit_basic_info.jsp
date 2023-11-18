@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -29,13 +20,17 @@ DDMStructure ddmStructure = journalEditDDMTemplateDisplayContext.getDDMStructure
 <div class="form-group">
 	<label class="control-label" for="<portlet:namespace />ddmStructure">
 		<liferay-ui:message key="structure" />
-
-		<liferay-ui:icon-help message="structure-help" />
 	</label>
+
+	<span class="icon-help lfr-portal-tooltip" tabindex="0" title="<%= LanguageUtil.get(request, "journal-template-cacheable-help") %>">
+		<clay:icon
+			symbol="question-circle-full"
+		/>
+	</span>
 
 	<div class="input-group">
 		<div class="input-group-item">
-			<input placeholder="<%= LanguageUtil.format(locale, "select-x", "structure") %>" id="<%= liferayPortletResponse.getNamespace() %>ddmStructure" name="structure" readonly value="<%= (ddmStructure != null) ? ddmStructure.getName(locale) : StringPool.BLANK %>" class="form-control lfr-input-resource" />
+			<input placeholder="<%= LanguageUtil.format(locale, "no-x-selected", "structure") %>" id="<%= liferayPortletResponse.getNamespace() %>ddmStructure" name="structure" readonly value="<%= (ddmStructure != null) ? ddmStructure.getName(locale) : StringPool.BLANK %>" class="form-control lfr-input-resource" />
 		</div>
 
 		<c:if test="<%= (ddmTemplate == null) || (ddmTemplate.getClassPK() == 0) %>">
@@ -45,6 +40,7 @@ DDMStructure ddmStructure = journalEditDDMTemplateDisplayContext.getDDMStructure
 					icon="plus"
 					id='<%= liferayPortletResponse.getNamespace() + "selectDDMStructure" %>'
 					small="<%= true %>"
+					title='<%= LanguageUtil.format(locale, "select-x", "structure") %>'
 				/>
 			</div>
 		</c:if>
@@ -73,7 +69,20 @@ DDMStructure ddmStructure = journalEditDDMTemplateDisplayContext.getDDMStructure
 	<aui:input name="webDavURL" type="resource" value="<%= ddmTemplate.getWebDavURL(themeDisplay, WebDAVUtil.getStorageToken(portlet)) %>" />
 </c:if>
 
-<aui:input helpMessage="journal-template-cacheable-help" labelCssClass="control-label" name="cacheable" value="<%= journalEditDDMTemplateDisplayContext.isCacheable() %>" />
+<div class="form-group form-inline">
+	<clay:checkbox
+		checked="<%= journalEditDDMTemplateDisplayContext.isCacheable() %>"
+		id='<%= liferayPortletResponse.getNamespace() + "cacheable" %>'
+		label="cacheable"
+		name='<%= liferayPortletResponse.getNamespace() + "cacheable" %>'
+	/>
+
+	<span class="c-ml-1 icon-help lfr-portal-tooltip" tabindex="0" title="<%= LanguageUtil.get(request, "journal-template-cacheable-help") %>">
+		<clay:icon
+			symbol="question-circle-full"
+		/>
+	</span>
+</div>
 
 <aui:script>
 	Liferay.Util.toggleBoxes(
@@ -86,10 +95,6 @@ DDMStructure ddmStructure = journalEditDDMTemplateDisplayContext.getDDMStructure
 	<aui:script sandbox="<%= true %>">
 		const selectDDMStructure = document.getElementById(
 			'<portlet:namespace />selectDDMStructure'
-		);
-
-		const ddmStructure = document.getElementById(
-			'<portlet:namespace />ddmStructure'
 		);
 
 		const onClick = (event) => {
@@ -108,17 +113,16 @@ DDMStructure ddmStructure = journalEditDDMTemplateDisplayContext.getDDMStructure
 					}
 				},
 				selectEventName: '<portlet:namespace />selectDDMStructure',
-				title: '<%= UnicodeLanguageUtil.get(request, "structures") %>',
+				title: Liferay.Util.sub(
+					'<%= UnicodeLanguageUtil.get(request, "select-x") %>',
+					'<%= UnicodeLanguageUtil.get(request, "structure") %>'
+				),
 				url: '<%= journalDisplayContext.getSelectDDMStructureURL() %>>',
 			});
 		};
 
 		if (selectDDMStructure) {
 			selectDDMStructure.addEventListener('click', onClick);
-		}
-
-		if (ddmStructure) {
-			ddmStructure.addEventListener('click', onClick);
 		}
 	</aui:script>
 </c:if>

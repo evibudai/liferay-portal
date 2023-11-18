@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.site.setting.internal.helper.v1_0;
@@ -18,7 +9,7 @@ import com.liferay.commerce.exception.NoSuchWarehouseException;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.headless.commerce.admin.site.setting.dto.v1_0.Warehouse;
-import com.liferay.headless.commerce.admin.site.setting.internal.mapper.v1_0.DTOMapper;
+import com.liferay.headless.commerce.admin.site.setting.internal.mapper.v1_0.util.DTOMapperUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -47,7 +38,7 @@ public class WarehouseHelper {
 			CommerceInventoryWarehouse commerceInventoryWarehouse =
 				updateWarehouse(warehouse.getId(), warehouse, user);
 
-			return _dtoMapper.modelToDTO(commerceInventoryWarehouse);
+			return DTOMapperUtil.modelToDTO(commerceInventoryWarehouse);
 		}
 		catch (NoSuchWarehouseException noSuchWarehouseException) {
 			if (_log.isDebugEnabled()) {
@@ -70,7 +61,7 @@ public class WarehouseHelper {
 				_serviceContextHelper.getServiceContext(
 					groupId, new long[0], user, true));
 
-		return _dtoMapper.modelToDTO(commerceInventoryWarehouse);
+		return DTOMapperUtil.modelToDTO(commerceInventoryWarehouse);
 	}
 
 	public void deleteWarehouse(Long id) throws PortalException {
@@ -78,7 +69,7 @@ public class WarehouseHelper {
 	}
 
 	public Warehouse getWarehouse(Long id) throws PortalException {
-		return _dtoMapper.modelToDTO(
+		return DTOMapperUtil.modelToDTO(
 			_commerceInventoryWarehouseService.getCommerceInventoryWarehouse(
 				id));
 	}
@@ -171,9 +162,6 @@ public class WarehouseHelper {
 	@Reference
 	private CommerceInventoryWarehouseService
 		_commerceInventoryWarehouseService;
-
-	@Reference
-	private DTOMapper _dtoMapper;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

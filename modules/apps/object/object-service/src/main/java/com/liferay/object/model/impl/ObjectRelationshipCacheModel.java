@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -78,7 +69,7 @@ public class ObjectRelationshipCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(37);
+		StringBundler sb = new StringBundler(41);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -108,12 +99,16 @@ public class ObjectRelationshipCacheModel
 		sb.append(deletionType);
 		sb.append(", dbTableName=");
 		sb.append(dbTableName);
+		sb.append(", edge=");
+		sb.append(edge);
 		sb.append(", label=");
 		sb.append(label);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", reverse=");
 		sb.append(reverse);
+		sb.append(", system=");
+		sb.append(system);
 		sb.append(", type=");
 		sb.append(type);
 		sb.append("}");
@@ -180,6 +175,8 @@ public class ObjectRelationshipCacheModel
 			objectRelationshipImpl.setDBTableName(dbTableName);
 		}
 
+		objectRelationshipImpl.setEdge(edge);
+
 		if (label == null) {
 			objectRelationshipImpl.setLabel("");
 		}
@@ -195,6 +192,7 @@ public class ObjectRelationshipCacheModel
 		}
 
 		objectRelationshipImpl.setReverse(reverse);
+		objectRelationshipImpl.setSystem(system);
 
 		if (type == null) {
 			objectRelationshipImpl.setType("");
@@ -231,10 +229,14 @@ public class ObjectRelationshipCacheModel
 		parameterObjectFieldId = objectInput.readLong();
 		deletionType = objectInput.readUTF();
 		dbTableName = objectInput.readUTF();
+
+		edge = objectInput.readBoolean();
 		label = objectInput.readUTF();
 		name = objectInput.readUTF();
 
 		reverse = objectInput.readBoolean();
+
+		system = objectInput.readBoolean();
 		type = objectInput.readUTF();
 	}
 
@@ -287,6 +289,8 @@ public class ObjectRelationshipCacheModel
 			objectOutput.writeUTF(dbTableName);
 		}
 
+		objectOutput.writeBoolean(edge);
+
 		if (label == null) {
 			objectOutput.writeUTF("");
 		}
@@ -302,6 +306,8 @@ public class ObjectRelationshipCacheModel
 		}
 
 		objectOutput.writeBoolean(reverse);
+
+		objectOutput.writeBoolean(system);
 
 		if (type == null) {
 			objectOutput.writeUTF("");
@@ -325,9 +331,11 @@ public class ObjectRelationshipCacheModel
 	public long parameterObjectFieldId;
 	public String deletionType;
 	public String dbTableName;
+	public boolean edge;
 	public String label;
 	public String name;
 	public boolean reverse;
+	public boolean system;
 	public String type;
 
 }

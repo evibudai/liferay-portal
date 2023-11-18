@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -38,6 +29,7 @@ import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -64,6 +56,11 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @CTAware
+@OSGiBeanProperties(
+	property = {
+		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntryType"
+	}
+)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -94,15 +91,16 @@ public interface DLFileEntryTypeLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public DLFileEntryType addDLFileEntryType(DLFileEntryType dlFileEntryType);
 
-	public void addDLFolderDLFileEntryType(
+	public boolean addDLFolderDLFileEntryType(
 		long folderId, DLFileEntryType dlFileEntryType);
 
-	public void addDLFolderDLFileEntryType(long folderId, long fileEntryTypeId);
+	public boolean addDLFolderDLFileEntryType(
+		long folderId, long fileEntryTypeId);
 
-	public void addDLFolderDLFileEntryTypes(
+	public boolean addDLFolderDLFileEntryTypes(
 		long folderId, List<DLFileEntryType> dlFileEntryTypes);
 
-	public void addDLFolderDLFileEntryTypes(
+	public boolean addDLFolderDLFileEntryTypes(
 		long folderId, long[] fileEntryTypeIds);
 
 	public DLFileEntryType addFileEntryType(
@@ -122,29 +120,6 @@ public interface DLFileEntryTypeLocalService
 			long userId, long groupId, long dataDefinitionId,
 			String fileEntryTypeKey, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, String fileEntryTypeKey,
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			long[] ddmStructureIds, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addFileEntryType(long, long, String, Map, Map, long,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, String name, String description,
-			long[] ddmStructureIds, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void cascadeFileEntryTypes(long userId, DLFolder dlFolder)
@@ -514,27 +489,6 @@ public interface DLFileEntryTypeLocalService
 
 	public DLFileEntry updateFileEntryFileEntryType(
 			DLFileEntry dlFileEntry, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	public void updateFileEntryType(
-			long userId, long fileEntryTypeId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, long[] ddmStructureIds,
-			ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateFileEntryType(long, Map, Map)}
-	 */
-	@Deprecated
-	public void updateFileEntryType(
-			long userId, long fileEntryTypeId, String name, String description,
-			long[] ddmStructureIds, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DLFileEntryType updateFileEntryType(

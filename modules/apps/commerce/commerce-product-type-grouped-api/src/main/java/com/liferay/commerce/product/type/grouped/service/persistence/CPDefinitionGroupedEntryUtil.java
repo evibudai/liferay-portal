@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service.persistence;
@@ -734,6 +725,185 @@ public class CPDefinitionGroupedEntryUtil {
 	}
 
 	/**
+	 * Returns all the cp definition grouped entries where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @return the matching cp definition grouped entries
+	 */
+	public static List<CPDefinitionGroupedEntry> findByEntryCProductId(
+		long entryCProductId) {
+
+		return getPersistence().findByEntryCProductId(entryCProductId);
+	}
+
+	/**
+	 * Returns a range of all the cp definition grouped entries where entryCProductId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionGroupedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param start the lower bound of the range of cp definition grouped entries
+	 * @param end the upper bound of the range of cp definition grouped entries (not inclusive)
+	 * @return the range of matching cp definition grouped entries
+	 */
+	public static List<CPDefinitionGroupedEntry> findByEntryCProductId(
+		long entryCProductId, int start, int end) {
+
+		return getPersistence().findByEntryCProductId(
+			entryCProductId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp definition grouped entries where entryCProductId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionGroupedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param start the lower bound of the range of cp definition grouped entries
+	 * @param end the upper bound of the range of cp definition grouped entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp definition grouped entries
+	 */
+	public static List<CPDefinitionGroupedEntry> findByEntryCProductId(
+		long entryCProductId, int start, int end,
+		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator) {
+
+		return getPersistence().findByEntryCProductId(
+			entryCProductId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp definition grouped entries where entryCProductId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionGroupedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param start the lower bound of the range of cp definition grouped entries
+	 * @param end the upper bound of the range of cp definition grouped entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp definition grouped entries
+	 */
+	public static List<CPDefinitionGroupedEntry> findByEntryCProductId(
+		long entryCProductId, int start, int end,
+		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByEntryCProductId(
+			entryCProductId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first cp definition grouped entry in the ordered set where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp definition grouped entry
+	 * @throws NoSuchCPDefinitionGroupedEntryException if a matching cp definition grouped entry could not be found
+	 */
+	public static CPDefinitionGroupedEntry findByEntryCProductId_First(
+			long entryCProductId,
+			OrderByComparator<CPDefinitionGroupedEntry> orderByComparator)
+		throws com.liferay.commerce.product.type.grouped.exception.
+			NoSuchCPDefinitionGroupedEntryException {
+
+		return getPersistence().findByEntryCProductId_First(
+			entryCProductId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first cp definition grouped entry in the ordered set where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp definition grouped entry, or <code>null</code> if a matching cp definition grouped entry could not be found
+	 */
+	public static CPDefinitionGroupedEntry fetchByEntryCProductId_First(
+		long entryCProductId,
+		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator) {
+
+		return getPersistence().fetchByEntryCProductId_First(
+			entryCProductId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp definition grouped entry in the ordered set where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp definition grouped entry
+	 * @throws NoSuchCPDefinitionGroupedEntryException if a matching cp definition grouped entry could not be found
+	 */
+	public static CPDefinitionGroupedEntry findByEntryCProductId_Last(
+			long entryCProductId,
+			OrderByComparator<CPDefinitionGroupedEntry> orderByComparator)
+		throws com.liferay.commerce.product.type.grouped.exception.
+			NoSuchCPDefinitionGroupedEntryException {
+
+		return getPersistence().findByEntryCProductId_Last(
+			entryCProductId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp definition grouped entry in the ordered set where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp definition grouped entry, or <code>null</code> if a matching cp definition grouped entry could not be found
+	 */
+	public static CPDefinitionGroupedEntry fetchByEntryCProductId_Last(
+		long entryCProductId,
+		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator) {
+
+		return getPersistence().fetchByEntryCProductId_Last(
+			entryCProductId, orderByComparator);
+	}
+
+	/**
+	 * Returns the cp definition grouped entries before and after the current cp definition grouped entry in the ordered set where entryCProductId = &#63;.
+	 *
+	 * @param CPDefinitionGroupedEntryId the primary key of the current cp definition grouped entry
+	 * @param entryCProductId the entry c product ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp definition grouped entry
+	 * @throws NoSuchCPDefinitionGroupedEntryException if a cp definition grouped entry with the primary key could not be found
+	 */
+	public static CPDefinitionGroupedEntry[] findByEntryCProductId_PrevAndNext(
+			long CPDefinitionGroupedEntryId, long entryCProductId,
+			OrderByComparator<CPDefinitionGroupedEntry> orderByComparator)
+		throws com.liferay.commerce.product.type.grouped.exception.
+			NoSuchCPDefinitionGroupedEntryException {
+
+		return getPersistence().findByEntryCProductId_PrevAndNext(
+			CPDefinitionGroupedEntryId, entryCProductId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the cp definition grouped entries where entryCProductId = &#63; from the database.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 */
+	public static void removeByEntryCProductId(long entryCProductId) {
+		getPersistence().removeByEntryCProductId(entryCProductId);
+	}
+
+	/**
+	 * Returns the number of cp definition grouped entries where entryCProductId = &#63;.
+	 *
+	 * @param entryCProductId the entry c product ID
+	 * @return the number of matching cp definition grouped entries
+	 */
+	public static int countByEntryCProductId(long entryCProductId) {
+		return getPersistence().countByEntryCProductId(entryCProductId);
+	}
+
+	/**
 	 * Returns the cp definition grouped entry where CPDefinitionId = &#63; and entryCProductId = &#63; or throws a <code>NoSuchCPDefinitionGroupedEntryException</code> if it could not be found.
 	 *
 	 * @param CPDefinitionId the cp definition ID
@@ -968,6 +1138,12 @@ public class CPDefinitionGroupedEntryUtil {
 
 	public static CPDefinitionGroupedEntryPersistence getPersistence() {
 		return _persistence;
+	}
+
+	public static void setPersistence(
+		CPDefinitionGroupedEntryPersistence persistence) {
+
+		_persistence = persistence;
 	}
 
 	private static volatile CPDefinitionGroupedEntryPersistence _persistence;

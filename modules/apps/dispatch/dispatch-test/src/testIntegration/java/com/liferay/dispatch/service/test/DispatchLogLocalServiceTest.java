@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dispatch.service.test;
@@ -19,6 +10,7 @@ import com.liferay.dispatch.exception.DispatchLogStartDateException;
 import com.liferay.dispatch.exception.DispatchLogStatusException;
 import com.liferay.dispatch.exception.NoSuchTriggerException;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
+import com.liferay.dispatch.internal.messaging.TestDispatchTaskExecutor;
 import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchLogLocalService;
@@ -32,6 +24,7 @@ import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -39,8 +32,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -88,7 +79,9 @@ public class DispatchLogLocalServiceTest {
 			NoSuchTriggerException.class, exceptionClass);
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST,
+				1));
 
 		try {
 			Date startDate = dispatchLog.getStartDate();
@@ -179,7 +172,9 @@ public class DispatchLogLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST,
+				1));
 
 		DispatchLog dispatchLog =
 			_dispatchLogLocalService.fetchLatestDispatchLog(
@@ -217,11 +212,10 @@ public class DispatchLogLocalServiceTest {
 
 		Assert.assertNotNull(dispatchLog);
 
-		Stream<DispatchLog> stream = dispatchLogs.stream();
-
 		_assertLatestStartDate(
 			dispatchLog,
-			stream.filter(
+			ListUtil.filter(
+				dispatchLogs,
 				item -> {
 					if (DispatchTaskStatus.valueOf(item.getStatus()) ==
 							DispatchTaskStatus.SUCCESSFUL) {
@@ -230,10 +224,7 @@ public class DispatchLogLocalServiceTest {
 					}
 
 					return false;
-				}
-			).collect(
-				Collectors.toList()
-			));
+				}));
 	}
 
 	@Test
@@ -243,7 +234,9 @@ public class DispatchLogLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST,
+				1));
 
 		_addDispatchLogs(
 			user, dispatchTrigger.getDispatchTriggerId(),
@@ -263,7 +256,9 @@ public class DispatchLogLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST,
+				1));
 
 		DispatchLog expectedDispatchLog = DispatchLogTestUtil.randomDispatchLog(
 			user, DispatchTaskStatus.FAILED);
@@ -298,7 +293,9 @@ public class DispatchLogLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST,
+				1));
 
 		DispatchLog expectedDispatchLog = DispatchLogTestUtil.randomDispatchLog(
 			user, DispatchTaskStatus.IN_PROGRESS);

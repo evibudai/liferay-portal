@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.web.internal.helper;
@@ -25,11 +16,8 @@ import com.liferay.user.associated.data.web.internal.display.UADApplicationSumma
 import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,18 +31,16 @@ public class UADApplicationSummaryHelper {
 	public List<UADAnonymizer<?>> getApplicationUADAnonymizers(
 		String applicationKey) {
 
-		Stream<UADDisplay<?>> uadDisplayStream =
-			_uadRegistry.getApplicationUADDisplayStream(applicationKey);
+		List<UADAnonymizer<?>> uadAnonymizers = new ArrayList<>();
 
-		return uadDisplayStream.map(
-			UADDisplay::getTypeClass
-		).map(
-			Class::getName
-		).map(
-			key -> _uadRegistry.getUADAnonymizer(key)
-		).collect(
-			Collectors.toList()
-		);
+		for (UADDisplay<?> uadDisplay :
+				_uadRegistry.getApplicationUADDisplays(applicationKey)) {
+
+			uadAnonymizers.add(
+				_uadRegistry.getUADAnonymizer(uadDisplay.getTypeKey()));
+		}
+
+		return uadAnonymizers;
 	}
 
 	public String getDefaultUADRegistryKey(String applicationKey) {
@@ -75,31 +61,28 @@ public class UADApplicationSummaryHelper {
 			return null;
 		}
 
-		Class<?> typeClass = uadDisplay.getTypeClass();
-
-		return typeClass.getName();
+		return uadDisplay.getTypeKey();
 	}
 
 	public int getTotalNonreviewableUADEntitiesCount(long userId) {
 		return _getNonreviewableUADEntitiesCount(
-			_uadRegistry.getNonreviewableUADAnonymizerStream(), userId);
+			_uadRegistry.getNonreviewableUADAnonymizers(), userId);
 	}
 
 	public int getTotalReviewableUADEntitiesCount(long userId) {
 		return _getReviewableUADEntitiesCount(
-			_uadRegistry.getUADDisplayStream(), userId);
+			_uadRegistry.getUADDisplays(), userId);
 	}
 
 	public UADApplicationSummaryDisplay getUADApplicationSummaryDisplay(
-		String applicationKey, List<UADDisplay<?>> uadDisplayStream,
-		long userId, long[] groupIds) {
+		String applicationKey, List<UADDisplay<?>> uadDisplays, long userId,
+		long[] groupIds) {
 
 		UADApplicationSummaryDisplay uadApplicationSummaryDisplay =
 			new UADApplicationSummaryDisplay();
 
 		uadApplicationSummaryDisplay.setCount(
-			_getReviewableUADEntitiesCount(
-				uadDisplayStream.stream(), userId, groupIds));
+			_getReviewableUADEntitiesCount(uadDisplays, userId, groupIds));
 		uadApplicationSummaryDisplay.setApplicationKey(applicationKey);
 
 		return uadApplicationSummaryDisplay;
@@ -121,27 +104,22 @@ public class UADApplicationSummaryHelper {
 		List<UADApplicationSummaryDisplay>
 			generatedUADApplicationSummaryDisplays = new ArrayList<>();
 
-		Set<String> applicationUADDisplaysKeySet =
-			_uadRegistry.getApplicationUADDisplaysKeySet();
-
 		int count = 0;
 
-		Iterator<String> iterator = applicationUADDisplaysKeySet.iterator();
+		for (String applicationKey :
+				_uadRegistry.getApplicationUADDisplaysKeySet()) {
 
-		while (iterator.hasNext()) {
-			String applicationKey = iterator.next();
+			List<UADDisplay<?>> applicationUADDisplays = new ArrayList<>();
 
-			Stream<UADDisplay<?>> uadDisplayStream =
-				_uadRegistry.getApplicationUADDisplayStream(applicationKey);
+			for (UADDisplay<?> uadDisplay :
+					_uadRegistry.getApplicationUADDisplays(applicationKey)) {
 
-			List<UADDisplay<?>> applicationUADDisplays =
-				uadDisplayStream.filter(
-					uadDisplay ->
-						ArrayUtil.isNotEmpty(groupIds) ==
-							uadDisplay.isSiteScoped()
-				).collect(
-					Collectors.toList()
-				);
+				if (ArrayUtil.isNotEmpty(groupIds) ==
+						uadDisplay.isSiteScoped()) {
+
+					applicationUADDisplays.add(uadDisplay);
+				}
+			}
 
 			if (ListUtil.isNotEmpty(applicationUADDisplays)) {
 				UADApplicationSummaryDisplay uadApplicationSummaryDisplay =
@@ -177,34 +155,50 @@ public class UADApplicationSummaryHelper {
 	}
 
 	private int _getNonreviewableUADEntitiesCount(
-		Stream<UADAnonymizer<?>> uadAnonymizerStream, long userId) {
+		Collection<UADAnonymizer<?>> uadAnonymizers, long userId) {
 
-		return uadAnonymizerStream.mapToInt(
-			uadAnonymizer -> {
-				try {
-					return (int)uadAnonymizer.count(userId);
-				}
-				catch (PortalException portalException) {
-					throw new SystemException(portalException);
-				}
+		int sum = 0;
+
+		for (UADAnonymizer<?> uadAnonymizer : uadAnonymizers) {
+			try {
+				int userIds = (int)uadAnonymizer.count(userId);
+
+				sum += userIds;
 			}
-		).sum();
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
+			}
+		}
+
+		return sum;
 	}
 
 	private int _getReviewableUADEntitiesCount(
-		Stream<UADDisplay<?>> uadDisplayStream, long userId) {
+		Collection<UADDisplay<?>> uadDisplays, long userId) {
 
-		return uadDisplayStream.mapToInt(
-			uadDisplay -> (int)uadDisplay.count(userId)
-		).sum();
+		int sum = 0;
+
+		for (UADDisplay<?> uadDisplay : uadDisplays) {
+			int userIds = (int)uadDisplay.count(userId);
+
+			sum += userIds;
+		}
+
+		return sum;
 	}
 
 	private int _getReviewableUADEntitiesCount(
-		Stream<UADDisplay<?>> uadDisplayStream, long userId, long[] groupIds) {
+		List<UADDisplay<?>> uadDisplays, long userId, long[] groupIds) {
 
-		return uadDisplayStream.mapToInt(
-			uadDisplay -> (int)uadDisplay.searchCount(userId, groupIds, null)
-		).sum();
+		int sum = 0;
+
+		for (UADDisplay<?> uadDisplay : uadDisplays) {
+			int userIds = (int)uadDisplay.searchCount(userId, groupIds, null);
+
+			sum += userIds;
+		}
+
+		return sum;
 	}
 
 	@Reference

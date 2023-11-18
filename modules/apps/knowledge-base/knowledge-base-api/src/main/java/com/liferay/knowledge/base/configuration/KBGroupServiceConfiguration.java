@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.configuration;
@@ -123,6 +114,42 @@ public interface KBGroupServiceConfiguration {
 	public String emailKBArticleUpdatedBody();
 
 	@Meta.AD(
+		deflt = "true", name = "email-kb-article-review-enabled",
+		required = false
+	)
+	public boolean emailKBArticleReviewEnabled();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_review_subject.tmpl}",
+		name = "email-kb-article-review-subject", required = false
+	)
+	public String emailKBArticleReviewSubject();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_review_body.tmpl}",
+		name = "email-kb-article-review-body", required = false
+	)
+	public String emailKBArticleReviewBody();
+
+	@Meta.AD(
+		deflt = "true", name = "email-kb-article-expired-enabled",
+		required = false
+	)
+	public boolean emailKBArticleExpiredEnabled();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_expired_subject.tmpl}",
+		name = "email-kb-article-expired-subject", required = false
+	)
+	public String emailKBArticleExpiredSubject();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_expired_body.tmpl}",
+		name = "email-kb-article-expired-body", required = false
+	)
+	public String emailKBArticleExpiredBody();
+
+	@Meta.AD(
 		deflt = "true",
 		name = "email-kb-article-suggestion-in-progress-enabled",
 		required = false
@@ -179,18 +206,19 @@ public interface KBGroupServiceConfiguration {
 	public String emailKBArticleSuggestionResolvedBody();
 
 	@Meta.AD(deflt = "true", name = "enable-rss", required = false)
-	public boolean enableRSS();
-
-	@Meta.AD(deflt = "20", name = "rss-delta", required = false)
-	public int rssDelta();
+	public boolean enableRss();
 
 	@Meta.AD(
-		deflt = "full-content", name = "rss-display-style", required = false
+		deflt = "${server-property://com.liferay.portal/search.container.page.default.delta}",
+		name = "rss-delta", required = false
+	)
+	public String rssDelta();
+
+	@Meta.AD(
+		deflt = "${server-property://com.liferay.portal/rss.feed.display.style.default}",
+		name = "rss-display-style", required = false
 	)
 	public String rssDisplayStyle();
-
-	@Meta.AD(deflt = "atom10", name = "rss-format", required = false)
-	public String rssFormat();
 
 	@Meta.AD(
 		deflt = "${server-property://com.liferay.portal/rss.feed.type.default}",

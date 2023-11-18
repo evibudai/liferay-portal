@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {TreeView as ClayTreeView} from '@clayui/core';
@@ -17,26 +8,40 @@ import ClayIcon from '@clayui/icon';
 import classnames from 'classnames';
 import {fetch, navigate, objectToFormData, openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useMemo, useState} from 'react';
 
+import getSearchItems from '../utils/getSearchItems';
+import normalizeItems from '../utils/normalizeItems';
+import showSuccessMessage from '../utils/showSuccessMessage';
 import ActionsDropdown from './ActionsDropdown';
+import SearchField from './SearchField';
 
 const ITEM_TYPES_SYMBOL = {
-	article: 'document-text',
-	folder: 'folder',
+	KBArticle: 'document-text',
+	KBFolder: 'folder',
 };
 
 const ITEM_TYPES = {
-	article: 'article',
-	folder: 'folder',
+	KBArticle: 'article',
+	KBFolder: 'folder',
 };
 
 export default function NavigationPanel({
-	items,
+	items: initialItems,
 	moveKBObjectURL,
 	portletNamespace,
 	selectedItemId,
 }) {
+	const items = useMemo(
+		() => normalizeItems(initialItems, portletNamespace),
+		[initialItems, portletNamespace]
+	);
+	const searchItems = useMemo(() => getSearchItems(initialItems), [
+		initialItems,
+	]);
+
+	const [searchActive, setSearchActive] = useState(false);
+
 	const handleClickItem = (event, item) => {
 		if (event.defaultPrevented) {
 			return;
@@ -85,6 +90,8 @@ export default function NavigationPanel({
 				if (!response.success) {
 					throw new Error(response.errorMessage);
 				}
+
+				showSuccessMessage(portletNamespace);
 			})
 			.catch(
 				({
@@ -102,60 +109,84 @@ export default function NavigationPanel({
 		return true;
 	};
 
+	const handleSearchChange = ({isSearchActive}) => {
+		setSearchActive(isSearchActive);
+	};
+
 	return (
-		<ClayTreeView
-			defaultItems={items}
-			defaultSelectedKeys={new Set([selectedItemId])}
-			dragAndDrop
-			nestedKey="children"
-			onItemMove={handleItemMove}
-			showExpanderOnHover={false}
-		>
-			{(item) => {
-				return (
-					<ClayTreeView.Item
-						actions={ActionsDropdown({actions: item.actions})}
-						onClick={(event) => {
-							handleClickItem(event, item);
-						}}
-					>
-						<ClayTreeView.ItemStack
-							className={classnames({
-								'knowledge-base-navigation-item-active':
-									item.id === selectedItemId,
-							})}
-						>
-							<ClayIcon symbol={ITEM_TYPES_SYMBOL[item.type]} />
+		<>
+			<SearchField
+				handleSearchChange={handleSearchChange}
+				items={searchItems}
+			/>
 
-							{item.name}
-						</ClayTreeView.ItemStack>
+			{!searchActive && (
+				<ClayTreeView
+					defaultItems={items}
+					defaultSelectedKeys={new Set([selectedItemId])}
+					dragAndDrop
+					nestedKey="children"
+					onItemMove={handleItemMove}
+					showExpanderOnHover={false}
+				>
+					{(item) => {
+						return (
+							<ClayTreeView.Item
+								actions={ActionsDropdown({
+									actions: item.actions,
+								})}
+								onClick={(event) => {
+									handleClickItem(event, item);
+								}}
+							>
+								<ClayTreeView.ItemStack
+									className={classnames({
+										'knowledge-base-navigation-item-active':
+											item.id === selectedItemId,
+									})}
+								>
+									<ClayIcon
+										aria-label={item.name}
+										symbol={ITEM_TYPES_SYMBOL[item.type]}
+									/>
 
-						<ClayTreeView.Group items={item.children}>
-							{(item) => {
-								return (
-									<ClayTreeView.Item
-										actions={ActionsDropdown({
-											actions: item.actions,
-										})}
-										onClick={(event) => {
-											handleClickItem(event, item);
-										}}
-									>
-										<ClayIcon
-											symbol={
-												ITEM_TYPES_SYMBOL[item.type]
-											}
-										/>
+									{item.name}
+								</ClayTreeView.ItemStack>
 
-										{item.name}
-									</ClayTreeView.Item>
-								);
-							}}
-						</ClayTreeView.Group>
-					</ClayTreeView.Item>
-				);
-			}}
-		</ClayTreeView>
+								<ClayTreeView.Group items={item.children}>
+									{(item) => {
+										return (
+											<ClayTreeView.Item
+												actions={ActionsDropdown({
+													actions: item.actions,
+												})}
+												onClick={(event) => {
+													handleClickItem(
+														event,
+														item
+													);
+												}}
+											>
+												<ClayIcon
+													aria-label={item.name}
+													symbol={
+														ITEM_TYPES_SYMBOL[
+															item.type
+														]
+													}
+												/>
+
+												{item.name}
+											</ClayTreeView.Item>
+										);
+									}}
+								</ClayTreeView.Group>
+							</ClayTreeView.Item>
+						);
+					}}
+				</ClayTreeView>
+			)}
+		</>
 	);
 }
 

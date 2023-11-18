@@ -1,28 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.log;
 
-import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
-import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogContext;
+import com.liferay.portal.kernel.log.LogContextRegistryUtil;
 import com.liferay.portal.kernel.log.LogWrapper;
-import com.liferay.portal.kernel.module.util.SystemBundleUtil;
-import com.liferay.portal.kernel.util.BasePortalLifecycle;
-import com.liferay.portal.kernel.util.PortalLifecycle;
-import com.liferay.portal.kernel.util.PortalLifecycleUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
 
@@ -33,8 +20,10 @@ import org.apache.logging.log4j.ThreadContext;
  */
 public class Log4jLogContextLogWrapper extends LogWrapper {
 
-	public Log4jLogContextLogWrapper(Log log) {
+	public Log4jLogContextLogWrapper(Log log, String name) {
 		super(log);
+
+		_name = name;
 
 		setLogWrapperClassName(Log4jLogContextLogWrapper.class.getName());
 	}
@@ -206,49 +195,23 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	}
 
 	private void _populateThreadContext() {
-		ServiceTrackerList<LogContext> serviceTrackerList = _serviceTrackerList;
-
-		if (serviceTrackerList == null) {
-			return;
-		}
-
-		for (LogContext logContext : serviceTrackerList) {
-			Map<String, String> context = logContext.getContext();
+		for (LogContext logContext : LogContextRegistryUtil.getLogContexts()) {
+			Map<String, String> context = logContext.getContext(_name);
 
 			for (Map.Entry<String, String> entry : context.entrySet()) {
-				ThreadContext.put(
-					logContext.getName() + "." + entry.getKey(),
-					entry.getValue());
+				String key = entry.getKey();
+
+				String logContextName = logContext.getName();
+
+				if (Validator.isNotNull(logContextName)) {
+					key = logContextName + "." + key;
+				}
+
+				ThreadContext.put(key, entry.getValue());
 			}
 		}
 	}
 
-	private static volatile ServiceTrackerList<LogContext> _serviceTrackerList;
-
-	static {
-		PortalLifecycleUtil.register(
-			new BasePortalLifecycle() {
-
-				@Override
-				protected void doPortalDestroy() {
-					ServiceTrackerList<LogContext> serviceTrackerList =
-						_serviceTrackerList;
-
-					_serviceTrackerList = null;
-
-					if (serviceTrackerList != null) {
-						serviceTrackerList.close();
-					}
-				}
-
-				@Override
-				protected void doPortalInit() {
-					_serviceTrackerList = ServiceTrackerListFactory.open(
-						SystemBundleUtil.getBundleContext(), LogContext.class);
-				}
-
-			},
-			PortalLifecycle.METHOD_ALL);
-	}
+	private final String _name;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.workspace.configurator;
@@ -29,6 +20,7 @@ import com.liferay.gradle.plugins.soy.SoyPlugin;
 import com.liferay.gradle.plugins.soy.SoyTranslationPlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationBasePlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
+import com.liferay.gradle.plugins.test.integration.TestIntegrationTomcatExtension;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
 import com.liferay.gradle.plugins.util.BndUtil;
 import com.liferay.gradle.plugins.workspace.FrontendPlugin;
@@ -315,6 +307,24 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 
 	protected static final String NAME = "modules";
 
+	private void _configureExtensionTestIntegrationTomcat(
+		TestIntegrationTomcatExtension testIntegrationTomcatExtension,
+		final WorkspaceExtension workspaceExtension) {
+
+		testIntegrationTomcatExtension.setDir(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					return new File(
+						workspaceExtension.getHomeDir(),
+						"tomcat-" +
+							workspaceExtension.getAppServerTomcatVersion());
+				}
+
+			});
+	}
+
 	private void _configureLiferayOSGi(Project project) {
 		LiferayOSGiExtension liferayOSGiExtension = GradleUtil.getExtension(
 			project, LiferayOSGiExtension.class);
@@ -441,7 +451,21 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 				project.getRootProject(),
 				RootProjectConfigurator.INIT_BUNDLE_TASK_NAME);
 
-			setUpTestableTomcatTask.dependsOn(initBundleTask);
+			Task copyTestModulesTask = GradleUtil.getTask(
+				project, TestIntegrationPlugin.COPY_TEST_MODULES_TASK_NAME);
+
+			copyTestModulesTask.dependsOn(initBundleTask);
+
+			setUpTestableTomcatTask.dependsOn(copyTestModulesTask);
+
+			ExtensionContainer extensionContainer = project.getExtensions();
+
+			TestIntegrationTomcatExtension testIntegrationTomcatExtension =
+				extensionContainer.getByType(
+					TestIntegrationTomcatExtension.class);
+
+			_configureExtensionTestIntegrationTomcat(
+				testIntegrationTomcatExtension, workspaceExtension);
 		}
 	}
 

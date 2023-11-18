@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal;
@@ -20,6 +11,7 @@ import com.liferay.adaptive.media.content.transformer.ContentTransformerContentT
 import com.liferay.adaptive.media.content.transformer.constants.ContentTransformerContentTypes;
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
 import com.liferay.adaptive.media.image.html.constants.AMImageHTMLConstants;
+import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringPool;
@@ -34,10 +26,8 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,6 +77,10 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 			imgElement.replaceWith(_parseNode(replacement));
 		}
 
+		if (html.contains("<html>") || html.contains("<head>")) {
+			return document.html();
+		}
+
 		Element body = document.body();
 
 		return body.html();
@@ -98,13 +92,15 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 				FriendlyURLResolverConstants.URL_SEPARATOR_Y_FILE_ENTRY,
 				matcher.group(7))) {
 
-			Optional<FileEntry> fileEntryOptional = _resolveFileEntry(
+			FileEntry fileEntry = _resolveFileEntry(
 				matcher.group(9), matcher.group(8));
 
-			return fileEntryOptional.orElseThrow(
-				() -> new PortalException(
-					"No file entry found for friendly URL " +
-						matcher.group(0)));
+			if (fileEntry == null) {
+				throw new PortalException(
+					"No file entry found for friendly URL " + matcher.group(0));
+			}
+
+			return fileEntry;
 		}
 
 		if (matcher.group(5) != null) {
@@ -142,7 +138,10 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 	protected String getReplacement(String originalImgTag, FileEntry fileEntry)
 		throws PortalException {
 
-		if (fileEntry == null) {
+		if ((fileEntry == null) ||
+			!_amImageMimeTypeProvider.isMimeTypeSupported(
+				fileEntry.getMimeType())) {
+
 			return originalImgTag;
 		}
 
@@ -185,13 +184,8 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 		return bodyNode.childNode(0);
 	}
 
-	private Optional<FileEntry> _resolveFileEntry(
-			String friendlyURL, String groupName)
+	private FileEntry _resolveFileEntry(String friendlyURL, String groupName)
 		throws PortalException {
-
-		if (_fileEntryFriendlyURLResolver == null) {
-			return Optional.empty();
-		}
 
 		Group group = _getGroup(CompanyThreadLocal.getCompanyId(), groupName);
 
@@ -260,12 +254,6 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 	private static final Log _log = LogFactoryUtil.getLog(
 		AMBackwardsCompatibilityHtmlContentTransformer.class);
 
-	private static volatile FileEntryFriendlyURLResolver
-		_fileEntryFriendlyURLResolver =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				FileEntryFriendlyURLResolver.class,
-				AMBackwardsCompatibilityHtmlContentTransformer.class,
-				"_fileEntryFriendlyURLResolver", false, true);
 	private static final Pattern _pattern = Pattern.compile(
 		"((?:/?[^\\s]*)/documents/(\\d+)/(\\d+)/([^/?]+)(?:/([-0-9a-fA-F]+))?" +
 			"(?:\\?t=\\d+)?)|((?:/?[^\\s]*)/documents/(d)/(.*)/" +
@@ -275,7 +263,13 @@ public class AMBackwardsCompatibilityHtmlContentTransformer
 	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
 
 	@Reference
+	private AMImageMimeTypeProvider _amImageMimeTypeProvider;
+
+	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private FileEntryFriendlyURLResolver _fileEntryFriendlyURLResolver;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

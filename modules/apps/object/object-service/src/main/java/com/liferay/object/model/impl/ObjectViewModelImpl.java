@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -242,76 +233,94 @@ public class ObjectViewModelImpl
 	public Map<String, Function<ObjectView, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ObjectView, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ObjectView, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ObjectView, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ObjectView, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<ObjectView, Object>>();
-		Map<String, BiConsumer<ObjectView, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ObjectView, ?>>();
+		private static final Map<String, Function<ObjectView, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", ObjectView::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ObjectView, Long>)ObjectView::setMvccVersion);
-		attributeGetterFunctions.put("uuid", ObjectView::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<ObjectView, String>)ObjectView::setUuid);
-		attributeGetterFunctions.put(
-			"objectViewId", ObjectView::getObjectViewId);
-		attributeSetterBiConsumers.put(
-			"objectViewId",
-			(BiConsumer<ObjectView, Long>)ObjectView::setObjectViewId);
-		attributeGetterFunctions.put("companyId", ObjectView::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ObjectView, Long>)ObjectView::setCompanyId);
-		attributeGetterFunctions.put("userId", ObjectView::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<ObjectView, Long>)ObjectView::setUserId);
-		attributeGetterFunctions.put("userName", ObjectView::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<ObjectView, String>)ObjectView::setUserName);
-		attributeGetterFunctions.put("createDate", ObjectView::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<ObjectView, Date>)ObjectView::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", ObjectView::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ObjectView, Date>)ObjectView::setModifiedDate);
-		attributeGetterFunctions.put(
-			"objectDefinitionId", ObjectView::getObjectDefinitionId);
-		attributeSetterBiConsumers.put(
-			"objectDefinitionId",
-			(BiConsumer<ObjectView, Long>)ObjectView::setObjectDefinitionId);
-		attributeGetterFunctions.put(
-			"defaultObjectView", ObjectView::getDefaultObjectView);
-		attributeSetterBiConsumers.put(
-			"defaultObjectView",
-			(BiConsumer<ObjectView, Boolean>)ObjectView::setDefaultObjectView);
-		attributeGetterFunctions.put("name", ObjectView::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<ObjectView, String>)ObjectView::setName);
+		static {
+			Map<String, Function<ObjectView, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<ObjectView, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ObjectView::getMvccVersion);
+			attributeGetterFunctions.put("uuid", ObjectView::getUuid);
+			attributeGetterFunctions.put(
+				"objectViewId", ObjectView::getObjectViewId);
+			attributeGetterFunctions.put("companyId", ObjectView::getCompanyId);
+			attributeGetterFunctions.put("userId", ObjectView::getUserId);
+			attributeGetterFunctions.put("userName", ObjectView::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", ObjectView::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", ObjectView::getModifiedDate);
+			attributeGetterFunctions.put(
+				"objectDefinitionId", ObjectView::getObjectDefinitionId);
+			attributeGetterFunctions.put(
+				"defaultObjectView", ObjectView::getDefaultObjectView);
+			attributeGetterFunctions.put("name", ObjectView::getName);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ObjectView, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ObjectView, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<ObjectView, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ObjectView, Long>)ObjectView::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<ObjectView, String>)ObjectView::setUuid);
+			attributeSetterBiConsumers.put(
+				"objectViewId",
+				(BiConsumer<ObjectView, Long>)ObjectView::setObjectViewId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ObjectView, Long>)ObjectView::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<ObjectView, Long>)ObjectView::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<ObjectView, String>)ObjectView::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<ObjectView, Date>)ObjectView::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ObjectView, Date>)ObjectView::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"objectDefinitionId",
+				(BiConsumer<ObjectView, Long>)
+					ObjectView::setObjectDefinitionId);
+			attributeSetterBiConsumers.put(
+				"defaultObjectView",
+				(BiConsumer<ObjectView, Boolean>)
+					ObjectView::setDefaultObjectView);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<ObjectView, String>)ObjectView::setName);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1025,8 +1034,9 @@ public class ObjectViewModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<ObjectView, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<ObjectView, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

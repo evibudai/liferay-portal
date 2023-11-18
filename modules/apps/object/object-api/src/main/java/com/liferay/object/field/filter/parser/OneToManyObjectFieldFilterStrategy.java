@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.field.filter.parser;
 
 import com.liferay.frontend.data.set.filter.FDSFilter;
+import com.liferay.frontend.data.set.filter.SelectionFDSFilterItem;
 import com.liferay.object.exception.ObjectViewFilterColumnException;
-import com.liferay.object.field.frontend.data.set.filter.OneToManyAutocompleteFDSFilter;
+import com.liferay.object.field.frontend.data.set.filter.OneToManySelectionFDSFilter;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -27,25 +19,23 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * @author Feliphe Marinho
@@ -61,9 +51,8 @@ public class OneToManyObjectFieldFilterStrategy
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectViewFilterColumn objectViewFilterColumn,
-		PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		super(locale, objectViewFilterColumn);
 
@@ -73,10 +62,8 @@ public class OneToManyObjectFieldFilterStrategy
 		_objectField = objectField;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
-		_persistedModelLocalServiceRegistry =
-			persistedModelLocalServiceRegistry;
-		_systemObjectDefinitionMetadataRegistry =
-			systemObjectDefinitionMetadataRegistry;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 	}
 
 	@Override
@@ -103,14 +90,14 @@ public class OneToManyObjectFieldFilterStrategy
 
 		String restContextPath = null;
 
-		if (objectDefinition1.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition1.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition1.getName());
 
 			JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-				systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+				systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 			restContextPath =
 				"/o/" + jaxRsApplicationDescriptor.getRESTContextPath();
@@ -119,31 +106,31 @@ public class OneToManyObjectFieldFilterStrategy
 			restContextPath = "/o" + objectDefinition1.getRESTContextPath();
 		}
 
-		return new OneToManyAutocompleteFDSFilter(
+		return new OneToManySelectionFDSFilter(
 			parse(), restContextPath, titleObjectField.getLabel(locale),
 			_objectField.getName(), titleObjectField.getName());
 	}
 
 	@Override
-	public List<Map<String, Object>> getItemsValues() throws PortalException {
-		List<Map<String, Object>> itemsValues = new ArrayList<>();
+	public List<SelectionFDSFilterItem> getSelectionFDSFilterItems()
+		throws PortalException {
+
+		List<SelectionFDSFilterItem> selectionFDSFilterItems =
+			new ArrayList<>();
 
 		JSONArray jsonArray = getJSONArray();
 
-		if (_objectDefinition1.isSystem()) {
+		if (_objectDefinition1.isUnmodifiableSystemObject()) {
 			for (int i = 0; i < jsonArray.length(); i++) {
-				itemsValues.add(
-					HashMapBuilder.<String, Object>put(
-						"label",
+				selectionFDSFilterItems.add(
+					new SelectionFDSFilterItem(
 						_objectEntryLocalService.getTitleValue(
 							_objectDefinition1.getObjectDefinitionId(),
-							GetterUtil.getLong(jsonArray.get(i)))
-					).put(
-						"value", jsonArray.getLong(i)
-					).build());
+							GetterUtil.getLong(jsonArray.get(i))),
+						jsonArray.getLong(i)));
 			}
 
-			return itemsValues;
+			return selectionFDSFilterItems;
 		}
 
 		for (int i = 0; i < jsonArray.length(); i++) {
@@ -155,22 +142,21 @@ public class OneToManyObjectFieldFilterStrategy
 				continue;
 			}
 
-			itemsValues.add(
-				HashMapBuilder.<String, Object>put(
-					"label", objectEntry.getTitleValue()
-				).put(
-					"value", objectEntry.getObjectEntryId()
-				).build());
+			selectionFDSFilterItems.add(
+				new SelectionFDSFilterItem(
+					objectEntry.getTitleValue(),
+					objectEntry.getObjectEntryId()));
 		}
 
-		return itemsValues;
+		return selectionFDSFilterItems;
 	}
 
 	@Override
 	public String toValueSummary() throws PortalException {
 		return StringUtil.merge(
 			ListUtil.toList(
-				getItemsValues(), itemValue -> itemValue.get("label")),
+				getSelectionFDSFilterItems(),
+				selectionFDSFilterItem -> selectionFDSFilterItem.getLabel()),
 			StringPool.COMMA_AND_SPACE);
 	}
 
@@ -180,9 +166,9 @@ public class OneToManyObjectFieldFilterStrategy
 
 		JSONArray jsonArray = getJSONArray();
 
-		if (_objectDefinition1.isSystem()) {
+		if (_objectDefinition1.isUnmodifiableSystemObject()) {
 			PersistedModelLocalService persistedModelLocalService =
-				_persistedModelLocalServiceRegistry.
+				PersistedModelLocalServiceRegistryUtil.
 					getPersistedModelLocalService(
 						_objectDefinition1.getClassName());
 
@@ -221,9 +207,7 @@ public class OneToManyObjectFieldFilterStrategy
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
-	private final PersistedModelLocalServiceRegistry
-		_persistedModelLocalServiceRegistry;
-	private final SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private final SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content and Application Templates";
@@ -13,21 +14,22 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Enable local live with page versioning enabled") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "true",
-				branchingPublic = "true",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(
+				pageVersioningEnabled = "true",
+				siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +38,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-130051. The user could apply widget template to Navigation Menu on content page when enable local live with page versioning."
-	@priority = "4"
+	@priority = 4
 	test ApplyWidgetTemplateToNavigationMenuOnContentPage {
 		task ("Add a content page") {
 			Staging.openStagingAdmin(siteURLKey = "test-site-name-staging");
@@ -54,7 +56,7 @@ definition {
 				siteName = "Test Site Name Staging");
 
 			PageEditor.addWidget(
-				indexItem = "2",
+				indexItem = 2,
 				portletName = "Menu Display");
 		}
 

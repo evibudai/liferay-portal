@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model.impl;
@@ -37,6 +28,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
+
+import java.math.BigDecimal;
 
 import java.sql.Blob;
 import java.sql.Types;
@@ -84,11 +77,11 @@ public class CPDefinitionInventoryModelImpl
 		{"lowStockActivity", Types.VARCHAR},
 		{"displayAvailability", Types.BOOLEAN},
 		{"displayStockQuantity", Types.BOOLEAN},
-		{"minStockQuantity", Types.INTEGER}, {"backOrders", Types.BOOLEAN},
-		{"minOrderQuantity", Types.INTEGER},
-		{"maxOrderQuantity", Types.INTEGER},
+		{"minStockQuantity", Types.DECIMAL}, {"backOrders", Types.BOOLEAN},
+		{"minOrderQuantity", Types.DECIMAL},
+		{"maxOrderQuantity", Types.DECIMAL},
 		{"allowedOrderQuantities", Types.VARCHAR},
-		{"multipleOrderQuantity", Types.INTEGER}
+		{"multipleOrderQuantity", Types.DECIMAL}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -110,16 +103,16 @@ public class CPDefinitionInventoryModelImpl
 		TABLE_COLUMNS_MAP.put("lowStockActivity", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("displayAvailability", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("displayStockQuantity", Types.BOOLEAN);
-		TABLE_COLUMNS_MAP.put("minStockQuantity", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("minStockQuantity", Types.DECIMAL);
 		TABLE_COLUMNS_MAP.put("backOrders", Types.BOOLEAN);
-		TABLE_COLUMNS_MAP.put("minOrderQuantity", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("maxOrderQuantity", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("minOrderQuantity", Types.DECIMAL);
+		TABLE_COLUMNS_MAP.put("maxOrderQuantity", Types.DECIMAL);
 		TABLE_COLUMNS_MAP.put("allowedOrderQuantities", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("multipleOrderQuantity", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("multipleOrderQuantity", Types.DECIMAL);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPDefinitionInventory (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionInventoryId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CPDefinitionInventoryEngine VARCHAR(75) null,lowStockActivity VARCHAR(75) null,displayAvailability BOOLEAN,displayStockQuantity BOOLEAN,minStockQuantity INTEGER,backOrders BOOLEAN,minOrderQuantity INTEGER,maxOrderQuantity INTEGER,allowedOrderQuantities VARCHAR(75) null,multipleOrderQuantity INTEGER,primary key (CPDefinitionInventoryId, ctCollectionId))";
+		"create table CPDefinitionInventory (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionInventoryId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CPDefinitionInventoryEngine VARCHAR(75) null,lowStockActivity VARCHAR(75) null,displayAvailability BOOLEAN,displayStockQuantity BOOLEAN,minStockQuantity BIGDECIMAL null,backOrders BOOLEAN,minOrderQuantity BIGDECIMAL null,maxOrderQuantity BIGDECIMAL null,allowedOrderQuantities VARCHAR(75) null,multipleOrderQuantity BIGDECIMAL null,primary key (CPDefinitionInventoryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CPDefinitionInventory";
@@ -258,166 +251,183 @@ public class CPDefinitionInventoryModelImpl
 	public Map<String, Function<CPDefinitionInventory, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CPDefinitionInventory, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CPDefinitionInventory, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CPDefinitionInventory, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CPDefinitionInventory, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CPDefinitionInventory, Object>>();
-		Map<String, BiConsumer<CPDefinitionInventory, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CPDefinitionInventory, ?>>();
+		private static final Map
+			<String, Function<CPDefinitionInventory, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CPDefinitionInventory::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CPDefinitionInventory::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", CPDefinitionInventory::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CPDefinitionInventory, String>)
-				CPDefinitionInventory::setUuid);
-		attributeGetterFunctions.put(
-			"CPDefinitionInventoryId",
-			CPDefinitionInventory::getCPDefinitionInventoryId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionInventoryId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setCPDefinitionInventoryId);
-		attributeGetterFunctions.put(
-			"groupId", CPDefinitionInventory::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", CPDefinitionInventory::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CPDefinitionInventory::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CPDefinitionInventory::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CPDefinitionInventory, String>)
-				CPDefinitionInventory::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CPDefinitionInventory::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CPDefinitionInventory, Date>)
-				CPDefinitionInventory::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CPDefinitionInventory::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CPDefinitionInventory, Date>)
-				CPDefinitionInventory::setModifiedDate);
-		attributeGetterFunctions.put(
-			"CPDefinitionId", CPDefinitionInventory::getCPDefinitionId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionId",
-			(BiConsumer<CPDefinitionInventory, Long>)
-				CPDefinitionInventory::setCPDefinitionId);
-		attributeGetterFunctions.put(
-			"CPDefinitionInventoryEngine",
-			CPDefinitionInventory::getCPDefinitionInventoryEngine);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionInventoryEngine",
-			(BiConsumer<CPDefinitionInventory, String>)
-				CPDefinitionInventory::setCPDefinitionInventoryEngine);
-		attributeGetterFunctions.put(
-			"lowStockActivity", CPDefinitionInventory::getLowStockActivity);
-		attributeSetterBiConsumers.put(
-			"lowStockActivity",
-			(BiConsumer<CPDefinitionInventory, String>)
-				CPDefinitionInventory::setLowStockActivity);
-		attributeGetterFunctions.put(
-			"displayAvailability",
-			CPDefinitionInventory::getDisplayAvailability);
-		attributeSetterBiConsumers.put(
-			"displayAvailability",
-			(BiConsumer<CPDefinitionInventory, Boolean>)
-				CPDefinitionInventory::setDisplayAvailability);
-		attributeGetterFunctions.put(
-			"displayStockQuantity",
-			CPDefinitionInventory::getDisplayStockQuantity);
-		attributeSetterBiConsumers.put(
-			"displayStockQuantity",
-			(BiConsumer<CPDefinitionInventory, Boolean>)
-				CPDefinitionInventory::setDisplayStockQuantity);
-		attributeGetterFunctions.put(
-			"minStockQuantity", CPDefinitionInventory::getMinStockQuantity);
-		attributeSetterBiConsumers.put(
-			"minStockQuantity",
-			(BiConsumer<CPDefinitionInventory, Integer>)
-				CPDefinitionInventory::setMinStockQuantity);
-		attributeGetterFunctions.put(
-			"backOrders", CPDefinitionInventory::getBackOrders);
-		attributeSetterBiConsumers.put(
-			"backOrders",
-			(BiConsumer<CPDefinitionInventory, Boolean>)
-				CPDefinitionInventory::setBackOrders);
-		attributeGetterFunctions.put(
-			"minOrderQuantity", CPDefinitionInventory::getMinOrderQuantity);
-		attributeSetterBiConsumers.put(
-			"minOrderQuantity",
-			(BiConsumer<CPDefinitionInventory, Integer>)
-				CPDefinitionInventory::setMinOrderQuantity);
-		attributeGetterFunctions.put(
-			"maxOrderQuantity", CPDefinitionInventory::getMaxOrderQuantity);
-		attributeSetterBiConsumers.put(
-			"maxOrderQuantity",
-			(BiConsumer<CPDefinitionInventory, Integer>)
-				CPDefinitionInventory::setMaxOrderQuantity);
-		attributeGetterFunctions.put(
-			"allowedOrderQuantities",
-			CPDefinitionInventory::getAllowedOrderQuantities);
-		attributeSetterBiConsumers.put(
-			"allowedOrderQuantities",
-			(BiConsumer<CPDefinitionInventory, String>)
-				CPDefinitionInventory::setAllowedOrderQuantities);
-		attributeGetterFunctions.put(
-			"multipleOrderQuantity",
-			CPDefinitionInventory::getMultipleOrderQuantity);
-		attributeSetterBiConsumers.put(
-			"multipleOrderQuantity",
-			(BiConsumer<CPDefinitionInventory, Integer>)
-				CPDefinitionInventory::setMultipleOrderQuantity);
+		static {
+			Map<String, Function<CPDefinitionInventory, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CPDefinitionInventory, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CPDefinitionInventory::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CPDefinitionInventory::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", CPDefinitionInventory::getUuid);
+			attributeGetterFunctions.put(
+				"CPDefinitionInventoryId",
+				CPDefinitionInventory::getCPDefinitionInventoryId);
+			attributeGetterFunctions.put(
+				"groupId", CPDefinitionInventory::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", CPDefinitionInventory::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CPDefinitionInventory::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CPDefinitionInventory::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CPDefinitionInventory::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CPDefinitionInventory::getModifiedDate);
+			attributeGetterFunctions.put(
+				"CPDefinitionId", CPDefinitionInventory::getCPDefinitionId);
+			attributeGetterFunctions.put(
+				"CPDefinitionInventoryEngine",
+				CPDefinitionInventory::getCPDefinitionInventoryEngine);
+			attributeGetterFunctions.put(
+				"lowStockActivity", CPDefinitionInventory::getLowStockActivity);
+			attributeGetterFunctions.put(
+				"displayAvailability",
+				CPDefinitionInventory::getDisplayAvailability);
+			attributeGetterFunctions.put(
+				"displayStockQuantity",
+				CPDefinitionInventory::getDisplayStockQuantity);
+			attributeGetterFunctions.put(
+				"minStockQuantity", CPDefinitionInventory::getMinStockQuantity);
+			attributeGetterFunctions.put(
+				"backOrders", CPDefinitionInventory::getBackOrders);
+			attributeGetterFunctions.put(
+				"minOrderQuantity", CPDefinitionInventory::getMinOrderQuantity);
+			attributeGetterFunctions.put(
+				"maxOrderQuantity", CPDefinitionInventory::getMaxOrderQuantity);
+			attributeGetterFunctions.put(
+				"allowedOrderQuantities",
+				CPDefinitionInventory::getAllowedOrderQuantities);
+			attributeGetterFunctions.put(
+				"multipleOrderQuantity",
+				CPDefinitionInventory::getMultipleOrderQuantity);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CPDefinitionInventory, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CPDefinitionInventory, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CPDefinitionInventory, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CPDefinitionInventory, String>)
+					CPDefinitionInventory::setUuid);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionInventoryId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setCPDefinitionInventoryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CPDefinitionInventory, String>)
+					CPDefinitionInventory::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CPDefinitionInventory, Date>)
+					CPDefinitionInventory::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CPDefinitionInventory, Date>)
+					CPDefinitionInventory::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionId",
+				(BiConsumer<CPDefinitionInventory, Long>)
+					CPDefinitionInventory::setCPDefinitionId);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionInventoryEngine",
+				(BiConsumer<CPDefinitionInventory, String>)
+					CPDefinitionInventory::setCPDefinitionInventoryEngine);
+			attributeSetterBiConsumers.put(
+				"lowStockActivity",
+				(BiConsumer<CPDefinitionInventory, String>)
+					CPDefinitionInventory::setLowStockActivity);
+			attributeSetterBiConsumers.put(
+				"displayAvailability",
+				(BiConsumer<CPDefinitionInventory, Boolean>)
+					CPDefinitionInventory::setDisplayAvailability);
+			attributeSetterBiConsumers.put(
+				"displayStockQuantity",
+				(BiConsumer<CPDefinitionInventory, Boolean>)
+					CPDefinitionInventory::setDisplayStockQuantity);
+			attributeSetterBiConsumers.put(
+				"minStockQuantity",
+				(BiConsumer<CPDefinitionInventory, BigDecimal>)
+					CPDefinitionInventory::setMinStockQuantity);
+			attributeSetterBiConsumers.put(
+				"backOrders",
+				(BiConsumer<CPDefinitionInventory, Boolean>)
+					CPDefinitionInventory::setBackOrders);
+			attributeSetterBiConsumers.put(
+				"minOrderQuantity",
+				(BiConsumer<CPDefinitionInventory, BigDecimal>)
+					CPDefinitionInventory::setMinOrderQuantity);
+			attributeSetterBiConsumers.put(
+				"maxOrderQuantity",
+				(BiConsumer<CPDefinitionInventory, BigDecimal>)
+					CPDefinitionInventory::setMaxOrderQuantity);
+			attributeSetterBiConsumers.put(
+				"allowedOrderQuantities",
+				(BiConsumer<CPDefinitionInventory, String>)
+					CPDefinitionInventory::setAllowedOrderQuantities);
+			attributeSetterBiConsumers.put(
+				"multipleOrderQuantity",
+				(BiConsumer<CPDefinitionInventory, BigDecimal>)
+					CPDefinitionInventory::setMultipleOrderQuantity);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -741,12 +751,12 @@ public class CPDefinitionInventoryModelImpl
 
 	@JSON
 	@Override
-	public int getMinStockQuantity() {
+	public BigDecimal getMinStockQuantity() {
 		return _minStockQuantity;
 	}
 
 	@Override
-	public void setMinStockQuantity(int minStockQuantity) {
+	public void setMinStockQuantity(BigDecimal minStockQuantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
@@ -777,12 +787,12 @@ public class CPDefinitionInventoryModelImpl
 
 	@JSON
 	@Override
-	public int getMinOrderQuantity() {
+	public BigDecimal getMinOrderQuantity() {
 		return _minOrderQuantity;
 	}
 
 	@Override
-	public void setMinOrderQuantity(int minOrderQuantity) {
+	public void setMinOrderQuantity(BigDecimal minOrderQuantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
@@ -792,12 +802,12 @@ public class CPDefinitionInventoryModelImpl
 
 	@JSON
 	@Override
-	public int getMaxOrderQuantity() {
+	public BigDecimal getMaxOrderQuantity() {
 		return _maxOrderQuantity;
 	}
 
 	@Override
-	public void setMaxOrderQuantity(int maxOrderQuantity) {
+	public void setMaxOrderQuantity(BigDecimal maxOrderQuantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
@@ -827,12 +837,12 @@ public class CPDefinitionInventoryModelImpl
 
 	@JSON
 	@Override
-	public int getMultipleOrderQuantity() {
+	public BigDecimal getMultipleOrderQuantity() {
 		return _multipleOrderQuantity;
 	}
 
 	@Override
-	public void setMultipleOrderQuantity(int multipleOrderQuantity) {
+	public void setMultipleOrderQuantity(BigDecimal multipleOrderQuantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
@@ -973,17 +983,17 @@ public class CPDefinitionInventoryModelImpl
 		cpDefinitionInventoryImpl.setDisplayStockQuantity(
 			this.<Boolean>getColumnOriginalValue("displayStockQuantity"));
 		cpDefinitionInventoryImpl.setMinStockQuantity(
-			this.<Integer>getColumnOriginalValue("minStockQuantity"));
+			this.<BigDecimal>getColumnOriginalValue("minStockQuantity"));
 		cpDefinitionInventoryImpl.setBackOrders(
 			this.<Boolean>getColumnOriginalValue("backOrders"));
 		cpDefinitionInventoryImpl.setMinOrderQuantity(
-			this.<Integer>getColumnOriginalValue("minOrderQuantity"));
+			this.<BigDecimal>getColumnOriginalValue("minOrderQuantity"));
 		cpDefinitionInventoryImpl.setMaxOrderQuantity(
-			this.<Integer>getColumnOriginalValue("maxOrderQuantity"));
+			this.<BigDecimal>getColumnOriginalValue("maxOrderQuantity"));
 		cpDefinitionInventoryImpl.setAllowedOrderQuantities(
 			this.<String>getColumnOriginalValue("allowedOrderQuantities"));
 		cpDefinitionInventoryImpl.setMultipleOrderQuantity(
-			this.<Integer>getColumnOriginalValue("multipleOrderQuantity"));
+			this.<BigDecimal>getColumnOriginalValue("multipleOrderQuantity"));
 
 		return cpDefinitionInventoryImpl;
 	}
@@ -1245,18 +1255,19 @@ public class CPDefinitionInventoryModelImpl
 	private String _lowStockActivity;
 	private boolean _displayAvailability;
 	private boolean _displayStockQuantity;
-	private int _minStockQuantity;
+	private BigDecimal _minStockQuantity;
 	private boolean _backOrders;
-	private int _minOrderQuantity;
-	private int _maxOrderQuantity;
+	private BigDecimal _minOrderQuantity;
+	private BigDecimal _maxOrderQuantity;
 	private String _allowedOrderQuantities;
-	private int _multipleOrderQuantity;
+	private BigDecimal _multipleOrderQuantity;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CPDefinitionInventory, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

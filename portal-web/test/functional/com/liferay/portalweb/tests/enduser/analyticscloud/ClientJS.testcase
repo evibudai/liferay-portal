@@ -26,13 +26,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +43,7 @@ definition {
 	}
 
 	@description = "Bug: LRAC-8038 | Automation ID: LRAC-11520 | Test Summary: Assert client does not send duplicated requests when the identity is the same (lowercase email string before hash)"
-	@priority = "4"
+	@priority = 4
 	test CheckIdentityEventNotResendWhenEmailIsTheSame {
 		property proxy.server.enabled = "true";
 
@@ -77,8 +79,8 @@ definition {
 
 		task ("Compare the two values") {
 			TestUtils.assertEquals(
-				actual = "${localStorageItem1}",
-				expected = "${localStorageItem2}");
+				actual = ${localStorageItem1},
+				expected = ${localStorageItem2});
 		}
 	}
 

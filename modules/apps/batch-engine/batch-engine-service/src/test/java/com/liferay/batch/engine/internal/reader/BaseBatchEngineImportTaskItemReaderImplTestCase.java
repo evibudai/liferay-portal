@@ -1,22 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.reader;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import com.liferay.batch.engine.model.impl.BatchEngineImportTaskImpl;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.jackson.databind.deser.JSONStringStdDeserializer;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -49,6 +48,10 @@ public abstract class BaseBatchEngineImportTaskItemReaderImplTestCase {
 			return _id;
 		}
 
+		public String getJsonString() {
+			return _jsonString;
+		}
+
 		public Map<String, String> getName() {
 			return _name;
 		}
@@ -72,8 +75,30 @@ public abstract class BaseBatchEngineImportTaskItemReaderImplTestCase {
 		private Date _createDate;
 		private String _description;
 		private Long _id;
+
+		@JsonDeserialize(using = JSONStringStdDeserializer.class)
+		private String _jsonString;
+
 		private Map<String, String> _name;
 
+	}
+
+	protected static Item getItem(
+			Map<String, String> fieldNameMappingMap,
+			Map<String, Object> fieldNameValueMap)
+		throws ReflectiveOperationException {
+
+		return BatchEngineImportTaskItemReaderUtil.convertValue(
+			new BatchEngineImportTaskImpl(), Item.class,
+			BatchEngineImportTaskItemReaderUtil.mapFieldNames(
+				fieldNameMappingMap, fieldNameValueMap),
+			Arrays.asList(
+				(batchEngineImportTask, extendedProperties, item1) -> {
+					if (MapUtil.isNotEmpty(extendedProperties)) {
+						throw new NoSuchFieldException(
+							String.valueOf(extendedProperties.keySet()));
+					}
+				}));
 	}
 
 	protected void validate(
@@ -82,15 +107,12 @@ public abstract class BaseBatchEngineImportTaskItemReaderImplTestCase {
 			Map<String, Object> fieldNameValueMap, Map<String, String> nameMap)
 		throws ReflectiveOperationException {
 
-		Item item = BatchEngineImportTaskItemReaderUtil.convertValue(
-			Item.class,
-			BatchEngineImportTaskItemReaderUtil.mapFieldNames(
-				fieldNameMappingMap, fieldNameValueMap));
+		Item item = getItem(fieldNameMappingMap, fieldNameValueMap);
 
 		if (createDateString == null) {
 			Assert.assertNull(item.getCreateDate());
 		}
-		else {
+		else if (Validator.isNotNull(item.getCreateDate())) {
 			Assert.assertEquals(
 				createDateString, _dateFormat.format(item.getCreateDate()));
 		}

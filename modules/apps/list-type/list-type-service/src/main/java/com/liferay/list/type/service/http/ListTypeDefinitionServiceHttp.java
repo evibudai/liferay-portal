@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service.http;
@@ -53,7 +44,9 @@ public class ListTypeDefinitionServiceHttp {
 	public static com.liferay.list.type.model.ListTypeDefinition
 			addListTypeDefinition(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
-				java.util.Map<java.util.Locale, String> nameMap)
+				java.util.Map<java.util.Locale, String> nameMap, boolean system,
+				java.util.List<com.liferay.list.type.model.ListTypeEntry>
+					listTypeEntries)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -62,7 +55,8 @@ public class ListTypeDefinitionServiceHttp {
 				_addListTypeDefinitionParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, externalReferenceCode, nameMap);
+				methodKey, externalReferenceCode, nameMap, system,
+				listTypeEntries);
 
 			Object returnObj = null;
 
@@ -177,6 +171,49 @@ public class ListTypeDefinitionServiceHttp {
 	}
 
 	public static com.liferay.list.type.model.ListTypeDefinition
+			fetchListTypeDefinitionByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				ListTypeDefinitionServiceUtil.class,
+				"fetchListTypeDefinitionByExternalReferenceCode",
+				_fetchListTypeDefinitionByExternalReferenceCodeParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, companyId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.list.type.model.ListTypeDefinition)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.list.type.model.ListTypeDefinition
 			getListTypeDefinition(
 				HttpPrincipal httpPrincipal, long listTypeDefinitionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -184,10 +221,53 @@ public class ListTypeDefinitionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				ListTypeDefinitionServiceUtil.class, "getListTypeDefinition",
-				_getListTypeDefinitionParameterTypes3);
+				_getListTypeDefinitionParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, listTypeDefinitionId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.list.type.model.ListTypeDefinition)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.list.type.model.ListTypeDefinition
+			getListTypeDefinitionByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				ListTypeDefinitionServiceUtil.class,
+				"getListTypeDefinitionByExternalReferenceCode",
+				_getListTypeDefinitionByExternalReferenceCodeParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, companyId);
 
 			Object returnObj = null;
 
@@ -224,7 +304,7 @@ public class ListTypeDefinitionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				ListTypeDefinitionServiceUtil.class, "getListTypeDefinitions",
-				_getListTypeDefinitionsParameterTypes4);
+				_getListTypeDefinitionsParameterTypes6);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, start, end);
@@ -256,7 +336,7 @@ public class ListTypeDefinitionServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				ListTypeDefinitionServiceUtil.class,
 				"getListTypeDefinitionsCount",
-				_getListTypeDefinitionsCountParameterTypes5);
+				_getListTypeDefinitionsCountParameterTypes7);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey);
 
@@ -285,17 +365,19 @@ public class ListTypeDefinitionServiceHttp {
 			updateListTypeDefinition(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
 				long listTypeDefinitionId,
-				java.util.Map<java.util.Locale, String> nameMap)
+				java.util.Map<java.util.Locale, String> nameMap,
+				java.util.List<com.liferay.list.type.model.ListTypeEntry>
+					listTypeEntries)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
 				ListTypeDefinitionServiceUtil.class, "updateListTypeDefinition",
-				_updateListTypeDefinitionParameterTypes6);
+				_updateListTypeDefinitionParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, externalReferenceCode, listTypeDefinitionId,
-				nameMap);
+				methodKey, externalReferenceCode, listTypeDefinitionId, nameMap,
+				listTypeEntries);
 
 			Object returnObj = null;
 
@@ -329,18 +411,29 @@ public class ListTypeDefinitionServiceHttp {
 		ListTypeDefinitionServiceHttp.class);
 
 	private static final Class<?>[] _addListTypeDefinitionParameterTypes0 =
-		new Class[] {String.class, java.util.Map.class};
+		new Class[] {
+			String.class, java.util.Map.class, boolean.class,
+			java.util.List.class
+		};
 	private static final Class<?>[] _deleteListTypeDefinitionParameterTypes1 =
 		new Class[] {com.liferay.list.type.model.ListTypeDefinition.class};
 	private static final Class<?>[] _deleteListTypeDefinitionParameterTypes2 =
 		new Class[] {long.class};
-	private static final Class<?>[] _getListTypeDefinitionParameterTypes3 =
+	private static final Class<?>[]
+		_fetchListTypeDefinitionByExternalReferenceCodeParameterTypes3 =
+			new Class[] {String.class, long.class};
+	private static final Class<?>[] _getListTypeDefinitionParameterTypes4 =
 		new Class[] {long.class};
-	private static final Class<?>[] _getListTypeDefinitionsParameterTypes4 =
+	private static final Class<?>[]
+		_getListTypeDefinitionByExternalReferenceCodeParameterTypes5 =
+			new Class[] {String.class, long.class};
+	private static final Class<?>[] _getListTypeDefinitionsParameterTypes6 =
 		new Class[] {int.class, int.class};
 	private static final Class<?>[]
-		_getListTypeDefinitionsCountParameterTypes5 = new Class[] {};
-	private static final Class<?>[] _updateListTypeDefinitionParameterTypes6 =
-		new Class[] {String.class, long.class, java.util.Map.class};
+		_getListTypeDefinitionsCountParameterTypes7 = new Class[] {};
+	private static final Class<?>[] _updateListTypeDefinitionParameterTypes8 =
+		new Class[] {
+			String.class, long.class, java.util.Map.class, java.util.List.class
+		};
 
 }

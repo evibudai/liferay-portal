@@ -11,8 +11,18 @@
 
 <tbody>
 <tr>
+	<td>ADD_SUGGESTIONS_BUTTON</td>
+	<td>//button[contains(@aria-label,'Suggestion Contributor')]/span</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CHARACTER_THRESHOLD_FOR_DISPLAYING_SUGGESTIONS</td>
 	<td>//input[contains(@name,'suggestionsDisplayThreshold')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DELETE_SUGGESTION_CONTRIBUTOR</td>
+	<td>//button[contains(@aria-label,'Delete')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -32,22 +42,42 @@
 </tr>
 <tr>
 	<td>SUGGESTION_CONTRIBUTOR</td>
-	<td>//div[contains(@class,'field-list')]/div[${key_suggestionContributorOrder}]//select[contains(@aria-label,'Suggestion Contributor')]</td>
+	<td>//button[contains(@aria-label,'Suggestion Contributor')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUGGESTION_CONTRIBUTOR_ACTIVITY</td>
+	<td>//div[contains(@class,'input-sets-item-root')][${key_suggestionContributorOrder}]//button[contains(@aria-label,'Suggestion Contributor')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUGGESTION_CONTRIBUTOR_SELECT</td>
+	<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_suggestionContributor}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME</td>
-	<td>//div[contains(@class,'field-list')]/div[${key_suggestionContributorOrder}]//label[contains(.,'Display Group Name')]/following-sibling::input</td>
+	<td>//div[contains(@class,'input-sets-item-root')][${key_suggestionContributorOrder}]//label[contains(.,'Display Group Name')]/following-sibling::input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUGGESTION_CONTRIBUTOR_MINIMUM_SEARCHES</td>
+	<td>//div[contains(@class,'input-sets-item-root')][${key_suggestionContributorOrder}]//input[contains(@aria-label,'Minimum Searches')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SUGGESTION_CONTRIBUTOR_SELECT_BLUEPRINT</td>
-	<td>//div[contains(@class,'field-list')]/div[${key_suggestionContributorOrder}]//button[contains(.,'Select')]</td>
+	<td>//div[contains(@class,'input')][${key_suggestionContributorOrder}]//button[contains(.,'Select')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SUGGESTION_CONTRIBUTOR_SIZE</td>
-	<td>//div[contains(@class,'field-list')]/div[${key_suggestionContributorOrder}]//input[contains(@aria-label,'Size')]</td>
+	<td>//div[contains(@class,'input-sets-item-root')][${key_suggestionContributorOrder}]//input[contains(@aria-label,'Size')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUGGESTION_CONTRIBUTOR_THRESHOLD</td>
+	<td>//div[contains(@class,'input-sets-item-root')][${key_suggestionContributorOrder}]//input[contains(@aria-label,'Character Threshold')]</td>
 	<td></td>
 </tr>
 </tbody>

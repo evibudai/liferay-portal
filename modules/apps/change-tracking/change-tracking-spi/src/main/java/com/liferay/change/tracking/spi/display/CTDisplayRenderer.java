@@ -1,30 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.spi.display;
 
 import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 
 import java.io.InputStream;
 
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Display renderer used to describe and render models of a given type. If an
@@ -40,34 +28,6 @@ public interface CTDisplayRenderer<T> {
 	}
 
 	public default String[] getAvailableLanguageIds(T model) {
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #renderPreview(DisplayContext)}
-	 */
-	@Deprecated
-	public default String getContent(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, Locale locale, T model)
-		throws Exception {
-
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #getContent(
-	 *             		HttpServletRequest, HttpServletResponse, Locale,
-	 *             		Object)}
-	 */
-	@Deprecated
-	public default String getContent(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse, T model)
-		throws Exception {
-
 		return null;
 	}
 
@@ -109,28 +69,6 @@ public interface CTDisplayRenderer<T> {
 	public Class<T> getModelClass();
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 */
-	@Deprecated
-	public default String getPreviousContent(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse, T currentModel,
-			T previousModel)
-		throws Exception {
-
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #fetchLatestVersionedModel(Object)}
-	 */
-	@Deprecated
-	public default T getPreviousVersionedModel(T model) throws PortalException {
-		return null;
-	}
-
-	/**
 	 * Returns the title for the model.
 	 *
 	 * @param  locale to use for translation
@@ -153,14 +91,6 @@ public interface CTDisplayRenderer<T> {
 	}
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 */
-	@Deprecated
-	public default boolean hasContent() {
-		return false;
-	}
-
-	/**
 	 * Returns whether the model may be hidden by default. Hidden models may be
 	 * filtered out in some views.
 	 *
@@ -171,12 +101,8 @@ public interface CTDisplayRenderer<T> {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 */
-	@Deprecated
-	public default boolean isVersioned() {
-		return false;
+	public default boolean isMovable(T model) {
+		return !isHideable(model);
 	}
 
 	/**
@@ -190,10 +116,7 @@ public interface CTDisplayRenderer<T> {
 	public default String renderPreview(DisplayContext<T> displayContext)
 		throws Exception {
 
-		return getContent(
-			displayContext.getHttpServletRequest(),
-			displayContext.getHttpServletResponse(), displayContext.getLocale(),
-			displayContext.getModel());
+		return null;
 	}
 
 	public default boolean showPreviewDiff() {

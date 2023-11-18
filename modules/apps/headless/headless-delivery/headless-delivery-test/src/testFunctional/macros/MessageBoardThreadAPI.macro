@@ -1,0 +1,72 @@
+definition {
+
+	macro _curlMessageBoardThread {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (isSet(messageBoardSectionId)) {
+			var api = "message-board-sections/${messageBoardSectionId}/message-board-threads";
+		}
+		else if (isSet(messageBoardThreadId)) {
+			var api = "message-board-threads/${messageBoardThreadId}";
+		}
+		else {
+			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
+				groupName = "Guest",
+				site = "true");
+
+			var api = "sites/${siteId}/message-board-threads";
+		}
+
+		var command = '''
+			-u test@liferay.com:test \
+			-H Content-Type: application/json
+		''';
+
+		if (isSet(headline)) {
+			var body = '''
+				-d {
+					"headline": "${headline}"
+				}
+			''';
+
+			var command = StringUtil.add(${command}, " \ ${body}", "");
+		}
+
+		var curl = StringUtil.add("${portalURL}/o/headless-delivery/v1.0/${api}", "\ ${command}", "");
+
+		return ${curl};
+	}
+
+	macro createMessageThreadInMessageBoardSection {
+		Variables.assertDefined(parameterList = "${headline},${messageBoardSectionId}");
+
+		var curl = MessageBoardThreadAPI._curlMessageBoardThread(
+			headline = ${headline},
+			messageBoardSectionId = ${messageBoardSectionId});
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+	macro deleteMessageBoardThreadByThreadId {
+		Variables.assertDefined(parameterList = ${messageBoardThreadId});
+
+		var curl = MessageBoardThreadAPI._curlMessageBoardThread(messageBoardThreadId = ${messageBoardThreadId});
+
+		JSONCurlUtil.delete(${curl});
+	}
+
+	macro setUpGlobalMessageBoardThreadId {
+		Variables.assertDefined(parameterList = ${headline});
+
+		var curl = MessageBoardThreadAPI._curlMessageBoardThread(headline = ${headline});
+
+		var messageBoardThreadId = JSONCurlUtil.post(${curl}, "$.['id']");
+
+		static var staticMessageBoardThreadId = ${messageBoardThreadId};
+
+		return ${staticMessageBoardThreadId};
+	}
+
+}

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -30,18 +21,18 @@ if (!dlFileEntries.isEmpty()) {
 	List<DLFileVersion> dlFileVersions = dlFileEntry.getFileVersions(WorkflowConstants.STATUS_ANY);
 
 	for (DLFileVersion dlFileVersion : dlFileVersions) {
-		UnicodeProperties extraSettingsProperties = dlFileVersion.getExtraSettingsProperties();
+		UnicodeProperties extraSettingsUnicodeProperties = dlFileVersion.getExtraSettingsProperties();
 
-		if (extraSettingsProperties.isEmpty()) {
+		if (extraSettingsUnicodeProperties.isEmpty()) {
 			continue;
 		}
 
-		keys = new ArrayList<String>(extraSettingsProperties.size());
-		expandoBridgeAttributeNames = new ArrayList<String>(extraSettingsProperties.size());
+		keys = new ArrayList<String>(extraSettingsUnicodeProperties.size());
+		expandoBridgeAttributeNames = new ArrayList<String>(extraSettingsUnicodeProperties.size());
 
 		ExpandoBridge expandoBridge = dlFileEntry.getExpandoBridge();
 
-		for (String key : extraSettingsProperties.keySet()) {
+		for (String key : extraSettingsUnicodeProperties.keySet()) {
 			if (expandoBridge.hasAttribute(key)) {
 				expandoBridgeAttributeNames.add(key);
 			}

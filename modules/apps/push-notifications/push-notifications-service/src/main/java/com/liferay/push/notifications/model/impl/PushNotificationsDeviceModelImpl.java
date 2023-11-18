@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.push.notifications.model.impl;
@@ -224,73 +215,88 @@ public class PushNotificationsDeviceModelImpl
 	public Map<String, Function<PushNotificationsDevice, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<PushNotificationsDevice, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<PushNotificationsDevice, Object>>
-		_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<PushNotificationsDevice, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<PushNotificationsDevice, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<PushNotificationsDevice, Object>>();
-		Map<String, BiConsumer<PushNotificationsDevice, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<PushNotificationsDevice, ?>>();
+		private static final Map
+			<String, Function<PushNotificationsDevice, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"pushNotificationsDeviceId",
-			PushNotificationsDevice::getPushNotificationsDeviceId);
-		attributeSetterBiConsumers.put(
-			"pushNotificationsDeviceId",
-			(BiConsumer<PushNotificationsDevice, Long>)
-				PushNotificationsDevice::setPushNotificationsDeviceId);
-		attributeGetterFunctions.put(
-			"companyId", PushNotificationsDevice::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<PushNotificationsDevice, Long>)
-				PushNotificationsDevice::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", PushNotificationsDevice::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<PushNotificationsDevice, Long>)
-				PushNotificationsDevice::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", PushNotificationsDevice::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<PushNotificationsDevice, Date>)
-				PushNotificationsDevice::setCreateDate);
-		attributeGetterFunctions.put(
-			"platform", PushNotificationsDevice::getPlatform);
-		attributeSetterBiConsumers.put(
-			"platform",
-			(BiConsumer<PushNotificationsDevice, String>)
-				PushNotificationsDevice::setPlatform);
-		attributeGetterFunctions.put(
-			"token", PushNotificationsDevice::getToken);
-		attributeSetterBiConsumers.put(
-			"token",
-			(BiConsumer<PushNotificationsDevice, String>)
-				PushNotificationsDevice::setToken);
+		static {
+			Map<String, Function<PushNotificationsDevice, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<PushNotificationsDevice, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"pushNotificationsDeviceId",
+				PushNotificationsDevice::getPushNotificationsDeviceId);
+			attributeGetterFunctions.put(
+				"companyId", PushNotificationsDevice::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", PushNotificationsDevice::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", PushNotificationsDevice::getCreateDate);
+			attributeGetterFunctions.put(
+				"platform", PushNotificationsDevice::getPlatform);
+			attributeGetterFunctions.put(
+				"token", PushNotificationsDevice::getToken);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<PushNotificationsDevice, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<PushNotificationsDevice, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<PushNotificationsDevice, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"pushNotificationsDeviceId",
+				(BiConsumer<PushNotificationsDevice, Long>)
+					PushNotificationsDevice::setPushNotificationsDeviceId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<PushNotificationsDevice, Long>)
+					PushNotificationsDevice::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<PushNotificationsDevice, Long>)
+					PushNotificationsDevice::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<PushNotificationsDevice, Date>)
+					PushNotificationsDevice::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"platform",
+				(BiConsumer<PushNotificationsDevice, String>)
+					PushNotificationsDevice::setPlatform);
+			attributeSetterBiConsumers.put(
+				"token",
+				(BiConsumer<PushNotificationsDevice, String>)
+					PushNotificationsDevice::setToken);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -705,7 +711,8 @@ public class PushNotificationsDeviceModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<PushNotificationsDevice, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

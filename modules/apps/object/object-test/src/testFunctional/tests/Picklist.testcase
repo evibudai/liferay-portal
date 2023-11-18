@@ -16,15 +16,15 @@ definition {
 
 		Picklist.deleteAllPicklistsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-136595 - Verify it is possible to cancel the creation of a Picklist"
-	@priority = "4"
+	@priority = 4
 	test CanCancelCreatePicklist {
 		Picklist.gotoPicklists();
 
@@ -34,15 +34,15 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to cancel the creation of a Picklist item"
-	@priority = "4"
+	@priority = 4
 	test CanCancelCreatePicklistItem {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.addPicklistItemViaUI(
 			picklistItemKey = "PicklistItemKeyTest",
@@ -56,15 +56,15 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to cancel the update of a Picklist"
-	@priority = "4"
+	@priority = 4
 	test CanCancelUpdatePicklist {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist Test");
 
@@ -74,7 +74,7 @@ definition {
 	}
 
 	@description = "LPS-152677 - Verify that it's possible to create an object with a state added to the picklist"
-	@priority = "4"
+	@priority = 4
 	test CanCreateObjectWithState {
 		task ("Add a Custom Picklist and Item (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
@@ -104,7 +104,7 @@ definition {
 				fieldPicklist = "Picklist Test",
 				fieldType = "Picklist",
 				itemName = "Picklist Item Test",
-				maskAsState = "true");
+				markAsState = "true");
 
 			Refresh();
 		}
@@ -138,7 +138,7 @@ definition {
 				key_selectField = "Picklist Item Test",
 				locator1 = "Picklist#SELECT_FIELD_RELATIONSHIP_OBJECT");
 
-			Button.clickSave();
+			PortletEntry.save();
 		}
 
 		task ("Assert that entry was added") {
@@ -149,7 +149,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to create a Picklist"
-	@priority = "5"
+	@priority = 5
 	test CanCreatePicklist {
 		property portal.acceptance = "true";
 
@@ -161,7 +161,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to create an item for a Picklist"
-	@priority = "5"
+	@priority = 5
 	test CanCreatePicklistItem {
 		property portal.acceptance = "true";
 
@@ -181,7 +181,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to delete a Picklist"
-	@priority = "5"
+	@priority = 5
 	test CanDeletePicklist {
 		property portal.acceptance = "true";
 
@@ -190,14 +190,14 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "Delete");
+			menuItem = "Delete",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistNotPresent(picklistName = "Picklist Test");
 	}
 
 	@description = "LPS-136595 - Verify it is possible to delete a Picklist item"
-	@priority = "5"
+	@priority = 5
 	test CanDeletePicklistItem {
 		property portal.acceptance = "true";
 
@@ -211,12 +211,12 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "PicklistItemKeyTest",
-			picklistItemOption = "Delete");
+			menuItem = "Delete");
 
 		Picklist.assertPicklistItemNotPresent(
 			picklistItemKey = "PicklistItemKeyTest",
@@ -224,7 +224,7 @@ definition {
 	}
 
 	@description = "LPS-152677 - Verify that it's possible to edit an object with a state added to the picklist"
-	@priority = "4"
+	@priority = 4
 	test CanEditObjectWithState {
 		task ("Add a Custom Picklist and Items (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
@@ -256,9 +256,7 @@ definition {
 				fieldPicklist = "Picklist Test",
 				fieldType = "Picklist",
 				itemName = "Picklist Item Test 1",
-				maskAsState = "true");
-
-			Refresh();
+				markAsState = "true");
 		}
 
 		task ("Publish the Custom Object and assert that is possible to edit state") {
@@ -266,13 +264,15 @@ definition {
 
 			ObjectAdmin.goToFieldsDetails(label = "Field Picklist");
 
+			Form.gotoAdvancedTab();
+
 			Click(locator1 = "ObjectAdmin#DROPDOWN_DEFAULT_VALUE");
 
 			Click(
 				key_dropdownItem = "Picklist Item Test 2",
 				locator1 = "ObjectAdmin#SELECT_DROPDOWN_ITEM_DEFAULT_VALUE");
 
-			Button.clickSave();
+			PortletEntry.save();
 		}
 
 		task ("Go to State Manager tab and assert Picklist") {
@@ -298,7 +298,7 @@ definition {
 				key_selectField = "Picklist Item Test 2",
 				locator1 = "Picklist#SELECT_FIELD_RELATIONSHIP_OBJECT");
 
-			Button.clickSave();
+			PortletEntry.save();
 		}
 
 		task ("Assert that entry was added") {
@@ -309,7 +309,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to add special characters for the Key field for a Picklist item"
-	@priority = "3"
+	@priority = 3
 	test CannotAddSpecialCharacterForPicklistItemKeyField {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -327,7 +327,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to leave Key field empty for a Picklist item"
-	@priority = "4"
+	@priority = 4
 	test CannotLeavePicklistItemKeyFieldEmpty {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -341,29 +341,33 @@ definition {
 
 		Picklist.clickSaveButton();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Key");
+		AssertElementPresent(
+			key_fieldLabel = "Key",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to leave Name field empty for a Picklist item"
-	@priority = "4"
+	@priority = 4
 	test CannotLeavePicklistItemNameFieldEmpty {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.addPicklistItemViaUI(picklistItemKey = "PicklistItemKeyTest");
 
 		Picklist.clickSaveButton();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Name");
+		AssertElementPresent(
+			key_fieldLabel = "Name",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to leave Name field empty for Picklist"
-	@priority = "4"
+	@priority = 4
 	test CannotLeavePicklistNameFieldEmpty {
 		Picklist.gotoPicklists();
 
@@ -375,11 +379,13 @@ definition {
 
 		Button.clickSave();
 
-		FieldBase.assertRequiredFieldErrorPresent(fieldLabel = "Name");
+		AssertElementPresent(
+			key_fieldLabel = "Name",
+			locator1 = "FieldBase#ERROR_MESSAGE_REQUIRED_FIELD");
 	}
 
 	@description = "LPS-136595 - Verify it is not possible to update a Picklist item's key"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdatePicklistItemKey {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -391,18 +397,18 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "itemKeyName",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.assertDisableKey(keyName = "itemKeyName");
 	}
 
 	@description = "LPS-136595 - Verify it is possible to search for a Picklist"
-	@priority = "4"
+	@priority = 4
 	test CanSearchPicklist {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist 1");
 
@@ -418,7 +424,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to search for a Picklist item"
-	@priority = "4"
+	@priority = 4
 	test CanSearchPicklistItem {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -435,8 +441,8 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.searchPicklistItem(picklistItemName = "Test 2");
 
@@ -450,7 +456,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to set a different language for Picklists item's name"
-	@priority = "3"
+	@priority = 3
 	test CanSetDifferentPicklistItemNameLanguage {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -462,28 +468,28 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "itemTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.addLanguageOnPicklistItem(
 			itemName = "Teste de entrada",
 			newLanguage = "pt_BR");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "itemTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.assertPicklistItemByLanguage(
 			nameItem = "Teste de entrada",
@@ -491,15 +497,15 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to set a different language for Picklists item's name when updating it"
-	@priority = "4"
+	@priority = 4
 	test CanSetDifferentPicklistItemNameLanguageWhenUpdating {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.addPicklistItemWithTranslationViaUI(
 			defaultLanguage = "en_US",
@@ -512,12 +518,12 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "itemTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.assertItemNameAndItemKeyOnModal(
 			itemKey = "itemTest",
@@ -529,27 +535,27 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to set a different language for a Picklist name"
-	@priority = "3"
+	@priority = 3
 	test CanSetDifferentPicklistNameLanguage {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.addLanguageOnPicklist(
 			itemName = "Teste na lista",
 			newLanguage = "pt_BR");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistNameByLanguage(
 			nameItem = "Teste na lista",
@@ -557,7 +563,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to update a Picklist item's name"
-	@priority = "5"
+	@priority = 5
 	test CanUpdatePicklistItemName {
 		property portal.acceptance = "true";
 
@@ -571,8 +577,8 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistItemInTable(
 			picklistItemKey = "entryTest",
@@ -582,13 +588,13 @@ definition {
 			itemkey = "entryTest",
 			newItemName = "Update Entry");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistItemInTable(
 			picklistItemKey = "entryTest",
@@ -596,7 +602,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to update a Picklist name"
-	@priority = "5"
+	@priority = 5
 	test CanUpdatePicklistName {
 		property portal.acceptance = "true";
 
@@ -607,12 +613,12 @@ definition {
 		Picklist.assertPicklist(picklistName = "Picklist Test");
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Refresh();
 
@@ -620,21 +626,21 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify it is possible to view a Picklist"
-	@priority = "4"
+	@priority = 4
 	test CanViewPicklist {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistDetails(title = "Basic Info");
 	}
 
 	@description = "LPS-136595 - Verify it is possible to view a Picklist item"
-	@priority = "4"
+	@priority = 4
 	test CanViewPicklistItem {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -646,26 +652,35 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "View");
+			menuItem = "View",
+			picklistName = "Picklist Test");
 
 		Picklist.optionsPicklistItem(
 			itemKey = "PicklistItemKeyTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
-		Picklist.assertPicklistItemDetails();
+		IFrame.selectTopFrame();
+
+		SelectFrame(locator1 = "Picklist#IFRAME_PICKLIST_ITEM_MODAL");
+
+		AssertValue(
+			key_selectField = "Name",
+			locator1 = "Picklist#ADD_PICKLIST_ITEM_NAME_AND_KEY",
+			value1 = "Picklist Item Name Test");
 	}
 
 	@description = "LPS-136595 - Verify the empty state message when there is no Picklist"
-	@priority = "3"
+	@priority = 3
 	test EmptyStateMessageDisplayedWhenNoPicklist {
 		Picklist.gotoPicklists();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-136595 - Verify the empty state message when where is no items for a Picklist"
-	@priority = "3"
+	@priority = 3
 	test EmptyStateMessageDisplayedWhenNoPicklistItem {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -675,11 +690,13 @@ definition {
 
 		Picklist.selectPickilistModalFrame();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-140407 - Verify that the Key field is autofilled when the Name field is filled"
-	@priority = "4"
+	@priority = 4
 	test KeyFieldIsAutofilled {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -695,9 +712,10 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the translated Picklist item's name will be displayed on Forms"
-	@priority = "3"
+	@priority = 3
 	test ViewTranslatedPicklistItemNameOnForms {
-		property portal.upstream = "quarantine";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Custom Picklist and a Item (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
@@ -728,13 +746,13 @@ definition {
 		task ("Go to Picklist Item and add a new language") {
 			Picklist.optionsPicklistItem(
 				itemKey = "PicklistItemKeyTest",
-				picklistItemOption = "View");
+				menuItem = "View");
 
 			Picklist.addLanguageOnPicklistItem(
 				itemName = "Teste de entrada",
 				newLanguage = "pt_BR");
 
-			Button.clickSave();
+			PortletEntry.save();
 		}
 
 		task ("Go to Custom Object and Fields tab") {
@@ -765,9 +783,7 @@ definition {
 		}
 
 		task ("Go to Forms and add") {
-			PopulateObjectFormsConfiguration.openForm();
-
-			FormsAdminNavigator.gotoAddForm();
+			FormsAdmin.addForm();
 
 			Form.editName(formName = "Form 1");
 		}
@@ -812,7 +828,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the translated Picklist item's name will be displayed on the Object layout"
-	@priority = "3"
+	@priority = 3
 	test ViewTranslatedPicklistItemNameOnObjectLayout {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -833,7 +849,7 @@ definition {
 			itemName = "Teste de entrada",
 			newLanguage = "pt_BR");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -881,7 +897,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the translated Picklist item's name will be displayed on the Object view"
-	@priority = "3"
+	@priority = 3
 	test ViewTranslatedPicklistItemNameOnObjectView {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -905,13 +921,13 @@ definition {
 
 		Picklist.optionsPicklistItem(
 			itemKey = "PicklistItemKeyTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.addLanguageOnPicklistItem(
 			itemName = "Teste de entrada",
 			newLanguage = "pt_BR");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -948,9 +964,10 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the translated Picklist name will be displayed on the Object Admin"
-	@priority = "3"
+	@priority = 3
 	test ViewTranslatedPicklistNameOnObjectAdmin {
-		property portal.acceptance = "quarantine";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a Custom Picklist (via API)") {
 			Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
@@ -972,7 +989,7 @@ definition {
 				itemName = "Teste na lista",
 				newLanguage = "pt_BR");
 
-			Button.clickSave();
+			PortletEntry.save();
 		}
 
 		task ("Change the language") {
@@ -1004,9 +1021,9 @@ definition {
 
 			ObjectField.selectType(fieldType = "Lista de seleção");
 
-			Select(
-				locator1 = "ObjectAdmin#OBJECT_FIELDS_PICKLIST",
-				value1 = "Teste na lista");
+			ObjectField.selectPicklist(
+				dropdownLabel = "Lista de seleção",
+				picklistName = "Teste na lista");
 
 			Button.click(button = "Salvar");
 		}
@@ -1021,7 +1038,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the updated Picklist item's name will be displayed on the object's portlet"
-	@priority = "4"
+	@priority = 4
 	test ViewUpdatedPicklistItemNameOnObjectPortlet {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -1045,13 +1062,13 @@ definition {
 
 		Picklist.optionsPicklistItem(
 			itemKey = "PicklistItemKeyTest",
-			picklistItemOption = "View");
+			menuItem = "View");
 
 		Picklist.addLanguageOnPicklistItem(
 			itemName = "Teste de entrada",
 			newLanguage = "pt_BR");
 
-		Button.clickSave();
+		PortletEntry.save();
 
 		Navigator.openURL();
 
@@ -1088,7 +1105,7 @@ definition {
 	}
 
 	@description = "LPS-136595 - Verify that the updating or deleting a picklist item warn message is displayed"
-	@priority = "3"
+	@priority = 3
 	test WarnMessageDisplayedOnPickListItemScreen {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,6 +15,7 @@ String dropdownCssClass = GetterUtil.getString((String)request.getAttribute("lif
 String icon = GetterUtil.getString((String)request.getAttribute("liferay-ui:icon-menu:icon"));
 String id = GetterUtil.getString((String)request.getAttribute("liferay-ui:icon-menu:id"));
 String message = (String)request.getAttribute("liferay-ui:icon-menu:message");
+String triggerAriaLabel = (String)request.getAttribute("liferay-ui:icon-menu:triggerAriaLabel");
 boolean scroll = GetterUtil.getBoolean(request.getAttribute("liferay-ui:icon-menu:scroll"));
 String triggerCssClass = GetterUtil.getString((String)request.getAttribute("liferay-ui:icon-menu:triggerCssClass"));
 String triggerLabel = GetterUtil.getString((String)request.getAttribute("liferay-ui:icon-menu:triggerLabel"));
@@ -41,7 +33,14 @@ if (Validator.isNull(icon)) {
 				<aui:icon cssClass="inline-item" image="<%= icon %>" markupView="lexicon" />
 
 				<c:if test="<%= Validator.isNotNull(triggerLabel) %>">
-					<span class="btn-section"><%= triggerLabel %></span>
+					<c:choose>
+						<c:when test="<%= Validator.isNotNull(triggerAriaLabel) %>">
+							<span aria-label="<%= triggerAriaLabel %>" class="btn-section"><%= triggerLabel %></span>
+						</c:when>
+						<c:otherwise>
+							<span class="btn-section"><%= triggerLabel %></span>
+						</c:otherwise>
+					</c:choose>
 				</c:if>
 			</button>
 		</c:when>

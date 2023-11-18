@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.audit;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * @author Michael C. Han
@@ -23,19 +14,22 @@ import com.liferay.portal.kernel.util.ServiceProxyFactory;
 public class AuditRouterUtil {
 
 	public static AuditRouter getAuditRouter() {
-		return _auditRouter;
+		return _auditRouterSnapshot.get();
 	}
 
 	public static boolean isDeployed() {
-		return _auditRouter.isDeployed();
+		AuditRouter auditRouter = _auditRouterSnapshot.get();
+
+		return auditRouter.isDeployed();
 	}
 
 	public static void route(AuditMessage auditMessage) throws AuditException {
-		_auditRouter.route(auditMessage);
+		AuditRouter auditRouter = _auditRouterSnapshot.get();
+
+		auditRouter.route(auditMessage);
 	}
 
-	private static volatile AuditRouter _auditRouter =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			AuditRouter.class, AuditRouterUtil.class, "_auditRouter", false);
+	private static final Snapshot<AuditRouter> _auditRouterSnapshot =
+		new Snapshot<>(AuditRouterUtil.class, AuditRouter.class);
 
 }

@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osgi.service.tracker.collections.map.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.osgi.service.tracker.collections.ServiceTrackerMapBuilder;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory;
@@ -28,7 +18,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -304,45 +293,6 @@ public class ObjectServiceTrackerMapTest {
 	}
 
 	@Test
-	public void testGetServiceWithCustomComparatorWithBuilder() {
-		ServiceTrackerMapBuilder.Selector<TrackedOne, TrackedOne> selector =
-			ServiceTrackerMapBuilder.SelectorFactory.newSelector(
-				_bundleContext, TrackedOne.class);
-
-		ServiceTrackerMapBuilder.Mapper
-			<String, TrackedOne, TrackedOne, TrackedOne> mapper = selector.map(
-				"target");
-
-		ServiceTrackerMapBuilder.Collector
-			<String, TrackedOne, TrackedOne, TrackedOne> collector =
-				mapper.collectSingleValue(Comparator.naturalOrder());
-
-		_serviceTrackerMap = collector.build();
-
-		TrackedOne trackedOne1 = new TrackedOne();
-
-		ServiceRegistration<TrackedOne> serviceRegistration1 = registerService(
-			trackedOne1);
-
-		TrackedOne trackedOne2 = new TrackedOne();
-
-		ServiceRegistration<TrackedOne> serviceRegistration2 = registerService(
-			trackedOne2);
-
-		Assert.assertEquals(
-			trackedOne2, _serviceTrackerMap.getService("aTarget"));
-
-		serviceRegistration1.unregister();
-		serviceRegistration2.unregister();
-
-		_serviceRegistrations.add(registerService(trackedOne2));
-		_serviceRegistrations.add(registerService(trackedOne1));
-
-		Assert.assertEquals(
-			trackedOne1, _serviceTrackerMap.getService("aTarget"));
-	}
-
-	@Test
 	public void testGetServiceWithCustomServiceReferenceMapper() {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			_bundleContext, TrackedOne.class, "(&(other=*)(target=*))",
@@ -361,53 +311,6 @@ public class ObjectServiceTrackerMapTest {
 
 		Assert.assertNotNull(
 			_serviceTrackerMap.getService("aProperty - aTarget"));
-	}
-
-	@Test
-	public void testGetServiceWithCustomServiceReferenceMapperAndBuilder() {
-		ServiceTrackerMapBuilder.Selector<TrackedOne, TrackedOne> selector =
-			ServiceTrackerMapBuilder.SelectorFactory.newSelector(
-				_bundleContext, TrackedOne.class
-			).newSelector(
-				"(&(other=*)(target=*)(!(forbidden=*)))"
-			);
-
-		ServiceTrackerMapBuilder.Mapper<String, TrackedOne, TrackedOne, ?>
-			mapper = selector.map(
-				(sr, keys) -> keys.emit(
-					sr.getProperty("other") + " - " +
-						sr.getProperty("target")));
-
-		ServiceTrackerMapBuilder.Collector
-			<String, TrackedOne, TrackedOne, TrackedOne> collector =
-				mapper.collectSingleValue();
-
-		_serviceTrackerMap = collector.build();
-
-		Dictionary<String, String> properties = new Hashtable<>();
-
-		properties.put("other", "aProperty");
-		properties.put("target", "aTarget");
-
-		_serviceRegistrations.add(
-			_bundleContext.registerService(
-				TrackedOne.class, new TrackedOne(), properties));
-
-		Assert.assertNotNull(
-			_serviceTrackerMap.getService("aProperty - aTarget"));
-
-		properties = new Hashtable<>();
-
-		properties.put("forbidden", "true");
-		properties.put("other", "aProperty2");
-		properties.put("target", "aTarget2");
-
-		_serviceRegistrations.add(
-			_bundleContext.registerService(
-				TrackedOne.class, new TrackedOne(), properties));
-
-		Assert.assertNull(
-			_serviceTrackerMap.getService("aProperty2 - aTarget2"));
 	}
 
 	@Test
@@ -776,59 +679,6 @@ public class ObjectServiceTrackerMapTest {
 	}
 
 	@Test
-	public void testServiceWrapperServiceTrackerCustomizerWithBuilder() {
-		ServiceTrackerMapBuilder.Selector
-			<TrackedOne, ServiceWrapper<TrackedOne>> selector =
-				ServiceTrackerMapBuilder.SelectorFactory.newSelector(
-					_bundleContext, TrackedOne.class
-				).newSelector(
-					ServiceTrackerCustomizerFactory.serviceWrapper(
-						_bundleContext)
-				);
-
-		ServiceTrackerMapBuilder.Mapper
-			<String, TrackedOne, ServiceWrapper<TrackedOne>,
-			 ServiceWrapper<TrackedOne>> mapper = selector.map("target");
-
-		ServiceTrackerMapBuilder.Collector
-			<String, TrackedOne, ServiceWrapper<TrackedOne>,
-			 ServiceWrapper<TrackedOne>> collector =
-				mapper.collectSingleValue();
-
-		try (ServiceTrackerMap<String, ServiceWrapper<TrackedOne>>
-				serviceTrackerMap = collector.build()) {
-
-			Dictionary<String, Object> properties = new Hashtable<>();
-
-			properties.put("property", "aProperty");
-			properties.put("target", "aTarget");
-
-			TrackedOne trackedOne = new TrackedOne();
-
-			ServiceRegistration<TrackedOne> serviceRegistration =
-				_bundleContext.registerService(
-					TrackedOne.class, trackedOne, properties);
-
-			ServiceWrapper<TrackedOne> serviceWrapper =
-				serviceTrackerMap.getService("aTarget");
-
-			Assert.assertEquals(trackedOne, serviceWrapper.getService());
-
-			Map<String, Object> serviceWrapperProperties =
-				serviceWrapper.getProperties();
-
-			Assert.assertTrue(serviceWrapperProperties.containsKey("property"));
-			Assert.assertTrue(serviceWrapperProperties.containsKey("target"));
-			Assert.assertEquals(
-				"aProperty", serviceWrapperProperties.get("property"));
-			Assert.assertEquals(
-				"aTarget", serviceWrapperProperties.get("target"));
-
-			serviceRegistration.unregister();
-		}
-	}
-
-	@Test
 	public void testUnkeyedServiceReferencesBalanceReferenceCount() {
 		BundleContextWrapper wrappedBundleContext = wrapContext();
 
@@ -867,6 +717,8 @@ public class ObjectServiceTrackerMapTest {
 
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext, TrackedOne.class, "target");
+
+		_serviceTrackerMap.keySet();
 
 		return _serviceTrackerMap;
 	}

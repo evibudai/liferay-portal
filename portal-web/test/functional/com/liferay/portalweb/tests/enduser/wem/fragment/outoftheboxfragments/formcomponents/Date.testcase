@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Boolean field") {
@@ -35,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -48,7 +49,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151158 and LPS-155502. The page creator could configure the Date fragment. View the behaviors of Help Text and Label."
-	@priority = "5"
+	@priority = 5
 	test ConfigureDate {
 		property portal.acceptance = "true";
 
@@ -76,7 +77,7 @@ definition {
 
 			task ("Remove the automatic added fragments") {
 				for (var fragmentName : list "Date,Submit Button") {
-					PageEditor.removeFragment(fragmentName = "${fragmentName}");
+					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}
 		}

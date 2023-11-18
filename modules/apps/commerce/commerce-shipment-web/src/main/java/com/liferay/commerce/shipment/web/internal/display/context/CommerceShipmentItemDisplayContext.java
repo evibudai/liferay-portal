@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.display.context;
@@ -20,9 +11,12 @@ import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.shipment.web.internal.portlet.action.helper.ActionHelper;
+import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+
+import java.math.BigDecimal;
 
 import javax.portlet.PortletURL;
 
@@ -37,12 +31,14 @@ public class CommerceShipmentItemDisplayContext
 	public CommerceShipmentItemDisplayContext(
 		ActionHelper actionHelper, HttpServletRequest httpServletRequest,
 		CommerceOrderItemService commerceOrderItemService,
+		CommerceQuantityFormatter commerceQuantityFormatter,
 		CommerceShipmentItemService commerceShipmentItemService,
 		PortletResourcePermission portletResourcePermission) {
 
 		super(actionHelper, httpServletRequest, portletResourcePermission);
 
 		_commerceOrderItemService = commerceOrderItemService;
+		_commerceQuantityFormatter = commerceQuantityFormatter;
 		_commerceShipmentItemService = commerceShipmentItemService;
 	}
 
@@ -81,6 +77,19 @@ public class CommerceShipmentItemDisplayContext
 		return _commerceShipmentItem;
 	}
 
+	public String getOutstandingQuantity() throws PortalException {
+		CommerceOrderItem commerceOrderItem = getCommerceOrderItem();
+
+		BigDecimal quantity = commerceOrderItem.getQuantity();
+
+		BigDecimal outstandingQuantity = _commerceQuantityFormatter.format(
+			commerceOrderItem.getCPInstanceId(),
+			quantity.subtract(commerceOrderItem.getShippedQuantity()),
+			commerceOrderItem.getUnitOfMeasureKey());
+
+		return outstandingQuantity.toString();
+	}
+
 	@Override
 	public PortletURL getPortletURL() throws PortalException {
 		return PortletURLBuilder.create(
@@ -90,16 +99,23 @@ public class CommerceShipmentItemDisplayContext
 		).buildPortletURL();
 	}
 
-	public int getToSendQuantity() throws PortalException {
+	public String getToSendQuantity() throws PortalException {
 		CommerceOrderItem commerceOrderItem = getCommerceOrderItem();
 
-		return _commerceShipmentItemService.
-			getCommerceShipmentOrderItemsQuantity(
-				getCommerceShipmentId(),
-				commerceOrderItem.getCommerceOrderItemId());
+		BigDecimal commerceShipmentOrderItemsQuantity =
+			_commerceQuantityFormatter.format(
+				commerceOrderItem.getCPInstanceId(),
+				_commerceShipmentItemService.
+					getCommerceShipmentOrderItemsQuantity(
+						getCommerceShipmentId(),
+						commerceOrderItem.getCommerceOrderItemId()),
+				commerceOrderItem.getUnitOfMeasureKey());
+
+		return commerceShipmentOrderItemsQuantity.toString();
 	}
 
 	private final CommerceOrderItemService _commerceOrderItemService;
+	private final CommerceQuantityFormatter _commerceQuantityFormatter;
 	private CommerceShipmentItem _commerceShipmentItem;
 	private final CommerceShipmentItemService _commerceShipmentItemService;
 

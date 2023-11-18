@@ -1,68 +1,69 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context.util;
 
-import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.util.function.Predicate;
 
 /**
  * @author Carolina Barbosa
  */
-@Component(service = {})
 public class ObjectCodeEditorUtil {
 
 	public static List<Map<String, Object>> getCodeEditorElements(
-		boolean includeAggregationObjectField,
 		boolean includeDDMExpressionBuilderElements,
-		boolean includeFormulaObjectField, Locale locale,
-		long objectDefinitionId) {
+		boolean includeGeneralVariables, Locale locale, long objectDefinitionId,
+		Predicate<ObjectField> objectFieldPredicate) {
+
+		if (includeDDMExpressionBuilderElements) {
+			return getCodeEditorElements(
+				ddmExpressionFunctionPredicate -> true,
+				ddmExpressionOperatorPredicate -> true, includeGeneralVariables,
+				locale, objectDefinitionId, objectFieldPredicate);
+		}
+
+		return getCodeEditorElements(
+			ddmExpressionFunctionPredicate -> false,
+			ddmExpressionOperatorPredicate -> false, includeGeneralVariables,
+			locale, objectDefinitionId, objectFieldPredicate);
+	}
+
+	public static List<Map<String, Object>> getCodeEditorElements(
+		Predicate<DDMExpressionFunction> ddmExpressionFunctionPredicate,
+		Predicate<DDMExpressionOperator> ddmExpressionOperatorPredicate,
+		boolean includeGeneralVariables, Locale locale, long objectDefinitionId,
+		Predicate<ObjectField> objectFieldPredicate) {
 
 		List<Map<String, Object>> codeEditorElements = new ArrayList<>();
+
+		ObjectFieldLocalService objectFieldLocalService =
+			_objectFieldLocalServiceSnapshot.get();
 
 		codeEditorElements.add(
 			_createCodeEditorElement(
 				TransformUtil.transform(
 					ListUtil.filter(
-						_objectFieldLocalService.getObjectFields(
+						objectFieldLocalService.getObjectFields(
 							objectDefinitionId),
-						objectField ->
-							(includeAggregationObjectField ||
-							 !objectField.compareBusinessType(
-								 ObjectFieldConstants.
-									 BUSINESS_TYPE_AGGREGATION)) &&
-							(includeFormulaObjectField ||
-							 !objectField.compareBusinessType(
-								 ObjectFieldConstants.BUSINESS_TYPE_FORMULA))),
+						objectFieldPredicate),
 					objectField -> HashMapBuilder.put(
 						"content", objectField.getName()
 					).put(
@@ -71,53 +72,71 @@ public class ObjectCodeEditorUtil {
 						"label", objectField.getLabel(locale)
 					).build()),
 				"fields", locale));
-		codeEditorElements.add(
-			_createCodeEditorElement(
-				Collections.singletonList(
-					HashMapBuilder.put(
-						"content", "currentUserId"
-					).put(
-						"helpText", StringPool.BLANK
-					).put(
-						"label", LanguageUtil.get(locale, "current-user")
-					).build()),
-				"general-variables", locale));
 
-		if (includeDDMExpressionBuilderElements) {
-			Collections.addAll(
-				codeEditorElements,
+		if (includeGeneralVariables) {
+			codeEditorElements.add(
 				_createCodeEditorElement(
-					DDMExpressionOperator.getItems(locale), "operators",
-					locale),
+					Arrays.asList(
+						HashMapBuilder.put(
+							"content", "currentDate"
+						).put(
+							"helpText", StringPool.BLANK
+						).put(
+							"label", LanguageUtil.get(locale, "current-date")
+						).build(),
+						HashMapBuilder.put(
+							"content", "currentUserId"
+						).put(
+							"helpText", StringPool.BLANK
+						).put(
+							"label", LanguageUtil.get(locale, "current-user")
+						).build()),
+					"general-variables", locale));
+		}
+
+		List<Map<String, String>> ddmExpressionOperators =
+			DDMExpressionOperator.getItems(
+				ddmExpressionOperatorPredicate, locale);
+
+		if (ListUtil.isNotEmpty(ddmExpressionOperators)) {
+			codeEditorElements.add(
 				_createCodeEditorElement(
-					DDMExpressionFunction.getItems(locale), "functions",
-					locale));
+					ddmExpressionOperators, "operators", locale));
+		}
+
+		List<Map<String, String>> ddmExpressionFunctions =
+			DDMExpressionFunction.getItems(
+				ddmExpressionFunctionPredicate, locale);
+
+		if (ListUtil.isNotEmpty(ddmExpressionFunctions)) {
+			codeEditorElements.add(
+				_createCodeEditorElement(
+					ddmExpressionFunctions, "functions", locale));
 		}
 
 		return codeEditorElements;
 	}
 
-	private static Map<String, Object> _createCodeEditorElement(
-		List<HashMap<String, String>> items, String key, Locale locale) {
+	public enum DDMExpressionFunction {
 
-		return HashMapBuilder.<String, Object>put(
-			"items", items
-		).put(
-			"label", LanguageUtil.get(locale, key)
-		).build();
-	}
-
-	@Reference(unbind = "-")
-	private void _setObjectFieldLocalService(
-		ObjectFieldLocalService objectFieldLocalService) {
-
-		_objectFieldLocalService = objectFieldLocalService;
-	}
-
-	private static ObjectFieldLocalService _objectFieldLocalService;
-
-	private enum DDMExpressionFunction {
-
+		ADD_DAYS(
+			"addDays(field_name, parameter)",
+			"calculates-the-result-of-adding-or-subtracting-a-specified-" +
+				"number-of-days-from-a-given-date.-to-subtract,-prefix-the-" +
+					"number-of-days-with-a-minus-sign",
+			"add-days"),
+		ADD_MONTHS(
+			"addMonths(field_name, parameter)",
+			"calculates-the-result-of-adding-or-subtracting-a-specified-" +
+				"number-of-months-from-a-given-date.-to-subtract,-prefix-the-" +
+					"number-of-months-with-a-minus-sign",
+			"add-months"),
+		ADD_YEARS(
+			"addYears(field_name, parameter)",
+			"calculates-the-result-of-adding-or-subtracting-a-specified-" +
+				"number-of-years-from-a-given-date.-to-subtract,-prefix-the-" +
+					"number-of-years-with-a-minus-sign",
+			"add-years"),
 		COMPARE_DATES(
 			"compareDates(field_name, parameter)",
 			"check-if-a-field-has-the-same-date-of-the-value", "compare-dates"),
@@ -199,6 +218,11 @@ public class ObjectCodeEditorUtil {
 			"check-if-a-text-field-matches-a-specific-string-value-or-regex-" +
 				"expression-and-return-a-boolean",
 			"match"),
+		OLD_VALUE(
+			"oldValue(\"field_name\")",
+			"use-the-previous-value-of-a-field-before-its-update-to-create-" +
+				"more-accurate-conditions",
+			"old-value"),
 		PAST_DATES(
 			"pastDates(field_name, parameter)",
 			"check-if-a-date-fields-value-is-in-the-past-and-return-a-boolean",
@@ -218,28 +242,35 @@ public class ObjectCodeEditorUtil {
 				"that-can-be-used-with-other-validation-functions",
 			"sum");
 
-		public static List<HashMap<String, String>> getItems(Locale locale) {
-			List<HashMap<String, String>> values = new ArrayList<>();
+		public static List<Map<String, String>> getItems(
+			Predicate<DDMExpressionFunction> ddmExpressionFunctionPredicate,
+			Locale locale) {
+
+			List<Map<String, String>> values = new ArrayList<>();
 
 			for (DDMExpressionFunction ddmExpressionFunction : values()) {
 				if (StringUtil.equals(ddmExpressionFunction._key, "power") &&
-					!GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LPS-164948"))) {
+					!FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
 
 					continue;
 				}
 
-				values.add(
-					HashMapBuilder.put(
-						"content", ddmExpressionFunction._content
-					).put(
-						"helpText",
-						LanguageUtil.get(
-							locale, ddmExpressionFunction._helpTextKey)
-					).put(
-						"label",
-						LanguageUtil.get(locale, ddmExpressionFunction._key)
-					).build());
+				if ((ddmExpressionFunctionPredicate == null) ||
+					ddmExpressionFunctionPredicate.test(
+						ddmExpressionFunction)) {
+
+					values.add(
+						HashMapBuilder.put(
+							"content", ddmExpressionFunction._content
+						).put(
+							"helpText",
+							LanguageUtil.get(
+								locale, ddmExpressionFunction._helpTextKey)
+						).put(
+							"label",
+							LanguageUtil.get(locale, ddmExpressionFunction._key)
+						).build());
+				}
 			}
 
 			return values;
@@ -259,7 +290,7 @@ public class ObjectCodeEditorUtil {
 
 	}
 
-	private enum DDMExpressionOperator {
+	public enum DDMExpressionOperator {
 
 		AND(
 			"AND",
@@ -267,11 +298,11 @@ public class ObjectCodeEditorUtil {
 				"used-to-indicate-a-dependent-relationship",
 			"and"),
 		DIVIDED_BY(
-			"field_name / field_name2",
+			"field_name1 / field_name2",
 			"divide-one-numeric-field-by-another-to-create-an-expression",
 			"divided-by"),
 		MINUS(
-			"field_name - field_name2",
+			"field_name1 - field_name2",
 			"subtract-numeric-fields-from-one-another-to-create-an-expression",
 			"minus"),
 		OR(
@@ -280,27 +311,35 @@ public class ObjectCodeEditorUtil {
 				"independent-relationship",
 			"or"),
 		PLUS(
-			"field_name + field_name2",
+			"field_name1 + field_name2",
 			"add-numeric-fields-to-create-an-expression", "plus"),
 		TIMES(
-			"field_name * field_name2",
+			"field_name1 * field_name2",
 			"multiply-numeric-fields-to-create-an-expression", "times");
 
-		public static List<HashMap<String, String>> getItems(Locale locale) {
-			List<HashMap<String, String>> values = new ArrayList<>();
+		public static List<Map<String, String>> getItems(
+			Predicate<DDMExpressionOperator> ddmExpressionOperatorPredicate,
+			Locale locale) {
+
+			List<Map<String, String>> values = new ArrayList<>();
 
 			for (DDMExpressionOperator ddmExpressionOperator : values()) {
-				values.add(
-					HashMapBuilder.put(
-						"content", ddmExpressionOperator._content
-					).put(
-						"helpText",
-						LanguageUtil.get(
-							locale, ddmExpressionOperator._helpTextKey)
-					).put(
-						"label",
-						LanguageUtil.get(locale, ddmExpressionOperator._key)
-					).build());
+				if ((ddmExpressionOperatorPredicate == null) ||
+					ddmExpressionOperatorPredicate.test(
+						ddmExpressionOperator)) {
+
+					values.add(
+						HashMapBuilder.put(
+							"content", ddmExpressionOperator._content
+						).put(
+							"helpText",
+							LanguageUtil.get(
+								locale, ddmExpressionOperator._helpTextKey)
+						).put(
+							"label",
+							LanguageUtil.get(locale, ddmExpressionOperator._key)
+						).build());
+				}
 			}
 
 			return values;
@@ -319,5 +358,19 @@ public class ObjectCodeEditorUtil {
 		private String _key;
 
 	}
+
+	private static Map<String, Object> _createCodeEditorElement(
+		List<Map<String, String>> items, String key, Locale locale) {
+
+		return HashMapBuilder.<String, Object>put(
+			"items", items
+		).put(
+			"label", LanguageUtil.get(locale, key)
+		).build();
+	}
+
+	private static final Snapshot<ObjectFieldLocalService>
+		_objectFieldLocalServiceSnapshot = new Snapshot<>(
+			ObjectCodeEditorUtil.class, ObjectFieldLocalService.class);
 
 }

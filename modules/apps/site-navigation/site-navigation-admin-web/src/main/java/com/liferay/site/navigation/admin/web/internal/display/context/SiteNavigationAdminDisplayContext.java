@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.admin.web.internal.display.context;
@@ -20,7 +11,7 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
-import com.liferay.petra.string.StringPool;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,6 +36,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -69,13 +61,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -102,38 +91,37 @@ public class SiteNavigationAdminDisplayContext {
 		_siteNavigationMenuLocalService = siteNavigationMenuLocalService;
 		_siteNavigationMenuService = siteNavigationMenuService;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getAddSiteNavigationMenuItemDropdownItems() {
-		SiteNavigationMenuItemTypeContext siteNavigationMenuItemTypeContext =
-			new DefaultSiteNavigationMenuItemTypeContext(
-				_themeDisplay.getScopeGroup());
-
 		List<SiteNavigationMenuItemType> siteNavigationMenuItemTypes =
 			_siteNavigationMenuItemTypeRegistry.
 				getSiteNavigationMenuItemTypes();
 
-		Stream<SiteNavigationMenuItemType> stream =
-			siteNavigationMenuItemTypes.stream();
+		SiteNavigationMenuItemTypeContext siteNavigationMenuItemTypeContext =
+			new DefaultSiteNavigationMenuItemTypeContext(
+				_themeDisplay.getScopeGroup());
+
+		siteNavigationMenuItemTypes = ListUtil.filter(
+			siteNavigationMenuItemTypes,
+			siteNavigationMenuItemType ->
+				siteNavigationMenuItemType.isAvailable(
+					siteNavigationMenuItemTypeContext));
+
+		ListUtil.sort(
+			siteNavigationMenuItemTypes,
+			Comparator.comparing(
+				siteNavigationMenuItemType ->
+					siteNavigationMenuItemType.getLabel(
+						_themeDisplay.getLocale())));
 
 		return DropdownItemListBuilder.addAll(
-			stream.filter(
-				siteNavigationMenuItemType ->
-					siteNavigationMenuItemType.isAvailable(
-						siteNavigationMenuItemTypeContext)
-			).sorted(
-				Comparator.comparing(
-					siteNavigationMenuItemType ->
-						siteNavigationMenuItemType.getLabel(
-							_themeDisplay.getLocale()))
-			).map(
+			TransformUtil.transform(
+				siteNavigationMenuItemTypes,
 				siteNavigationMenuItemType -> _getDropdownItem(
-					siteNavigationMenuItemType, _themeDisplay)
-			).collect(
-				Collectors.toList()
-			)
+					siteNavigationMenuItemType, _themeDisplay))
 		).build();
 	}
 
@@ -397,7 +385,7 @@ public class SiteNavigationAdminDisplayContext {
 			}
 		}
 
-		PortletURL addURL = PortletURLBuilder.createRenderURL(
+		return PortletURLBuilder.createRenderURL(
 			_liferayPortletResponse
 		).setMVCPath(
 			"/add_site_navigation_menu_item.jsp"
@@ -418,20 +406,9 @@ public class SiteNavigationAdminDisplayContext {
 			"siteNavigationMenuId", getSiteNavigationMenuId()
 		).setParameter(
 			"type", siteNavigationMenuItemType.getType()
-		).build();
-
-		try {
-			addURL.setWindowState(LiferayWindowState.POP_UP);
-		}
-		catch (WindowStateException windowStateException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(windowStateException);
-			}
-
-			return StringPool.BLANK;
-		}
-
-		return addURL.toString();
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	private JSONArray _getDDMTemplatesJSONArray() {
@@ -556,16 +533,7 @@ public class SiteNavigationAdminDisplayContext {
 			}
 		}
 
-		try {
-			return PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId);
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(portalException);
-			}
-		}
-
-		return new long[] {groupId};
+		return PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId);
 	}
 
 	private String _getPreviewSiteNavigationMenuURL() {

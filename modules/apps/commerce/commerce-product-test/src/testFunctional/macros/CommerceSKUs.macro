@@ -3,14 +3,14 @@ definition {
 	macro addPriceToSKU {
 		Type(
 			locator1 = "CommerceEntry#PRICE_FIELD",
-			value1 = "${price}");
+			value1 = ${price});
 	}
 
 	macro addSKU {
-		for (var optionValues : list "${optionValuesList}") {
-			var optionValue = StringUtil.extractFirst("${optionValues}", ":");
-			var price = StringUtil.extractLast("${optionValues}", ":");
-			var optionValueUppercase = StringUtil.upperCase("${optionValue}");
+		for (var optionValues : list ${optionValuesList}) {
+			var optionValue = StringUtil.extractFirst(${optionValues}, ":");
+			var price = StringUtil.extractLast(${optionValues}, ":");
+			var optionValueUppercase = StringUtil.upperCase(${optionValue});
 
 			Refresh();
 
@@ -20,14 +20,14 @@ definition {
 				AssertClick(
 					key_menuItem = "Add SKU",
 					locator1 = "MenuItem#DROPDOWN_MENU_ITEM",
-					value1 = "${key_menuItem}");
+					value1 = ${key_menuItem});
 			}
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 			CommerceEntry.addSKUsEntry(
-				noOption = "${noOption}",
-				optionValue = "${optionValue}",
+				noOption = ${noOption},
+				optionValue = ${optionValue},
 				productSku = "${optionValueUppercase}SKU");
 
 			WaitForElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
@@ -36,7 +36,7 @@ definition {
 				key_toggleSwitchLabel = "Purchasable",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-			CommerceSKUs.addPriceToSKU(price = "${price}");
+			CommerceSKUs.addPriceToSKU(price = ${price});
 
 			Button.clickPublish();
 
@@ -53,7 +53,7 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#SKU_ERC_FIELD",
-			value1 = "${skuERC}");
+			value1 = ${skuERC});
 
 		if (isSet(publish)) {
 			Button.clickPublish();
@@ -69,32 +69,142 @@ definition {
 	macro editSkuPricing {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
+		CommerceSKUs.setSkuPricing(
+			basePrice = ${basePrice},
+			cost = ${cost},
+			priceOnApplication = ${priceOnApplication},
+			promoPrice = ${promoPrice});
+
+		if (IsElementPresent(key_text = "Publish", locator1 = "Button#ANY")) {
+			Button.clickPublish();
+		}
+		else if (IsElementPresent(key_text = "Save", locator1 = "Button#ANY")) {
+			Button.clickSave();
+		}
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrame.selectFrameTop();
+	}
+
+	macro generateAllSkuCombinations {
+		Click(locator1 = "Button#PLUS");
+
+		Click(
+			key_fieldName = "Generate All SKU Combinations",
+			locator1 = "FormViewBuilder#OBJECT_FIELD_BUTTON_DROPDOWN");
+	}
+
+	macro setSkuInventory {
+		if (isSet(italyQuantity)) {
+			Type(
+				key_value1 = 0,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
+				value1 = ${italyQuantity});
+
+			Click(
+				key_value1 = 0,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_SAVE_BUTTON");
+		}
+
+		if (isSet(northeastQuantity)) {
+			Type(
+				key_value1 = 1,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
+				value1 = ${northeastQuantity});
+
+			Click(
+				key_value1 = 1,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_SAVE_BUTTON");
+		}
+
+		if (isSet(southwestQuantity)) {
+			Type(
+				key_value1 = 2,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
+				value1 = ${southwestQuantity});
+
+			Click(
+				key_value1 = 2,
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_SAVE_BUTTON");
+		}
+	}
+
+	macro setSkuPricing {
+		if (isSet(priceOnApplication)) {
+			if (${priceOnApplication} == "true") {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "Price on Application",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+			else {
+				Uncheck.uncheckToggleSwitch(
+					key_toggleSwitchLabel = "Price on Application",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
 		if (isSet(basePrice)) {
 			Type(
 				key_text = "Base Price",
 				locator1 = "TextInput#ANY",
-				value1 = "${basePrice}");
+				value1 = ${basePrice});
 		}
 
 		if (isSet(promoPrice)) {
 			Type(
 				key_text = "Promotion Price",
 				locator1 = "TextInput#ANY",
-				value1 = "${promoPrice}");
+				value1 = ${promoPrice});
 		}
 
 		if (isSet(cost)) {
 			Type(
 				key_text = "Cost",
 				locator1 = "TextInput#ANY",
-				value1 = "${cost}");
+				value1 = ${cost});
 		}
+	}
 
-		Button.clickPublish();
+	macro setSkuUomInventory {
+		for (var uomQuantityList : list ${uomQuantityLists}) {
+			var warehouseItemList = StringUtil.extractFirst(${uomQuantityList}, ":");
+			var warehouseItemQuantity = StringUtil.extractLast(${uomQuantityList}, ":");
 
-		Click(locator1 = "Icon#CLOSE");
+			Type(
+				key_value1 = ${warehouseItemList},
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
+				value1 = ${warehouseItemQuantity});
 
-		SelectFrame.selectFrameTop();
+			Click(
+				key_value1 = ${warehouseItemList},
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_SAVE_BUTTON");
+		}
+	}
+
+	macro viewSkuUomInventory {
+		for (var uomQuantityList : list ${uomQuantityLists}) {
+			var warehouseItemList = StringUtil.extractFirst(${uomQuantityList}, ":");
+			var warehouseItemQuantity = StringUtil.extractLast(${uomQuantityList}, ":");
+
+			AssertTextEquals(
+				key_value1 = ${warehouseItemList},
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
+				value1 = ${warehouseItemQuantity});
+		}
+	}
+
+	macro viewSkuUomWarehouse {
+		for (var uomList : list ${uomLists}) {
+			var index = StringUtil.extractFirst(${uomList}, ":");
+			var warehouseName = StringUtil.extractLast(${uomList}, ":");
+
+			AssertTextEquals(
+				key_index = ${index},
+				key_warehouseName = ${warehouseName},
+				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_UNIT_OF_MEASURE",
+				value1 = ${uomKey});
+		}
 	}
 
 }

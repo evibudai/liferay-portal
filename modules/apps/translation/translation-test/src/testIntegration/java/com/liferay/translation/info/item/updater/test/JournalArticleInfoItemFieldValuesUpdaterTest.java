@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.info.item.updater.test;
@@ -19,6 +10,9 @@ import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
@@ -41,9 +35,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.xml.Document;
-import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -51,8 +42,10 @@ import com.liferay.translation.importer.TranslationInfoItemFieldValuesImporter;
 import com.liferay.translation.service.TranslationEntryLocalService;
 import com.liferay.translation.test.util.TranslationTestUtil;
 
+import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -130,8 +123,7 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"<p>Este es el contenido</p>",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.SPAIN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.SPAIN));
 	}
 
 	@Test
@@ -183,13 +175,11 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"<p>これが内容です</p>",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.JAPAN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.JAPAN));
 		Assert.assertEquals(
 			"Este es el contenido",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.SPAIN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.SPAIN));
 	}
 
 	@Test
@@ -215,8 +205,7 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"Este campo es nuevo",
 			_getContent(
-				journalArticle.getContent(), "NewText", LocaleUtil.US,
-				LocaleUtil.SPAIN));
+				journalArticle, "NewText", LocaleUtil.US, LocaleUtil.SPAIN));
 	}
 
 	@Test
@@ -259,8 +248,7 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			StringPool.BLANK,
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.SPAIN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.SPAIN));
 	}
 
 	@Test
@@ -296,8 +284,7 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"translate content to japanese",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.JAPAN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.JAPAN));
 
 		InfoItemFieldValues infoItemFieldValues =
 			_xliffTranslationInfoItemFieldValuesImporter.
@@ -319,8 +306,7 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"<p>これが内容です</p>",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.JAPAN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.JAPAN));
 	}
 
 	@Test
@@ -361,55 +347,38 @@ public class JournalArticleInfoItemFieldValuesUpdaterTest {
 		Assert.assertEquals(
 			"<p>XLIFF 文書を編集、または処理 するアプリケーションです。</p>",
 			_getContent(
-				journalArticle.getContent(), "name", LocaleUtil.US,
-				LocaleUtil.JAPAN));
+				journalArticle, "name", LocaleUtil.US, LocaleUtil.JAPAN));
 	}
 
 	private String _getContent(
-			String actualXML, String fieldName, Locale sourceLocale,
-			Locale targetLocale)
-		throws Exception {
+		JournalArticle journalArticle, String fieldName, Locale sourceLocale,
+		Locale targetLocale) {
 
-		Document actualDocument = SAXReaderUtil.read(actualXML);
+		DDMFormValues ddmFormValues = journalArticle.getDDMFormValues();
 
-		Element rootElement = actualDocument.getRootElement();
+		Set<Locale> availableLocales = ddmFormValues.getAvailableLocales();
 
-		String availableLanguageIds = rootElement.attributeValue(
-			"available-locales");
-
-		if (!availableLanguageIds.contains(
-				LocaleUtil.toLanguageId(sourceLocale)) ||
-			!availableLanguageIds.contains(
-				LocaleUtil.toLanguageId(targetLocale))) {
+		if (!availableLocales.contains(sourceLocale) ||
+			!availableLocales.contains(targetLocale)) {
 
 			return StringPool.BLANK;
 		}
 
-		for (Element dynamicElementElement :
-				rootElement.elements("dynamic-element")) {
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+			ddmFormValues.getDDMFormFieldValuesMap(true);
 
-			String attribute = dynamicElementElement.attributeValue(
-				"name", StringPool.BLANK);
+		List<DDMFormFieldValue> ddmFormFieldValues = ddmFormFieldValuesMap.get(
+			fieldName);
 
-			if (!Objects.equals(attribute, fieldName)) {
-				continue;
-			}
-
-			for (Element element :
-					dynamicElementElement.elements("dynamic-content")) {
-
-				String languageId = element.attributeValue(
-					"language-id", StringPool.BLANK);
-
-				if (Objects.equals(
-						languageId, LocaleUtil.toLanguageId(targetLocale))) {
-
-					return element.getStringValue();
-				}
-			}
+		if (ddmFormFieldValues.isEmpty()) {
+			return null;
 		}
 
-		return StringPool.BLANK;
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+
+		Value value = ddmFormFieldValue.getValue();
+
+		return value.getString(targetLocale);
 	}
 
 	private JournalArticle _getJournalArticle() throws Exception {

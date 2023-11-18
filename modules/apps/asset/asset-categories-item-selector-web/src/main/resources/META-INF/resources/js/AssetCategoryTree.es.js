@@ -1,23 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {TreeView as ClayTreeView} from '@clayui/core';
 import ClayEmptyState from '@clayui/empty-state';
 import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import {getOpener} from 'frontend-js-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import {SearchResultsMessage} from '@liferay/layout-js-components-web';
+import {getOpener, sub} from 'frontend-js-web';
+import React, {useEffect, useMemo} from 'react';
+
+import './../css/tree.scss';
 
 const nodeByName = (items, name) => {
 	return items.reduce(function reducer(acc, item) {
@@ -44,14 +38,15 @@ function visit(nodes, callback) {
 
 export function AssetCategoryTree({
 	filterQuery,
+	inheritSelection,
 	itemSelectedEventName,
 	items,
 	multiSelection,
 	onItems,
 	onSelectedItemsCount,
+	selectedKeys,
+	setSelectedKeys,
 }) {
-	const [selectedKeys, setSelectionChange] = useState(new Set());
-
 	const filteredItems = useMemo(() => {
 		if (!filterQuery) {
 			return items;
@@ -71,7 +66,7 @@ export function AssetCategoryTree({
 	}, [items]);
 
 	useEffect(() => {
-		const selectedItems = [];
+		const selectedItems = {};
 
 		selectedKeys.forEach((key) => {
 			const item = itemsById[key];
@@ -80,28 +75,27 @@ export function AssetCategoryTree({
 				return;
 			}
 
-			selectedItems.push({
+			selectedItems[item.id] = {
+				ancestorIds: item.ancestorIds,
+				categoryId: item.vocabulary ? 0 : item.id,
 				className: item.className,
 				classNameId: item.classNameId,
 				classPK: item.id,
+				nodePath: item.nodePath,
 				title: item.name,
-			});
+				value: item.name,
+				vocabularyId: item.vocabulary ? item.id : 0,
+			};
 		});
 
 		if (onSelectedItemsCount) {
-			onSelectedItemsCount(selectedItems.length);
-		}
-
-		let data = selectedItems;
-
-		if (!multiSelection) {
-			data = selectedItems[0];
+			onSelectedItemsCount(selectedKeys.size);
 		}
 
 		requestAnimationFrame(() => {
-			if (data) {
+			if (Object.keys(selectedItems).length) {
 				getOpener().Liferay.fire(itemSelectedEventName, {
-					data,
+					data: selectedItems,
 				});
 			}
 		});
@@ -122,7 +116,16 @@ export function AssetCategoryTree({
 			return;
 		}
 
-		selection.toggle(item.id);
+		if (!multiSelection) {
+			selection.toggle(item.id);
+
+			return;
+		}
+
+		selection.toggle(item.id, {
+			parentSelection: false,
+			selectionMode: event.shiftKey ? 'multiple-recursive' : null,
+		});
 	};
 
 	const onKeyDown = (event, item, selection) => {
@@ -133,75 +136,154 @@ export function AssetCategoryTree({
 				return;
 			}
 
-			selection.toggle(item.id);
+			if (!multiSelection) {
+				selection.toggle(item.id);
+
+				return;
+			}
+
+			selection.toggle(item.id, {
+				parentSelection: false,
+				selectionMode: event.shiftKey ? 'multiple-recursive' : null,
+			});
 		}
 	};
 
-	return filteredItems.length ? (
-		<ClayTreeView
-			items={filteredItems}
-			onItemsChange={(items) => onItems(items)}
-			onSelectionChange={(keys) => setSelectionChange(keys)}
-			selectedKeys={selectedKeys}
-			selectionMode={multiSelection ? 'multiple' : 'single'}
-			showExpanderOnHover={false}
-		>
-			{(item, selection, expand) => (
-				<ClayTreeView.Item>
-					<ClayTreeView.ItemStack
-						onClick={(event) =>
-							onClick(event, item, selection, expand)
+	return (
+		<>
+			<SearchResultsMessage
+				numberOfResults={filteredItems.length}
+				resultType={
+					filteredItems.length > 1
+						? Liferay.Language.get('main-categories')
+						: Liferay.Language.get('main-category')
+				}
+			/>
+			{filteredItems.length ? (
+				<>
+					{multiSelection && (
+						<p
+							className="mb-4"
+							dangerouslySetInnerHTML={{
+								__html: sub(
+									Liferay.Language.get(
+										'press-x-to-select-or-deselect-a-parent-node-and-all-its-child-items'
+									),
+									'<kbd class="c-kbd c-kbd-light">⇧</kbd>'
+								),
+							}}
+						/>
+					)}
+
+					<ClayTreeView
+						items={filteredItems}
+						onItemsChange={(items) => onItems(items)}
+						onSelectionChange={(keys) => setSelectedKeys(keys)}
+						selectedKeys={selectedKeys}
+						selectionMode={
+							inheritSelection
+								? 'multiple-recursive'
+								: multiSelection
+								? 'multiple'
+								: 'single'
 						}
-						onKeyDown={(event) => onKeyDown(event, item, selection)}
+						showExpanderOnHover={false}
 					>
-						{multiSelection && !item.disabled && (
-							<ClayCheckbox
-								onChange={() => selection.toggle(item.id)}
-								tabIndex="-1"
-							/>
-						)}
+						{(item, selection, expand) => (
+							<ClayTreeView.Item>
+								<ClayTreeView.ItemStack
+									onClick={(event) =>
+										onClick(event, item, selection, expand)
+									}
+									onKeyDown={(event) =>
+										onKeyDown(event, item, selection)
+									}
+								>
+									{multiSelection && !item.disabled && (
+										<Checkbox
+											checked={selection.has(item.id)}
+											onChange={(event) => {
+												selection.toggle(item.id, {
+													parentSelection: false,
+													selectionMode: event
+														.nativeEvent.shiftKey
+														? 'multiple-recursive'
+														: null,
+												});
+											}}
+											onClick={(event) =>
+												event.stopPropagation()
+											}
+											tabIndex="-1"
+										/>
+									)}
 
-						<ClayIcon symbol={item.icon} />
+									<ClayIcon symbol={item.icon} />
 
-						{item.name}
-					</ClayTreeView.ItemStack>
+									{item.name}
+								</ClayTreeView.ItemStack>
 
-					<ClayTreeView.Group items={item.children}>
-						{(item) => (
-							<ClayTreeView.Item
-								onClick={(event) =>
-									onClick(event, item, selection)
-								}
-								onKeyDown={(event) =>
-									onKeyDown(event, item, selection)
-								}
-							>
-								{multiSelection && !item.disabled && (
-									<ClayCheckbox
-										onChange={() =>
-											selection.toggle(item.id)
-										}
-										tabIndex="-1"
-									/>
-								)}
+								<ClayTreeView.Group items={item.children}>
+									{(item) => (
+										<ClayTreeView.Item
+											onClick={(event) =>
+												onClick(event, item, selection)
+											}
+											onKeyDown={(event) =>
+												onKeyDown(
+													event,
+													item,
+													selection
+												)
+											}
+										>
+											{multiSelection && !item.disabled && (
+												<Checkbox
+													checked={selection.has(
+														item.id
+													)}
+													onChange={(event) => {
+														selection.toggle(
+															item.id,
+															{
+																parentSelection: false,
+																selectionMode: event
+																	.nativeEvent
+																	.shiftKey
+																	? 'multiple-recursive'
+																	: null,
+															}
+														);
+													}}
+													onClick={(event) =>
+														event.stopPropagation()
+													}
+													tabIndex="-1"
+												/>
+											)}
 
-								<ClayIcon symbol={item.icon} />
+											<ClayIcon symbol={item.icon} />
 
-								{item.name}
+											{item.name}
+										</ClayTreeView.Item>
+									)}
+								</ClayTreeView.Group>
 							</ClayTreeView.Item>
 						)}
-					</ClayTreeView.Group>
-				</ClayTreeView.Item>
+					</ClayTreeView>
+				</>
+			) : (
+				<ClayEmptyState
+					description={Liferay.Language.get(
+						'try-again-with-a-different-search'
+					)}
+					imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+					small
+					title={Liferay.Language.get('no-results-found')}
+				/>
 			)}
-		</ClayTreeView>
-	) : (
-		<ClayEmptyState
-			description={Liferay.Language.get(
-				'try-again-with-a-different-search'
-			)}
-			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
-			small
-			title={Liferay.Language.get('no-results-found')}
-		/>
+		</>
 	);
 }
+
+const Checkbox = (props) => <ClayCheckbox {...props} />;

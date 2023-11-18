@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.client.serdes.v1_0;
@@ -28,7 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -199,6 +189,20 @@ public class OrderSerDes {
 			sb.append("\"");
 
 			sb.append(liferayToJSONDateFormat.format(order.getCreateDate()));
+
+			sb.append("\"");
+		}
+
+		if (order.getCreatorEmailAddress() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creatorEmailAddress\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(order.getCreatorEmailAddress()));
 
 			sb.append("\"");
 		}
@@ -1352,6 +1356,15 @@ public class OrderSerDes {
 				liferayToJSONDateFormat.format(order.getCreateDate()));
 		}
 
+		if (order.getCreatorEmailAddress() == null) {
+			map.put("creatorEmailAddress", null);
+		}
+		else {
+			map.put(
+				"creatorEmailAddress",
+				String.valueOf(order.getCreatorEmailAddress()));
+		}
+
 		if (order.getCurrencyCode() == null) {
 			map.put("currencyCode", null);
 		}
@@ -2231,6 +2244,13 @@ public class OrderSerDes {
 					order.setCreateDate(toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "creatorEmailAddress")) {
+
+				if (jsonParserFieldValue != null) {
+					order.setCreatorEmailAddress((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
 				if (jsonParserFieldValue != null) {
 					order.setCurrencyCode((String)jsonParserFieldValue);
@@ -2294,14 +2314,18 @@ public class OrderSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderItems")) {
 				if (jsonParserFieldValue != null) {
-					order.setOrderItems(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> OrderItemSerDes.toDTO((String)object)
-						).toArray(
-							size -> new OrderItem[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					OrderItem[] orderItemsArray =
+						new OrderItem[jsonParserFieldValues.length];
+
+					for (int i = 0; i < orderItemsArray.length; i++) {
+						orderItemsArray[i] = OrderItemSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					order.setOrderItems(orderItemsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderStatus")) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.list.type.resource.v1_0.test;
@@ -46,7 +37,32 @@ public class ListTypeEntryResourceTest
 		_listTypeDefinition =
 			ListTypeDefinitionLocalServiceUtil.addListTypeDefinition(
 				null, TestPropsValues.getUserId(),
-				Collections.singletonMap(LocaleUtil.getDefault(), "test"));
+				Collections.singletonMap(LocaleUtil.getDefault(), "test"),
+				false, Collections.emptyList());
+	}
+
+	@Override
+	@Test
+	public void testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPageWithSortInteger()
+		throws Exception {
+
+		testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, listTypeEntry1, listTypeEntry2) -> {
+				if (BeanTestUtil.hasProperty(
+						listTypeEntry1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						listTypeEntry1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						listTypeEntry2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						listTypeEntry2, entityField.getName(), 1);
+				}
+			});
 	}
 
 	@Override
@@ -103,6 +119,25 @@ public class ListTypeEntryResourceTest
 	}
 
 	@Override
+	protected ListTypeEntry
+			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_addListTypeEntry(
+				String externalReferenceCode, ListTypeEntry listTypeEntry)
+		throws Exception {
+
+		return listTypeEntryResource.
+			postListTypeDefinitionByExternalReferenceCodeListTypeEntry(
+				externalReferenceCode, listTypeEntry);
+	}
+
+	@Override
+	protected String
+			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_getExternalReferenceCode()
+		throws Exception {
+
+		return _listTypeDefinition.getExternalReferenceCode();
+	}
+
+	@Override
 	protected Long
 		testGetListTypeDefinitionListTypeEntriesPage_getListTypeDefinitionId() {
 
@@ -121,6 +156,17 @@ public class ListTypeEntryResourceTest
 		throws Exception {
 
 		return _addListTypeEntry();
+	}
+
+	@Override
+	protected ListTypeEntry
+			testPostListTypeDefinitionByExternalReferenceCodeListTypeEntry_addListTypeEntry(
+				ListTypeEntry listTypeEntry)
+		throws Exception {
+
+		return listTypeEntryResource.
+			postListTypeDefinitionByExternalReferenceCodeListTypeEntry(
+				_listTypeDefinition.getExternalReferenceCode(), listTypeEntry);
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.impl;
@@ -26,11 +17,12 @@ import com.liferay.commerce.product.model.CPAttachmentFileEntryTable;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.base.CPAttachmentFileEntryLocalServiceBaseImpl;
 import com.liferay.commerce.product.service.persistence.CPDefinitionPersistence;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Expression;
@@ -45,6 +37,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassName;
@@ -75,6 +68,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -140,7 +134,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 			false);
 
 		Date expirationDate = null;
-		Date now = new Date();
+		Date date = new Date();
 
 		Date displayDate = _portal.getDate(
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
@@ -155,7 +149,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		}
 
 		if ((expirationDate != null) &&
-			(expirationDate.before(now) ||
+			(expirationDate.before(date) ||
 			 ((displayDate != null) && expirationDate.before(displayDate)))) {
 
 			throw new CPAttachmentFileEntryExpirationDateException(
@@ -192,7 +186,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		cpAttachmentFileEntry.setDisplayDate(displayDate);
 		cpAttachmentFileEntry.setExpirationDate(expirationDate);
 
-		if ((expirationDate == null) || expirationDate.after(now)) {
+		if ((expirationDate == null) || expirationDate.after(date)) {
 			cpAttachmentFileEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
 		}
 		else {
@@ -315,6 +309,21 @@ public class CPAttachmentFileEntryLocalServiceImpl
 	}
 
 	@Override
+	public void deleteCPAttachmentFileEntries(long fileEntryId)
+		throws PortalException {
+
+		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
+			cpAttachmentFileEntryPersistence.findByFileEntryId(fileEntryId);
+
+		for (CPAttachmentFileEntry cpAttachmentFileEntry :
+				cpAttachmentFileEntries) {
+
+			cpAttachmentFileEntryLocalService.deleteCPAttachmentFileEntry(
+				cpAttachmentFileEntry);
+		}
+	}
+
+	@Override
 	public void deleteCPAttachmentFileEntries(String className, long classPK)
 		throws PortalException {
 
@@ -365,11 +374,23 @@ public class CPAttachmentFileEntryLocalServiceImpl
 			}
 		}
 
-		// Commerce product attachment file entry
-
 		cpAttachmentFileEntryPersistence.remove(cpAttachmentFileEntry);
 
-		// Expando
+		FileEntry fileEntry = cpAttachmentFileEntry.fetchFileEntry();
+
+		if ((fileEntry != null) &&
+			(fileEntry.getGroupId() == cpAttachmentFileEntry.getGroupId())) {
+
+			List<CPAttachmentFileEntry> cpAttachmentFileEntries =
+				cpAttachmentFileEntryPersistence.findByG_C_F(
+					cpAttachmentFileEntry.getGroupId(), cpDefinitionClassNameId,
+					cpAttachmentFileEntry.getFileEntryId());
+
+			if (ListUtil.isEmpty(cpAttachmentFileEntries)) {
+				_dlAppLocalService.deleteFileEntry(
+					cpAttachmentFileEntry.getFileEntryId());
+			}
+		}
 
 		_expandoRowLocalService.deleteRows(
 			cpAttachmentFileEntry.getCPAttachmentFileEntryId());
@@ -463,18 +484,23 @@ public class CPAttachmentFileEntryLocalServiceImpl
 			int status, int start, int end)
 		throws PortalException {
 
-		return dslQuery(
-			_getGroupByStep(
-				DSLQueryFactoryUtil.selectDistinct(
-					CPAttachmentFileEntryTable.INSTANCE
-				).from(
-					CPAttachmentFileEntryTable.INSTANCE
-				),
-				classNameId, classPK, keywords, type, status,
-				CPAttachmentFileEntryTable.INSTANCE.title
-			).limit(
-				start, end
-			));
+		return TransformUtil.transform(
+			dslQuery(
+				_getGroupByStep(
+					DSLQueryFactoryUtil.selectDistinct(
+						CPAttachmentFileEntryTable.INSTANCE.
+							CPAttachmentFileEntryId
+					).from(
+						CPAttachmentFileEntryTable.INSTANCE
+					),
+					classNameId, classPK, keywords, type, status,
+					CPAttachmentFileEntryTable.INSTANCE.title
+				).limit(
+					start, end
+				)),
+			cpAttachmentFileEntryId ->
+				cpAttachmentFileEntryLocalService.getCPAttachmentFileEntry(
+					(Long)cpAttachmentFileEntryId));
 	}
 
 	@Override
@@ -490,7 +516,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		if (_jsonHelper.isArray(serializedDDMFormValues)) {
+		if (JSONUtil.isJSONArray(serializedDDMFormValues)) {
 			jsonArray = _jsonFactory.createJSONArray(serializedDDMFormValues);
 		}
 
@@ -516,17 +542,17 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-			JSONArray valueAsJSONArray = _jsonHelper.getValueAsJSONArray(
-				"value", jsonObject);
+			JSONArray valueJSONArray = CPJSONUtil.getJSONArray(
+				jsonObject, "value");
 
-			String[] values = new String[valueAsJSONArray.length()];
+			String[] values = new String[valueJSONArray.length()];
 
 			if (values.length == 0) {
 				continue;
 			}
 
-			for (int j = 0; j < valueAsJSONArray.length(); j++) {
-				values[j] = valueAsJSONArray.getString(j);
+			for (int j = 0; j < valueJSONArray.length(); j++) {
+				values[j] = valueJSONArray.getString(j);
 			}
 
 			String key = jsonObject.getString("key");
@@ -669,7 +695,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 			cpAttachmentFileEntry.getCDNURL(), true);
 
 		Date expirationDate = null;
-		Date now = new Date();
+		Date date = new Date();
 
 		Date displayDate = _portal.getDate(
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
@@ -684,7 +710,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		}
 
 		if ((expirationDate != null) &&
-			(expirationDate.before(now) ||
+			(expirationDate.before(date) ||
 			 ((displayDate != null) && expirationDate.before(displayDate)))) {
 
 			throw new CPAttachmentFileEntryExpirationDateException(
@@ -694,7 +720,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		cpAttachmentFileEntry.setDisplayDate(displayDate);
 		cpAttachmentFileEntry.setExpirationDate(expirationDate);
 
-		if ((expirationDate == null) || expirationDate.after(now)) {
+		if ((expirationDate == null) || expirationDate.after(date)) {
 			cpAttachmentFileEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
 		}
 		else {
@@ -730,7 +756,7 @@ public class CPAttachmentFileEntryLocalServiceImpl
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
-		Date now = new Date();
+		Date date = new Date();
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			cpAttachmentFileEntryPersistence.findByPrimaryKey(
@@ -738,23 +764,23 @@ public class CPAttachmentFileEntryLocalServiceImpl
 
 		if ((status == WorkflowConstants.STATUS_APPROVED) &&
 			(cpAttachmentFileEntry.getDisplayDate() != null) &&
-			now.before(cpAttachmentFileEntry.getDisplayDate())) {
+			date.before(cpAttachmentFileEntry.getDisplayDate())) {
 
 			status = WorkflowConstants.STATUS_SCHEDULED;
 		}
 
-		Date modifiedDate = serviceContext.getModifiedDate(now);
+		Date modifiedDate = serviceContext.getModifiedDate(date);
 
 		if (status == WorkflowConstants.STATUS_APPROVED) {
 			Date expirationDate = cpAttachmentFileEntry.getExpirationDate();
 
-			if ((expirationDate != null) && expirationDate.before(now)) {
+			if ((expirationDate != null) && expirationDate.before(date)) {
 				cpAttachmentFileEntry.setExpirationDate(null);
 			}
 		}
 
 		if (status == WorkflowConstants.STATUS_EXPIRED) {
-			cpAttachmentFileEntry.setExpirationDate(now);
+			cpAttachmentFileEntry.setExpirationDate(date);
 		}
 
 		cpAttachmentFileEntry.setStatus(status);
@@ -1020,9 +1046,6 @@ public class CPAttachmentFileEntryLocalServiceImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 	@Reference
 	private Portal _portal;

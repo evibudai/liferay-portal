@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.model.impl;
@@ -248,106 +239,122 @@ public class NotificationRecipientSettingModelImpl
 	public Map<String, Function<NotificationRecipientSetting, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<NotificationRecipientSetting, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<NotificationRecipientSetting, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<NotificationRecipientSetting, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<NotificationRecipientSetting, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<NotificationRecipientSetting, Object>>();
-		Map<String, BiConsumer<NotificationRecipientSetting, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<NotificationRecipientSetting, ?>>();
+		private static final Map
+			<String, Function<NotificationRecipientSetting, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", NotificationRecipientSetting::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<NotificationRecipientSetting, Long>)
-				NotificationRecipientSetting::setMvccVersion);
-		attributeGetterFunctions.put(
-			"uuid", NotificationRecipientSetting::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<NotificationRecipientSetting, String>)
-				NotificationRecipientSetting::setUuid);
-		attributeGetterFunctions.put(
-			"notificationRecipientSettingId",
-			NotificationRecipientSetting::getNotificationRecipientSettingId);
-		attributeSetterBiConsumers.put(
-			"notificationRecipientSettingId",
-			(BiConsumer<NotificationRecipientSetting, Long>)
+		static {
+			Map<String, Function<NotificationRecipientSetting, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String,
+						 Function<NotificationRecipientSetting, Object>>();
+
+			attributeGetterFunctions.put(
+				"mvccVersion", NotificationRecipientSetting::getMvccVersion);
+			attributeGetterFunctions.put(
+				"uuid", NotificationRecipientSetting::getUuid);
+			attributeGetterFunctions.put(
+				"notificationRecipientSettingId",
 				NotificationRecipientSetting::
-					setNotificationRecipientSettingId);
-		attributeGetterFunctions.put(
-			"companyId", NotificationRecipientSetting::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<NotificationRecipientSetting, Long>)
-				NotificationRecipientSetting::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", NotificationRecipientSetting::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<NotificationRecipientSetting, Long>)
-				NotificationRecipientSetting::setUserId);
-		attributeGetterFunctions.put(
-			"userName", NotificationRecipientSetting::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<NotificationRecipientSetting, String>)
-				NotificationRecipientSetting::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", NotificationRecipientSetting::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<NotificationRecipientSetting, Date>)
-				NotificationRecipientSetting::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", NotificationRecipientSetting::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<NotificationRecipientSetting, Date>)
-				NotificationRecipientSetting::setModifiedDate);
-		attributeGetterFunctions.put(
-			"notificationRecipientId",
-			NotificationRecipientSetting::getNotificationRecipientId);
-		attributeSetterBiConsumers.put(
-			"notificationRecipientId",
-			(BiConsumer<NotificationRecipientSetting, Long>)
-				NotificationRecipientSetting::setNotificationRecipientId);
-		attributeGetterFunctions.put(
-			"name", NotificationRecipientSetting::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<NotificationRecipientSetting, String>)
-				NotificationRecipientSetting::setName);
-		attributeGetterFunctions.put(
-			"value", NotificationRecipientSetting::getValue);
-		attributeSetterBiConsumers.put(
-			"value",
-			(BiConsumer<NotificationRecipientSetting, String>)
-				NotificationRecipientSetting::setValue);
+					getNotificationRecipientSettingId);
+			attributeGetterFunctions.put(
+				"companyId", NotificationRecipientSetting::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", NotificationRecipientSetting::getUserId);
+			attributeGetterFunctions.put(
+				"userName", NotificationRecipientSetting::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", NotificationRecipientSetting::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", NotificationRecipientSetting::getModifiedDate);
+			attributeGetterFunctions.put(
+				"notificationRecipientId",
+				NotificationRecipientSetting::getNotificationRecipientId);
+			attributeGetterFunctions.put(
+				"name", NotificationRecipientSetting::getName);
+			attributeGetterFunctions.put(
+				"value", NotificationRecipientSetting::getValue);
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<NotificationRecipientSetting, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<NotificationRecipientSetting, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<NotificationRecipientSetting, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<NotificationRecipientSetting, Long>)
+					NotificationRecipientSetting::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<NotificationRecipientSetting, String>)
+					NotificationRecipientSetting::setUuid);
+			attributeSetterBiConsumers.put(
+				"notificationRecipientSettingId",
+				(BiConsumer<NotificationRecipientSetting, Long>)
+					NotificationRecipientSetting::
+						setNotificationRecipientSettingId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<NotificationRecipientSetting, Long>)
+					NotificationRecipientSetting::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<NotificationRecipientSetting, Long>)
+					NotificationRecipientSetting::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<NotificationRecipientSetting, String>)
+					NotificationRecipientSetting::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<NotificationRecipientSetting, Date>)
+					NotificationRecipientSetting::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<NotificationRecipientSetting, Date>)
+					NotificationRecipientSetting::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"notificationRecipientId",
+				(BiConsumer<NotificationRecipientSetting, Long>)
+					NotificationRecipientSetting::setNotificationRecipientId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<NotificationRecipientSetting, String>)
+					NotificationRecipientSetting::setName);
+			attributeSetterBiConsumers.put(
+				"value",
+				(BiConsumer<NotificationRecipientSetting, String>)
+					NotificationRecipientSetting::setValue);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -1081,7 +1088,8 @@ public class NotificationRecipientSettingModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<NotificationRecipientSetting, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal;
@@ -18,15 +9,15 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.IndexSearcher;
 import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -36,6 +27,7 @@ import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch7.internal.index.IndexConfigurationDynamicUpdatesExecutor;
 import com.liferay.portal.search.elasticsearch7.internal.index.IndexFactory;
 import com.liferay.portal.search.engine.ConnectionInformation;
 import com.liferay.portal.search.engine.NodeInformation;
@@ -60,20 +52,26 @@ import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRepositoryDetai
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotState;
 import com.liferay.portal.search.index.IndexNameBuilder;
 
+import java.io.IOException;
+
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.action.ingest.PutPipelineRequest;
+import org.elasticsearch.client.IngestClient;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.xcontent.XContentType;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -136,14 +134,21 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchConnectionManager.getRestHighLevelClient();
 
-		_indexFactory.createIndices(restHighLevelClient.indices(), companyId);
+		_putTimestampPipeline(restHighLevelClient);
+
+		boolean created = _indexFactory.createIndices(
+			restHighLevelClient.indices(), companyId);
 
 		_indexFactory.registerCompanyId(companyId);
 
-		_waitForYellowStatus();
+		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
+
+		if (created) {
+			_waitForYellowStatus();
+		}
 
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
-			_crossClusterReplicationHelper;
+			_crossClusterReplicationHelperSnapshot.get();
 
 		if (crossClusterReplicationHelper != null) {
 			crossClusterReplicationHelper.follow(
@@ -166,7 +171,7 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	@Override
 	public void removeCompany(long companyId) {
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
-			_crossClusterReplicationHelper;
+			_crossClusterReplicationHelperSnapshot.get();
 
 		if (crossClusterReplicationHelper != null) {
 			crossClusterReplicationHelper.unfollow(
@@ -230,10 +235,6 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 			}
 		}
 
-		for (Company company : _companyLocalService.getCompanies()) {
-			initialize(company.getCompanyId());
-		}
-
 		initialize(CompanyConstants.SYSTEM);
 	}
 
@@ -262,6 +263,10 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	}
 
 	private void _checkNodeVersions() {
+		if (!_elasticsearchConfigurationWrapper.productionModeEnabled()) {
+			return;
+		}
+
 		String minimumVersionString =
 			_elasticsearchConfigurationWrapper.minimumRequiredNodeVersion();
 
@@ -343,6 +348,39 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 		return true;
 	}
 
+	private void _putTimestampPipeline(
+		RestHighLevelClient restHighLevelClient) {
+
+		String source = JSONUtil.put(
+			"description", "Adds timestamp to documents"
+		).put(
+			"processors",
+			JSONUtil.put(
+				JSONUtil.put(
+					"set",
+					JSONUtil.put(
+						"field", "_source.timestamp"
+					).put(
+						"value", "{{{_ingest.timestamp}}}"
+					)))
+		).toString();
+
+		PutPipelineRequest putPipelineRequest = new PutPipelineRequest(
+			"timestamp",
+			new BytesArray(source.getBytes(StandardCharsets.UTF_8)),
+			XContentType.JSON);
+
+		IngestClient ingestClient = restHighLevelClient.ingest();
+
+		try {
+			ingestClient.putPipeline(
+				putPipelineRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			_log.error("Unable to put timestamp pipeline", ioException);
+		}
+	}
+
 	private void _validateBackupName(String backupName) throws SearchException {
 		if (Validator.isNull(backupName)) {
 			throw new SearchException(
@@ -388,7 +426,6 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 		HealthClusterRequest healthClusterRequest = new HealthClusterRequest();
 
 		healthClusterRequest.setTimeout(timeout);
-
 		healthClusterRequest.setWaitForClusterHealthStatus(
 			ClusterHealthStatus.YELLOW);
 
@@ -409,16 +446,10 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchSearchEngine.class);
 
-	@Reference
-	private CompanyLocalService _companyLocalService;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile CrossClusterReplicationHelper
-		_crossClusterReplicationHelper;
+	private static final Snapshot<CrossClusterReplicationHelper>
+		_crossClusterReplicationHelperSnapshot = new Snapshot(
+			ElasticsearchSearchEngine.class,
+			CrossClusterReplicationHelper.class, null, true);
 
 	@Reference
 	private volatile ElasticsearchConfigurationWrapper
@@ -426,6 +457,10 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 
 	@Reference
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
+
+	@Reference
+	private IndexConfigurationDynamicUpdatesExecutor
+		_indexConfigurationDynamicUpdatesExecutor;
 
 	@Reference
 	private IndexFactory _indexFactory;

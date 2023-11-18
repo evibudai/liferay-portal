@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.portlet.category;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletCategory;
@@ -33,6 +25,7 @@ import com.liferay.portal.kernel.model.PortletItem;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletItemLocalService;
@@ -55,6 +48,7 @@ import com.liferay.portal.util.PortletCategoryUtil;
 import com.liferay.portal.util.WebAppPool;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -169,6 +163,24 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 		return highlightedPortletIds;
 	}
 
+	private Set<String> _getLayoutDecodedPortletNames(
+		ThemeDisplay themeDisplay) {
+
+		Set<String> layoutDecodedPortletNames = new HashSet<>();
+
+		LayoutTypePortlet layoutTypePortlet =
+			themeDisplay.getLayoutTypePortlet();
+
+		for (Portlet layoutPortlet : layoutTypePortlet.getPortlets()) {
+			String decodedPortletName = PortletIdCodec.decodePortletName(
+				layoutPortlet.getPortletId());
+
+			layoutDecodedPortletNames.add(decodedPortletName);
+		}
+
+		return layoutDecodedPortletNames;
+	}
+
 	private Map<String, JSONObject> _getPortletCategoryJSONObjectsMap(
 			Set<String> highlightedPortletIds,
 			HttpServletRequest httpServletRequest,
@@ -177,6 +189,9 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 
 		Map<String, JSONObject> portletCategoryJSONObjectsMap =
 			new LinkedHashMap<>();
+
+		Set<String> layoutDecodedPortletNames = _getLayoutDecodedPortletNames(
+			themeDisplay);
 
 		List<PortletCategory> portletCategories = ListUtil.fromCollection(
 			portletCategory.getCategories());
@@ -205,7 +220,8 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 
 			JSONArray portletsJSONArray = _getPortletsJSONArray(
 				highlightedPortletIds, httpServletRequest,
-				currentPortletCategory, themeDisplay);
+				layoutDecodedPortletNames, currentPortletCategory,
+				themeDisplay);
 
 			if ((childPortletCategoriesJSONArray.length() > 0) ||
 				(portletsJSONArray.length() > 0)) {
@@ -346,6 +362,7 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 	private JSONArray _getPortletsJSONArray(
 			Set<String> highlightedPortletIds,
 			HttpServletRequest httpServletRequest,
+			Set<String> layoutDecodedPortletNames,
 			PortletCategory portletCategory, ThemeDisplay themeDisplay)
 		throws Exception {
 
@@ -379,6 +396,30 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 					"title",
 					_portal.getPortletTitle(
 						portlet, servletContext, themeDisplay.getLocale())
+				).put(
+					"used",
+					() -> {
+						Layout layout = themeDisplay.getLayout();
+
+						if (!layout.isTypePortlet() ||
+							portlet.isInstanceable()) {
+
+							return false;
+						}
+
+						LayoutTypePortlet layoutTypePortlet =
+							themeDisplay.getLayoutTypePortlet();
+
+						if (layoutDecodedPortletNames.contains(
+								portlet.getPortletId()) ||
+							layoutTypePortlet.hasPortletId(
+								portlet.getPortletId())) {
+
+							return true;
+						}
+
+						return false;
+					}
 				));
 		}
 

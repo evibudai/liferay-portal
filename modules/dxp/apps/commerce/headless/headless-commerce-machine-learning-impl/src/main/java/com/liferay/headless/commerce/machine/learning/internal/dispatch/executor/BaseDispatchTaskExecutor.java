@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.machine.learning.internal.dispatch.executor;
 
 import com.liferay.analytics.batch.exportimport.manager.AnalyticsBatchExportImportManager;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.dispatch.executor.DispatchTaskExecutorOutput;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
 import com.liferay.dispatch.model.DispatchLog;
@@ -22,11 +15,15 @@ import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -35,6 +32,30 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseDispatchTaskExecutor
 	extends com.liferay.dispatch.executor.BaseDispatchTaskExecutor {
+
+	protected String getCommerceChannelFilterString(
+			long companyId, Function<Long, String> filterFunction)
+		throws Exception {
+
+		List<String> filterStrings = new ArrayList<>();
+
+		AnalyticsConfiguration analyticsConfiguration =
+			analyticsSettingsManager.getAnalyticsConfiguration(companyId);
+
+		for (String analyticsChannelId :
+				analyticsConfiguration.
+					commerceSyncEnabledAnalyticsChannelIds()) {
+
+			for (Long commerceChannelId :
+					analyticsSettingsManager.getCommerceChannelIds(
+						analyticsChannelId, companyId)) {
+
+				filterStrings.add(filterFunction.apply(commerceChannelId));
+			}
+		}
+
+		return StringUtil.merge(filterStrings, " or ");
+	}
 
 	protected Date getLatestSuccessfulDispatchLogEndDate(
 		long dispatchTriggerId) {
@@ -78,6 +99,9 @@ public abstract class BaseDispatchTaskExecutor
 	@Reference
 	protected AnalyticsBatchExportImportManager
 		analyticsBatchExportImportManager;
+
+	@Reference
+	protected AnalyticsSettingsManager analyticsSettingsManager;
 
 	@Reference
 	protected DispatchLogLocalService dispatchLogLocalService;

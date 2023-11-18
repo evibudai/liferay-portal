@@ -207,7 +207,6 @@ components:
                             type: integer
                         name:
                             type: string
-                    readOnly: true
                     type: object
                 parentTaxonomyVocabulary:
                     description:
@@ -363,7 +362,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.taxonomy.client', and version '4.0.17'."
+        'com.liferay.headless.admin.taxonomy.client', and version '4.0.25'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -1674,6 +1673,10 @@ paths:
                   name: fields
                   schema:
                       type: string
+                - in: query
+                  name: flatten
+                  schema:
+                      type: boolean
                 - in: query
                   name: restrictFields
                   schema:

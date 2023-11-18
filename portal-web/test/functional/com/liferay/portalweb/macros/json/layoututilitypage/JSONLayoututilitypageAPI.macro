@@ -1,0 +1,45 @@
+definition {
+
+	macro _deleteLayoutUtilityPage {
+		Variables.assertDefined(parameterList = ${layoutUtilityPageEntryId});
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${portalURL}/api/jsonws/layoututilitypage.layoututilitypageentry/delete-layout-utility-page-entry \
+				-u ${userLoginInfo} \
+				-d layoutUtilityPageEntryId=${layoutUtilityPageEntryId}
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	macro _getLayoutUtilityPageEntryId {
+		Variables.assertDefined(parameterList = "${groupId},${layoutUtilityPageName}");
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${portalURL}/api/jsonws/layoututilitypage.layoututilitypageentry/get-layout-utility-page-entries \
+				-u ${userLoginInfo} \
+				-d groupId=${groupId}
+		''';
+
+		var layoutUtilityPageEntryId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${layoutUtilityPageName}')]['layoutUtilityPageEntryId']");
+
+		if (${layoutUtilityPageEntryId} == "") {
+			fail("FAIL. Cannot find utility page.");
+		}
+
+		return ${layoutUtilityPageEntryId};
+	}
+
+}

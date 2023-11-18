@@ -1,0 +1,291 @@
+{
+	"object-fields": [
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"defaultValue": "awaitingApprovalOnEvp",
+			"externalReferenceCode": "EVP-REQUEST-STATUS-DEFAULT",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "EVP Request Status"
+			},
+			"listTypeDefinitionExternalReferenceCode": "EVP-REQUEST-STATUS-PICKLIST",
+			"name": "requestStatus",
+			"objectFieldSettings": [
+				{
+					"name": "stateFlow",
+					"value": {
+						"objectStates": [
+							{
+								"key": "rejected",
+								"objectStateTransitions": [
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "closed",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingApprovalOnEvp",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingApprovalOnManager",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitCompanyVerification",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingFinanceReview",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingPaymentConfirmation",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingMoreInfoFromEmployee",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingEmployeeProofOfExpenses"
+									}
+								]
+							},
+							{
+								"key": "awaitingEmployeeProofOfExpenses",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									},
+									{
+										"key": "awaitingApprovalOnManager"
+									}
+								]
+							}
+						]
+					}
+				}
+			],
+			"required": true,
+			"state": true
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:EVPRequest$]"
+}

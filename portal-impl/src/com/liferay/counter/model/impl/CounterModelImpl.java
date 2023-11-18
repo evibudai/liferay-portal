@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.counter.model.impl;
@@ -193,37 +184,51 @@ public class CounterModelImpl
 	public Map<String, Function<Counter, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<Counter, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<Counter, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<Counter, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<Counter, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<Counter, Object>>();
-		Map<String, BiConsumer<Counter, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<Counter, ?>>();
+		private static final Map<String, Function<Counter, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("name", Counter::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<Counter, String>)Counter::setName);
-		attributeGetterFunctions.put("currentId", Counter::getCurrentId);
-		attributeSetterBiConsumers.put(
-			"currentId", (BiConsumer<Counter, Long>)Counter::setCurrentId);
+		static {
+			Map<String, Function<Counter, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<Counter, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("name", Counter::getName);
+			attributeGetterFunctions.put("currentId", Counter::getCurrentId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<Counter, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<Counter, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<Counter, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<Counter, String>)Counter::setName);
+			attributeSetterBiConsumers.put(
+				"currentId", (BiConsumer<Counter, Long>)Counter::setCurrentId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -459,8 +464,9 @@ public class CounterModelImpl
 	private long _currentId;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<Counter, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<Counter, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

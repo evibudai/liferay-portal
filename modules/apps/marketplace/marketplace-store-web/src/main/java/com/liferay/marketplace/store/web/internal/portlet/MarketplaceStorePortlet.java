@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.marketplace.store.web.internal.portlet;
 
+import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.marketplace.constants.MarketplaceStorePortletKeys;
 import com.liferay.marketplace.model.App;
 import com.liferay.marketplace.service.AppLocalService;
@@ -32,7 +24,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.patcher.Patcher;
+import com.liferay.portal.kernel.patcher.PatcherValues;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -80,6 +72,7 @@ import javax.portlet.WindowState;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -544,6 +537,11 @@ public class MarketplaceStorePortlet extends MVCPortlet {
 		writeJSON(actionRequest, actionResponse, jsonObject);
 	}
 
+	@Activate
+	protected void activate() {
+		oAuthManager = new OAuthManager(expandoValueLocalService);
+	}
+
 	protected void addOAuthParameter(
 		OAuthRequest oAuthRequest, String key, String value) {
 
@@ -664,7 +662,8 @@ public class MarketplaceStorePortlet extends MVCPortlet {
 				new String[] {String.valueOf(ReleaseInfo.getBuildNumber())});
 		}
 
-		parameterMap.put("installedPatches", patcher.getInstalledPatches());
+		parameterMap.put(
+			"installedPatches", PatcherValues.INSTALLED_PATCH_NAMES);
 		parameterMap.put(
 			"supportsHotDeploy", new String[] {Boolean.TRUE.toString()});
 	}
@@ -694,13 +693,12 @@ public class MarketplaceStorePortlet extends MVCPortlet {
 	protected AppService appService;
 
 	@Reference
+	protected ExpandoValueLocalService expandoValueLocalService;
+
+	@Reference
 	protected JSONFactory jsonFactory;
 
-	@Reference
 	protected OAuthManager oAuthManager;
-
-	@Reference
-	protected Patcher patcher;
 
 	@Reference
 	protected Portal portal;

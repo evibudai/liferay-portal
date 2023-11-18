@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -21,11 +12,11 @@ import {KeyedMutator} from 'swr';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
-import {AccountContext} from '../../../context/AccountContext';
+import {TestrayContext} from '../../../context/TestrayContext';
 import useFormActions from '../../../hooks/useFormActions';
 import i18n from '../../../i18n';
 import yupSchema from '../../../schema/yup';
-import {UserAccount, liferayUserAccountsRest} from '../../../services/rest';
+import {UserAccount, liferayUserAccountsImpl} from '../../../services/rest';
 
 type UserPasswordDefault = {
 	alternateName?: string;
@@ -47,7 +38,7 @@ const ChangeUserPassword: React.FC = () => {
 		userAccount: UserAccount;
 	} = useOutletContext();
 
-	const [{myUserAccount}] = useContext(AccountContext);
+	const [{myUserAccount}] = useContext(TestrayContext);
 
 	const {
 		form: {onClose, onError, onSave, onSubmit},
@@ -75,16 +66,14 @@ const ChangeUserPassword: React.FC = () => {
 		onSubmit(
 			{...form, userId: userAccount.id},
 			{
-				create: (...params) =>
-					liferayUserAccountsRest.create(...params),
-				update: (...params) =>
-					liferayUserAccountsRest.update(...params),
+				create: (data) => liferayUserAccountsImpl.create(data),
+				update: (id, data) => liferayUserAccountsImpl.update(id, data),
 			}
 		)
 			.then(mutatePassword)
 			.then(() => onSave())
 			.catch((error) => {
-				if (error.info.type === 'MustMatchCurrentPassword') {
+				if (error.info.type.includes('MustMatchCurrentPassword')) {
 					return setError('currentPassword', {
 						message: i18n.translate(
 							'current-password-is-incorrect'
@@ -138,12 +127,7 @@ const ChangeUserPassword: React.FC = () => {
 				/>
 			</ClayForm>
 
-			<div>
-				<Form.Footer
-					onClose={onClose}
-					onSubmit={handleSubmit(_onSubmit)}
-				/>
-			</div>
+			<Form.Footer onClose={onClose} onSubmit={handleSubmit(_onSubmit)} />
 		</Container>
 	);
 };

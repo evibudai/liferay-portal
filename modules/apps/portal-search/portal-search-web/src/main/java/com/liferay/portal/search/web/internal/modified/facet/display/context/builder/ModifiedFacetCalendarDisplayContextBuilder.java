@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.display.context.builder;
@@ -17,7 +8,7 @@ package com.liferay.portal.search.web.internal.modified.facet.display.context.bu
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.CalendarFactory;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -31,12 +22,6 @@ import java.util.TimeZone;
  * @author André de Oliveira
  */
 public class ModifiedFacetCalendarDisplayContextBuilder {
-
-	public ModifiedFacetCalendarDisplayContextBuilder(
-		CalendarFactory calendarFactory) {
-
-		_calendarFactory = calendarFactory;
-	}
 
 	public ModifiedFacetCalendarDisplayContext build() {
 		_buildBounds();
@@ -66,7 +51,6 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 			toCalendar.get(Calendar.MONTH));
 		modifiedFacetCalendarDisplayContext.setToYearValue(
 			toCalendar.get(Calendar.YEAR));
-
 		modifiedFacetCalendarDisplayContext.setRangeBackwards(
 			_isRangeBackwards(fromCalendar, toCalendar));
 
@@ -121,11 +105,11 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 
 	private Calendar _getFromCalendar() {
 		if (Validator.isGregorianDate(_fromMonth, _fromDay, _fromYear)) {
-			return _calendarFactory.getCalendar(
+			return CalendarFactoryUtil.getCalendar(
 				_fromYear, _fromMonth, _fromDay, 0, 0, 0, 0, _timeZone);
 		}
 
-		Calendar calendar = _calendarFactory.getCalendar(_timeZone, _locale);
+		Calendar calendar = CalendarFactoryUtil.getCalendar(_timeZone, _locale);
 
 		calendar.add(Calendar.DATE, -1);
 
@@ -134,11 +118,11 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 
 	private Calendar _getToCalendar() {
 		if (Validator.isGregorianDate(_toMonth, _toDay, _toYear)) {
-			return _calendarFactory.getCalendar(
+			return CalendarFactoryUtil.getCalendar(
 				_toYear, _toMonth, _toDay, 0, 0, 0, 0, _timeZone);
 		}
 
-		return _calendarFactory.getCalendar(_timeZone, _locale);
+		return CalendarFactoryUtil.getCalendar(_timeZone, _locale);
 	}
 
 	private boolean _isRangeBackwards(
@@ -183,7 +167,6 @@ public class ModifiedFacetCalendarDisplayContextBuilder {
 		_toYear = to[2];
 	}
 
-	private final CalendarFactory _calendarFactory;
 	private String _from;
 	private int _fromDay;
 	private int _fromMonth;

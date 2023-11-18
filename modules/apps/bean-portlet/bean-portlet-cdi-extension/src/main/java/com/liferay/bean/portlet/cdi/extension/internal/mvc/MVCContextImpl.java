@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bean.portlet.cdi.extension.internal.mvc;
@@ -56,10 +47,9 @@ public class MVCContextImpl implements MvcContext {
 		_configuration = configuration;
 		_encoders = encoders;
 		_portletContext = portletContext;
-
 		_portletRequest = portletRequest;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_portletRequest.getAttribute(
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
@@ -75,7 +65,7 @@ public class MVCContextImpl implements MvcContext {
 
 		Map<String, javax.ws.rs.core.Cookie> cookieMap = new HashMap<>();
 
-		Cookie[] cookies = _portletRequest.getCookies();
+		Cookie[] cookies = portletRequest.getCookies();
 
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
@@ -88,17 +78,17 @@ public class MVCContextImpl implements MvcContext {
 
 		Map<String, String> headerMap = new HashMap<>();
 
-		Enumeration<String> enumeration = _portletRequest.getPropertyNames();
+		Enumeration<String> enumeration = portletRequest.getPropertyNames();
 
 		while (enumeration.hasMoreElements()) {
 			String header = enumeration.nextElement();
 
-			headerMap.put(header, _portletRequest.getProperty(header));
+			headerMap.put(header, portletRequest.getProperty(header));
 		}
 
 		LocaleResolverContext localeResolverContext =
 			new LocaleResolverContextImpl(
-				Collections.list(_portletRequest.getLocales()), _configuration,
+				Collections.list(portletRequest.getLocales()), _configuration,
 				cookieMap, headerMap, new UriInfoImpl());
 
 		Locale locale = null;

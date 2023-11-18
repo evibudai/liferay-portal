@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.results.portlet;
@@ -17,7 +8,6 @@ package com.liferay.portal.search.web.internal.search.results.portlet;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.Language;
@@ -31,6 +21,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -50,15 +41,11 @@ import com.liferay.portal.search.web.internal.result.display.context.SearchResul
 import com.liferay.portal.search.web.internal.result.display.context.builder.SearchResultSummaryDisplayContextBuilder;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
-import com.liferay.portal.search.web.search.result.SearchResultImageContributor;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -71,8 +58,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * @author André de Oliveira
@@ -127,16 +112,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC
-	)
-	protected void addSearchResultImageContributor(
-		SearchResultImageContributor searchResultImageContributor) {
-
-		_searchResultImageContributors.add(searchResultImageContributor);
-	}
-
 	protected String getCurrentURL(RenderRequest renderRequest) {
 		return _portal.getCurrentURL(renderRequest);
 	}
@@ -188,12 +163,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 		}
 
 		return false;
-	}
-
-	protected void removeSearchResultImageContributor(
-		SearchResultImageContributor searchResultImageContributor) {
-
-		_searchResultImageContributors.remove(searchResultImageContributor);
 	}
 
 	@Reference
@@ -261,48 +230,31 @@ public class SearchResultsPortlet extends MVCPortlet {
 
 		SearchRequest searchRequest = searchResponse.getRequest();
 
-		Optional<String> keywordsOptional = Optional.ofNullable(
-			searchRequest.getQueryString());
-
 		searchResultsPortletDisplayContext.setKeywords(
-			keywordsOptional.orElse(StringPool.BLANK));
-
+			GetterUtil.getString(searchRequest.getQueryString()));
 		searchResultsPortletDisplayContext.setRenderNothing(
 			isRenderNothing(renderRequest, searchRequest));
 
-		int paginationDelta = Optional.ofNullable(
-			searchRequest.getSize()
-		).orElse(
-			SearchContainer.DEFAULT_DELTA
-		);
-		int paginationStart = 0;
-
-		int from = Optional.ofNullable(
-			searchRequest.getFrom()
-		).orElse(
-			0
-		);
-
-		if (from > 0) {
-			paginationStart = (from / paginationDelta) + 1;
-		}
-
 		searchResultsPortletDisplayContext.setSearchContainer(
 			_buildSearchContainer(
-				documents, searchResponse.getTotalHits(), paginationStart,
+				documents, searchResponse.getTotalHits(),
+				portletSharedSearchResponse.getPaginationStart(),
 				searchResultsPortletPreferences.
 					getPaginationStartParameterName(),
-				paginationDelta,
+				portletSharedSearchResponse.getPaginationDelta(),
 				searchResultsPortletPreferences.
 					getPaginationDeltaParameterName(),
 				renderRequest));
-
 		searchResultsPortletDisplayContext.setSearchResultsSummariesHolder(
 			searchResultsSummariesHolder);
 		searchResultsPortletDisplayContext.
 			setSearchResultSummaryDisplayContexts(
 				searchResultsPortletDisplayContext.
 					translateSearchResultSummaryDisplayContexts(documents));
+		searchResultsPortletDisplayContext.setShowEmptyResultMessage(
+			searchResultsPortletPreferences.isShowEmptyResultMessage());
+		searchResultsPortletDisplayContext.setShowPagination(
+			searchResultsPortletPreferences.isShowPagination());
 		searchResultsPortletDisplayContext.setTotalHits(
 			searchResponse.getTotalHits());
 
@@ -405,8 +357,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 			getHttpServletRequest(renderRequest)
 		).setResourceActions(
 			resourceActions
-		).setSearchResultImageContributorsStream(
-			_searchResultImageContributors.stream()
 		).setSearchResultPreferences(
 			searchResultPreferences
 		).setSummaryBuilderFactory(
@@ -484,7 +434,7 @@ public class SearchResultsPortlet extends MVCPortlet {
 		SearchResultsPortletPreferences searchResultsPortletPreferences) {
 
 		return portletSharedSearchResponse.getFederatedSearchResponse(
-			searchResultsPortletPreferences.getFederatedSearchKeyOptional());
+			searchResultsPortletPreferences.getFederatedSearchKey());
 	}
 
 	private String _getURLString(
@@ -497,8 +447,5 @@ public class SearchResultsPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
-
-	private final Set<SearchResultImageContributor>
-		_searchResultImageContributors = new HashSet<>();
 
 }

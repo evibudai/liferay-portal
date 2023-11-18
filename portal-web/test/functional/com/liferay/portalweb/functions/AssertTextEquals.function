@@ -2,7 +2,6 @@
 @summary = "Assert that '${locator1}' equals the value '${value1}'"
 definition {
 
-	@summary = "Assert that '${locator1}' contains the value '${value1}'"
 	function assertPartialText {
 		WaitForSPARefresh();
 
@@ -70,7 +69,7 @@ definition {
 	function assertTextEquals {
 		WaitForSPARefresh();
 
-		if (contains("${locator1}", "/input")) {
+		if (contains(${locator1}, "/input")) {
 			AssertTextEquals.assertValue();
 		}
 		else {

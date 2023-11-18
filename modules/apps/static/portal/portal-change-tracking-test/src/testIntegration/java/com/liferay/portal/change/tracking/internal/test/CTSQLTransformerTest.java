@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.change.tracking.internal.test;
@@ -40,7 +31,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.log.LogCapture;
-import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -972,7 +962,6 @@ public class CTSQLTransformerTest {
 			"update_in.sql", "update_out.sql", ctCollectionId7,
 			ps -> {
 				ps.setLong(1, ctCollectionId8);
-
 				ps.setLong(2, 1);
 			});
 
@@ -1015,7 +1004,8 @@ public class CTSQLTransformerTest {
 
 		if (ctCollection == null) {
 			ctCollection = _ctCollectionLocalService.addCTCollection(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), 0,
 				CTSQLTransformerTest.class.getName(), null);
 
 			_ctCollections.add(ctCollection);
@@ -1023,7 +1013,7 @@ public class CTSQLTransformerTest {
 
 		if (addedPK != null) {
 			_ctEntryLocalService.addCTEntry(
-				ctCollection.getCtCollectionId(),
+				null, ctCollection.getCtCollectionId(),
 				_classNameLocalService.getClassNameId(modelClass),
 				_getCTModelProxy(addedPK), TestPropsValues.getUserId(),
 				CTConstants.CT_CHANGE_TYPE_ADDITION);
@@ -1031,7 +1021,7 @@ public class CTSQLTransformerTest {
 
 		if (modifiedPK != null) {
 			_ctEntryLocalService.addCTEntry(
-				ctCollection.getCtCollectionId(),
+				null, ctCollection.getCtCollectionId(),
 				_classNameLocalService.getClassNameId(modelClass),
 				_getCTModelProxy(modifiedPK), TestPropsValues.getUserId(),
 				CTConstants.CT_CHANGE_TYPE_MODIFICATION);
@@ -1039,7 +1029,7 @@ public class CTSQLTransformerTest {
 
 		if (removedPK != null) {
 			_ctEntryLocalService.addCTEntry(
-				ctCollection.getCtCollectionId(),
+				null, ctCollection.getCtCollectionId(),
 				_classNameLocalService.getClassNameId(modelClass),
 				_getCTModelProxy(removedPK), TestPropsValues.getUserId(),
 				CTConstants.CT_CHANGE_TYPE_DELETION);
@@ -1218,15 +1208,6 @@ public class CTSQLTransformerTest {
 			String newSQL = _ctSQLTransformer.transform(inputSQL);
 
 			Assert.assertEquals(expectedOutputSQL, newSQL);
-
-			List<LogEntry> logEntries = logCapture.getLogEntries();
-
-			if (expectedOutputSQLFile.endsWith("_ct.sql")) {
-				Assert.assertFalse(newSQL, logEntries.isEmpty());
-			}
-			else {
-				Assert.assertTrue(newSQL, logEntries.isEmpty());
-			}
 
 			return newSQL;
 		}

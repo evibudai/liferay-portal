@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {openSelectionModal} from 'frontend-js-web';
@@ -44,38 +35,61 @@ export default function propsTransformer({
 
 				openSelectionModal({
 					buttonAddLabel: Liferay.Language.get('done'),
+					customSelectEvent: true,
 					multiple: true,
-					onSelect(selectedItems) {
-						Array.from(selectedItems).forEach((selectedItem) => {
-							const assetEntry = JSON.parse(selectedItem.value);
+					onSelect(data) {
+						if (data.value && data.value.length) {
+							const selectedItems = data.value;
 
-							const entityId = assetEntry.assetEntryId;
+							Array.from(selectedItems).forEach(
+								(selectedItem) => {
+									const assetEntry = JSON.parse(selectedItem);
 
-							if (searchContainerData.indexOf(entityId) === -1) {
-								const rowColumns = [];
+									const entityId = assetEntry.assetEntryId;
 
-								rowColumns.push(`<h4 class="list-group-title">
-									${Liferay.Util.escapeHTML(assetEntry.title)}
-								</h4>
-								<p class="list-group-subtitle">
-									${Liferay.Util.escapeHTML(assetEntry.assetType)}
-								</p>
-								<p class="list-group-subtitle">
-									${Liferay.Language.get('scope')}: ${Liferay.Util.escapeHTML(
-									assetEntry.groupDescriptiveName
-								)}
-								</p>`);
+									if (
+										searchContainerData.indexOf(
+											entityId
+										) === -1
+									) {
+										const rowColumns = [];
 
-								rowColumns.push(
-									`<a class="float-right modify-link" data-rowId="${entityId}" href="javascript:void(0);">${additionalProps.removeIcon}</a>`
-								);
+										rowColumns.push(`<h4 class="list-group-title">
+												${Liferay.Util.escapeHTML(assetEntry.title)}
+											</h4>
+											<p class="list-group-subtitle">
+												${Liferay.Util.escapeHTML(assetEntry.assetType)}
+											</p>
+											<p class="list-group-subtitle">
+												${Liferay.Language.get('scope')}: ${Liferay.Util.escapeHTML(
+											assetEntry.groupDescriptiveName
+										)}
+											</p>`);
 
-								searchContainer.addRow(rowColumns, entityId);
+										rowColumns.push(
+											`<button 
+												aria-label=${Liferay.Language.get('remove')}
+												class="btn btn-monospaced btn-outline-borderless btn-outline-secondary float-right lfr-portal-tooltip modify-link"
+												data-rowId="${entityId}"
+												title=${Liferay.Language.get('remove')}
+												type="button"
+											>
+												${additionalProps.removeIcon}
+											</button>`
+										);
 
-								searchContainer.updateDataStore();
-							}
-						});
+										searchContainer.addRow(
+											rowColumns,
+											entityId
+										);
+
+										searchContainer.updateDataStore();
+									}
+								}
+							);
+						}
 					},
+					selectEventName: `${portletNamespace}selectAsset`,
 					title: item.data.title,
 					url: item.data.href,
 				});

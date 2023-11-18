@@ -1,8 +1,8 @@
 definition {
 
 	macro _gotoChildArticle {
-		var key_kbChildArticleContent = "${kbChildArticleContent}";
-		var key_kbChildArticleTitle = "${kbChildArticleTitle}";
+		var key_kbChildArticleContent = ${kbChildArticleContent};
+		var key_kbChildArticleTitle = ${kbChildArticleTitle};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBase#CHILD_PAGE_HEADER",
@@ -10,25 +10,25 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBase#CHILD_PAGE_TITLE",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBase#CHILD_PAGE_CONTENT",
-			value1 = "${kbChildArticleContent}");
+			value1 = ${kbChildArticleContent});
 
 		AssertClick(
 			locator1 = "KnowledgeBase#CHILD_PAGE_TITLE",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 	}
 
 	macro addChildArticleViaKBAdmin {
 		if (isSet(navigationPane)) {
 			KBArticle.gotoMenuItemViaNavigationPane(
-				kbArticleTitle = "${kbArticleTitle}",
+				kbArticleTitle = ${kbArticleTitle},
 				menuItem = "Add Child Article");
 		}
 		else {
-			var key_rowEntry = "${kbArticleTitle}";
+			var key_rowEntry = ${kbArticleTitle};
 
 			if (IsElementPresent(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS")) {
 				Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
@@ -44,16 +44,18 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 
-		CKEditor.addContent(content = "${kbChildArticleContent}");
+		CKEditor.addContent(content = ${kbChildArticleContent});
 
 		PortletEntry.publish();
 	}
 
 	macro addCP {
+		WaitForVisible(locator1 = "Button#PLUS");
+
 		if (isSet(kbTemplateTitle)) {
-			LexiconEntry.gotoAddMenuItem(menuItem = "${kbTemplateTitle}");
+			LexiconEntry.gotoAddMenuItem(menuItem = ${kbTemplateTitle});
 		}
 		else if (isSet(centerPaneButton)) {
 			Button.click(button = "New");
@@ -69,12 +71,12 @@ definition {
 		if (isSet(specialCharacters)) {
 			Type.sendKeys(
 				locator1 = "TextInput#TITLE",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
 		}
 		else {
 			Type(
 				locator1 = "TextInput#TITLE",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
 		}
 
 		Click.clickAt(locator1 = "TextInput#TITLE");
@@ -82,32 +84,43 @@ definition {
 		Panel.expandPanel(panel = "Configuration");
 
 		if (isSet(kbArticleFriendlyURL)) {
-			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleFriendlyURL}");
+			var kbArticleTitleFormatted = StringUtil.lowerCase(${kbArticleFriendlyURL});
 
-			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
+			var kbArticleTitleFormatted = StringUtil.replace(${kbArticleTitleFormatted}, " ", "-");
 
 			Type(
 				locator1 = "KnowledgeBaseArticle#EDIT_FRIENDLY_URL_FIELD",
-				value1 = "${kbArticleTitleFormatted}");
+				value1 = ${kbArticleTitleFormatted});
+		}
+		else if (isSet(kbDescription)) {
+			Type(
+				locator1 = "TextArea#DESCRIPTION",
+				value1 = ${kbDescription});
 		}
 		else {
-			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleTitle}");
+			var kbArticleTitleFormatted = StringUtil.lowerCase(${kbArticleTitle});
 
-			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
+			var kbArticleTitleFormatted = StringUtil.replace(${kbArticleTitleFormatted}, " ", "-");
 
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#EDIT_FRIENDLY_URL_FIELD",
-				value1 = "${kbArticleTitleFormatted}");
+				value1 = ${kbArticleTitleFormatted});
 		}
 
-		if ("${kbArticleAddViaSource}" == "true") {
-			CKEditor.addSourceContent(content = "${kbArticleContentSource}");
+		if (${kbArticleAddViaSource} == "true") {
+			CKEditor.addSourceContent(content = ${kbArticleContentSource});
 		}
-		else if ("${kbArticleAddViaTemplate}" == "true") {
-			CKEditor.addContent(kbArticleContentEdit = "${kbArticleContent}");
+		else if (${kbArticleAddViaTemplate} == "true") {
+			CKEditor.addContent(kbArticleContentEdit = ${kbArticleContent});
 		}
 		else {
-			CKEditor.addContent(content = "${kbArticleContent}");
+			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+			Type(
+				locator1 = "CKEditor#BODY",
+				value1 = ${kbArticleContent});
+
+			SelectFrame(value1 = "relative=top");
 		}
 
 		if (isSet(embedVideo)) {
@@ -115,65 +128,106 @@ definition {
 
 			Click(locator1 = "CKEditor#TOOLBAR_VIDEO_BUTTON");
 
-			if ("${navTab}" == "Documents and Media") {
+			if (${navTab} == "Documents and Media") {
 				ItemSelector.addVideoFromDM(
-					depotName = "${depotName}",
-					navTab = "${navTab}",
-					videoShortcutPreview = "${videoShortcutPreview}",
-					videoShortcutTitle = "${videoShortcutTitle}");
+					depotName = ${depotName},
+					navTab = ${navTab},
+					videoShortcutPreview = ${videoShortcutPreview},
+					videoShortcutTitle = ${videoShortcutTitle});
 
 				if (isSet(viewInternalVideoPreview)) {
 					SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-					DMDocument.viewInternalVideoPreview(videoName = "${videoName}");
+					DMDocument.viewInternalVideoPreview(videoName = ${videoName});
 				}
 			}
 			else {
 				ItemSelector.addVideoFromURL(
-					navTab = "${navTab}",
-					videoSourceURL = "${embedVideo}");
+					navTab = ${navTab},
+					videoSourceURL = ${embedVideo});
 			}
 		}
 
 		if (isSet(kbArticleAttachment)) {
-			KBArticle.selectAttachmentCP(kbArticleAttachment = "${kbArticleAttachment}");
+			KBArticle.selectAttachmentCP(kbArticleAttachment = ${kbArticleAttachment});
 		}
 
 		if (isSet(kbArticleSourceURL)) {
 			Type(
 				locator1 = "CKEditor#SOURCE_URL",
-				value1 = "${kbArticleSourceURL}");
+				value1 = ${kbArticleSourceURL});
 		}
 
 		if (isSet(kbArticleSection)) {
 			AssertClick(
-				key_kbArticleSection = "${kbArticleSection}",
+				key_kbArticleSection = ${kbArticleSection},
 				locator1 = "KnowledgeBaseArticle#SECTIONS_SELECT",
-				value1 = "${kbArticleSection}");
+				value1 = ${kbArticleSection});
 		}
 
 		if (isSet(assetType)) {
 			RelatedAssets.selectAsset(
-				assetTitle = "${assetTitle}",
-				assetType = "${assetType}");
+				assetTitle = ${assetTitle},
+				assetType = ${assetType});
 		}
 
 		if (isSet(categoryName)) {
 			Panel.expandPanel(panel = "Categorization");
 
 			AssetCategorization.addCategory(
-				categoryName = "${categoryName}",
-				vocabularyName = "${vocabularyName}");
+				categoryName = ${categoryName},
+				vocabularyName = ${vocabularyName});
 		}
 
-		if ("${kbWorkflowAction}" == "Submit for Publication") {
+		if (${configureReviewDate} == "true") {
+			KBArticle.setReviewDate(
+				increaseMinutes = ${increaseMinutes},
+				uncheckNeverReview = ${uncheckNeverReview});
+		}
+
+		if (${enableExpirationDate} == "true") {
+			Panel.expandPanel(panel = "Expiration Date");
+
+			AssertChecked(
+				checkboxName = "Never Expire",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Uncheck(
+				checkboxName = "Never Expire",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			if (isSet(notificationDate)) {
+				var expirationDate = DateUtil.getDateOffsetByDays(${notificationDate}, "MM/dd/yyyy");
+				var expirationDateFormatted = DateUtil.getFormattedDate("+0", "MMMM dd, yyyy");
+
+				echo("## * expirationDate: ${expirationDate}");
+
+				Type(
+					locator1 = "TextInput#EXPIRATION_DATE",
+					value1 = ${expirationDate});
+			}
+
+			if (isSet(extendedMinutes)) {
+				var expirationDateTime = DateUtil.getDateOffsetByMinutes(${extendedMinutes}, "hh:mm a");
+
+				echo("## * expirationDateTime: ${expirationDateTime}");
+
+				var expirationDateTime = StringUtil.removeSpaces(${expirationDateTime});
+
+				Type.sendKeys(
+					locator1 = "TextInput#EXPIRATION_DATE_TIME",
+					value1 = ${expirationDateTime});
+			}
+		}
+
+		if (${kbWorkflowAction} == "Submit for Workflow") {
 			ProductMenuHelper.closeProductMenu();
 
 			AssertClick(
-				locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-				value1 = "Submit for Publication");
+				locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+				value1 = "Submit for Workflow");
 		}
-		else if ("${saveAsDraft}" == "true") {
+		else if (${saveAsDraft} == "true") {
 			Button.clickSaveAsDraft();
 		}
 		else {
@@ -182,19 +236,19 @@ definition {
 			Button.click(button = "Publish");
 		}
 
-		if ("${kbArticleInvalidContent}" == "true") {
+		if (${kbArticleInvalidContent} == "true") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "TextInput#REQUIRED_ALERT",
 				value1 = "The Content field is required.");
 		}
-		else if ("${kbArticleDuplicateFriendlyURL}" == "true") {
+		else if (${kbArticleDuplicateFriendlyURL} == "true") {
 			Alert.viewRequestFailedToComplete();
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_1",
 				value1 = "Please enter a unique friendly URL.");
 		}
-		else if ("${kbMissingRequiredCategory}" == "true") {
+		else if (${kbMissingRequiredCategory} == "true") {
 			Alert.viewRequestFailedToComplete();
 
 			AssertTextEquals.assertPartialText(
@@ -203,6 +257,18 @@ definition {
 		}
 		else {
 			Alert.viewSuccessMessage();
+		}
+
+		if (${viewExpirationTime} == "true") {
+			var expirationTime = StringUtil.add("${expirationDateFormatted} ", ${expirationDateTime}, "");
+
+			MouseOver(
+				locator1 = "KnowledgeBase#ARTICLE_TABLE_EXPIRATION_TIME",
+				value1 = ${expirationTime});
+
+			AssertVisible(
+				locator1 = "KnowledgeBase#ARTICLE_TABLE_EXPIRATION_TIME",
+				value1 = ${expirationTime});
 		}
 	}
 
@@ -215,11 +281,11 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
-		CKEditor.addContent(content = "${kbArticleContent}");
+		CKEditor.addContent(content = ${kbArticleContent});
 
-		KBArticle.selectAttachmentCP(kbArticleAttachment = "${kbArticleAttachment}");
+		KBArticle.selectAttachmentCP(kbArticleAttachment = ${kbArticleAttachment});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#MESSAGE_ATTACHMENT_INVALID_SIZE_ERROR",
@@ -237,9 +303,9 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
-		CKEditor.addContent(content = "${kbArticleContent}");
+		CKEditor.addContent(content = ${kbArticleContent});
 
 		ProductMenuHelper.closeProductMenu();
 
@@ -257,15 +323,15 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
-		CKEditor.addContent(content = "${kbArticleContent}");
+		CKEditor.addContent(content = ${kbArticleContent});
 
 		Panel.expandPanel(panel = "Custom Fields");
 
 		Type(
 			locator1 = "TextInput#CUSTOM_FIELD",
-			value1 = "${customFieldText}");
+			value1 = ${customFieldText});
 
 		PortletEntry.publish();
 	}
@@ -277,9 +343,9 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
-		CKEditor.addContent(content = "${kbArticleContent}");
+		CKEditor.addContent(content = ${kbArticleContent});
 
 		Button.click(button = "Publish");
 	}
@@ -291,28 +357,28 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
-		CKEditor.addContent(content = "${kbArticleContent}");
+		CKEditor.addContent(content = ${kbArticleContent});
 
 		Button.clickCancel();
 	}
 
 	macro closePageTreePanel {
-		if ("${section}" == "Folders and Articles") {
-			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+		if (${section} == "Folders and Articles") {
+			if (IsElementPresent(key_header = ${section}, locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
 				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
 			}
 		}
 
-		if ("${section}" == "Templates") {
-			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+		if (${section} == "Templates") {
+			if (IsElementPresent(key_header = ${section}, locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
 				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
 			}
 		}
 
-		if ("${section}" == "Suggestions") {
-			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+		if (${section} == "Suggestions") {
+			if (IsElementPresent(key_header = ${section}, locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
 				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
 			}
 		}
@@ -334,11 +400,11 @@ definition {
 
 			Type(
 				locator1 = "TextInput#EMAIL_FROM_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 
 			Type(
 				locator1 = "TextInput#EMAIL_FROM_ADDRESS",
-				value1 = "${userEmailAddress}");
+				value1 = ${userEmailAddress});
 
 			PortletEntry.save();
 		}
@@ -403,7 +469,7 @@ definition {
 	macro deleteCP {
 		if (isSet(navigationPane)) {
 			KBArticle.gotoMenuItemViaNavigationPane(
-				kbArticleTitle = "${kbArticleTitle}",
+				kbArticleTitle = ${kbArticleTitle},
 				menuItem = "Delete");
 
 			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
@@ -414,7 +480,7 @@ definition {
 			}
 			else {
 				Click(
-					key_rowEntry = "${kbArticleTitle}",
+					key_rowEntry = ${kbArticleTitle},
 					locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 				MenuItem.click(menuItem = "Delete");
@@ -450,16 +516,16 @@ definition {
 	}
 
 	macro disableSocialBookmarkSites {
-		for (var socialBookmarkSite : list "${disableSocialBookmarkSites}") {
+		for (var socialBookmarkSite : list ${disableSocialBookmarkSites}) {
 			AddSelection(
 				locator1 = "SocialBookmarks#ENABLE_SOCIAL_BOOKMARK_CURRENT_SELECT",
-				value1 = "${socialBookmarkSite}");
+				value1 = ${socialBookmarkSite});
 
 			Click(locator1 = "Button#MOVE_CURRENT_TO_AVAILABLE");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "SocialBookmarks#ENABLE_SOCIAL_BOOKMARK_AVAILABLE_SELECT",
-				value1 = "${socialBookmarkSite}");
+				value1 = ${socialBookmarkSite});
 		}
 	}
 
@@ -467,34 +533,41 @@ definition {
 		if (!(isSet(skipNavigation))) {
 			if (isSet(navigationPane)) {
 				KBArticle.gotoMenuItemViaNavigationPane(
-					kbArticleTitle = "${kbArticleTitle}",
+					kbArticleTitle = ${kbArticleTitle},
 					menuItem = "Edit");
+			}
+			else if (isSet(editActionToolbar)) {
+				Click(
+					key_text = "pencil",
+					locator1 = "Icon#ANY");
 			}
 			else {
 				Click(
-					key_rowEntry = "${kbArticleTitle}",
+					key_rowEntry = ${kbArticleTitle},
 					locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 				MenuItem.click(menuItem = "Edit");
 			}
 		}
 
-		AssertTextEquals(
-			locator1 = "Message#INFO",
-			value1 = "A new version is created automatically if this content is modified.");
+		if (!(isSet(enableExpirationDate))) {
+			AssertTextEquals(
+				locator1 = "Message#INFO",
+				value1 = "A new version is created automatically if this content is modified.");
+		}
 
 		AssertElementPresent(locator1 = "TextInput#TITLE");
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${kbArticleTitleEdit}");
+			value1 = ${kbArticleTitleEdit});
 
 		if (isSet(kbArticleContentEdit)) {
-			CKEditor.addContent(kbArticleContentEdit = "${kbArticleContentEdit}");
+			CKEditor.addContent(kbArticleContentEdit = ${kbArticleContentEdit});
 		}
 
 		if (isSet(kbArticleAttachment)) {
-			KBArticle.selectAttachmentCP(kbArticleAttachment = "${kbArticleAttachment}");
+			KBArticle.selectAttachmentCP(kbArticleAttachment = ${kbArticleAttachment});
 		}
 
 		if (isSet(customFieldTextEdit)) {
@@ -502,23 +575,23 @@ definition {
 
 			Type(
 				locator1 = "TextInput#CUSTOM_FIELD",
-				value1 = "${customFieldTextEdit}");
+				value1 = ${customFieldTextEdit});
 		}
 
 		if (isSet(dmImage)) {
 			Click(locator1 = "CKEditor#TOOLBAR_IMAGE_BUTTON");
 
-			if ("${navTab}" == "Documents and Media") {
+			if (${navTab} == "Documents and Media") {
 				if (isSet(depotName)) {
 					ItemSelector.selectRepositoryImage(
-						depotName = "${depotName}",
-						imageFileName = "${dmImage}",
-						navTab = "${navTab}");
+						depotName = ${depotName},
+						imageFileName = ${dmImage},
+						navTab = ${navTab});
 				}
 				else {
 					ItemSelector.selectDMImage(
-						imageFileName = "${dmImage}",
-						navTab = "${navTab}");
+						imageFileName = ${dmImage},
+						navTab = ${navTab});
 				}
 			}
 		}
@@ -527,25 +600,51 @@ definition {
 			ItemSelector.gotoItemSelectorViaCKEditor();
 
 			ItemSelector.uploadFile(
-				navTab = "${navTab}",
-				uploadFileName = "${uploadFileName}");
+				navTab = ${navTab},
+				uploadFileName = ${uploadFileName});
 		}
 
 		if (isSet(embedVideo)) {
 			Click.pauseClickAt(locator1 = "CKEditor#TOOLBAR_VIDEO_BUTTON");
 
-			if ("${navTab}" == "Documents and Media") {
+			if (${navTab} == "Documents and Media") {
 				ItemSelector.addVideoFromDM(
-					depotName = "${depotName}",
-					navTab = "${navTab}",
-					videoShortcutTitle = "${videoShortcutTitle}");
+					depotName = ${depotName},
+					navTab = ${navTab},
+					videoShortcutTitle = ${videoShortcutTitle});
 			}
 		}
 
-		if ("${cancel}" == "true") {
+		if (${enableExpirationDate} == "true") {
+			Panel.expandPanel(panel = "Expiration Date");
+
+			if (isSet(notificationDate)) {
+				var expirationDate = DateUtil.getDateOffsetByDays(${notificationDate}, "MM/dd/yyyy");
+
+				echo("## * expirationDate: ${expirationDate}");
+
+				Type(
+					locator1 = "TextInput#EXPIRATION_DATE",
+					value1 = ${expirationDate});
+			}
+
+			if (isSet(extendedMinutes)) {
+				var expirationDateTime = DateUtil.getDateOffsetByMinutes(${extendedMinutes}, "hh:mm a");
+
+				echo("## * expirationDateTime: ${expirationDateTime}");
+
+				var expirationDateTime = StringUtil.removeSpaces(${expirationDateTime});
+
+				Type.sendKeys(
+					locator1 = "TextInput#EXPIRATION_DATE_TIME",
+					value1 = ${expirationDateTime});
+			}
+		}
+
+		if (${cancel} == "true") {
 			Button.clickCancel();
 		}
-		else if ("${saveAsDraft}" == "true") {
+		else if (${saveAsDraft} == "true") {
 			PortletEntry.saveAsDraft();
 		}
 		else {
@@ -553,30 +652,50 @@ definition {
 		}
 	}
 
+	macro enableDescriptionOnPortlet {
+		Portlet.gotoPortletOptions(
+			portletName = ${portletName},
+			portletOption = "Configuration");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+		if ((${portletName} == "Knowledge Base Search") || (${portletName} == "Knowledge Base Section")) {
+			Navigator.gotoNavTab(navTab = "Display Settings");
+		}
+
+		WaitForVisible(locator1 = "Checkbox#ENABLE_DESCRIPTION_CHECKBOX");
+
+		Check(locator1 = "Checkbox#ENABLE_DESCRIPTION_CHECKBOX");
+
+		PortletEntry.save();
+
+		IFrame.closeFrame();
+	}
+
 	macro enableSocialBookmarkSites {
-		for (var socialBookmarkSite : list "${enableSocialBookmarkSites}") {
+		for (var socialBookmarkSite : list ${enableSocialBookmarkSites}) {
 			AddSelection(
 				locator1 = "SocialBookmarks#ENABLE_SOCIAL_BOOKMARK_AVAILABLE_SELECT",
-				value1 = "${socialBookmarkSite}");
+				value1 = ${socialBookmarkSite});
 
 			Click(locator1 = "Button#MOVE_AVAILABLE_TO_CURRENT");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "SocialBookmarks#ENABLE_SOCIAL_BOOKMARK_CURRENT_SELECT",
-				value1 = "${socialBookmarkSite}");
+				value1 = ${socialBookmarkSite});
 		}
 	}
 
 	macro gotoChildArticleDescriptiveDetails {
 		AssertClick.assertPartialTextClickAt(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_CHILD_ARTICLE_LINK",
 			value1 = "Child Article");
 	}
 
 	macro goToEntryPermissions {
 		Click(
-			key_rowEntry = "${kbArticleTitle}",
+			key_rowEntry = ${kbArticleTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Permissions");
@@ -586,73 +705,67 @@ definition {
 
 	macro gotoKBArticleViaKBDisplayHierarchyNavigationPG {
 		AssertClick(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_PARENT",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 	}
 
 	macro gotoKBChildArticleViaKBDisplayHierarchyNavigationPG {
-		var key_kbArticleTitle = "${kbArticleTitle}";
-		var key_kbChildArticleTitle = "${kbChildArticleTitle}";
+		var key_kbArticleTitle = ${kbArticleTitle};
+		var key_kbChildArticleTitle = ${kbChildArticleTitle};
 
 		AssertClick(
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_PARENT",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertClick.assertTextClickNoMouseOver(
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_CHILD",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 	}
 
 	macro gotoMenuItemViaNavigationPane {
 		MouseOver(
-			key_itemName = "${kbArticleTitle}",
+			key_itemName = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 
 		Click.waitForMenuToggleJSClick(
-			key_itemName = "${kbArticleTitle}",
+			key_itemName = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_ELLIPSIS");
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
-		if ("${menuItem}" == "Delete") {
-			MenuItem.clickNoError(menuItem = "${menuItem}");
+		if (${menuItem} == "Delete") {
+			MenuItem.clickNoError(menuItem = ${menuItem});
 		}
 		else {
-			MenuItem.click(menuItem = "${menuItem}");
+			MenuItem.click(menuItem = ${menuItem});
 		}
 	}
 
 	macro gotoNextArticlePG {
 		AssertClick(
 			locator1 = "KnowledgeBaseArticle#NEXT",
-			value1 = "${kbDisplayNextArticle}");
+			value1 = ${kbDisplayNextArticle});
 	}
 
 	macro gotoPreviousArticle {
 		AssertClick(
 			locator1 = "KnowledgeBaseArticle#PREVIOUS",
-			value1 = "${kbDisplayPreviousArticle}");
-	}
-
-	macro gotoSuggestionsNavigationCP {
-		AssertClick(
-			locator1 = "KnowledgeBase#ADMIN_TABS_SUGGESTIONS",
-			value1 = "Suggestions");
+			value1 = ${kbDisplayPreviousArticle});
 	}
 
 	macro gotoViaKBAdminCP {
-		var key_kbArticleTitle = "${kbArticleTitle}";
+		var key_kbArticleTitle = ${kbArticleTitle};
 
 		if (isSet(hasChildArticle)) {
 			AssertClick(
 				locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_TITLE",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
 		}
 		else {
 			AssertClick(
 				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
 		}
 
 		WaitForPageLoad();
@@ -666,16 +779,16 @@ definition {
 		}
 		else if (isSet(navigationPane)) {
 			KBFolder.gotoMenuItemViaNavigationPane(
-				kbFolderName = "${kbFolderName}",
+				kbFolderName = ${kbFolderName},
 				menuItem = "Import");
 		}
 		else {
 			LexiconEntry.gotoAddDropdownMenuItem(menuItem = "Import");
 		}
 
-		UploadDependencyFile.uploadArchiveFile(fileName = "${kbZipFile}");
+		UploadDependencyFile.uploadArchiveFile(fileName = ${kbZipFile});
 
-		if ("${applyNumericalPrefix}" == "true") {
+		if (${applyNumericalPrefix} == "true") {
 			Check(locator1 = "Checkbox#PRIORITIZATION_STRATEGY");
 		}
 		else {
@@ -688,86 +801,58 @@ definition {
 	}
 
 	macro moveArticleCP {
+		var key_rowEntry = ${kbArticleTitle};
+		var key_nodeName = ${destinationItem};
+
 		if (isSet(navigationPane)) {
 			KBArticle.gotoMenuItemViaNavigationPane(
-				kbArticleTitle = "${kbArticleTitle}",
+				kbArticleTitle = ${kbArticleTitle},
 				menuItem = "Move");
 		}
 		else {
-			var key_rowEntry = "${kbArticleTitle}";
-
-			if (IsElementPresent(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS")) {
-				Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
-			}
-			else {
-				Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
-			}
+			Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Move");
 		}
 
-		AssertTextEquals(
-			locator1 = "Portlet#HEADER",
-			value1 = "${kbArticleTitle}");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_CURRENT_PARENT_TITLE_LABEL",
-			value1 = "Current Parent");
+		Click(locator1 = "Treeview#NODE_ITEM");
 
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_CURRENT_PARENT_TITLE_FIELD",
-			value1 = "${kbArticleCurrentParent}");
+		SelectFrameTop();
 
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_CURRENT_PARENT_PRIORITY_LABEL",
-			value1 = "Priority");
-
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_NEW_PARENT_TITLE_LABEL",
-			value1 = "New Parent");
-
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_NEW_PARENT_PRIORITY_LABEL",
-			value1 = "Priority");
-
-		AssertClick(
-			locator1 = "Button#SELECT",
-			value1 = "Select");
+		Button.clickSave();
 	}
 
 	macro openPageTreePanel {
-		if ("${section}" == "Folders and Articles") {
+		if (${section} == "Folders and Articles") {
 			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
 
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
 
-			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+			if (IsElementNotPresent(key_header = ${section}, locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
 				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
 			}
 
 			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_PANEL_OPENED");
 		}
 
-		if ("${section}" == "Templates") {
+		if (${section} == "Templates") {
 			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
 
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
 
-			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+			if (IsElementNotPresent(key_header = ${section}, locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
 				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
 			}
 
 			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_PANEL_OPENED");
 		}
 
-		if ("${section}" == "Suggestions") {
+		if (${section} == "Suggestions") {
 			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
 
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
-
-			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
-				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
-			}
 		}
 	}
 
@@ -775,19 +860,19 @@ definition {
 
 		// You can use this navigation when you need to access the configuration quickly without checking the UI.
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var groupId = JSONWebcontentSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
 
 		if (!(isSet(parentResourcePrimKey))) {
-			var parentResourcePrimKey = "0";
+			var parentResourcePrimKey = 0;
 		}
 
 		// Articles accessed in admin will stay in admin after publishing.
@@ -799,25 +884,25 @@ definition {
 
 		// You can use this navigation when you need to access the configuration quickly without checking the UI.
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		var portalInstanceName = JSONCompany.parsePortalInstanceURL(portalURL = "${baseURL}");
+		var portalInstanceName = JSONCompany.parsePortalInstanceURL(portalURL = ${baseURL});
 
 		if (isSet(kbChildArticleTitle)) {
 			var resourcePrimKey = JSONKnowledgeBase._getChildKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				kbChildArticleTitle = "${kbChildArticleTitle}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				kbChildArticleTitle = ${kbChildArticleTitle});
 		}
 		else {
 			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				site = "${site}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				site = ${site});
 		}
 
 		Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_knowledge_base_web_portlet_AdminPortlet&_com_liferay_knowledge_base_web_portlet_AdminPortlet_redirect=http%3A%2F%2F${portalInstanceName}%3A8080%2Fgroup%2F${siteURLKey}%2F~%2Fcontrol_panel%2Fmanage%3Fp_p_id%3Dcom_liferay_knowledge_base_web_portlet_AdminPortlet%26p_p_lifecycle%3D0%26p_p_state%3Dmaximized%26p_p_mode%3Dview%26p_p_auth%3DkhoaN4dO&_com_liferay_knowledge_base_web_portlet_AdminPortlet_mvcPath=%2Fadmin%2Fcommon%2Fedit_kb_article.jsp&_com_liferay_knowledge_base_web_portlet_AdminPortlet_resourcePrimKey=${resourcePrimKey}");
@@ -827,24 +912,24 @@ definition {
 
 		// You can use this navigation when you need to access the configuration quickly without checking the UI.
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(folderName)) {
 			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				folderName = "${folderName}",
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				site = "${site}");
+				folderName = ${folderName},
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				site = ${site});
 		}
 		else {
 			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
-				groupName = "${groupName}",
-				kbArticleTitle = "${kbArticleTitle}",
-				site = "${site}");
+				groupName = ${groupName},
+				kbArticleTitle = ${kbArticleTitle},
+				site = ${site});
 		}
 
 		var resourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
@@ -854,10 +939,47 @@ definition {
 
 	macro removeAttachment {
 		ClickNoError(
-			key_attachmentName = "${attachmentName}",
+			key_attachmentName = ${attachmentName},
 			locator1 = "KnowledgeBaseArticle#ATTACHMENTS_REMOVE");
 
 		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+	}
+
+	macro searchArticleInMoveModal {
+		var key_rowEntry = ${kbArticleTitle};
+
+		Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Move");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Type(
+			locator1 = "KnowledgeBase#MOVE_MODAL_SEARCH_BAR",
+			value1 = ${searchItem});
+	}
+
+	macro searchForKB {
+		var key_knowledgeBaseName = ${knowledgeBaseName};
+
+		if (isSet(searchFromCenterPanel)) {
+			Type(
+				locator1 = "TextInput#SITE_SEARCH_KEYWORDS",
+				value1 = ${knowledgeBaseName});
+
+			KeyPress(
+				locator1 = "TextInput#SITE_SEARCH_KEYWORDS",
+				value1 = "\RETURN");
+		}
+		else {
+			Type(
+				locator1 = "KnowledgeBase#SEARCH_FIELD",
+				value1 = ${knowledgeBaseName});
+
+			KeyPress(
+				locator1 = "KnowledgeBase#SEARCH_FIELD",
+				value1 = "\RETURN");
+		}
 	}
 
 	macro selectAllCP {
@@ -868,7 +990,7 @@ definition {
 
 	macro selectArticleCP {
 		Check(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_CHECKBOX");
 
 		AssertVisible(locator1 = "Icon#DELETE");
@@ -876,7 +998,7 @@ definition {
 
 	macro selectArticlesToDisplayOnWidget {
 		Portlet.gotoPortletOptions(
-			portletName = "${portletName}",
+			portletName = ${portletName},
 			portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
@@ -903,27 +1025,27 @@ definition {
 
 		if (isSet(kbDisplay)) {
 			AssertClick(
-				key_kbArticleTitle = "${kbArticleTitle}",
+				key_kbArticleTitle = ${kbArticleTitle},
 				locator1 = "KnowledgeBaseSelectParent#SELECT_BUTTON",
 				value1 = "Select");
 		}
 		else if (isSet(kbArticle)) {
 			if (isSet(kbFolderName)) {
 				Click(
-					key_listEntry = "${kbFolderName}",
+					key_listEntry = ${kbFolderName},
 					locator1 = "LexiconList#LIST_ENTRY_TITLE_LINK");
 			}
 
 			if (isSet(childArticles)) {
 				Click(
-					key_listEntry = "${childArticles}",
+					key_listEntry = ${childArticles},
 					locator1 = "LexiconList#LIST_ENTRY_TITLE_LINK");
 			}
 
 			AssertClick(
-				key_kbArticleTitle = "${kbArticleTitle}",
+				key_kbArticleTitle = ${kbArticleTitle},
 				locator1 = "KnowledgeBaseSelectParent#SELECTOR_FIELD",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
 		}
 
 		SelectFrame(value1 = "relative=top");
@@ -944,7 +1066,7 @@ definition {
 
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${kbArticleAttachment}");
+			value1 = ${kbArticleAttachment});
 	}
 
 	macro selectFolderThroughPageTreePanel {
@@ -952,45 +1074,67 @@ definition {
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
 
 			Click(
-				key_itemName = "${kbChildFolderName}",
+				key_itemName = ${kbChildFolderName},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 		else {
 			Click(
-				key_itemName = "${kbFolderName}",
+				key_itemName = ${kbFolderName},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 	}
 
-	macro selectParentArticleCP {
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+	macro setReviewDate {
+		Panel.expandPanel(panel = "Expiration Date");
 
-		Click(
-			key_kbArticleTitle = "${kbArticleTitle}",
-			locator1 = "KnowledgeBaseSelectParent#SELECT_BUTTON",
-			value1 = "Select");
+		if (isSet(uncheckNeverReview)) {
+			AssertChecked(
+				checkboxName = "Never Review",
+				locator1 = "Checkbox#ANY_CHECKBOX");
 
-		SelectFrame(value1 = "relative=top");
+			Uncheck(
+				checkboxName = "Never Review",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
 
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#MOVE_NEW_PARENT_TITLE_FIELD",
-			value1 = "${kbArticleTitle}");
+		var reviewDate = DateUtil.getFormattedCurrentDate("MM/dd/yyyy");
 
-		Click(locator1 = "Button#MOVE");
+		echo("## * reviewDate: ${reviewDate}");
 
-		Alert.viewSuccessMessage();
+		var reviewDateTime = DateUtil.getDateOffsetByMinutes(${increaseMinutes}, "hh:mm a");
+
+		echo("## * reviewDateTime: ${reviewDateTime}");
+
+		Type(
+			locator1 = "TextInput#REVIEW_DATE",
+			value1 = ${reviewDate});
+
+		var reviewDateTime = StringUtil.removeSpaces(${reviewDateTime});
+
+		Type.sendKeys(
+			locator1 = "TextInput#REVIEW_DATE_TIME",
+			value1 = ${reviewDateTime});
 	}
 
 	macro subscribeCP {
-		if (isSet(kbArticleTitle)) {
+		if (isSet(subscribeActionToolbar)) {
 			Click(
-				key_rowEntry = "${kbArticleTitle}",
-				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+				key_kbArticleTitle = ${kbArticleTitle},
+				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE");
 
-			MenuItem.click(menuItem = "Subscribe");
+			Click(locator1 = "Button#SUBSCRIBE");
 		}
 		else {
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Subscribe");
+			if (isSet(kbArticleTitle)) {
+				Click(
+					key_rowEntry = ${kbArticleTitle},
+					locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+
+				MenuItem.click(menuItem = "Subscribe");
+			}
+			else {
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Subscribe");
+			}
 		}
 
 		Alert.viewSuccessMessage();
@@ -1014,22 +1158,91 @@ definition {
 		}
 	}
 
+	macro updateCheckInterval {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_configurationScreenKey=knowledge-base-service");
+
+		Type(
+			key_text = "Check Interval",
+			locator1 = "TextInput#ANY",
+			value1 = ${fieldValue});
+
+		SystemSettings.saveConfiguration();
+	}
+
+	macro viewActionsDetailsToolbar {
+		AssertVisible(
+			key_text = "pencil",
+			locator1 = "Icon#ANY");
+
+		AssertVisible(
+			key_text = "info-circle-open",
+			locator1 = "Icon#ANY");
+
+		AssertVisible(locator1 = "Button#SUBSCRIBE");
+
+		AssertVisible(locator1 = "Icon#TOOLBAR_ELLIPSIS");
+
+		if (isSet(moreActions)) {
+			Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
+
+			MenuItem.viewVisible(menuItem = "Edit");
+
+			MenuItem.viewVisible(menuItem = "Add Child Article");
+
+			MenuItem.viewVisible(menuItem = "Subscribe");
+
+			MenuItem.viewVisible(menuItem = "History");
+
+			MenuItem.viewVisible(menuItem = "Print");
+
+			MenuItem.viewVisible(menuItem = "Move");
+
+			MenuItem.viewVisible(menuItem = "Permissions");
+
+			MenuItem.viewVisible(menuItem = "Delete");
+		}
+	}
+
+	macro viewActiveActionsManagementToolbar {
+		AssertElementNotPresent(locator1 = "Checkbox#LEXICON_SELECT_ALL_CONTAINER_DISABLED");
+
+		AssertElementNotPresent(locator1 = "ManagementBar#FILTER_AND_ORDER_DISABLED");
+
+		AssertElementNotPresent(locator1 = "ManagementBar#ORDER_ICON_GENERIC_BUTTON_DISABLED");
+
+		AssertElementNotPresent(locator1 = "TextInput#SEARCH_DISABLED");
+
+		AssertVisible(locator1 = "Checkbox#LEXICON_SELECT_ALL_CONTAINER");
+
+		AssertVisible(locator1 = "ManagementBar#FILTER_AND_ORDER");
+
+		AssertVisible(locator1 = "ManagementBar#ORDER_ICON_GENERIC_BUTTON");
+
+		AssertVisible(locator1 = "TextInput#SEARCH");
+
+		ManagementBar.clickInfo();
+
+		AssertVisible(
+			key_title = ${title},
+			locator1 = "Header#H4_TITLE");
+	}
+
 	macro viewArticleHistoryCP {
 		Click(
-			key_rowEntry = "${kbArticleTitle}",
+			key_rowEntry = ${kbArticleTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "History");
 
 		Check(
-			key_versionNumber = "${kbArticleVersionNew}",
+			key_versionNumber = ${kbArticleVersionNew},
 			locator1 = "KnowledgeBaseArticle#HISTORY_SELECT_VERSION_CHECKBOX",
-			value1 = "${kbArticleVersionNew}");
+			value1 = ${kbArticleVersionNew});
 
 		Check(
-			key_versionNumber = "${kbArticleVersionOld}",
+			key_versionNumber = ${kbArticleVersionOld},
 			locator1 = "KnowledgeBaseArticle#HISTORY_SELECT_VERSION_CHECKBOX",
-			value1 = "${kbArticleVersionOld}");
+			value1 = ${kbArticleVersionOld});
 
 		AssertClick(
 			locator1 = "Button#COMPARE_VERSIONS",
@@ -1037,15 +1250,15 @@ definition {
 
 		if (isSet(kbArticleContentRemovedDiff)) {
 			AssertTextEquals(
-				key_kbArticleContentRemovedDiff = "${kbArticleContentRemovedDiff}",
+				key_kbArticleContentRemovedDiff = ${kbArticleContentRemovedDiff},
 				locator1 = "KnowledgeBaseArticle#HISTORY_CONTENT_REMOVED_DIFF",
-				value1 = "${kbArticleContentRemovedDiff}");
+				value1 = ${kbArticleContentRemovedDiff});
 		}
 
 		if (isSet(kbArticleContentAddedDiff)) {
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#HISTORY_CONTENT_ADDED_DIFF",
-				value1 = "${kbArticleContentAddedDiff}");
+				value1 = ${kbArticleContentAddedDiff});
 		}
 	}
 
@@ -1053,14 +1266,14 @@ definition {
 		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "History");
 
 		Check(
-			key_versionNumber = "${kbArticleVersionNew}",
+			key_versionNumber = ${kbArticleVersionNew},
 			locator1 = "KnowledgeBaseArticle#HISTORY_SELECT_VERSION_CHECKBOX",
-			value1 = "${kbArticleVersionNew}");
+			value1 = ${kbArticleVersionNew});
 
 		Check(
-			key_versionNumber = "${kbArticleVersionOld}",
+			key_versionNumber = ${kbArticleVersionOld},
 			locator1 = "KnowledgeBaseArticle#HISTORY_SELECT_VERSION_CHECKBOX",
-			value1 = "${kbArticleVersionOld}");
+			value1 = ${kbArticleVersionOld});
 
 		AssertClick(
 			locator1 = "Button#COMPARE_VERSIONS",
@@ -1068,18 +1281,18 @@ definition {
 
 		if (isSet(kbArticleContentRemovedDiff)) {
 			AssertTextEquals(
-				key_kbArticleContentRemovedDiff = "${kbArticleContentRemovedDiff}",
+				key_kbArticleContentRemovedDiff = ${kbArticleContentRemovedDiff},
 				locator1 = "KnowledgeBaseArticle#HISTORY_CONTENT_REMOVED_DIFF",
-				value1 = "${kbArticleContentRemovedDiff}");
+				value1 = ${kbArticleContentRemovedDiff});
 		}
 
 		if (isSet(kbArticleContentAddedDiff)) {
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#HISTORY_CONTENT_ADDED_DIFF",
-				value1 = "${kbArticleContentAddedDiff}");
+				value1 = ${kbArticleContentAddedDiff});
 		}
 
-		if ("${viewNoXmlInTitle}" == "true") {
+		if (${viewNoXmlInTitle} == "true") {
 			AssertTextNotPresent(
 				locator1 = "KnowledgeBaseArticle#TITLE",
 				value1 = "xml");
@@ -1091,30 +1304,30 @@ definition {
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
 
 			AssertVisible(
-				key_itemName = "${kbChildArticleTitle}",
+				key_itemName = ${kbChildArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 		else if (isSet(kbFolderName)) {
 			AssertVisible(
-				key_itemName = "${kbFolderName}",
+				key_itemName = ${kbFolderName},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 
 			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
 
 			AssertVisible(
-				key_itemName = "${kbArticleTitle}",
+				key_itemName = ${kbArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 		else {
 			AssertVisible(
-				key_itemName = "${kbArticleTitle}",
+				key_itemName = ${kbArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 	}
 
 	macro viewAttachmentCP {
 		Click(
-			key_rowEntry = "${kbArticleTitle}",
+			key_rowEntry = ${kbArticleTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit");
@@ -1127,11 +1340,11 @@ definition {
 	}
 
 	macro viewBlogsEntryRelatedAsset {
-		var key_kbArticleRelatedAssetTitle = "${kbArticleRelatedAssetTitle}";
+		var key_kbArticleRelatedAssetTitle = ${kbArticleRelatedAssetTitle};
 
 		AssertClick.assertTextClickAt(
 			locator1 = "AssetRelatedAssets#KB_RELATED_ASSETS_LINKS",
-			value1 = "${kbArticleRelatedAssetTitle}");
+			value1 = ${kbArticleRelatedAssetTitle});
 
 		WaitForPageLoad();
 
@@ -1147,110 +1360,130 @@ definition {
 	macro viewChildArticleCP {
 		if (isSet(pageTreePanel)) {
 			Click(
-				key_itemName = "${kbChildArticleTitle}",
+				key_itemName = ${kbChildArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 		else {
 			KBArticle._gotoChildArticle(
-				kbChildArticleContent = "${kbChildArticleContent}",
-				kbChildArticleTitle = "${kbChildArticleTitle}");
+				kbChildArticleContent = ${kbChildArticleContent},
+				kbChildArticleTitle = ${kbChildArticleTitle});
 		}
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBaseArticle#CONTENT",
-			value1 = "${kbChildArticleContent}");
+			value1 = ${kbChildArticleContent});
 	}
 
 	macro viewChildArticlePG {
 		AssertClick.assertTextClickNoMouseOver(
-			key_kbArticleTitle = "${kbArticleTitle}",
-			key_kbChildArticleTitle = "${kbChildArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
+			key_kbChildArticleTitle = ${kbChildArticleTitle},
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_CHILD",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DISPLAY_TITLE",
-			value1 = "${kbChildArticleTitle}");
+			value1 = ${kbChildArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DISPLAY_CONTENT",
-			value1 = "${kbChildArticleContent}");
+			value1 = ${kbChildArticleContent});
 	}
 
 	macro viewCP {
-		var key_kbArticleTitle = "${kbArticleTitle}";
+		var key_kbArticleTitle = ${kbArticleTitle};
 
 		if (isSet(pageTreePanel)) {
 			Click(
-				key_itemName = "${kbArticleTitle}",
+				key_itemName = ${kbArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 
 			AssertVisible(
-				key_itemName = "${kbArticleTitle}",
+				key_itemName = ${kbArticleTitle},
 				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_HIGHLIGHT");
 		}
 		else {
-			AssertTextEquals(
-				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-				value1 = "${kbArticleTitle}");
-
-			if (isSet(kbStatus)) {
+			if (isSet(indexNumber)) {
 				AssertTextEquals(
-					locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS",
-					value1 = "${kbStatus}");
+					indexNumber = ${indexNumber},
+					locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE_SPECIFIC",
+					value1 = ${kbArticleTitle});
+			}
+			else {
+				AssertTextEquals(
+					locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
+					value1 = ${kbArticleTitle});
 			}
 
 			AssertClick(
 				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-				value1 = "${kbArticleTitle}");
+				value1 = ${kbArticleTitle});
+
+			if (isSet(kbDescription)) {
+				AssertTextEquals(
+					key_title = "Description",
+					locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION_HEADER",
+					value1 = "Description");
+
+				AssertTextEquals(
+					locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION",
+					value1 = ${kbDescription});
+			}
 
 			if (isSet(kbStatus)) {
-				AssertTextEquals(
-					key_kbArticleStatus = "${kbStatus}",
-					locator1 = "WorkflowKnowledgeBaseArticle#ARTICLE_PREVIEW_ARTICLE_STATUS",
-					value1 = "${kbStatus}");
+				if (IsElementNotPresent(locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE")) {
+					ManagementBar.clickInfo();
+				}
+
+				AssertTextEquals.assertPartialText(
+					locator1 = "Message#WORKFLOW_STATUS",
+					value1 = ${kbStatus});
 			}
 
 			if (isSet(versionNumber)) {
-				AssertTextEquals(
-					locator1 = "KnowledgeBase#ARTICLE_PREVIEW_VERSION_NUMBER",
-					value1 = "${versionNumber}");
+				if (IsElementNotPresent(locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE")) {
+					ManagementBar.clickInfo();
+				}
+
+				AssertTextEquals.assertPartialText(
+					locator1 = "KnowledgeBase#ARTICLE_VERSION_NUMBER",
+					value1 = ${versionNumber});
 			}
 
 			if (isSet(highlight)) {
 				AssertVisible(
-					key_itemName = "${kbArticleTitle}",
+					key_itemName = ${kbArticleTitle},
 					locator1 = "KnowledgeBase#PAGE_TREE_ITEM_HIGHLIGHT");
 			}
 		}
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#CONTENT",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 
 		if (isSet(embedVideo)) {
 			WaitForElementPresent.waitForLastScript();
 
-			if ("${service}" == "twitch") {
+			if (${service} == "twitch") {
 				AssertVisible(
-					key_service = "${service}",
+					key_service = ${service},
 					locator1 = "BlogsEntry#CONTENT_VIDEO");
 			}
-			else if ("${service}" == "facebook") {
+			else if (${service} == "facebook") {
 				AssertVisible(
-					key_service = "${service}",
+					key_service = ${service},
 					locator1 = "BlogsEntry#CONTENT_VIDEO");
 			}
-			else if ("${internalVideo}" == "true") {
-				DMDocument.viewInternalVideoPreview(videoName = "${videoName}");
+			else if (${internalVideo} == "true") {
+				DMDocument.viewInternalVideoPreview(videoName = ${videoName});
 			}
 			else {
 				AssertElementPresent(
@@ -1266,11 +1499,11 @@ definition {
 		if (isSet(kbChildArticleTitle)) {
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#ADMIN_VIEW_CHILD_ARTICLE_TITLE",
-				value1 = "${kbChildArticleTitle}");
+				value1 = ${kbChildArticleTitle});
 
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#ADMIN_VIEW_CHILD_ARTICLE_CONTENT",
-				value1 = "${kbChildArticleContent}");
+				value1 = ${kbChildArticleContent});
 		}
 
 		if (isSet(kbArticleRelatedAssetTitle)) {
@@ -1279,9 +1512,9 @@ definition {
 				value1 = "RELATED ASSETS");
 
 			AssertTextEquals(
-				key_kbArticleRelatedAssetTitle = "${kbArticleRelatedAssetTitle}",
+				key_kbArticleRelatedAssetTitle = ${kbArticleRelatedAssetTitle},
 				locator1 = "AssetRelatedAssets#KB_RELATED_ASSETS_LINKS",
-				value1 = "${kbArticleRelatedAssetTitle}");
+				value1 = ${kbArticleRelatedAssetTitle});
 		}
 
 		if (isSet(categoryName)) {
@@ -1290,9 +1523,9 @@ definition {
 				value1 = "${vocabularyName}: ${categoryName}");
 
 			AssertTextEquals(
-				key_categoryName = "${categoryName}",
+				key_categoryName = ${categoryName},
 				locator1 = "KnowledgeBaseArticle#CATEGORY_LINKS",
-				value1 = "${categoryName}");
+				value1 = ${categoryName});
 		}
 
 		if ("noAttachment" == "true") {
@@ -1302,58 +1535,68 @@ definition {
 
 	macro viewCPWithHTML {
 		AssertClick(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#HTML_BOLD_CONTENT",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 	}
 
 	macro viewDefaultCP {
-		if (isSet(featureFlag)) {
-			if (isSet(defaultHome)) {
-				AssertTextEquals(
-					locator1 = "Message#EMPTY_INFO_TAGLIB_TITLE",
-					value1 = "Knowledge base is empty.");
-			}
-			else if (isSet(suggestions)) {
-				AssertTextEquals(
-					locator1 = "Message#EMPTY_INFO",
-					value1 = "There are no suggestions.");
-			}
-			else {
-				AssertTextEquals(
-					locator1 = "Message#EMPTY_INFO_TAGLIB_TITLE",
-					value1 = "This folder is empty.");
-			}
+		if (isSet(newFolder)) {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_INFO_TAGLIB_TITLE",
+				value1 = "This folder is empty.");
 		}
-		else {
+		else if (isSet(suggestions)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
-				value1 = "No articles were found.");
+				value1 = "There are no suggestions.");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_INFO_TAGLIB_TITLE",
+				value1 = "Knowledge base is empty.");
+		}
+
+		if (isSet(disabledActionToolbar)) {
+			AssertElementPresent(locator1 = "TextInput#SEARCH_DISABLED");
 		}
 
 		AssertElementNotPresent(locator1 = "KnowledgeBase#ARTICLE_TABLE_KB_GENERIC");
 	}
 
+	macro viewExpirationStatus {
+		AssertTextEquals(
+			key_kbArticleTitle = ${kbArticleTitle},
+			locator1 = "KnowledgeBase#ARTICLE_TABLE_EXPIRATION_STATUS",
+			value1 = ${kbExpirationStatus});
+
+		if (isSet(expirationTime)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#EMPTY_INFO",
+				value1 = "There are no suggestions.");
+		}
+	}
+
 	macro viewFieldRequiredAsterisk {
 		LexiconEntry.gotoAddMenuItem(menuItem = "Basic Article");
 
-		for (var fieldFieldLabel : list "${fieldLabel}") {
-			FormFields.viewRequiredAsteriskDataField(fieldFieldLabel = "${fieldFieldLabel}");
+		for (var fieldFieldLabel : list ${fieldLabel}) {
+			FormFields.viewRequiredAsteriskDataField(fieldFieldLabel = ${fieldFieldLabel});
 		}
 	}
 
 	macro viewFriendlyURLCP {
 		if (!(isSet(skipNavigation))) {
 			Click(
-				key_rowEntry = "${kbArticleTitle}",
+				key_rowEntry = ${kbArticleTitle},
 				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS_2");
 
 			MenuItem.click(menuItem = "Edit");
@@ -1363,7 +1606,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#EDIT_FRIENDLY_URL_FIELD",
-			value1 = "${kbArticleFriendlyURL}");
+			value1 = ${kbArticleFriendlyURL});
 
 		if (isSet(disabledFriendlyURLField)) {
 			AssertElementPresent(
@@ -1374,11 +1617,11 @@ definition {
 
 	macro viewImageIsPresent {
 		Click(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_TITLE");
 
 		AssertElementPresent(
-			key_contentImageName = "${contentImageName}",
+			key_contentImageName = ${contentImageName},
 			locator1 = "KnowledgeBase#CONTENT_IMAGE_NAME");
 	}
 
@@ -1391,11 +1634,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#INFO_TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		if (isSet(versionNumber)) {
 			AssertTextEquals(
-				key_dmDocumentVersionNumber = "${versionNumber}",
+				key_dmDocumentVersionNumber = ${versionNumber},
 				locator1 = "DocumentsAndMediaDocument#DOCUMENT_DETAILS_VERSION",
 				value1 = "VERSION ${versionNumber}");
 		}
@@ -1403,7 +1646,21 @@ definition {
 		if (isSet(workflowStatus)) {
 			AssertTextEquals(
 				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_WORKFLOW_STATUS",
-				value1 = "${workflowStatus}");
+				value1 = ${workflowStatus});
+		}
+
+		if (isSet(viewsQuantity)) {
+			AssertVisible(
+				key_sectionContent = ${viewQuantity},
+				key_sectionTitle = "Views",
+				locator1 = "KnowledgeBase#SIDE_PANEL_INFO");
+		}
+
+		if (isSet(childArticlesQuantity)) {
+			AssertVisible(
+				key_sectionContent = ${childArticlesQuantity},
+				key_sectionTitle = "Child Articles",
+				locator1 = "KnowledgeBase#SIDE_PANEL_INFO");
 		}
 	}
 
@@ -1411,25 +1668,25 @@ definition {
 		Navigator.gotoNavTab(navTab = "Versions");
 
 		AssertTextEquals(
-			key_entryVersion = "${entryVersion}",
+			key_entryVersion = ${entryVersion},
 			locator1 = "KnowledgeBaseArticle#INFO_VERSION_TITLE",
-			value1 = "${entryVersion}");
+			value1 = ${entryVersion});
 
 		var modifiedDate = DateUtil.getFormattedCurrentDate("MMMM d, yyyy");
 
 		AssertTextEquals.assertPartialText(
-			key_entryVersion = "${entryVersion}",
+			key_entryVersion = ${entryVersion},
 			locator1 = "KnowledgeBaseArticle#INFO_VERSION_SUBTITLE",
-			userName = "${userName}",
+			userName = ${userName},
 			value1 = "By ${userName}, on ${modifiedDate}");
 	}
 
 	macro viewKBArticlePriorityCP {
-		var key_kbArticleTitle = "${kbArticleTitle}";
+		var key_kbArticleTitle = ${kbArticleTitle};
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_PRIORITY",
@@ -1438,7 +1695,7 @@ definition {
 
 	macro viewKBArticleWithAttachmentCP {
 		Click(
-			key_rowEntry = "${kbArticleTitle}",
+			key_rowEntry = ${kbArticleTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit");
@@ -1449,13 +1706,13 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "ControlMenu#HEADING",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		AssertTextEquals(
 			locator1 = "CKEditor#BODY",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -1465,45 +1722,51 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#ATTACHMENTS_SAVED_ATTACHMENTS_CONTAINER",
-			value1 = "${kbArticleAttachment}");
+			value1 = ${kbArticleAttachment});
 	}
 
 	macro viewNavigationLinksPG {
-		if ("${previous}" == "true") {
+		if (${previous} == "true") {
 			AssertElementPresent(locator1 = "KnowledgeBaseArticle#PREVIOUS");
 		}
-		else if ("${previous}" == "false") {
+		else if (${previous} == "false") {
 			AssertElementNotPresent(locator1 = "KnowledgeBaseArticle#PREVIOUS");
 		}
 
-		if ("${next}" == "true") {
+		if (${next} == "true") {
 			AssertElementPresent(locator1 = "KnowledgeBaseArticle#NEXT");
 		}
-		else if ("${next}" == "false") {
+		else if (${next} == "false") {
 			AssertElementNotPresent(locator1 = "KnowledgeBaseArticle#NEXT");
 		}
 	}
 
+	macro viewNoExpirationStatus {
+		AssertElementNotPresent(
+			key_kbArticleTitle = ${kbArticleTitle},
+			locator1 = "KnowledgeBase#ARTICLE_TABLE_EXPIRATION_STATUS");
+	}
+
 	macro viewNoHierarchyPG {
 		AssertElementNotPresent(
-			key_kbArticleTitle = "${kbArticleTitle}",
+			key_kbArticleTitle = ${kbArticleTitle},
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_PARENT");
 
 		AssertElementPresent(locator1 = "KnowledgeBase#FOLDER_NAVIGATION_MENULIST");
 	}
 
 	macro viewNoPGViaKBDisplay {
-		AssertTextNotPresent(value1 = "${kbArticleTitle}");
+		AssertTextNotPresent(value1 = ${kbArticleTitle});
 	}
 
 	macro viewPG {
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBase#DISPLAY_TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DISPLAY_CONTENT",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 
 		if (isSet(embedVideo)) {
 			AssertElementPresent(
@@ -1518,30 +1781,50 @@ definition {
 		if (isSet(customFieldName)) {
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#CUSTOM_FIELD_NAME",
-				value1 = "${customFieldName}");
+				value1 = ${customFieldName});
 
 			AssertTextEquals(
 				locator1 = "KnowledgeBaseArticle#CUSTOM_FIELD_VALUE",
-				value1 = "${customFieldValue}");
+				value1 = ${customFieldValue});
+		}
+
+		if (isSet(kbDescription)) {
+			if (${description} == "Disabled") {
+				AssertElementNotPresent(
+					key_title = "Description",
+					locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION_HEADER");
+
+				AssertElementNotPresent(locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION");
+			}
+			else {
+				AssertTextEquals(
+					key_title = "Description",
+					locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION_HEADER",
+					value1 = "Description");
+
+				AssertTextEquals(
+					locator1 = "KnowledgeBase#ARTICLE_DESCRIPTION",
+					value1 = ${kbDescription});
+			}
 		}
 	}
 
 	macro viewPGViaAP {
-		var key_assetContent = "${kbArticleContent}";
-		var key_assetTitle = "${kbArticleTitle}";
+		var key_assetContent = ${kbArticleContent};
+		var key_assetTitle = ${kbArticleTitle};
 
 		AssertTextEquals(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 	}
 
 	macro viewPrintContent {
 		Click(
-			key_rowEntry = "${kbArticleTitle}",
+			key_rowEntry = ${kbArticleTitle},
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Print");
@@ -1550,11 +1833,23 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE_PRINT_PREVIEW",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#CONTENT",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
+	}
+
+	macro viewSearchResultNotPresent {
+		AssertElementNotPresent(
+			key_kbArticleTitle = ${kbArticleTitle},
+			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE");
+	}
+
+	macro viewSearchResults {
+		AssertVisible(
+			key_kbArticleTitle = ${kbArticleTitle},
+			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE");
 	}
 
 	macro viewSourceURLCP {
@@ -1563,7 +1858,7 @@ definition {
 		}
 		else {
 			Click(
-				key_rowEntry = "${kbArticleTitle}",
+				key_rowEntry = ${kbArticleTitle},
 				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 		}
 
@@ -1573,7 +1868,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "CKEditor#SOURCE_URL",
-			value1 = "${kbArticleSourceURL}");
+			value1 = ${kbArticleSourceURL});
 	}
 
 	macro viewSourceURLPG {
@@ -1583,11 +1878,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "CKEditor#SOURCE_URL",
-			value1 = "${kbArticleSourceURL}");
+			value1 = ${kbArticleSourceURL});
 	}
 
 	macro viewUploadFailed {
-		if ("${kbImportFailed}" == "true") {
+		if (${kbImportFailed} == "true") {
 			Alert.viewRequestFailedToComplete();
 		}
 		else {
@@ -1598,11 +1893,11 @@ definition {
 	macro viewViaNextLinkPG {
 		AssertClick(
 			locator1 = "KnowledgeBaseArticle#NEXT",
-			value1 = "${kbArticleTitle}");
+			value1 = ${kbArticleTitle});
 
 		AssertTextPresent(
 			locator1 = "KnowledgeBase#DISPLAY_CONTENT",
-			value1 = "${kbArticleContent}");
+			value1 = ${kbArticleContent});
 	}
 
 }

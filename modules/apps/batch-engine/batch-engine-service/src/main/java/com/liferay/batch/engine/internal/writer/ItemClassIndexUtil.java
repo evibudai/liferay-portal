@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.writer;
@@ -30,9 +21,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 
 /**
  * @author Shuyang Zhou
@@ -41,53 +34,17 @@ import java.util.Objects;
 public class ItemClassIndexUtil {
 
 	public static Map<String, Field> index(Class<?> itemClass) {
-		return _fieldsMap.computeIfAbsent(
-			itemClass,
-			clazz -> {
-				Map<String, Field> fieldsMap = new HashMap<>();
+		Queue<Class<?>> queue = new LinkedList<>();
 
-				while (clazz != Object.class) {
-					for (Field field : clazz.getDeclaredFields()) {
-						if (isMultidimensionalArray(field.getType())) {
-							continue;
-						}
+		Map<String, Field> fieldsMap = _fieldsMap.computeIfAbsent(
+			itemClass, clazz -> _index(clazz, queue));
 
-						field.setAccessible(true);
+		while ((itemClass = queue.poll()) != null) {
+			_fieldsMap.computeIfAbsent(
+				itemClass, clazz -> _index(clazz, queue));
+		}
 
-						String name = field.getName();
-
-						if (name.charAt(0) == CharPool.UNDERLINE) {
-							name = name.substring(1);
-						}
-
-						if (field.isSynthetic()) {
-							continue;
-						}
-
-						fieldsMap.put(name, field);
-
-						Class<?> fieldClass = field.getType();
-
-						if (!isIterable(fieldClass) && !isMap(fieldClass) &&
-							!isSingleColumnAdoptableArray(fieldClass) &&
-							!isSingleColumnAdoptableValue(fieldClass) &&
-							!Objects.equals(clazz, fieldClass)) {
-
-							index(fieldClass);
-						}
-					}
-
-					if (Objects.equals(
-							clazz.getSuperclass(), clazz.getDeclaringClass())) {
-
-						break;
-					}
-
-					clazz = clazz.getSuperclass();
-				}
-
-				return fieldsMap;
-			});
+		return fieldsMap;
 	}
 
 	public static boolean isIterable(Class<?> valueClass) {
@@ -161,6 +118,54 @@ public class ItemClassIndexUtil {
 		}
 
 		return true;
+	}
+
+	private static Map<String, Field> _index(
+		Class<?> clazz, Queue<Class<?>> queue) {
+
+		Map<String, Field> fieldsMap = new HashMap<>();
+
+		while (clazz != Object.class) {
+			for (Field field : clazz.getDeclaredFields()) {
+				if (isMultidimensionalArray(field.getType())) {
+					continue;
+				}
+
+				field.setAccessible(true);
+
+				String name = field.getName();
+
+				if (name.charAt(0) == CharPool.UNDERLINE) {
+					name = name.substring(1);
+				}
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				fieldsMap.put(name, field);
+
+				Class<?> fieldClass = field.getType();
+
+				if (!isIterable(fieldClass) && !isMap(fieldClass) &&
+					!isSingleColumnAdoptableArray(fieldClass) &&
+					!isSingleColumnAdoptableValue(fieldClass) &&
+					!Objects.equals(clazz, fieldClass)) {
+
+					queue.add(clazz);
+				}
+			}
+
+			if (Objects.equals(
+					clazz.getSuperclass(), clazz.getDeclaringClass())) {
+
+				break;
+			}
+
+			clazz = clazz.getSuperclass();
+		}
+
+		return fieldsMap;
 	}
 
 	private static final Map<Class<?>, Map<String, Field>> _fieldsMap =

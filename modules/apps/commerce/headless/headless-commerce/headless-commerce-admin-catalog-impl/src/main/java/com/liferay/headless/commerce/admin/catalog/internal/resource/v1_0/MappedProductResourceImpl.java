@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
@@ -23,7 +14,7 @@ import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.MappedProductDTOConverter;
+import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.MappedProductUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -34,10 +25,10 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -53,12 +44,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/mapped-product.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {MappedProductResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = MappedProductResource.class
 )
 @CTAware
-public class MappedProductResourceImpl
-	extends BaseMappedProductResourceImpl implements NestedFieldSupport {
+public class MappedProductResourceImpl extends BaseMappedProductResourceImpl {
 
 	@Override
 	public void deleteMappedProduct(Long mappedProductId) throws Exception {
@@ -114,26 +104,8 @@ public class MappedProductResourceImpl
 			cpDefinition.getCPDefinitionId(), pagination, search, sorts);
 	}
 
-	@NestedField(parentClass = Product.class, value = "mappedProducts")
 	@Override
-	public Page<MappedProduct> getProductIdMappedProductsPage(
-			Long productId, String search, Pagination pagination, Sort[] sorts)
-		throws Exception {
-
-		CPDefinition cpDefinition =
-			_cpDefinitionService.fetchCPDefinitionByCProductId(productId);
-
-		if (cpDefinition == null) {
-			throw new NoSuchCPDefinitionException(
-				"Unable to find product with ID " + productId);
-		}
-
-		return _getMappedProductsPage(
-			cpDefinition.getCPDefinitionId(), pagination, search, sorts);
-	}
-
-	@Override
-	public MappedProduct getProductMappedProductBySequence(
+	public MappedProduct getProductIdMappedProductBySequence(
 			Long productId, String sequence)
 		throws Exception {
 
@@ -150,6 +122,24 @@ public class MappedProductResourceImpl
 				cpDefinition.getCPDefinitionId(), sequence);
 
 		return _toMappedProduct(csDiagramEntry.getCSDiagramEntryId());
+	}
+
+	@NestedField(parentClass = Product.class, value = "mappedProducts")
+	@Override
+	public Page<MappedProduct> getProductIdMappedProductsPage(
+			Long productId, String search, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		CPDefinition cpDefinition =
+			_cpDefinitionService.fetchCPDefinitionByCProductId(productId);
+
+		if (cpDefinition == null) {
+			throw new NoSuchCPDefinitionException(
+				"Unable to find product with ID " + productId);
+		}
+
+		return _getMappedProductsPage(
+			cpDefinition.getCPDefinitionId(), pagination, search, sorts);
 	}
 
 	@Override
@@ -295,8 +285,9 @@ public class MappedProductResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private MappedProductDTOConverter _mappedProductDTOConverter;
+	@Reference(target = DTOConverterConstants.MAPPED_PRODUCT_DTO_CONVERTER)
+	private DTOConverter<CSDiagramEntry, MappedProduct>
+		_mappedProductDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

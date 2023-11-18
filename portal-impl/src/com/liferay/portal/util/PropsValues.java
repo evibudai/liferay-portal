@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -142,13 +133,14 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.ASSET_BROWSER_SEARCH_WITH_DATABASE));
 
-	public static final boolean ASSET_CATEGORIES_SEARCH_HIERARCHICAL =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SEARCH_HIERARCHICAL));
-
 	public static final int ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES));
+
+	public static final boolean ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED));
 
 	public static final int ASSET_FILTER_SEARCH_LIMIT = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.ASSET_FILTER_SEARCH_LIMIT));
@@ -333,11 +325,6 @@ public class PropsValues {
 	public static final String CDN_HOST_HTTPS = PropsUtil.get(
 		PropsKeys.CDN_HOST_HTTPS);
 
-	public static int CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE =
-		GetterUtil.getInteger(
-			PropsUtil.get(
-				PropsKeys.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE));
-
 	public static final boolean CLUSTER_LINK_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.CLUSTER_LINK_ENABLED));
 
@@ -479,8 +466,8 @@ public class PropsValues {
 	public static final String DATABASE_MYSQL_ENGINE = PropsUtil.get(
 		PropsKeys.DATABASE_MYSQL_ENGINE);
 
-	public static final String DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX =
-		PropsUtil.get(PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX);
+	public static String DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX = PropsUtil.get(
+		PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX);
 
 	public static String DEFAULT_ADMIN_FIRST_NAME = PropsUtil.get(
 		PropsKeys.DEFAULT_ADMIN_FIRST_NAME);
@@ -586,11 +573,6 @@ public class PropsValues {
 	public static final String DISCUSSION_COMMENTS_ALLOWED_CONTENT =
 		PropsUtil.get(PropsKeys.DISCUSSION_COMMENTS_ALLOWED_CONTENT);
 
-	public static final boolean DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER =
-		GetterUtil.getBoolean(
-			PropsUtil.get(
-				PropsKeys.DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER));
-
 	public static final int DISCUSSION_COMMENTS_DELTA_VALUE =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.DISCUSSION_COMMENTS_DELTA_VALUE));
@@ -600,9 +582,6 @@ public class PropsValues {
 
 	public static final int DISCUSSION_MAX_COMMENTS = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.DISCUSSION_MAX_COMMENTS));
-
-	public static final boolean DISCUSSION_SUBSCRIBE = GetterUtil.getBoolean(
-		PropsUtil.get(PropsKeys.DISCUSSION_SUBSCRIBE));
 
 	public static final String[] DL_CHAR_BLACKLIST = PropsUtil.getArray(
 		PropsKeys.DL_CHAR_BLACKLIST);
@@ -889,6 +868,10 @@ public class PropsValues {
 	public static final int GZIP_COMPRESSION_LEVEL = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.GZIP_COMPRESSION_LEVEL));
 
+	public static final boolean HEALTH_CHECK_DATA_SOURCE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.HEALTH_CHECK_DATA_SOURCE_ENABLED));
+
 	public static final String HIBERNATE_DIALECT = PropsUtil.get(
 		PropsKeys.HIBERNATE_DIALECT);
 
@@ -911,12 +894,6 @@ public class PropsValues {
 
 	public static final boolean IMAGE_AUTO_SCALE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.IMAGE_AUTO_SCALE));
-
-	public static final String IMAGE_HOOK_FILE_SYSTEM_ROOT_DIR = PropsUtil.get(
-		PropsKeys.IMAGE_HOOK_FILE_SYSTEM_ROOT_DIR);
-
-	public static String IMAGE_HOOK_IMPL = GetterUtil.getString(
-		PropsUtil.get(PropsKeys.IMAGE_HOOK_IMPL));
 
 	public static final boolean IMAGE_IO_USE_DISK_CACHE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.IMAGE_IO_USE_DISK_CACHE));
@@ -1144,6 +1121,10 @@ public class PropsValues {
 
 	public static boolean LAYOUT_TEMPLATE_CACHE_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.LAYOUT_TEMPLATE_CACHE_ENABLED));
+
+	public static boolean LAYOUT_USER_ACCESS_VIA_PLID_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.LAYOUT_USER_ACCESS_VIA_PLID_ENABLED));
 
 	public static boolean LAYOUT_USER_PRIVATE_LAYOUTS_AUTO_CREATE =
 		GetterUtil.getBoolean(
@@ -1501,16 +1482,21 @@ public class PropsValues {
 	public static final String NETVIBES_SERVLET_MAPPING = PropsUtil.get(
 		PropsKeys.NETVIBES_SERVLET_MAPPING);
 
-	public static final boolean NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED =
+	public static final boolean NOTIFICATION_EMAIL_TEMPLATE_ENABLED =
 		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED));
+			PropsUtil.get(PropsKeys.NOTIFICATION_EMAIL_TEMPLATE_ENABLED));
 
 	public static final int NOTIFICATIONS_MAX_EVENTS = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.NOTIFICATIONS_MAX_EVENTS));
 
-	public static final int OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION));
+	public static String OBJECT_ENCRYPTION_ALGORITHM = PropsUtil.get(
+		PropsKeys.OBJECT_ENCRYPTION_ALGORITHM);
+
+	public static boolean OBJECT_ENCRYPTION_ENABLED = GetterUtil.getBoolean(
+		PropsUtil.get(PropsKeys.OBJECT_ENCRYPTION_ENABLED));
+
+	public static String OBJECT_ENCRYPTION_KEY = PropsUtil.get(
+		PropsKeys.OBJECT_ENCRYPTION_KEY);
 
 	public static final int OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		GetterUtil.getInteger(
@@ -1765,13 +1751,6 @@ public class PropsValues {
 
 	public static String PHONE_NUMBER_FORMAT_USA_REGEXP = GetterUtil.getString(
 		PropsUtil.get(PropsKeys.PHONE_NUMBER_FORMAT_USA_REGEXP));
-
-	public static final long POLLER_NOTIFICATIONS_TIMEOUT =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.POLLER_NOTIFICATIONS_TIMEOUT));
-
-	public static final long POLLER_REQUEST_TIMEOUT = GetterUtil.getLong(
-		PropsUtil.get(PropsKeys.POLLER_REQUEST_TIMEOUT));
 
 	public static final boolean POP_SERVER_NOTIFICATIONS_ENABLED =
 		GetterUtil.getBoolean(
@@ -2249,9 +2228,6 @@ public class PropsValues {
 	public static final String[] SPRING_INFRASTRUCTURE_CONFIGS =
 		PropsUtil.getArray(PropsKeys.SPRING_INFRASTRUCTURE_CONFIGS);
 
-	public static final int SQL_DATA_MAX_PARAMETERS = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.SQL_DATA_MAX_PARAMETERS));
-
 	public static int STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CHECK_INTERVAL =
 		GetterUtil.getInteger(
 			PropsUtil.get(
@@ -2311,13 +2287,6 @@ public class PropsValues {
 
 	public static boolean TERMS_OF_USE_REQUIRED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.TERMS_OF_USE_REQUIRED));
-
-	public static final boolean TEXT_EXTRACTION_FORK_PROCESS_ENABLED =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.TEXT_EXTRACTION_FORK_PROCESS_ENABLED));
-
-	public static final String[] TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES =
-		PropsUtil.getArray(PropsKeys.TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES);
 
 	public static boolean THEME_CSS_FAST_LOAD = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.THEME_CSS_FAST_LOAD));
@@ -2405,10 +2374,6 @@ public class PropsValues {
 	public static final String UNICODE_TEXT_NORMALIZER_FORM = PropsUtil.get(
 		PropsKeys.UNICODE_TEXT_NORMALIZER_FORM);
 
-	public static final boolean UPGRADE_DATABASE_AUTO_RUN =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.UPGRADE_DATABASE_AUTO_RUN));
-
 	public static final boolean UPGRADE_DATABASE_TRANSACTIONS_DISABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.UPGRADE_DATABASE_TRANSACTIONS_DISABLED));
@@ -2417,8 +2382,12 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.UPGRADE_LOG_CONTEXT_ENABLED));
 
-	public static final String UPGRADE_LOG_CONTEXT_NAME = PropsUtil.get(
-		PropsKeys.UPGRADE_LOG_CONTEXT_NAME);
+	public static final String UPGRADE_REPORT_DIR = GetterUtil.getString(
+		PropsUtil.get(PropsKeys.UPGRADE_REPORT_DIR));
+
+	public static final long UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT));
 
 	public static final boolean UPGRADE_REPORT_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.UPGRADE_REPORT_ENABLED));
@@ -2540,21 +2509,21 @@ public class PropsValues {
 	public static final boolean WEB_SERVER_DISPLAY_NODE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.WEB_SERVER_DISPLAY_NODE));
 
-	public static final boolean WEB_SERVER_FORWARDED_HOST_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_HOST_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_HOST_ENABLED));
 
 	public static final String WEB_SERVER_FORWARDED_HOST_HEADER = PropsUtil.get(
 		PropsKeys.WEB_SERVER_FORWARDED_HOST_HEADER);
 
-	public static final boolean WEB_SERVER_FORWARDED_PORT_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_PORT_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_PORT_ENABLED));
 
 	public static final String WEB_SERVER_FORWARDED_PORT_HEADER = PropsUtil.get(
 		PropsKeys.WEB_SERVER_FORWARDED_PORT_HEADER);
 
-	public static final boolean WEB_SERVER_FORWARDED_PROTOCOL_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_PROTOCOL_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_PROTOCOL_ENABLED));
 

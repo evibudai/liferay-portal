@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.qualifier.model.impl;
@@ -242,116 +233,136 @@ public class CommerceQualifierEntryModelImpl
 	public Map<String, Function<CommerceQualifierEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceQualifierEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CommerceQualifierEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CommerceQualifierEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceQualifierEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CommerceQualifierEntry, Object>>();
-		Map<String, BiConsumer<CommerceQualifierEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CommerceQualifierEntry, ?>>();
+		private static final Map
+			<String, Function<CommerceQualifierEntry, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceQualifierEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"commerceQualifierEntryId",
-			CommerceQualifierEntry::getCommerceQualifierEntryId);
-		attributeSetterBiConsumers.put(
-			"commerceQualifierEntryId",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setCommerceQualifierEntryId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceQualifierEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CommerceQualifierEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CommerceQualifierEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceQualifierEntry, String>)
-				CommerceQualifierEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceQualifierEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceQualifierEntry, Date>)
-				CommerceQualifierEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceQualifierEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceQualifierEntry, Date>)
-				CommerceQualifierEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"sourceClassNameId", CommerceQualifierEntry::getSourceClassNameId);
-		attributeSetterBiConsumers.put(
-			"sourceClassNameId",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setSourceClassNameId);
-		attributeGetterFunctions.put(
-			"sourceClassPK", CommerceQualifierEntry::getSourceClassPK);
-		attributeSetterBiConsumers.put(
-			"sourceClassPK",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setSourceClassPK);
-		attributeGetterFunctions.put(
-			"sourceCommerceQualifierMetadataKey",
-			CommerceQualifierEntry::getSourceCommerceQualifierMetadataKey);
-		attributeSetterBiConsumers.put(
-			"sourceCommerceQualifierMetadataKey",
-			(BiConsumer<CommerceQualifierEntry, String>)
-				CommerceQualifierEntry::setSourceCommerceQualifierMetadataKey);
-		attributeGetterFunctions.put(
-			"targetClassNameId", CommerceQualifierEntry::getTargetClassNameId);
-		attributeSetterBiConsumers.put(
-			"targetClassNameId",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setTargetClassNameId);
-		attributeGetterFunctions.put(
-			"targetClassPK", CommerceQualifierEntry::getTargetClassPK);
-		attributeSetterBiConsumers.put(
-			"targetClassPK",
-			(BiConsumer<CommerceQualifierEntry, Long>)
-				CommerceQualifierEntry::setTargetClassPK);
-		attributeGetterFunctions.put(
-			"targetCommerceQualifierMetadataKey",
-			CommerceQualifierEntry::getTargetCommerceQualifierMetadataKey);
-		attributeSetterBiConsumers.put(
-			"targetCommerceQualifierMetadataKey",
-			(BiConsumer<CommerceQualifierEntry, String>)
-				CommerceQualifierEntry::setTargetCommerceQualifierMetadataKey);
+		static {
+			Map<String, Function<CommerceQualifierEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CommerceQualifierEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceQualifierEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"commerceQualifierEntryId",
+				CommerceQualifierEntry::getCommerceQualifierEntryId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceQualifierEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CommerceQualifierEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceQualifierEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceQualifierEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CommerceQualifierEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"sourceClassNameId",
+				CommerceQualifierEntry::getSourceClassNameId);
+			attributeGetterFunctions.put(
+				"sourceClassPK", CommerceQualifierEntry::getSourceClassPK);
+			attributeGetterFunctions.put(
+				"sourceCommerceQualifierMetadataKey",
+				CommerceQualifierEntry::getSourceCommerceQualifierMetadataKey);
+			attributeGetterFunctions.put(
+				"targetClassNameId",
+				CommerceQualifierEntry::getTargetClassNameId);
+			attributeGetterFunctions.put(
+				"targetClassPK", CommerceQualifierEntry::getTargetClassPK);
+			attributeGetterFunctions.put(
+				"targetCommerceQualifierMetadataKey",
+				CommerceQualifierEntry::getTargetCommerceQualifierMetadataKey);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CommerceQualifierEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceQualifierEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CommerceQualifierEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"commerceQualifierEntryId",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setCommerceQualifierEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceQualifierEntry, String>)
+					CommerceQualifierEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceQualifierEntry, Date>)
+					CommerceQualifierEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceQualifierEntry, Date>)
+					CommerceQualifierEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"sourceClassNameId",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setSourceClassNameId);
+			attributeSetterBiConsumers.put(
+				"sourceClassPK",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setSourceClassPK);
+			attributeSetterBiConsumers.put(
+				"sourceCommerceQualifierMetadataKey",
+				(BiConsumer<CommerceQualifierEntry, String>)
+					CommerceQualifierEntry::
+						setSourceCommerceQualifierMetadataKey);
+			attributeSetterBiConsumers.put(
+				"targetClassNameId",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setTargetClassNameId);
+			attributeSetterBiConsumers.put(
+				"targetClassPK",
+				(BiConsumer<CommerceQualifierEntry, Long>)
+					CommerceQualifierEntry::setTargetClassPK);
+			attributeSetterBiConsumers.put(
+				"targetCommerceQualifierMetadataKey",
+				(BiConsumer<CommerceQualifierEntry, String>)
+					CommerceQualifierEntry::
+						setTargetCommerceQualifierMetadataKey);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -976,7 +987,8 @@ public class CommerceQualifierEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceQualifierEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

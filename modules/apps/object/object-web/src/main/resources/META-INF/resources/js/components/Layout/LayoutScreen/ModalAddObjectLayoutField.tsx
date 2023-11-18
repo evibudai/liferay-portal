@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -20,12 +11,14 @@ import {Observer} from '@clayui/modal/lib/types';
 import {
 	AutoComplete,
 	FormError,
+	REQUIRED_MSG,
 	stringIncludesQuery,
 	useForm,
 } from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {useMemo, useState} from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 import {TObjectField} from '../types';
 
@@ -41,8 +34,6 @@ type TInitialValues = {
 interface IBoxBtnColumnsProps {
 	setValues: (values: Partial<TInitialValues>) => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 function BoxBtnColumns({setValues}: IBoxBtnColumnsProps) {
 	const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -99,10 +90,9 @@ export default function ModalAddObjectLayoutField({
 		TObjectField
 	>();
 
-	const [readOnlyField, setReadOnlyField] = useState<ObjectFieldSetting>({
-		name: 'readOnly',
-		value: 'false',
-	});
+	const [readOnlyField, setReadOnlyField] = useState<ReadOnlyFieldValue>(
+		'false'
+	);
 
 	const filteredObjectFields = useMemo(() => {
 		return objectFields.filter(
@@ -132,7 +122,7 @@ export default function ModalAddObjectLayoutField({
 		const errors: FormError<TInitialValues> = {};
 
 		if (!values.objectFieldName) {
-			errors.objectFieldName = Liferay.Language.get('required');
+			errors.objectFieldName = REQUIRED_MSG;
 		}
 
 		return errors;
@@ -173,8 +163,8 @@ export default function ModalAddObjectLayoutField({
 										: Liferay.Language.get('optional')}
 								</ClayLabel>
 
-								{(readOnlyField.value === 'true' ||
-									readOnlyField.value === 'conditional') && (
+								{(readOnlyField === 'conditional' ||
+									readOnlyField === 'true') && (
 									<ClayLabel
 										className="label-inside-custom-select"
 										displayType="secondary"
@@ -188,17 +178,15 @@ export default function ModalAddObjectLayoutField({
 							'there-are-no-fields-for-this-object'
 						)}
 						error={errors.objectFieldName}
+						id="modalAddObjectLayoutField"
 						items={filteredObjectFields}
 						label={Liferay.Language.get('field')}
+						onActive={(item) =>
+							item.name === selectedObjectField?.name
+						}
 						onChangeQuery={setQuery}
 						onSelectItem={(item: ObjectField) => {
-							const readOnlySetting = item.objectFieldSettings?.find(
-								(fieldSetting) =>
-									fieldSetting.name === 'readOnly'
-							);
-							if (readOnlySetting) {
-								setReadOnlyField(readOnlySetting);
-							}
+							setReadOnlyField(item.readOnly);
 							setSelectedObjectField(item);
 							setValues({objectFieldName: item.name});
 						}}
@@ -206,7 +194,7 @@ export default function ModalAddObjectLayoutField({
 						required
 						value={selectedObjectField?.label[defaultLanguageId]}
 					>
-						{({label, objectFieldSettings, required}) => (
+						{({label, readOnly, required}) => (
 							<div className="d-flex justify-content-between">
 								<div className="lfr__object-web-layout-modal-add-field-label">
 									{label[defaultLanguageId]}
@@ -224,11 +212,8 @@ export default function ModalAddObjectLayoutField({
 											: Liferay.Language.get('optional')}
 									</ClayLabel>
 
-									{objectFieldSettings?.find(
-										(fieldSetting: ObjectFieldSetting) =>
-											fieldSetting.value === 'true' ||
-											fieldSetting.value === 'conditional'
-									) && (
+									{(readOnly === 'conditional' ||
+										readOnly === 'true') && (
 										<ClayLabel
 											className="label-inside-custom-select"
 											displayType="secondary"

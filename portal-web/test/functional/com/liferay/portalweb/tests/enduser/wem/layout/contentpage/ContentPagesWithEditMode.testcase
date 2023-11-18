@@ -1,59 +1,55 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 	}
 
 	@description = "This is a use case for LPS-114438. Only can edit inline content, mapped content and comments of elements when select Content Editing."
-	@priority = "5"
+	@priority = 5
 	test CanOnlyEditContentInContentEditionMode {
 		property portal.acceptance = "true";
+
+		var siteName = StringUtil.randomString(8);
 
 		task ("Add a Web Content Article, a Blogs Entry and a Document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
 
 		task ("Add a page based on Blank") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 		}
@@ -61,7 +57,7 @@ definition {
 		task ("Assert Edit Mode is Page Design") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertTextEquals(
 				locator1 = "PageEditor#EDIT_MODE_SELECTOR",
@@ -99,7 +95,7 @@ definition {
 			PageEditor.addComment(
 				fragmentComment = "This is a fragment comment.",
 				fragmentName = "Heading",
-				position = "1");
+				position = 1);
 		}
 
 		task ("Map title of Web Content Article to Paragraph") {
@@ -143,7 +139,7 @@ definition {
 		task ("Select Content Editing") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
 
@@ -157,20 +153,20 @@ definition {
 		task ("Assert only Browser and Comments are shown in sidebar") {
 			for (var tabName : list "Browser,Comments") {
 				AssertVisible(
-					key_tabName = "${tabName}",
+					key_tabName = ${tabName},
 					locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
 			}
 
 			for (var tabName : list "Fragments and Widgets,Page Design Options") {
 				AssertElementNotPresent(
-					key_tabName = "${tabName}",
+					key_tabName = ${tabName},
 					locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
 			}
 		}
 
 		task ("Assert topper of elements are hidden") {
 			for (var elementName : list "Heading,Paragraph,Image,Asset Publisher") {
-				PageEditor.viewFragmentNotPresent(fragmentName = "${elementName}");
+				PageEditor.viewFragmentNotPresent(fragmentName = ${elementName});
 			}
 		}
 
@@ -178,13 +174,13 @@ definition {
 			Click(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 
 			DoubleClick(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 
 			AssertElementPresent(locator1 = "//*[contains(@class,'component-heading') and contains(@data-lfr-editable-id,'element-text')]/div[contains(@class,'cke_editable_inline')]");
@@ -196,7 +192,7 @@ definition {
 			Click(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 
 			Navigator.gotoNavTab(navTab = "Mapping");
@@ -231,26 +227,26 @@ definition {
 
 				LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
 					menuItem = "Edit",
-					rowEntry = "${title}");
+					rowEntry = ${title});
 
-				if ("${title}" == "Web Content Title") {
+				if (${title} == "Web Content Title") {
 					WebContent.addCP(webContentTitle = "Web Content Title Edit");
 
 					CKEditor.addContentInWebContent(
 						content = "Web Content Content Edit",
 						fieldLabel = "Content");
 
-					PortletEntry.publish();
+					Button.clickPublish();
 				}
 
-				if ("${title}" == "Blogs Entry Title") {
+				if (${title} == "Blogs Entry Title") {
 					BlogsEntry.editEntryContent(
 						entryContent = "Blogs Entry Content",
 						entryContentEdit = "Blogs Entry Content Edit",
 						entryTitle = "Blogs Entry Title",
 						entryTitleEdit = "Blogs Entry Title Edit");
 
-					PortletEntry.publish();
+					Button.clickPublish();
 				}
 
 				PageEditor.assertFragmentSidebarLoaded();

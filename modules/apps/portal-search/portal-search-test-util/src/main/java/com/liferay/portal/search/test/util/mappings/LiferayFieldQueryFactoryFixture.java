@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.mappings;
 
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.internal.analysis.SimpleKeywordTokenizer;
 import com.liferay.portal.search.internal.query.QueriesImpl;
 import com.liferay.portal.search.internal.query.field.AssetTagNamesFieldQueryBuilderFactory;
@@ -22,10 +15,13 @@ import com.liferay.portal.search.internal.query.field.FieldQueryBuilderFactoryIm
 import com.liferay.portal.search.internal.query.field.FieldQueryFactoryImpl;
 import com.liferay.portal.search.internal.query.field.SubstringFieldQueryBuilder;
 import com.liferay.portal.search.internal.query.field.TitleFieldQueryBuilder;
+import com.liferay.portal.search.query.field.FieldQueryBuilderFactory;
 import com.liferay.portal.search.query.field.FieldQueryFactory;
 import com.liferay.portal.search.query.field.QueryPreProcessConfiguration;
 
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author André de Oliveira
@@ -60,19 +56,25 @@ public class LiferayFieldQueryFactoryFixture {
 			assetTagNamesFieldQueryBuilderFactory =
 				new AssetTagNamesFieldQueryBuilderFactory() {
 					{
-						titleQueryBuilder = _titleFieldQueryBuilder;
+						titleFieldQueryBuilder = _titleFieldQueryBuilder;
 					}
 				};
 
-		_fieldQueryFactory = new FieldQueryFactoryImpl() {
-			{
-				descriptionFieldQueryBuilder = _descriptionFieldQueryBuilder;
+		ReflectionTestUtil.setFieldValue(
+			_fieldQueryFactory, "_descriptionFieldQueryBuilder",
+			_descriptionFieldQueryBuilder);
 
-				addFieldQueryBuilderFactory(
-					assetTagNamesFieldQueryBuilderFactory);
-				addFieldQueryBuilderFactory(fieldQueryBuilderFactoryImpl);
-			}
-		};
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		bundleContext.registerService(
+			FieldQueryBuilderFactory.class,
+			assetTagNamesFieldQueryBuilderFactory, null);
+		bundleContext.registerService(
+			FieldQueryBuilderFactory.class, fieldQueryBuilderFactoryImpl, null);
+
+		ReflectionTestUtil.invoke(
+			_fieldQueryFactory, "activate",
+			new Class<?>[] {BundleContext.class}, bundleContext);
 	}
 
 	public FieldQueryFactory getFieldQueryFactory() {
@@ -118,7 +120,8 @@ public class LiferayFieldQueryFactoryFixture {
 	}
 
 	private final DescriptionFieldQueryBuilder _descriptionFieldQueryBuilder;
-	private final FieldQueryFactory _fieldQueryFactory;
+	private final FieldQueryFactory _fieldQueryFactory =
+		new FieldQueryFactoryImpl();
 	private final SubstringFieldQueryBuilder _substringFieldQueryBuilder;
 	private final TitleFieldQueryBuilder _titleFieldQueryBuilder;
 

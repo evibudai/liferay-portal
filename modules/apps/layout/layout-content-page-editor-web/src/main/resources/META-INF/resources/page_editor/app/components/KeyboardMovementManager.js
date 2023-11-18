@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEventListener} from '@liferay/frontend-js-react-web';
@@ -18,13 +9,13 @@ import {useEffect, useRef} from 'react';
 
 import {FRAGMENT_ENTRY_TYPES} from '../config/constants/fragmentEntryTypes';
 import {
-	ARROW_DOWN_KEYCODE,
-	ARROW_UP_KEYCODE,
-	END_KEYCODE,
-	ENTER_KEYCODE,
-	ESCAPE_KEYCODE,
-	HOME_KEYCODE,
-} from '../config/constants/keycodes';
+	ARROW_DOWN_KEY_CODE,
+	ARROW_UP_KEY_CODE,
+	END_KEY_CODE,
+	ENTER_KEY_CODE,
+	ESCAPE_KEY_CODE,
+	HOME_KEY_CODE,
+} from '../config/constants/keyboardCodes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {useSelectItem} from '../contexts/ControlsContext';
 import {
@@ -40,10 +31,10 @@ import addFragment from '../thunks/addFragment';
 import addItem from '../thunks/addItem';
 import addWidget from '../thunks/addWidget';
 import moveItem from '../thunks/moveItem';
-import checkAllowedChild from '../utils/drag-and-drop/checkAllowedChild';
-import {TARGET_POSITIONS} from '../utils/drag-and-drop/constants/targetPositions';
-import getDropData from '../utils/drag-and-drop/getDropData';
-import itemIsAncestor from '../utils/drag-and-drop/itemIsAncestor';
+import checkAllowedChild from '../utils/drag_and_drop/checkAllowedChild';
+import {TARGET_POSITIONS} from '../utils/drag_and_drop/constants/targetPositions';
+import getDropData from '../utils/drag_and_drop/getDropData';
+import itemIsAncestor from '../utils/drag_and_drop/itemIsAncestor';
 import {isUnmappedCollection} from '../utils/isUnmappedCollection';
 
 const DIRECTIONS = {
@@ -78,7 +69,7 @@ export default function KeyboardMovementManager() {
 				setText(null);
 				disableMovement();
 			},
-			keyCode: ESCAPE_KEYCODE,
+			keyCode: ESCAPE_KEY_CODE,
 		},
 		executeAction: {
 			action: () => {
@@ -158,7 +149,7 @@ export default function KeyboardMovementManager() {
 					selectItem(source.itemId);
 				}
 			},
-			keyCode: ENTER_KEYCODE,
+			keyCode: ENTER_KEY_CODE,
 		},
 		moveDown: {
 			action: () => {
@@ -181,7 +172,7 @@ export default function KeyboardMovementManager() {
 					);
 				}
 			},
-			keyCode: ARROW_DOWN_KEYCODE,
+			keyCode: ARROW_DOWN_KEY_CODE,
 		},
 		moveToEnd: {
 			action: () => {
@@ -200,7 +191,7 @@ export default function KeyboardMovementManager() {
 					])
 				);
 			},
-			keyCode: END_KEYCODE,
+			keyCode: END_KEY_CODE,
 		},
 		moveToStart: {
 			action: () => {
@@ -231,7 +222,7 @@ export default function KeyboardMovementManager() {
 					);
 				}
 			},
-			keyCode: HOME_KEYCODE,
+			keyCode: HOME_KEY_CODE,
 		},
 		moveUp: {
 			action: () => {
@@ -254,7 +245,7 @@ export default function KeyboardMovementManager() {
 					);
 				}
 			},
-			keyCode: ARROW_UP_KEYCODE,
+			keyCode: ARROW_UP_KEY_CODE,
 		},
 	};
 
@@ -264,10 +255,10 @@ export default function KeyboardMovementManager() {
 			event.stopPropagation();
 			event.preventDefault();
 
-			const {keyCode} = event;
+			const {code} = event;
 
 			const shortcut = Object.values(keymapRef.current).find(
-				(shortcut) => shortcut.keyCode === keyCode
+				(shortcut) => shortcut.keyCode === code
 			);
 
 			if (shortcut) {

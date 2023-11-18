@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.impl;
 
+import com.liferay.commerce.price.list.exception.DuplicateCommercePriceListAccountRelException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListAccountRel;
 import com.liferay.commerce.price.list.service.base.CommercePriceListAccountRelLocalServiceBaseImpl;
@@ -51,15 +43,24 @@ public class CommercePriceListAccountRelLocalServiceImpl
 			int order, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
 		CommercePriceListAccountRel commercePriceListAccountRel =
+			commercePriceListAccountRelPersistence.fetchByCAI_CPI(
+				commerceAccountId, commercePriceListId);
+
+		if (commercePriceListAccountRel != null) {
+			throw new DuplicateCommercePriceListAccountRelException();
+		}
+
+		commercePriceListAccountRel =
 			commercePriceListAccountRelPersistence.create(
 				counterLocalService.increment());
+
+		User user = _userLocalService.getUser(userId);
 
 		commercePriceListAccountRel.setCompanyId(user.getCompanyId());
 		commercePriceListAccountRel.setUserId(user.getUserId());
 		commercePriceListAccountRel.setUserName(user.getFullName());
+
 		commercePriceListAccountRel.setCommerceAccountId(commerceAccountId);
 		commercePriceListAccountRel.setCommercePriceListId(commercePriceListId);
 		commercePriceListAccountRel.setOrder(order);

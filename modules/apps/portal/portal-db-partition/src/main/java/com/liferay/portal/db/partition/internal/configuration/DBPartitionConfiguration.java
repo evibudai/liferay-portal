@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.partition.internal.configuration;
@@ -29,14 +20,14 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface DBPartitionConfiguration {
 
 	@Meta.AD(
-		deflt = "liferay/adaptive_media_image_configuration|liferay/background_task|liferay/background_task_status|liferay/scheduler_engine|liferay/scheduler_scripting",
+		deflt = "liferay/background_task|liferay/background_task_status|liferay/scheduler_engine|liferay/scheduler_scripting",
 		description = "excluded-message-bus-destination-names-description",
 		name = "excluded-message-bus-destination-names", required = false
 	)
 	public String[] excludedMessageBusDestinationNames();
 
 	@Meta.AD(
-		deflt = "com.liferay.analytics.settings.internal.messaging.CheckAnalyticsConnectionsMessageListener|com.liferay.portal.store.s3.AbortedMultipartUploadCleaner|com.liferay.server.admin.web.internal.messaging.PluginRepositoriesMessageListener",
+		deflt = "com.liferay.analytics.settings.internal.scheduler.CheckAnalyticsConnectionsSchedulerJobConfiguration|com.liferay.portal.store.s3.scheduler.AbortedMultipartUploadCleanerSchedulerJobConfiguration",
 		description = "excluded-scheduler-job-names-description",
 		name = "excluded-scheduler-job-names", required = false
 	)

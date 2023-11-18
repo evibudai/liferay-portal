@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.writer;
@@ -19,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.lang.reflect.Field;
 
@@ -182,7 +172,7 @@ public abstract class BaseBatchEngineExportTaskItemWriterImplTestCase {
 
 		if (fieldNames.contains("childItem") && (item.getChildItem() != null)) {
 			sb.append("\"childItem\": ");
-			sb.append(getItemJSONContent(fieldNames, item.getChildItem()));
+			sb.append(getItemJSONContent(jsonFieldNames, item.getChildItem()));
 			sb.append(StringPool.COMMA);
 		}
 
@@ -251,7 +241,7 @@ public abstract class BaseBatchEngineExportTaskItemWriterImplTestCase {
 	protected static final List<String> columnFieldNames = Arrays.asList(
 		"createDate", "description", "id", "name_en", "name_hr");
 	protected static final DateFormat dateFormat = new SimpleDateFormat(
-		"yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+		"yyyy-MM-dd'T'HH:mm:ssX");
 	protected static final List<String> jsonFieldNames = Arrays.asList(
 		"childItem", "createDate", "description", "id", "name");
 
@@ -264,9 +254,7 @@ public abstract class BaseBatchEngineExportTaskItemWriterImplTestCase {
 		}
 
 		if (value instanceof Date) {
-			return "\"" +
-				StringUtil.replace(dateFormat.format(value), 'Z', "+00:00") +
-					"\"";
+			return "\"" + dateFormat.format(value) + "\"";
 		}
 
 		if (value instanceof String) {

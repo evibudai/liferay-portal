@@ -1,23 +1,14 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-Group siteGoup = (Group)request.getAttribute("site.group");
+Group siteGroup = (Group)request.getAttribute("site.group");
 
 Group liveGroup = (Group)request.getAttribute("site.liveGroup");
 
@@ -26,7 +17,7 @@ List<LayoutSetPrototype> layoutSetPrototypes = LayoutSetPrototypeServiceUtil.sea
 LayoutSetPrototype privateLayoutSetPrototype = null;
 boolean privateLayoutSetPrototypeLinkEnabled = true;
 
-LayoutSet privateLayoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(siteGoup.getGroupId(), true);
+LayoutSet privateLayoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(siteGroup.getGroupId(), true);
 
 if (privateLayoutSet != null) {
 	privateLayoutSetPrototypeLinkEnabled = privateLayoutSet.isLayoutSetPrototypeLinkEnabled();
@@ -41,7 +32,7 @@ if (privateLayoutSet != null) {
 LayoutSetPrototype publicLayoutSetPrototype = null;
 boolean publicLayoutSetPrototypeLinkEnabled = true;
 
-LayoutSet publicLayoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(siteGoup.getGroupId(), false);
+LayoutSet publicLayoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(siteGroup.getGroupId(), false);
 
 if (publicLayoutSet != null) {
 	publicLayoutSetPrototypeLinkEnabled = publicLayoutSet.isLayoutSetPrototypeLinkEnabled();
@@ -61,7 +52,7 @@ boolean disableLayoutSetPrototypeInput = false;
 
 SiteAdminConfiguration siteAdminConfiguration = ConfigurationProviderUtil.getSystemConfiguration(SiteAdminConfiguration.class);
 
-if (!LanguageUtil.isInheritLocales(siteGoup.getGroupId()) && !siteAdminConfiguration.enableCustomLanguagesWithTemplatePropagation()) {
+if (!LanguageUtil.isInheritLocales(siteGroup.getGroupId()) && !siteAdminConfiguration.enableCustomLanguagesWithTemplatePropagation()) {
 	disableLayoutSetPrototypeInput = true;
 }
 
@@ -72,11 +63,12 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 
 <aui:field-wrapper cssClass="form-group">
 	<c:choose>
-		<c:when test="<%= (publicLayoutSetPrototype == null) && (siteGoup.getPublicLayoutsPageCount() == 0) && !layoutSetPrototypes.isEmpty() %>">
+		<c:when test="<%= (publicLayoutSetPrototype == null) && (siteGroup.getPublicLayoutsPageCount() == 0) && !layoutSetPrototypes.isEmpty() %>">
 			<c:if test="<%= disableLayoutSetPrototypeInput %>">
-				<div class="alert alert-info">
-					<liferay-ui:message key="you-cannot-apply-a-site-template-because-you-modified-the-display-settings-of-this-site" />
-				</div>
+				<clay:alert
+					displayType="info"
+					message="you-cannot-apply-a-site-template-because-you-modified-the-display-settings-of-this-site"
+				/>
 			</c:if>
 
 			<aui:select disabled="<%= disableLayoutSetPrototypeInput %>" helpMessage="site-templates-with-an-incompatible-application-adapter-are-disabled" label="site-template" name="publicLayoutSetPrototypeId">
@@ -95,14 +87,15 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 
 			</aui:select>
 
-			<c:if test="<%= !siteGoup.isStaged() %>">
+			<c:if test="<%= !siteGroup.isStaged() %>">
 				<c:choose>
 					<c:when test="<%= hasUnlinkLayoutSetPrototypePermission %>">
 						<div class="hide" id="<portlet:namespace />publicLayoutSetPrototypeIdOptions">
 							<c:if test="<%= disableLayoutSetPrototypeInput %>">
-								<div class="alert alert-info">
-									<liferay-ui:message key="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site" />
-								</div>
+								<clay:alert
+									displayType="info"
+									message="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site"
+								/>
 							</c:if>
 
 							<aui:input disabled="<%= disableLayoutSetPrototypeInput %>" helpMessage="enable-propagation-of-changes-from-the-site-template-help" inlineLabel="right" label="enable-propagation-of-changes-from-the-site-template" labelCssClass="simple-toggle-switch" name="publicLayoutSetPrototypeLinkEnabled" type="toggle-switch" value="<%= publicLayoutSetPrototypeLinkEnabled %>" />
@@ -116,8 +109,8 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 		</c:when>
 		<c:otherwise>
 			<c:choose>
-				<c:when test="<%= siteGoup.getPublicLayoutsPageCount() > 0 %>">
-					<aui:a href="<%= siteGoup.getDisplayURL(themeDisplay, false) %>" label="open-public-pages" target="_blank" />
+				<c:when test="<%= siteGroup.getPublicLayoutsPageCount() > 0 %>">
+					<aui:a href="<%= siteGroup.getDisplayURL(themeDisplay, false) %>" label="open-public-pages" target="_blank" />
 				</c:when>
 				<c:otherwise>
 					<p class="small text-secondary">
@@ -127,11 +120,12 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 			</c:choose>
 
 			<c:choose>
-				<c:when test="<%= (publicLayoutSetPrototype != null) && !siteGoup.isStaged() && hasUnlinkLayoutSetPrototypePermission %>">
+				<c:when test="<%= (publicLayoutSetPrototype != null) && !siteGroup.isStaged() && hasUnlinkLayoutSetPrototypePermission %>">
 					<c:if test="<%= disableLayoutSetPrototypeInput %>">
-						<div class="alert alert-info">
-							<liferay-ui:message key="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site" />
-						</div>
+						<clay:alert
+							displayType="info"
+							message="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site"
+						/>
 					</c:if>
 
 					<aui:input disabled="<%= disableLayoutSetPrototypeInput %>" inlineLabel="right" label='<%= LanguageUtil.format(request, "enable-propagation-of-changes-from-the-site-template-x", HtmlUtil.escape(publicLayoutSetPrototype.getName(locale)), false) %>' labelCssClass="simple-toggle-switch" name="publicLayoutSetPrototypeLinkEnabled" type="toggle-switch" value="<%= publicLayoutSetPrototypeLinkEnabled %>" />
@@ -139,7 +133,7 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 					<div class="<%= publicLayoutSetPrototypeLinkEnabled ? "" : "hide" %>" id="<portlet:namespace />publicLayoutSetPrototypeMergeAlert">
 
 						<%
-						request.setAttribute("edit_layout_set_prototype.jsp-groupId", String.valueOf(siteGoup.getGroupId()));
+						request.setAttribute("edit_layout_set_prototype.jsp-groupId", String.valueOf(siteGroup.getGroupId()));
 						request.setAttribute("edit_layout_set_prototype.jsp-layoutSet", publicLayoutSet);
 						request.setAttribute("edit_layout_set_prototype.jsp-layoutSetPrototype", publicLayoutSetPrototype);
 						request.setAttribute("edit_layout_set_prototype.jsp-redirect", currentURL);
@@ -162,11 +156,12 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 
 <aui:field-wrapper cssClass="form-group">
 	<c:choose>
-		<c:when test="<%= (privateLayoutSetPrototype == null) && (siteGoup.getPrivateLayoutsPageCount() == 0) && !layoutSetPrototypes.isEmpty() %>">
+		<c:when test="<%= (privateLayoutSetPrototype == null) && (siteGroup.getPrivateLayoutsPageCount() == 0) && !layoutSetPrototypes.isEmpty() %>">
 			<c:if test="<%= disableLayoutSetPrototypeInput %>">
-				<div class="alert alert-info">
-					<liferay-ui:message key="you-cannot-apply-a-site-template-because-you-modified-the-display-settings-of-this-site" />
-				</div>
+				<clay:alert
+					displayType="info"
+					message="you-cannot-apply-a-site-template-because-you-modified-the-display-settings-of-this-site"
+				/>
 			</c:if>
 
 			<aui:select disabled="<%= disableLayoutSetPrototypeInput %>" helpMessage="site-templates-with-an-incompatible-application-adapter-are-disabled" label="site-template" name="privateLayoutSetPrototypeId">
@@ -185,14 +180,15 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 
 			</aui:select>
 
-			<c:if test="<%= !siteGoup.isStaged() %>">
+			<c:if test="<%= !siteGroup.isStaged() %>">
 				<c:choose>
 					<c:when test="<%= hasUnlinkLayoutSetPrototypePermission %>">
 						<div class="hide" id="<portlet:namespace />privateLayoutSetPrototypeIdOptions">
 							<c:if test="<%= disableLayoutSetPrototypeInput %>">
-								<div class="alert alert-info">
-									<liferay-ui:message key="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site" />
-								</div>
+								<clay:alert
+									displayType="info"
+									message="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site"
+								/>
 							</c:if>
 
 							<aui:input disabled="<%= disableLayoutSetPrototypeInput %>" helpMessage="enable-propagation-of-changes-from-the-site-template-help" inlineLabel="right" label="enable-propagation-of-changes-from-the-site-template" labelCssClass="simple-toggle-switch" name="privateLayoutSetPrototypeLinkEnabled" type="toggle-switch" value="<%= privateLayoutSetPrototypeLinkEnabled %>" />
@@ -206,8 +202,8 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 		</c:when>
 		<c:otherwise>
 			<c:choose>
-				<c:when test="<%= siteGoup.getPrivateLayoutsPageCount() > 0 %>">
-					<aui:a href="<%= siteGoup.getDisplayURL(themeDisplay, true) %>" label="open-private-pages" target="_blank" />
+				<c:when test="<%= siteGroup.getPrivateLayoutsPageCount() > 0 %>">
+					<aui:a href="<%= siteGroup.getDisplayURL(themeDisplay, true) %>" label="open-private-pages" target="_blank" />
 				</c:when>
 				<c:otherwise>
 					<p class="small text-secondary">
@@ -217,11 +213,12 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 			</c:choose>
 
 			<c:choose>
-				<c:when test="<%= (privateLayoutSetPrototype != null) && !siteGoup.isStaged() && hasUnlinkLayoutSetPrototypePermission %>">
+				<c:when test="<%= (privateLayoutSetPrototype != null) && !siteGroup.isStaged() && hasUnlinkLayoutSetPrototypePermission %>">
 					<c:if test="<%= disableLayoutSetPrototypeInput %>">
-						<div class="alert alert-info">
-							<liferay-ui:message key="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site" />
-						</div>
+						<clay:alert
+							displayType="info"
+							message="you-cannot-enable-the-propagation-of-changes-because-you-modified-the-display-settings-of-this-site"
+						/>
 					</c:if>
 
 					<aui:input disabled="<%= disableLayoutSetPrototypeInput %>" inlineLabel="right" label='<%= LanguageUtil.format(request, "enable-propagation-of-changes-from-the-site-template-x", HtmlUtil.escape(privateLayoutSetPrototype.getName(locale)), false) %>' labelCssClass="simple-toggle-switch" name="privateLayoutSetPrototypeLinkEnabled" type="toggle-switch" value="<%= privateLayoutSetPrototypeLinkEnabled %>" />
@@ -229,7 +226,7 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 					<div class="<%= privateLayoutSetPrototypeLinkEnabled ? "" : "hide" %>" id="<portlet:namespace />privateLayoutSetPrototypeMergeAlert">
 
 						<%
-						request.setAttribute("edit_layout_set_prototype.jsp-groupId", String.valueOf(siteGoup.getGroupId()));
+						request.setAttribute("edit_layout_set_prototype.jsp-groupId", String.valueOf(siteGroup.getGroupId()));
 						request.setAttribute("edit_layout_set_prototype.jsp-layoutSet", privateLayoutSet);
 						request.setAttribute("edit_layout_set_prototype.jsp-layoutSetPrototype", privateLayoutSetPrototype);
 						request.setAttribute("edit_layout_set_prototype.jsp-redirect", currentURL);

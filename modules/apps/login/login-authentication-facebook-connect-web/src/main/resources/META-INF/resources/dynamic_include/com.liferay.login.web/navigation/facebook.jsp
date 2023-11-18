@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,11 +16,11 @@ String facebookAuthRedirectURL = (String)request.getAttribute(FacebookConnectWeb
 String facebookAuthURL = (String)request.getAttribute(FacebookConnectWebKeys.FACEBOOK_AUTH_URL);
 String facebookAppId = (String)request.getAttribute(FacebookConnectWebKeys.FACEBOOK_APP_ID);
 
-HttpSession portalSession = PortalSessionThreadLocal.getHttpSession();
+HttpSession portalHttpSession = PortalSessionThreadLocal.getHttpSession();
 
 String nonce = PwdGenerator.getPassword(GetterUtil.getInteger(PropsUtil.get(PropsKeys.AUTH_TOKEN_LENGTH)));
 
-portalSession.setAttribute(WebKeys.FACEBOOK_NONCE, nonce);
+portalHttpSession.setAttribute(WebKeys.FACEBOOK_NONCE, nonce);
 
 facebookAuthURL = HttpComponentsUtil.addParameter(facebookAuthURL, "client_id", facebookAppId);
 facebookAuthURL = HttpComponentsUtil.addParameter(facebookAuthURL, "redirect_uri", facebookAuthRedirectURL);
@@ -47,6 +38,7 @@ String taglibOpenFacebookConnectLoginWindow = "javascript:var facebookConnectLog
 %>
 
 <liferay-ui:icon
+	cssClass="text-4"
 	message="facebook"
 	url="<%= taglibOpenFacebookConnectLoginWindow %>"
 />

@@ -1,13 +1,16 @@
 @component-name = "portal-service-builder"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Service Builder";
 
-	@priority = "4"
+	@disable-webdriver = "true"
+	@priority = 4
 	test RemoveRedundantIndex {
-		property test.name.skip.portal.instance = "ServiceBuilderIndexes#RemoveRedundantIndex";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a redundant index to indexes.sql") {
 			var content = '''create unique index IX_32712A55 on RedundantIndexEntry (name[\$COLUMN_LENGTH:75\$], companyId);''';
@@ -24,21 +27,19 @@ definition {
 			var expectedText = '''create unique index IX_32712A55 on RedundantIndexEntry (name[$COLUMN_LENGTH:75$], companyId);''';
 			var fileContent = FileUtil.read("${projectDir}/modules/util/portal-tools-service-builder-test-service/src/main/resources/META-INF/sql/indexes.sql");
 
-			if (!(contains("${fileContent}", "${expectedText}"))) {
-				fail("${fileContent}");
+			if (!(contains(${fileContent}, ${expectedText}))) {
+				fail(${fileContent});
 			}
 		}
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "build-service -Dgradle.file.path=/modules/util/portal-tools-service-builder-test-service");
+		AntCommands.runCommand("build-test.xml", "build-service -Dgradle.file.path=modules/util/portal-tools-service-builder-test-service");
 
 		task ("Confirm that the redundant index was removed from indexes.sql by buildService") {
 			var expectedText = '''create unique index IX_32712A55 on RedundantIndexEntry (name[$COLUMN_LENGTH:75$], companyId);''';
 			var fileContent = FileUtil.read("${projectDir}/modules/util/portal-tools-service-builder-test-service/src/main/resources/META-INF/sql/indexes.sql");
 
-			if (contains("${fileContent}", "${expectedText}")) {
-				fail("${fileContent}");
+			if (contains(${fileContent}, ${expectedText})) {
+				fail(${fileContent});
 			}
 		}
 	}

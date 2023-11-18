@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.web.internal.servlet.taglib.test;
@@ -93,12 +84,10 @@ import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -278,7 +267,7 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 
 		_layout.setType(LayoutConstants.TYPE_ASSET_DISPLAY);
 
-		_layoutLocalService.updateLayout(_layout);
+		_layout = _layoutLocalService.updateLayout(_layout);
 
 		_testWithMockInfoItem(
 			_serviceContext.getRequest(),
@@ -622,7 +611,9 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		_assertCanonicalLinkTag(
 			document,
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				FileEntry.class.getName(), fileEntry.getFileEntryId(),
+				new InfoItemReference(
+					FileEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 				_getThemeDisplay()));
 	}
 
@@ -652,7 +643,9 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		_assertCanonicalLinkTag(
 			document,
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				FileEntry.class.getName(), fileEntry.getFileEntryId(),
+				new InfoItemReference(
+					FileEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 				_getThemeDisplay()));
 	}
 
@@ -684,7 +677,9 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		_assertCanonicalLinkTag(
 			document,
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				FileEntry.class.getName(), fileEntry.getFileEntryId(),
+				new InfoItemReference(
+					FileEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 				_getThemeDisplay()));
 	}
 
@@ -714,7 +709,9 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		_assertCanonicalLinkTag(
 			document,
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				FileEntry.class.getName(), fileEntry.getFileEntryId(),
+				new InfoItemReference(
+					FileEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 				_getThemeDisplay()));
 	}
 
@@ -741,7 +738,9 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		_assertCanonicalLinkTag(
 			document,
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				FileEntry.class.getName(), fileEntry.getFileEntryId(),
+				new InfoItemReference(
+					FileEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 				_getThemeDisplay()));
 		_assertAlternateLinkTagAssetDisplayPage(
 			document, fileEntry,
@@ -1032,16 +1031,13 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 			document, _getAvailableLocalesLayoutTranslatedLanguages());
 		_assertMetaTag(document, "og:locale", _group.getDefaultLanguageId());
 
-		Stream<String> stream = Arrays.stream(
-			_layout.getAvailableLanguageIds());
+		Set<Locale> locales = new HashSet<>();
 
-		_assertAlternateLocalesTag(
-			document,
-			stream.map(
-				LocaleUtil::fromLanguageId
-			).collect(
-				Collectors.toSet()
-			));
+		for (String availableLanguageId : _layout.getAvailableLanguageIds()) {
+			locales.add(LocaleUtil.fromLanguageId(availableLanguageId));
+		}
+
+		_assertAlternateLocalesTag(document, locales);
 	}
 
 	@Test
@@ -1082,7 +1078,7 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		typeSettingsUnicodeProperties.put(
 			"mapped-openGraphImageAlt", "mappedImageAltFieldName");
 
-		_layoutLocalService.updateLayout(_layout);
+		_layout = _layoutLocalService.updateLayout(_layout);
 
 		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
@@ -1118,7 +1114,7 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 		typeSettingsUnicodeProperties.put(
 			"mapped-openGraphTitle", "mappedTitleFieldName");
 
-		_layoutLocalService.updateLayout(_layout);
+		_layout = _layoutLocalService.updateLayout(_layout);
 
 		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
@@ -1424,7 +1420,10 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 			Assert.assertEquals(
 				_portal.getAlternateURL(
 					_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-						FileEntry.class.getName(), fileEntry.getFileEntryId(),
+						new InfoItemReference(
+							FileEntry.class.getName(),
+							new ClassPKInfoItemIdentifier(
+								fileEntry.getFileEntryId())),
 						locale, themeDisplay),
 					themeDisplay, locale, _layout),
 				localeAlternateLinkElement.attr("href"));
@@ -1530,8 +1529,8 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				_group.getCreatorUserId(), _group.getGroupId(), 0, classNameId,
 				0, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true,
-				0, 0, 0, 0,
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
+				0, 0, 0,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
@@ -1544,7 +1543,8 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 
 		InfoItemObjectProvider<?> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className);
+				InfoItemObjectProvider.class, className,
+				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 		Object infoItem = infoItemObjectProvider.getInfoItem(
 			new ClassPKInfoItemIdentifier(classPK));
@@ -1588,20 +1588,17 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 			return _language.getAvailableLocales(_group.getGroupId());
 		}
 
-		Stream<String> stream = Arrays.stream(
-			infoItemLanguagesProvider.getAvailableLanguageIds(_layout));
+		Set<Locale> availableLocales = new HashSet<>();
 
-		Stream<Locale> localesStream = stream.map(LocaleUtil::fromLanguageId);
+		for (String availableLanguageId :
+				infoItemLanguagesProvider.getAvailableLanguageIds(_layout)) {
 
-		Set<Locale> availableLocales = localesStream.collect(
-			Collectors.toSet());
-
-		Locale siteDefaultLocale = _portal.getSiteDefaultLocale(
-			_layout.getGroupId());
-
-		if (!availableLocales.contains(siteDefaultLocale)) {
-			availableLocales.add(siteDefaultLocale);
+			availableLocales.add(
+				LocaleUtil.fromLanguageId(availableLanguageId));
 		}
+
+		availableLocales.add(
+			_portal.getSiteDefaultLocale(_layout.getGroupId()));
 
 		return availableLocales;
 	}

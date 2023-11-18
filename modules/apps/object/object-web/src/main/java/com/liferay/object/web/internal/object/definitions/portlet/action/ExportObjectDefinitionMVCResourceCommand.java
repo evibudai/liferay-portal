@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.portlet.action;
@@ -17,10 +8,11 @@ package com.liferay.object.web.internal.object.definitions.portlet.action;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectAction;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
-import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectPortletKeys;
+import com.liferay.object.web.internal.util.JSONObjectSanitizerUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
@@ -29,19 +21,15 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -104,20 +92,17 @@ public class ExportObjectDefinitionMVCResourceCommand
 		objectDefinition.setObjectFields(
 			ArrayUtil.filter(
 				objectDefinition.getObjectFields(),
-				objectField ->
-					Validator.isNull(objectField.getRelationshipType()) &&
-					!Objects.equals(
-						objectField.getBusinessTypeAsString(),
-						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)));
+				objectField -> Validator.isNull(
+					objectField.getRelationshipType())));
 
 		JSONObject objectDefinitionJSONObject = _jsonFactory.createJSONObject(
 			objectDefinition.toString());
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-135430"))) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 			objectDefinitionJSONObject.remove("storageType");
 		}
 
-		_sanitizeJSON(
+		JSONObjectSanitizerUtil.sanitize(
 			objectDefinitionJSONObject,
 			new String[] {
 				"dateCreated", "dateModified", "id", "listTypeDefinitionId",
@@ -132,39 +117,9 @@ public class ExportObjectDefinitionMVCResourceCommand
 			resourceRequest, resourceResponse,
 			StringBundler.concat(
 				"Object_", objectDefinition.getName(), StringPool.UNDERLINE,
-				String.valueOf(objectDefinitionId), StringPool.UNDERLINE,
-				Time.getTimestamp(), ".json"),
+				objectDefinitionId, StringPool.UNDERLINE, Time.getTimestamp(),
+				".json"),
 			objectDefinitionJSON.getBytes(), ContentTypes.APPLICATION_JSON);
-	}
-
-	private void _sanitizeJSON(Object object, String[] keys) {
-		if (object instanceof JSONArray) {
-			JSONArray jsonArray = (JSONArray)object;
-
-			for (int i = 0; i < jsonArray.length(); ++i) {
-				_sanitizeJSON(jsonArray.get(i), keys);
-			}
-		}
-		else if (object instanceof JSONObject) {
-			JSONObject jsonObject = (JSONObject)object;
-
-			if (jsonObject.length() == 0) {
-				return;
-			}
-
-			JSONArray jsonArray = jsonObject.names();
-
-			for (int i = 0; i < jsonArray.length(); ++i) {
-				String key = jsonArray.getString(i);
-
-				if (ArrayUtil.contains(keys, key)) {
-					jsonObject.remove(key);
-				}
-				else {
-					_sanitizeJSON(jsonObject.get(key), keys);
-				}
-			}
-		}
 	}
 
 	@Reference

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.versioning.test;
@@ -23,8 +14,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.documentlibrary.model.impl.DLFileVersionImpl;
-
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -72,14 +61,13 @@ public class MetadataVersioningPolicyTest {
 		nextDLFileVersionImpl.setTitle(previousDLFileVersionImpl.getTitle());
 		nextDLFileVersionImpl.setDescription(StringUtil.randomString(6));
 
-		Optional<DLVersionNumberIncrease> dlVersionNumberIncreaseOptional =
+		DLVersionNumberIncrease dlVersionNumberIncrease =
 			_versioningPolicy.computeDLVersionNumberIncrease(
 				previousDLFileVersionImpl, nextDLFileVersionImpl);
 
-		Assert.assertTrue(dlVersionNumberIncreaseOptional.isPresent());
+		Assert.assertNotNull(dlVersionNumberIncrease);
 		Assert.assertEquals(
-			DLVersionNumberIncrease.MINOR,
-			dlVersionNumberIncreaseOptional.get());
+			DLVersionNumberIncrease.MINOR, dlVersionNumberIncrease);
 	}
 
 	@Test
@@ -97,14 +85,13 @@ public class MetadataVersioningPolicyTest {
 		nextDLFileVersionImpl.setFileEntryTypeId(
 			previousDLFileVersionImpl.getFileEntryTypeId() + 1);
 
-		Optional<DLVersionNumberIncrease> dlVersionNumberIncreaseOptional =
+		DLVersionNumberIncrease dlVersionNumberIncrease =
 			_versioningPolicy.computeDLVersionNumberIncrease(
 				previousDLFileVersionImpl, nextDLFileVersionImpl);
 
-		Assert.assertTrue(dlVersionNumberIncreaseOptional.isPresent());
+		Assert.assertNotNull(dlVersionNumberIncrease);
 		Assert.assertEquals(
-			DLVersionNumberIncrease.MINOR,
-			dlVersionNumberIncreaseOptional.get());
+			DLVersionNumberIncrease.MINOR, dlVersionNumberIncrease);
 	}
 
 	@Test
@@ -117,17 +104,18 @@ public class MetadataVersioningPolicyTest {
 
 		nextDLFileVersionImpl.setTitle(StringUtil.randomString(6));
 
-		Optional<DLVersionNumberIncrease> dlVersionNumberIncreaseOptional =
+		DLVersionNumberIncrease dlVersionNumberIncrease =
 			_versioningPolicy.computeDLVersionNumberIncrease(
 				previousDLFileVersionImpl, nextDLFileVersionImpl);
 
-		Assert.assertTrue(dlVersionNumberIncreaseOptional.isPresent());
+		Assert.assertNotNull(dlVersionNumberIncrease);
 		Assert.assertEquals(
-			DLVersionNumberIncrease.MINOR,
-			dlVersionNumberIncreaseOptional.get());
+			DLVersionNumberIncrease.MINOR, dlVersionNumberIncrease);
 	}
 
-	@Inject(filter = "component.name=*.MetadataVersioningPolicy")
+	@Inject(
+		filter = "component.name=com.liferay.document.library.internal.versioning.MetadataVersioningPolicy"
+	)
 	private VersioningPolicy _versioningPolicy;
 
 }

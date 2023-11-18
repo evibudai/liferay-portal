@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -22,6 +13,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Peter Yoo
@@ -37,7 +30,7 @@ public class ParallelExecutor<T> {
 
 		_executorService = executorService;
 
-		if (_executorService == null) {
+		if (executorService == null) {
 			_disposeExecutor = true;
 			_executorService = Executors.newSingleThreadExecutor();
 		}
@@ -53,9 +46,17 @@ public class ParallelExecutor<T> {
 	}
 
 	public List<T> execute() {
+		return execute(null);
+	}
+
+	public List<T> execute(Long timeoutSeconds) {
 		start();
 
-		return waitFor();
+		return waitFor(timeoutSeconds);
+	}
+
+	public void shutdownNow() {
+		_executorService.shutdownNow();
 	}
 
 	public synchronized void start() {
@@ -71,8 +72,16 @@ public class ParallelExecutor<T> {
 	}
 
 	public List<T> waitFor() {
+		return waitFor(null);
+	}
+
+	public List<T> waitFor(Long timeoutSeconds) {
 		if (_futures == null) {
 			start();
+		}
+
+		if (timeoutSeconds == null) {
+			timeoutSeconds = 60L * 60L * 2L;
 		}
 
 		try {
@@ -80,7 +89,23 @@ public class ParallelExecutor<T> {
 
 			for (Future<T> future : _futures) {
 				try {
-					T result = future.get();
+					T result = null;
+
+					try {
+						result = future.get(timeoutSeconds, TimeUnit.SECONDS);
+					}
+					catch (TimeoutException timeoutException) {
+						System.out.println(
+							JenkinsResultsParserUtil.combine(
+								"Parallel executor thread timed out after ",
+								JenkinsResultsParserUtil.toDurationString(
+									timeoutSeconds * 1000),
+								"\n", timeoutException.getMessage()));
+
+						future.cancel(true);
+
+						result = null;
+					}
 
 					if ((result == null) && _excludeNulls) {
 						continue;
@@ -97,7 +122,7 @@ public class ParallelExecutor<T> {
 		}
 		finally {
 			if (_disposeExecutor) {
-				_executorService.shutdown();
+				_executorService.shutdownNow();
 
 				while (!_executorService.isShutdown()) {
 					JenkinsResultsParserUtil.sleep(100);

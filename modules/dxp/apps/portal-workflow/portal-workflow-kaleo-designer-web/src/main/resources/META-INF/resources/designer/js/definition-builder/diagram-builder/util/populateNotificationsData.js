@@ -1,27 +1,35 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {isNode} from 'react-flow-renderer';
 
-import {retrieveRolesBy, retrieveUsersBy} from '../../util/fetchUtil';
+import {
+	retrieveAccountRoles,
+	retrieveRoleById,
+	retrieveRoles,
+	retrieveUsersBy,
+} from '../../util/fetchUtil';
 
-const populateNotificationsData = (initialElements, setElements) => {
+const populateNotificationsData = (
+	accountEntryId,
+	initialElements,
+	setElements
+) => {
 	for (let i = 0; i < initialElements.length; i++) {
 		const element = initialElements[i];
 
 		if (isNode(element) && element.data.notifications) {
 			const recipients = element.data.notifications.recipients;
+
 			recipients.map((recipient, index) => {
+				if (recipient[0] !== undefined) {
+					recipient = recipient[0];
+				}
+
 				if (recipient?.assignmentType?.[0] === 'roleId') {
-					retrieveRolesBy('roleId', recipient.roleId)
+					retrieveRoleById(recipient.roleId)
 						.then((response) => response.json())
 						.then((response) => {
 							initialElements[i].data.notifications.recipients[
@@ -34,6 +42,51 @@ const populateNotificationsData = (initialElements, setElements) => {
 
 							setElements([...initialElements]);
 						});
+				}
+				else if (recipient?.assignmentType?.[0] === 'roleType') {
+					Promise.all([
+						retrieveRoles(),
+						retrieveAccountRoles(accountEntryId),
+					]).then(([response1, response2]) =>
+						Promise.all([response1.json(), response2.json()]).then(
+							([roles, accountRoles]) => {
+								const items = roles.items.concat(
+									accountRoles.items
+								);
+
+								initialElements[
+									i
+								].data.notifications.recipients[
+									index
+								].roleKey.forEach((key) => {
+									const role = items.find(
+										(item) =>
+											item.externalReferenceCode ===
+												key || item.displayName === key
+									);
+
+									if (
+										!initialElements[i].data.notifications
+											.recipients[index].roleName
+									) {
+										initialElements[
+											i
+										].data.notifications.recipients[
+											index
+										].roleName = [];
+									}
+
+									initialElements[
+										i
+									].data.notifications.recipients[
+										index
+									].roleName.push(role?.name);
+								});
+
+								setElements([...initialElements]);
+							}
+						)
+					);
 				}
 				else if (
 					recipient?.assignmentType?.[0] === 'user' &&

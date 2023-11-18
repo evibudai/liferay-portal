@@ -1,6 +1,5 @@
 definition {
 
-	@summary = "This calls the JSON WS API to empty recycle bin"
 	macro emptyRecycleBin {
 		var portalURL = JSONCompany.getPortalURL();
 
@@ -21,18 +20,18 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			grandParentGroupName = "${grandParentGroupName}",
-			groupName = "${groupName}",
-			parentGroupName = "${parentGroupName}",
-			site = "${site}");
+			grandParentGroupName = ${grandParentGroupName},
+			groupName = ${groupName},
+			parentGroupName = ${parentGroupName},
+			site = ${site});
 
 		var curl = '''
 			${portalURL}/api/jsonws/trash.trashentry/delete-entries \
-			-u ${userEmailAddress}:${userPassword} \
-			-d groupId=${groupId}
+				-u ${userEmailAddress}:${userPassword} \
+				-d groupId=${groupId}
 		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
 }

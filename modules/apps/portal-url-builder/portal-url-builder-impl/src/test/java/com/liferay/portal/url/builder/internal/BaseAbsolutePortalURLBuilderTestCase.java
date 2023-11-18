@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.url.builder.internal;
@@ -18,12 +9,11 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Theme;
-import com.liferay.portal.kernel.servlet.BrowserSniffer;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.portal.url.builder.facet.CacheAwareAbsolutePortalURLBuilder.CachePolicy;
 import com.liferay.portal.url.builder.internal.util.CacheHelper;
 
@@ -31,6 +21,7 @@ import java.util.Dictionary;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import org.osgi.framework.Bundle;
@@ -166,21 +157,22 @@ public abstract class BaseAbsolutePortalURLBuilderTestCase {
 	}
 
 	protected void setUp() throws Exception {
-		BrowserSnifferUtil browserSnifferUtil = new BrowserSnifferUtil();
+		_browserSnifferUtilMockedStatic = Mockito.mockStatic(
+			BrowserSnifferUtil.class);
 
-		browserSnifferUtil.setBrowserSniffer(_mockBrowserSniffer());
-	}
-
-	private BrowserSniffer _mockBrowserSniffer() {
-		BrowserSniffer browserSniffer = Mockito.mock(BrowserSniffer.class);
-
-		Mockito.when(
-			browserSniffer.getBrowserId(Mockito.any(HttpServletRequest.class))
+		_browserSnifferUtilMockedStatic.when(
+			() -> BrowserSnifferUtil.getBrowserId(
+				Mockito.any(HttpServletRequest.class))
 		).thenReturn(
-			BrowserSniffer.BROWSER_ID_FIREFOX
+			BrowserSnifferUtil.BROWSER_ID_FIREFOX
 		);
-
-		return browserSniffer;
 	}
+
+	protected void tearDown() {
+		_browserSnifferUtilMockedStatic.close();
+	}
+
+	private static MockedStatic<BrowserSnifferUtil>
+		_browserSnifferUtilMockedStatic;
 
 }

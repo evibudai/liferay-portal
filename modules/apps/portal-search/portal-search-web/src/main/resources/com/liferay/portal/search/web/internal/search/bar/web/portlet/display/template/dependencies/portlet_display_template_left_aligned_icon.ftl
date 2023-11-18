@@ -9,9 +9,12 @@
 	<div class="input-group ${searchBarPortletDisplayContext.isLetTheUserChooseTheSearchScope()?then("search-bar-scope","search-bar-simple")}">
 		<#if searchBarPortletDisplayContext.isLetTheUserChooseTheSearchScope()>
 			<div class="input-group-item input-group-item-shrink input-group-prepend">
-				<button aria-label="${languageUtil.get(locale, "search")}" class="btn btn-secondary" type="submit">
-					<@clay.icon symbol="search" />
-				</button>
+				<@clay["button"]
+					aria\-label="${languageUtil.get(locale, 'search')}"
+					displayType="secondary"
+					icon="search"
+					type="submit"
+				/>
 			</div>
 
 			<@liferay_aui.select
@@ -23,9 +26,9 @@
 				wrapperCssClass="input-group-item input-group-item-shrink input-group-prepend search-bar-search-select-wrapper"
 			>
 				<@liferay_aui.option
-				label="this-site"
-				selected=searchBarPortletDisplayContext.isSelectedCurrentSiteSearchScope()
-				value=searchBarPortletDisplayContext.getCurrentSiteSearchScopeParameterString()
+					label="this-site"
+					selected=searchBarPortletDisplayContext.isSelectedCurrentSiteSearchScope()
+					value=searchBarPortletDisplayContext.getCurrentSiteSearchScopeParameterString()
 				/>
 
 				<#if searchBarPortletDisplayContext.isAvailableEverythingSearchScope()>
@@ -43,6 +46,7 @@
 
 			<@liferay_aui.input
 				autoFocus=true
+				autocomplete="off"
 				cssClass="search-bar-keywords-input"
 				data=data
 				label=""
@@ -57,6 +61,7 @@
 		<#else>
 			<div class="input-group-item search-bar-keywords-input-wrapper">
 				<input
+					autocomplete="off"
 					class="form-control input-group-inset input-group-inset-before search-bar-keywords-input"
 					data-qa-id="searchInput"
 					id="${namespace + stringUtil.randomId()}"
@@ -68,9 +73,12 @@
 				/>
 
 				<div class="input-group-inset-item input-group-inset-item-before">
-					<button aria-label="${languageUtil.get(locale, "search")}" class="btn btn-unstyled" type="submit">
-						<@clay.icon symbol="search" />
-					</button>
+					<@clay["button"]
+						aria\-label="${languageUtil.get(locale, 'search')}"
+						displayType="unstyled"
+						icon="search"
+						type="submit"
+					/>
 				</div>
 
 				<@liferay_aui.input

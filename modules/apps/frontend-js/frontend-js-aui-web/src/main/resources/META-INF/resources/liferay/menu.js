@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -123,13 +114,15 @@ AUI.add(
 
 					handles.length = 0;
 
-					const overlay = instance._overlay;
+					const trigger = instance._activeTrigger;
+
+					const overlay = instance._overlayMap.get(
+						trigger.generateID()
+					);
 
 					if (overlay) {
 						overlay.hide();
 					}
-
-					const trigger = instance._activeTrigger;
 
 					instance._activeMenu = null;
 					instance._activeTrigger = null;
@@ -213,7 +206,13 @@ AUI.add(
 			_getMenu(trigger) {
 				const instance = this;
 
-				let overlay = instance._overlay;
+				if (!instance._overlayMap) {
+					instance._overlayMap = new Map();
+				}
+
+				instance._trigger = trigger;
+
+				let overlay = instance._overlayMap.get(trigger.generateID());
 
 				if (!overlay) {
 					const MenuOverlay = A.Component.create({
@@ -249,10 +248,10 @@ AUI.add(
 					Liferay.once('beforeScreenFlip', () => {
 						overlay.destroy();
 
-						instance._overlay = null;
+						instance._overlayMap.clear();
 					});
 
-					instance._overlay = overlay;
+					instance._overlayMap.set(trigger.generateID(), overlay);
 				}
 				else {
 					overlay.set('align.node', trigger);
@@ -393,7 +392,9 @@ AUI.add(
 				if (menu) {
 					const cssClass = trigger.attr(ATTR_CLASS_NAME);
 
-					const overlay = instance._overlay;
+					const overlay = instance._overlayMap.get(
+						trigger.generateID()
+					);
 
 					const align = overlay.get('align');
 
@@ -465,7 +466,9 @@ AUI.add(
 					'aria-haspopup': true,
 				});
 
-				listNode.setAttribute('aria-labelledby', trigger.guid());
+				if (!trigger.hasClass('input-localized-trigger')) {
+					listNode.setAttribute('aria-labelledby', trigger.guid());
+				}
 			},
 		};
 
@@ -529,10 +532,20 @@ AUI.add(
 			() => {
 				const menuInstance = Menu._INSTANCE;
 
-				let focusManager = menuInstance._focusManager;
+				const trigger = menuInstance._trigger;
+
+				if (!menuInstance._focusManagerMap) {
+					menuInstance._focusManagerMap = new Map();
+				}
+
+				let focusManager = menuInstance._focusManagerMap.get(
+					trigger.generateID()
+				);
 
 				if (!focusManager) {
-					const bodyNode = menuInstance._overlay.bodyNode;
+					const bodyNode = menuInstance._overlayMap.get(
+						trigger.generateID()
+					).bodyNode;
 
 					bodyNode.plug(A.Plugin.NodeFocusManager, {
 						circular: true,
@@ -589,10 +602,15 @@ AUI.add(
 						}
 					});
 
-					menuInstance._focusManager = focusManager;
+					menuInstance._focusManagerMap.set(
+						trigger.generateID(),
+						focusManager
+					);
 
 					Liferay.once('beforeScreenFlip', () => {
-						menuInstance._focusManager = null;
+						menuInstance._focusManagerMap = null;
+
+						menuInstance._trigger = null;
 					});
 				}
 

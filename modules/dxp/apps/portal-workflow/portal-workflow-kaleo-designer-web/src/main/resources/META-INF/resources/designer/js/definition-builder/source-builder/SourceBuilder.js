@@ -1,19 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayToolbar from '@clayui/toolbar';
 import {Editor} from 'frontend-editor-ckeditor-web';
 import React, {useContext, useEffect, useRef, useState} from 'react';
@@ -31,18 +25,20 @@ export default function SourceBuilder() {
 		definitionName,
 		elements,
 		setCurrentEditor,
-		setShowInvalidContentMessage,
-		showInvalidContentMessage,
 		version,
 	} = useContext(DefinitionBuilderContext);
 	const editorRef = useRef();
+	const [loading, setLoading] = useState(true);
 	const [showImportSuccessMessage, setShowImportSuccessMessage] = useState(
+		false
+	);
+	const [showInvalidContentMessage, setShowInvalidContentMessage] = useState(
 		false
 	);
 
 	useEffect(() => {
-		if (elements) {
-			const metada = {
+		if (currentEditor?.mode === 'source' && elements) {
+			const metadata = {
 				description: definitionDescription,
 				name: definitionName,
 				version,
@@ -50,18 +46,26 @@ export default function SourceBuilder() {
 
 			const xmlContent = serializeDefinition(
 				xmlNamespace,
-				metada,
+				metadata,
 				elements.filter(isNode),
 				elements.filter(isEdge)
 			);
 
-			if (xmlContent && currentEditor) {
+			if (xmlContent) {
 				currentEditor.setData(xmlContent);
+
+				setLoading(false);
 			}
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentEditor, definitionName, elements, version]);
+
+	useEffect(() => {
+		if (currentEditor && currentEditor.mode !== 'source') {
+			currentEditor.setMode('source');
+		}
+	}, [currentEditor]);
 
 	useEffect(() => {
 		if (showInvalidContentMessage) {
@@ -107,6 +111,9 @@ export default function SourceBuilder() {
 
 			reader.readAsText(files[0]);
 		}
+		else if (files[0].type !== 'text/xml') {
+			setShowInvalidContentMessage(true);
+		}
 	}
 
 	return (
@@ -117,16 +124,6 @@ export default function SourceBuilder() {
 						<ClayToolbar.Item>
 							<span>{Liferay.Language.get('source')}</span>
 						</ClayToolbar.Item>
-
-						{showInvalidContentMessage && (
-							<ClayToolbar.Item className="error ml-4">
-								<span>
-									{Liferay.Language.get(
-										'please-enter-valid-content'
-									)}
-								</span>
-							</ClayToolbar.Item>
-						)}
 
 						<ClayToolbar.Item>
 							<div className="import-file">
@@ -151,12 +148,20 @@ export default function SourceBuilder() {
 				</ClayLayout.ContainerFluid>
 			</ClayToolbar>
 
+			{loading && (
+				<ClayLoadingIndicator
+					displayType="primary"
+					shape="squares"
+					size="md"
+				/>
+			)}
+
 			<Editor
 				config={editorConfig}
 				onInstanceReady={({editor}) => {
-					setCurrentEditor(editor);
-
 					editor.setMode('source');
+
+					setCurrentEditor(editor);
 				}}
 				ref={editorRef}
 			/>
@@ -172,6 +177,19 @@ export default function SourceBuilder() {
 						{Liferay.Language.get(
 							'definition-imported-successfully'
 						)}
+					</ClayAlert>
+				</ClayAlert.ToastContainer>
+			)}
+
+			{showInvalidContentMessage && (
+				<ClayAlert.ToastContainer>
+					<ClayAlert
+						autoClose={5000}
+						displayType="danger"
+						onClose={() => showInvalidContentMessage(false)}
+						title={`${Liferay.Language.get('error')}:`}
+					>
+						{Liferay.Language.get('please-select-a-valid-xml-file')}
 					</ClayAlert>
 				</ClayAlert.ToastContainer>
 			)}

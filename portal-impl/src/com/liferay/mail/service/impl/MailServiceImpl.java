@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.mail.service.impl;
 
+import com.liferay.mail.kernel.auth.token.provider.MailAuthTokenProvider;
+import com.liferay.mail.kernel.auth.token.provider.MailAuthTokenProviderRegistryUtil;
 import com.liferay.mail.kernel.model.Account;
-import com.liferay.mail.kernel.model.Filter;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
-import com.liferay.mail.kernel.util.Hook;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.log.Log;
@@ -31,17 +22,14 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
-import com.liferay.portal.kernel.util.MethodHandler;
-import com.liferay.portal.kernel.util.MethodKey;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PrefsPropsUtil;
 
 import java.io.IOException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,79 +39,11 @@ import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
-import javax.portlet.PortletPreferences;
-
 /**
  * @author Brian Wing Shun Chan
  */
 @CTAware
 public class MailServiceImpl implements IdentifiableOSGiService, MailService {
-
-	@Override
-	public void addForward(
-		long companyId, long userId, List<Filter> filters,
-		List<String> emailAddresses, boolean leaveCopy) {
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("addForward");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_addForwardMethodKey, companyId, userId, filters,
-					emailAddresses, leaveCopy);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void addUser(
-		long companyId, long userId, String password, String firstName,
-		String middleName, String lastName, String emailAddress) {
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("addUser");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_addUserMethodKey, companyId, userId, password, firstName,
-					middleName, lastName, emailAddress);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void addVacationMessage(
-		long companyId, long userId, String emailAddress,
-		String vacationMessage) {
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("addVacationMessage");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_addVacationMessageMethodKey, companyId, userId,
-					emailAddress, vacationMessage);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
 
 	@Clusterable
 	@Override
@@ -142,50 +62,32 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 	}
 
 	@Override
-	public void deleteEmailAddress(long companyId, long userId) {
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("deleteEmailAddress");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_deleteEmailAddressMethodKey, companyId, userId);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void deleteUser(long companyId, long userId) {
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("deleteUser");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_deleteUserMethodKey, companyId, userId);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
 	public String getOSGiServiceIdentifier() {
 		return MailService.class.getName();
 	}
 
 	@Override
 	public Session getSession() {
-		long companyId = CompanyThreadLocal.getCompanyId();
+		return getSession(CompanyThreadLocal.getCompanyId());
+	}
 
+	@Override
+	public Session getSession(Account account) {
+		Session session = Session.getInstance(_getProperties(account));
+
+		if (_log.isDebugEnabled()) {
+			session.setDebug(true);
+
+			Properties sessionProperties = session.getProperties();
+
+			sessionProperties.list(System.out);
+		}
+
+		return session;
+	}
+
+	@Override
+	public Session getSession(long companyId) {
 		Session session = _sessions.get(companyId);
 
 		if (session != null) {
@@ -194,15 +96,10 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 		session = InfrastructureUtil.getMailSession();
 
-		PortletPreferences companyPortletPreferences =
-			PrefsPropsUtil.getPreferences(companyId);
-		PortletPreferences systemPortletPreferences =
-			PrefsPropsUtil.getPreferences();
-
 		Function<String, String> function =
-			(String key) -> companyPortletPreferences.getValue(
-				key,
-				systemPortletPreferences.getValue(key, PropsUtil.get(key)));
+			(String key) -> PrefsPropsUtil.getString(
+				companyId, key,
+				PrefsPropsUtil.getString(key, PropsUtil.get(key)));
 
 		if (!GetterUtil.getBoolean(
 				function.apply(PropsKeys.MAIL_SESSION_MAIL))) {
@@ -245,6 +142,23 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 		String storePrefix = "mail." + storeProtocol + ".";
 
+		boolean oAuth2AuthEnable = false;
+
+		MailAuthTokenProvider pop3MailAuthTokenProvider =
+			MailAuthTokenProviderRegistryUtil.getMailAuthTokenProvider(
+				companyId, pop3Host, storeProtocol);
+
+		if (pop3MailAuthTokenProvider != null) {
+			oAuth2AuthEnable = true;
+
+			pop3Password = pop3MailAuthTokenProvider.getAccessToken(companyId);
+
+			properties.put(storePrefix + "auth.mechanisms", "XOAUTH2");
+			properties.put(
+				storePrefix + "auth.xoauth2.two.line.authentication.format",
+				"true");
+		}
+
 		properties.setProperty(storePrefix + "host", pop3Host);
 		properties.setProperty(storePrefix + "password", pop3Password);
 		properties.setProperty(storePrefix + "port", String.valueOf(pop3Port));
@@ -270,6 +184,22 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 		properties.setProperty(
 			transportPrefix + "auth", String.valueOf(smtpAuth));
+
+		MailAuthTokenProvider smtpMailAuthTokenProvider =
+			MailAuthTokenProviderRegistryUtil.getMailAuthTokenProvider(
+				companyId, smtpHost, transportProtocol);
+
+		if (smtpMailAuthTokenProvider != null) {
+			oAuth2AuthEnable = true;
+
+			properties.put(transportPrefix + "auth.mechanisms", "XOAUTH2");
+			properties.put(
+				transportPrefix + "auth.xoauth2.two.line.authentication.format",
+				"false");
+
+			smtpPassword = smtpMailAuthTokenProvider.getAccessToken(companyId);
+		}
+
 		properties.setProperty(transportPrefix + "host", smtpHost);
 		properties.setProperty(transportPrefix + "password", smtpPassword);
 		properties.setProperty(
@@ -311,7 +241,9 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 						getPasswordAuthentication() {
 
 						return new PasswordAuthentication(
-							smtpUser, smtpPassword);
+							smtpUser,
+							properties.getProperty(
+								transportPrefix + "password"));
 					}
 
 				});
@@ -326,20 +258,8 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 			properties.list(System.out);
 		}
 
-		_sessions.put(companyId, session);
-
-		return session;
-	}
-
-	public Session getSession(Account account) {
-		Session session = Session.getInstance(_getProperties(account));
-
-		if (_log.isDebugEnabled()) {
-			session.setDebug(true);
-
-			Properties sessionProperties = session.getProperties();
-
-			sessionProperties.list(System.out);
+		if (!oAuth2AuthEnable) {
+			_sessions.put(companyId, session);
 		}
 
 		return session;
@@ -354,65 +274,6 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 				}
 
 				MessageBusUtil.sendMessage(DestinationNames.MAIL, mailMessage);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void updateBlocked(
-		long companyId, long userId, List<String> blocked) {
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("updateBlocked");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_updateBlockedMethodKey, companyId, userId, blocked);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void updateEmailAddress(
-		long companyId, long userId, String emailAddress) {
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("updateEmailAddress");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_updateEmailAddressMethodKey, companyId, userId,
-					emailAddress);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
-
-				return null;
-			});
-	}
-
-	@Override
-	public void updatePassword(long companyId, long userId, String password) {
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug("updatePassword");
-				}
-
-				MethodHandler methodHandler = new MethodHandler(
-					_updatePasswordMethodKey, companyId, userId, password);
-
-				MessageBusUtil.sendMessage(
-					DestinationNames.MAIL, methodHandler);
 
 				return null;
 			});
@@ -452,26 +313,6 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MailServiceImpl.class);
-
-	private static final MethodKey _addForwardMethodKey = new MethodKey(
-		Hook.class, "addForward", long.class, long.class, List.class,
-		List.class, boolean.class);
-	private static final MethodKey _addUserMethodKey = new MethodKey(
-		Hook.class, "addUser", long.class, long.class, String.class,
-		String.class, String.class, String.class, String.class);
-	private static final MethodKey _addVacationMessageMethodKey = new MethodKey(
-		Hook.class, "addVacationMessage", long.class, long.class, String.class,
-		String.class);
-	private static final MethodKey _deleteEmailAddressMethodKey = new MethodKey(
-		Hook.class, "deleteEmailAddress", long.class, long.class);
-	private static final MethodKey _deleteUserMethodKey = new MethodKey(
-		Hook.class, "deleteUser", long.class, long.class);
-	private static final MethodKey _updateBlockedMethodKey = new MethodKey(
-		Hook.class, "updateBlocked", long.class, long.class, List.class);
-	private static final MethodKey _updateEmailAddressMethodKey = new MethodKey(
-		Hook.class, "updateEmailAddress", long.class, long.class, String.class);
-	private static final MethodKey _updatePasswordMethodKey = new MethodKey(
-		Hook.class, "updatePassword", long.class, long.class, String.class);
 
 	private final Map<Long, Session> _sessions = new ConcurrentHashMap<>();
 

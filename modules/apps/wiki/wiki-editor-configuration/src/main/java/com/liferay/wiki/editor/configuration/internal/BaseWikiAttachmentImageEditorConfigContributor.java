@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.editor.configuration.internal;
 
+import com.liferay.document.library.kernel.util.DLValidator;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.constants.ItemSelectorCriterionConstants;
@@ -23,6 +16,7 @@ import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCrite
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -31,6 +25,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.wiki.configuration.WikiFileUploadConfiguration;
@@ -40,6 +35,10 @@ import com.liferay.wiki.item.selector.criterion.WikiAttachmentItemSelectorCriter
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
@@ -112,6 +111,13 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 		);
 	}
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		wikiFileUploadConfiguration = ConfigurableUtil.createConfigurable(
+			WikiFileUploadConfiguration.class, properties);
+	}
+
 	protected ItemSelectorCriterion getImageItemSelectorCriterion(
 		ItemSelectorReturnType... desiredItemSelectorReturnTypes) {
 
@@ -133,9 +139,24 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 		long wikiPageResourcePrimKey, ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
+		List<String> extensions = new ArrayList<>();
+
+		String[] attachmentMimeTypes =
+			wikiFileUploadConfiguration.attachmentMimeTypes();
+
+		for (String attachmentMimeType : attachmentMimeTypes) {
+			extensions.addAll(MimeTypesUtil.getExtensions(attachmentMimeType));
+		}
+
 		return UploadItemSelectorCriterion.builder(
 		).desiredItemSelectorReturnTypes(
 			new FileEntryItemSelectorReturnType()
+		).extensions(
+			extensions.toArray(new String[0])
+		).maxFileSize(
+			dlValidator.getMaxAllowableSize(
+				themeDisplay.getScopeGroupId(), null,
+				wikiFileUploadConfiguration.attachmentMaxSize())
 		).mimeTypeRestriction(
 			ItemSelectorCriterionConstants.MIME_TYPE_RESTRICTION_IMAGE
 		).portletId(
@@ -180,15 +201,17 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 		return itemSelectorCriterion;
 	}
 
-	protected abstract WikiFileUploadConfiguration
-		getWikiFileUploadConfiguration();
+	@Reference
+	protected DLValidator dlValidator;
+
+	@Reference
+	protected ItemSelector itemSelector;
+
+	protected volatile WikiFileUploadConfiguration wikiFileUploadConfiguration;
 
 	private String[] _getMimeTypes() {
 		String[] dlFileEntryPreviewImageMimeTypes =
 			PropsValues.DL_FILE_ENTRY_PREVIEW_IMAGE_MIME_TYPES;
-
-		WikiFileUploadConfiguration wikiFileUploadConfiguration =
-			getWikiFileUploadConfiguration();
 
 		List<String> wikiAttachmentMimeTypes = ListUtil.fromArray(
 			wikiFileUploadConfiguration.attachmentMimeTypes());

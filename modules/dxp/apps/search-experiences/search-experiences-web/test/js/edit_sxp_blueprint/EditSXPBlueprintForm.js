@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fireEvent, render, within} from '@testing-library/react';
 import React from 'react';
 
 import EditSXPBlueprintForm from '../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/edit_sxp_blueprint/EditSXPBlueprintForm';
-import * as fetchUtils from '../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/fetch';
+import fetchPreviewSearch from '../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/fetch/fetch_preview_search';
+import getUIConfigurationValues from '../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/sxp_element/get_ui_configuration_values';
 const Toasts = require('../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/toasts');
-import {getUIConfigurationValues} from '../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/utils';
 import {ENTITY_JSON, INITIAL_CONFIGURATION} from '../mocks/data';
 import {QUERY_SXP_ELEMENTS} from '../mocks/sxpElements';
 
@@ -28,6 +22,10 @@ jest.mock(
 	() => ({onChange, value}) => (
 		<textarea aria-label="text-area" onChange={onChange} value={value} />
 	)
+);
+
+jest.mock(
+	'../../../src/main/resources/META-INF/resources/sxp_blueprint_admin/js/utils/fetch/fetch_preview_search'
 );
 
 // Prevents "TypeError: Liferay.component is not a function" error on openToast
@@ -54,15 +52,18 @@ afterAll(() => {
 });
 
 Liferay.ThemeDisplay.getDefaultLanguageId = () => 'en_US';
+Liferay.ThemeDisplay.getPathContext = () => '';
 
 function renderEditSXPBlueprintForm(props) {
 	return render(
 		<EditSXPBlueprintForm
 			entityJSON={ENTITY_JSON}
 			initialConfiguration={INITIAL_CONFIGURATION}
-			initialDescription={{}}
+			initialDescription=""
+			initialDescriptionI18n={{}}
 			initialSXPElementInstances={[]}
-			initialTitle={{
+			initialTitle="Test Title"
+			initialTitleI18n={{
 				'en-US': 'Test Title',
 			}}
 			sxpBlueprintId="0"
@@ -95,7 +96,9 @@ describe('EditSXPBlueprintForm', () => {
 
 		await findByText('query-settings');
 
-		const {getByText} = within(container.querySelector('.builder'));
+		const {getByText} = within(
+			container.querySelector('.layout-section-main')
+		);
 
 		QUERY_SXP_ELEMENTS.map((sxpElement) =>
 			getByText(sxpElement.title_i18n['en_US'])
@@ -162,8 +165,6 @@ describe('EditSXPBlueprintForm', () => {
 	});
 
 	describe('fetchPreviewSearch responses', () => {
-		const fetchPreviewSearch = jest.spyOn(fetchUtils, 'fetchPreviewSearch');
-
 		async function setupAndGetErrorItems() {
 			const {
 				findAllByTestId,

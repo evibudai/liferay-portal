@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -34,6 +25,7 @@ import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -78,8 +70,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -215,6 +205,7 @@ public abstract class BaseDocumentResourceTestCase {
 		document.setEncodingFormat(regex);
 		document.setExternalReferenceCode(regex);
 		document.setFileExtension(regex);
+		document.setFileName(regex);
 		document.setTitle(regex);
 
 		String json = DocumentSerDes.toJSON(document);
@@ -230,6 +221,7 @@ public abstract class BaseDocumentResourceTestCase {
 		Assert.assertEquals(regex, document.getEncodingFormat());
 		Assert.assertEquals(regex, document.getExternalReferenceCode());
 		Assert.assertEquals(regex, document.getFileExtension());
+		Assert.assertEquals(regex, document.getFileName());
 		Assert.assertEquals(regex, document.getTitle());
 	}
 
@@ -259,7 +251,10 @@ public abstract class BaseDocumentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDocument),
 				(List<Document>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAssetLibraryDocumentsPage_getExpectedActions(
+					irrelevantAssetLibraryId));
 		}
 
 		Document document1 = testGetAssetLibraryDocumentsPage_addDocument(
@@ -276,11 +271,33 @@ public abstract class BaseDocumentResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(document1, document2),
 			(List<Document>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetAssetLibraryDocumentsPage_getExpectedActions(
+				assetLibraryId));
 
 		documentResource.deleteDocument(document1.getId());
 
 		documentResource.deleteDocument(document2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibraryDocumentsPage_getExpectedActions(
+				Long assetLibraryId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/documents/batch".
+				replace("{assetLibraryId}", String.valueOf(assetLibraryId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -318,41 +335,39 @@ public abstract class BaseDocumentResourceTestCase {
 	public void testGetAssetLibraryDocumentsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAssetLibraryDocumentsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAssetLibraryDocumentsPageWithFilterStringContains()
+		throws Exception {
 
-		Long assetLibraryId =
-			testGetAssetLibraryDocumentsPage_getAssetLibraryId();
-
-		Document document1 = testGetAssetLibraryDocumentsPage_addDocument(
-			assetLibraryId, randomDocument());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Document document2 = testGetAssetLibraryDocumentsPage_addDocument(
-			assetLibraryId, randomDocument());
-
-		for (EntityField entityField : entityFields) {
-			Page<Document> page = documentResource.getAssetLibraryDocumentsPage(
-				assetLibraryId, null, null, null,
-				getFilterString(entityField, "eq", document1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(document1),
-				(List<Document>)page.getItems());
-		}
+		testGetAssetLibraryDocumentsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAssetLibraryDocumentsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAssetLibraryDocumentsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAssetLibraryDocumentsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAssetLibraryDocumentsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAssetLibraryDocumentsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -371,7 +386,7 @@ public abstract class BaseDocumentResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<Document> page = documentResource.getAssetLibraryDocumentsPage(
 				assetLibraryId, null, null, null,
-				getFilterString(entityField, "eq", document1),
+				getFilterString(entityField, operator, document1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -704,6 +719,7 @@ public abstract class BaseDocumentResourceTestCase {
 											"\"" +
 												testGraphQLGetAssetLibraryDocumentByExternalReferenceCode_getAssetLibraryId() +
 													"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -901,6 +917,141 @@ public abstract class BaseDocumentResourceTestCase {
 	}
 
 	@Test
+	public void testGetAssetLibraryDocumentsRatedByMePage() throws Exception {
+		Long assetLibraryId =
+			testGetAssetLibraryDocumentsRatedByMePage_getAssetLibraryId();
+		Long irrelevantAssetLibraryId =
+			testGetAssetLibraryDocumentsRatedByMePage_getIrrelevantAssetLibraryId();
+
+		Page<Document> page =
+			documentResource.getAssetLibraryDocumentsRatedByMePage(
+				assetLibraryId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantAssetLibraryId != null) {
+			Document irrelevantDocument =
+				testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+					irrelevantAssetLibraryId, randomIrrelevantDocument());
+
+			page = documentResource.getAssetLibraryDocumentsRatedByMePage(
+				irrelevantAssetLibraryId, Pagination.of(1, 2));
+
+			Assert.assertEquals(1, page.getTotalCount());
+
+			assertEquals(
+				Arrays.asList(irrelevantDocument),
+				(List<Document>)page.getItems());
+			assertValid(
+				page,
+				testGetAssetLibraryDocumentsRatedByMePage_getExpectedActions(
+					irrelevantAssetLibraryId));
+		}
+
+		Document document1 =
+			testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, randomDocument());
+
+		Document document2 =
+			testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, randomDocument());
+
+		page = documentResource.getAssetLibraryDocumentsRatedByMePage(
+			assetLibraryId, Pagination.of(1, 10));
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(document1, document2),
+			(List<Document>)page.getItems());
+		assertValid(
+			page,
+			testGetAssetLibraryDocumentsRatedByMePage_getExpectedActions(
+				assetLibraryId));
+
+		documentResource.deleteDocument(document1.getId());
+
+		documentResource.deleteDocument(document2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibraryDocumentsRatedByMePage_getExpectedActions(
+				Long assetLibraryId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAssetLibraryDocumentsRatedByMePageWithPagination()
+		throws Exception {
+
+		Long assetLibraryId =
+			testGetAssetLibraryDocumentsRatedByMePage_getAssetLibraryId();
+
+		Document document1 =
+			testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, randomDocument());
+
+		Document document2 =
+			testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, randomDocument());
+
+		Document document3 =
+			testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+				assetLibraryId, randomDocument());
+
+		Page<Document> page1 =
+			documentResource.getAssetLibraryDocumentsRatedByMePage(
+				assetLibraryId, Pagination.of(1, 2));
+
+		List<Document> documents1 = (List<Document>)page1.getItems();
+
+		Assert.assertEquals(documents1.toString(), 2, documents1.size());
+
+		Page<Document> page2 =
+			documentResource.getAssetLibraryDocumentsRatedByMePage(
+				assetLibraryId, Pagination.of(2, 2));
+
+		Assert.assertEquals(3, page2.getTotalCount());
+
+		List<Document> documents2 = (List<Document>)page2.getItems();
+
+		Assert.assertEquals(documents2.toString(), 1, documents2.size());
+
+		Page<Document> page3 =
+			documentResource.getAssetLibraryDocumentsRatedByMePage(
+				assetLibraryId, Pagination.of(1, 3));
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(document1, document2, document3),
+			(List<Document>)page3.getItems());
+	}
+
+	protected Document testGetAssetLibraryDocumentsRatedByMePage_addDocument(
+			Long assetLibraryId, Document document)
+		throws Exception {
+
+		return documentResource.postAssetLibraryDocument(
+			assetLibraryId, document, getMultipartFiles());
+	}
+
+	protected Long testGetAssetLibraryDocumentsRatedByMePage_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	protected Long
+			testGetAssetLibraryDocumentsRatedByMePage_getIrrelevantAssetLibraryId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testGetDocumentFolderDocumentsPage() throws Exception {
 		Long documentFolderId =
 			testGetDocumentFolderDocumentsPage_getDocumentFolderId();
@@ -927,7 +1078,10 @@ public abstract class BaseDocumentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDocument),
 				(List<Document>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDocumentFolderDocumentsPage_getExpectedActions(
+					irrelevantDocumentFolderId));
 		}
 
 		Document document1 = testGetDocumentFolderDocumentsPage_addDocument(
@@ -945,11 +1099,34 @@ public abstract class BaseDocumentResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(document1, document2),
 			(List<Document>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetDocumentFolderDocumentsPage_getExpectedActions(
+				documentFolderId));
 
 		documentResource.deleteDocument(document1.getId());
 
 		documentResource.deleteDocument(document2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDocumentFolderDocumentsPage_getExpectedActions(
+				Long documentFolderId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/document-folders/{documentFolderId}/documents/batch".
+				replace(
+					"{documentFolderId}", String.valueOf(documentFolderId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -988,42 +1165,39 @@ public abstract class BaseDocumentResourceTestCase {
 	public void testGetDocumentFolderDocumentsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetDocumentFolderDocumentsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetDocumentFolderDocumentsPageWithFilterStringContains()
+		throws Exception {
 
-		Long documentFolderId =
-			testGetDocumentFolderDocumentsPage_getDocumentFolderId();
-
-		Document document1 = testGetDocumentFolderDocumentsPage_addDocument(
-			documentFolderId, randomDocument());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Document document2 = testGetDocumentFolderDocumentsPage_addDocument(
-			documentFolderId, randomDocument());
-
-		for (EntityField entityField : entityFields) {
-			Page<Document> page =
-				documentResource.getDocumentFolderDocumentsPage(
-					documentFolderId, null, null, null,
-					getFilterString(entityField, "eq", document1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(document1),
-				(List<Document>)page.getItems());
-		}
+		testGetDocumentFolderDocumentsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetDocumentFolderDocumentsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetDocumentFolderDocumentsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetDocumentFolderDocumentsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetDocumentFolderDocumentsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetDocumentFolderDocumentsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1043,7 +1217,7 @@ public abstract class BaseDocumentResourceTestCase {
 			Page<Document> page =
 				documentResource.getDocumentFolderDocumentsPage(
 					documentFolderId, null, null, null,
-					getFilterString(entityField, "eq", document1),
+					getFilterString(entityField, operator, document1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1570,7 +1744,9 @@ public abstract class BaseDocumentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDocument),
 				(List<Document>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteDocumentsPage_getExpectedActions(irrelevantSiteId));
 		}
 
 		Document document1 = testGetSiteDocumentsPage_addDocument(
@@ -1587,11 +1763,29 @@ public abstract class BaseDocumentResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(document1, document2),
 			(List<Document>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetSiteDocumentsPage_getExpectedActions(siteId));
 
 		documentResource.deleteDocument(document1.getId());
 
 		documentResource.deleteDocument(document2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteDocumentsPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/documents/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1627,40 +1821,36 @@ public abstract class BaseDocumentResourceTestCase {
 	public void testGetSiteDocumentsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSiteDocumentsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSiteDocumentsPageWithFilterStringContains()
+		throws Exception {
 
-		Long siteId = testGetSiteDocumentsPage_getSiteId();
-
-		Document document1 = testGetSiteDocumentsPage_addDocument(
-			siteId, randomDocument());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Document document2 = testGetSiteDocumentsPage_addDocument(
-			siteId, randomDocument());
-
-		for (EntityField entityField : entityFields) {
-			Page<Document> page = documentResource.getSiteDocumentsPage(
-				siteId, null, null, null,
-				getFilterString(entityField, "eq", document1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(document1),
-				(List<Document>)page.getItems());
-		}
+		testGetSiteDocumentsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSiteDocumentsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSiteDocumentsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteDocumentsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteDocumentsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteDocumentsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1678,7 +1868,7 @@ public abstract class BaseDocumentResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<Document> page = documentResource.getSiteDocumentsPage(
 				siteId, null, null, null,
-				getFilterString(entityField, "eq", document1),
+				getFilterString(entityField, operator, document1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1947,17 +2137,30 @@ public abstract class BaseDocumentResourceTestCase {
 			204,
 			documentResource.
 				deleteSiteDocumentByExternalReferenceCodeHttpResponse(
-					document.getSiteId(), document.getExternalReferenceCode()));
+					testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
+						document),
+					document.getExternalReferenceCode()));
 
 		assertHttpResponseStatusCode(
 			404,
 			documentResource.getSiteDocumentByExternalReferenceCodeHttpResponse(
-				document.getSiteId(), document.getExternalReferenceCode()));
+				testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
+					document),
+				document.getExternalReferenceCode()));
 
 		assertHttpResponseStatusCode(
 			404,
 			documentResource.getSiteDocumentByExternalReferenceCodeHttpResponse(
-				document.getSiteId(), document.getExternalReferenceCode()));
+				testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
+					document),
+				document.getExternalReferenceCode()));
+	}
+
+	protected Long testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
+			Document document)
+		throws Exception {
+
+		return document.getSiteId();
 	}
 
 	protected Document
@@ -1975,11 +2178,19 @@ public abstract class BaseDocumentResourceTestCase {
 
 		Document getDocument =
 			documentResource.getSiteDocumentByExternalReferenceCode(
-				postDocument.getSiteId(),
+				testGetSiteDocumentByExternalReferenceCode_getSiteId(
+					postDocument),
 				postDocument.getExternalReferenceCode());
 
 		assertEquals(postDocument, getDocument);
 		assertValid(getDocument);
+	}
+
+	protected Long testGetSiteDocumentByExternalReferenceCode_getSiteId(
+			Document document)
+		throws Exception {
+
+		return document.getSiteId();
 	}
 
 	protected Document testGetSiteDocumentByExternalReferenceCode_addDocument()
@@ -2008,7 +2219,10 @@ public abstract class BaseDocumentResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" + document.getSiteId() + "\"");
+											"\"" +
+												testGraphQLGetSiteDocumentByExternalReferenceCode_getSiteId(
+													document) + "\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2020,6 +2234,13 @@ public abstract class BaseDocumentResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/documentByExternalReferenceCode"))));
+	}
+
+	protected Long testGraphQLGetSiteDocumentByExternalReferenceCode_getSiteId(
+			Document document)
+		throws Exception {
+
+		return document.getSiteId();
 	}
 
 	@Test
@@ -2068,7 +2289,8 @@ public abstract class BaseDocumentResourceTestCase {
 
 		Document putDocument =
 			documentResource.putSiteDocumentByExternalReferenceCode(
-				postDocument.getSiteId(),
+				testPutSiteDocumentByExternalReferenceCode_getSiteId(
+					postDocument),
 				postDocument.getExternalReferenceCode(), randomDocument,
 				multipartFiles);
 
@@ -2077,7 +2299,8 @@ public abstract class BaseDocumentResourceTestCase {
 
 		Document getDocument =
 			documentResource.getSiteDocumentByExternalReferenceCode(
-				putDocument.getSiteId(),
+				testPutSiteDocumentByExternalReferenceCode_getSiteId(
+					putDocument),
 				putDocument.getExternalReferenceCode());
 
 		assertEquals(randomDocument, getDocument);
@@ -2089,20 +2312,29 @@ public abstract class BaseDocumentResourceTestCase {
 			testPutSiteDocumentByExternalReferenceCode_createDocument();
 
 		putDocument = documentResource.putSiteDocumentByExternalReferenceCode(
-			newDocument.getSiteId(), newDocument.getExternalReferenceCode(),
-			newDocument, getMultipartFiles());
+			testPutSiteDocumentByExternalReferenceCode_getSiteId(newDocument),
+			newDocument.getExternalReferenceCode(), newDocument,
+			getMultipartFiles());
 
 		assertEquals(newDocument, putDocument);
 		assertValid(putDocument);
 
 		getDocument = documentResource.getSiteDocumentByExternalReferenceCode(
-			putDocument.getSiteId(), putDocument.getExternalReferenceCode());
+			testPutSiteDocumentByExternalReferenceCode_getSiteId(putDocument),
+			putDocument.getExternalReferenceCode());
 
 		assertEquals(newDocument, getDocument);
 
 		Assert.assertEquals(
 			newDocument.getExternalReferenceCode(),
 			putDocument.getExternalReferenceCode());
+	}
+
+	protected Long testPutSiteDocumentByExternalReferenceCode_getSiteId(
+			Document document)
+		throws Exception {
+
+		return document.getSiteId();
 	}
 
 	protected Document
@@ -2175,6 +2407,126 @@ public abstract class BaseDocumentResourceTestCase {
 
 		return documentResource.postSiteDocument(
 			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+	}
+
+	@Test
+	public void testGetSiteDocumentsRatedByMePage() throws Exception {
+		Long siteId = testGetSiteDocumentsRatedByMePage_getSiteId();
+		Long irrelevantSiteId =
+			testGetSiteDocumentsRatedByMePage_getIrrelevantSiteId();
+
+		Page<Document> page = documentResource.getSiteDocumentsRatedByMePage(
+			siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
+			Document irrelevantDocument =
+				testGetSiteDocumentsRatedByMePage_addDocument(
+					irrelevantSiteId, randomIrrelevantDocument());
+
+			page = documentResource.getSiteDocumentsRatedByMePage(
+				irrelevantSiteId, Pagination.of(1, 2));
+
+			Assert.assertEquals(1, page.getTotalCount());
+
+			assertEquals(
+				Arrays.asList(irrelevantDocument),
+				(List<Document>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteDocumentsRatedByMePage_getExpectedActions(
+					irrelevantSiteId));
+		}
+
+		Document document1 = testGetSiteDocumentsRatedByMePage_addDocument(
+			siteId, randomDocument());
+
+		Document document2 = testGetSiteDocumentsRatedByMePage_addDocument(
+			siteId, randomDocument());
+
+		page = documentResource.getSiteDocumentsRatedByMePage(
+			siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(document1, document2),
+			(List<Document>)page.getItems());
+		assertValid(
+			page, testGetSiteDocumentsRatedByMePage_getExpectedActions(siteId));
+
+		documentResource.deleteDocument(document1.getId());
+
+		documentResource.deleteDocument(document2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteDocumentsRatedByMePage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetSiteDocumentsRatedByMePageWithPagination()
+		throws Exception {
+
+		Long siteId = testGetSiteDocumentsRatedByMePage_getSiteId();
+
+		Document document1 = testGetSiteDocumentsRatedByMePage_addDocument(
+			siteId, randomDocument());
+
+		Document document2 = testGetSiteDocumentsRatedByMePage_addDocument(
+			siteId, randomDocument());
+
+		Document document3 = testGetSiteDocumentsRatedByMePage_addDocument(
+			siteId, randomDocument());
+
+		Page<Document> page1 = documentResource.getSiteDocumentsRatedByMePage(
+			siteId, Pagination.of(1, 2));
+
+		List<Document> documents1 = (List<Document>)page1.getItems();
+
+		Assert.assertEquals(documents1.toString(), 2, documents1.size());
+
+		Page<Document> page2 = documentResource.getSiteDocumentsRatedByMePage(
+			siteId, Pagination.of(2, 2));
+
+		Assert.assertEquals(3, page2.getTotalCount());
+
+		List<Document> documents2 = (List<Document>)page2.getItems();
+
+		Assert.assertEquals(documents2.toString(), 1, documents2.size());
+
+		Page<Document> page3 = documentResource.getSiteDocumentsRatedByMePage(
+			siteId, Pagination.of(1, 3));
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(document1, document2, document3),
+			(List<Document>)page3.getItems());
+	}
+
+	protected Document testGetSiteDocumentsRatedByMePage_addDocument(
+			Long siteId, Document document)
+		throws Exception {
+
+		return documentResource.postSiteDocument(
+			siteId, document, getMultipartFiles());
+	}
+
+	protected Long testGetSiteDocumentsRatedByMePage_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
+	}
+
+	protected Long testGetSiteDocumentsRatedByMePage_getIrrelevantSiteId()
+		throws Exception {
+
+		return irrelevantGroup.getGroupId();
 	}
 
 	@Rule
@@ -2539,6 +2891,14 @@ public abstract class BaseDocumentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("fileName", additionalAssertFieldName)) {
+				if (document.getFileName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("keywords", additionalAssertFieldName)) {
 				if (document.getKeywords() == null) {
 					valid = false;
@@ -2632,6 +2992,12 @@ public abstract class BaseDocumentResourceTestCase {
 	}
 
 	protected void assertValid(Page<Document> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Document> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Document> documents = page.getItems();
@@ -2646,6 +3012,25 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected void assertValid(Rating rating) {
@@ -2950,6 +3335,16 @@ public abstract class BaseDocumentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("fileName", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						document1.getFileName(), document2.getFileName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(document1.getId(), document2.getId())) {
 					return false;
@@ -3189,14 +3584,16 @@ public abstract class BaseDocumentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -3213,6 +3610,10 @@ public abstract class BaseDocumentResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -3222,18 +3623,18 @@ public abstract class BaseDocumentResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -3265,25 +3666,139 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("assetLibraryKey")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getAssetLibraryKey()));
-			sb.append("'");
+			Object object = document.getAssetLibraryKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("contentUrl")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getContentUrl()));
-			sb.append("'");
+			Object object = document.getContentUrl();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("contentValue")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getContentValue()));
-			sb.append("'");
+			Object object = document.getContentValue();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3361,9 +3876,47 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getDescription()));
-			sb.append("'");
+			Object object = document.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3379,25 +3932,185 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("encodingFormat")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getEncodingFormat()));
-			sb.append("'");
+			Object object = document.getEncodingFormat();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = document.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("fileExtension")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getFileExtension()));
-			sb.append("'");
+			Object object = document.getFileExtension();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fileName")) {
+			Object object = document.getFileName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3449,9 +4162,47 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("title")) {
-			sb.append("'");
-			sb.append(String.valueOf(document.getTitle()));
-			sb.append("'");
+			Object object = document.getTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -3526,6 +4277,8 @@ public abstract class BaseDocumentResourceTestCase {
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				fileExtension = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				fileName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				numberOfComments = RandomTestUtil.randomInt();

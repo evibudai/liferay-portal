@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.versioning;
@@ -27,8 +18,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Optional;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -41,33 +30,33 @@ import org.osgi.service.component.annotations.Reference;
 public class ContentVersioningPolicy implements VersioningPolicy {
 
 	@Override
-	public Optional<DLVersionNumberIncrease> computeDLVersionNumberIncrease(
+	public DLVersionNumberIncrease computeDLVersionNumberIncrease(
 		DLFileVersion previousDLFileVersion, DLFileVersion nextDLFileVersion) {
 
 		long previousSize = previousDLFileVersion.getSize();
 		long nextSize = nextDLFileVersion.getSize();
 
 		if ((previousSize == 0) && (nextSize >= 0)) {
-			return Optional.empty();
+			return null;
 		}
 
 		if (previousSize != nextSize) {
-			return Optional.of(DLVersionNumberIncrease.MAJOR);
+			return DLVersionNumberIncrease.MAJOR;
 		}
 
 		String previousChecksum = _computeChecksum(previousDLFileVersion);
 
 		if (previousChecksum == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		String nextChecksum = _computeChecksum(nextDLFileVersion);
 
 		if ((nextChecksum == null) || previousChecksum.equals(nextChecksum)) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(DLVersionNumberIncrease.MAJOR);
+		return DLVersionNumberIncrease.MAJOR;
 	}
 
 	private String _computeChecksum(DLFileVersion dlFileVersion) {
@@ -78,7 +67,8 @@ public class ContentVersioningPolicy implements VersioningPolicy {
 		try (InputStream inputStream = dlFileVersion.getContentStream(false)) {
 			dlFileVersion.setChecksum(DigesterUtil.digestBase64(inputStream));
 
-			_dlFileVersionLocalService.updateDLFileVersion(dlFileVersion);
+			dlFileVersion = _dlFileVersionLocalService.updateDLFileVersion(
+				dlFileVersion);
 
 			return dlFileVersion.getChecksum();
 		}

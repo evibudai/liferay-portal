@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.digital.signature.rest.dto.v1_0;
@@ -55,6 +46,36 @@ public class DSDocument implements Serializable {
 	public static DSDocument unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(DSDocument.class, json);
 	}
+
+	@Schema
+	public String getAssignTabsToDSRecipientId() {
+		return assignTabsToDSRecipientId;
+	}
+
+	public void setAssignTabsToDSRecipientId(String assignTabsToDSRecipientId) {
+		this.assignTabsToDSRecipientId = assignTabsToDSRecipientId;
+	}
+
+	@JsonIgnore
+	public void setAssignTabsToDSRecipientId(
+		UnsafeSupplier<String, Exception>
+			assignTabsToDSRecipientIdUnsafeSupplier) {
+
+		try {
+			assignTabsToDSRecipientId =
+				assignTabsToDSRecipientIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String assignTabsToDSRecipientId;
 
 	@Schema
 	public String getData() {
@@ -195,6 +216,34 @@ public class DSDocument implements Serializable {
 	protected String name;
 
 	@Schema
+	public Boolean getTransformPDFFields() {
+		return transformPDFFields;
+	}
+
+	public void setTransformPDFFields(Boolean transformPDFFields) {
+		this.transformPDFFields = transformPDFFields;
+	}
+
+	@JsonIgnore
+	public void setTransformPDFFields(
+		UnsafeSupplier<Boolean, Exception> transformPDFFieldsUnsafeSupplier) {
+
+		try {
+			transformPDFFields = transformPDFFieldsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean transformPDFFields;
+
+	@Schema
 	public String getUri() {
 		return uri;
 	}
@@ -246,6 +295,20 @@ public class DSDocument implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (assignTabsToDSRecipientId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assignTabsToDSRecipientId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assignTabsToDSRecipientId));
+
+			sb.append("\"");
+		}
 
 		if (data != null) {
 			if (sb.length() > 1) {
@@ -315,6 +378,16 @@ public class DSDocument implements Serializable {
 			sb.append(_escape(name));
 
 			sb.append("\"");
+		}
+
+		if (transformPDFFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"transformPDFFields\": ");
+
+			sb.append(transformPDFFields);
 		}
 
 		if (uri != null) {
@@ -425,5 +498,7 @@ public class DSDocument implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

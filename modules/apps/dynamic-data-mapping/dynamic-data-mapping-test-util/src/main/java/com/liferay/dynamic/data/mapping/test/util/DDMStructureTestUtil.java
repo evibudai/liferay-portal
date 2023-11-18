@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.test.util;
@@ -32,21 +23,14 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
-import com.liferay.portal.kernel.xml.XPath;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -293,28 +277,6 @@ public class DDMStructureTestUtil {
 			"en_US");
 	}
 
-	public static Map<String, Map<String, String>> getXSDMap(String xsd)
-		throws Exception {
-
-		Map<String, Map<String, String>> map = new HashMap<>();
-
-		Document document = UnsecureSAXReaderUtil.read(xsd);
-
-		XPath xPathSelector = SAXReaderUtil.createXPath("//dynamic-element");
-
-		List<Node> nodes = xPathSelector.selectNodes(document);
-
-		for (Node node : nodes) {
-			Element dynamicElementElement = (Element)node;
-
-			map.put(
-				getElementName(dynamicElementElement),
-				getElementMap(dynamicElementElement));
-		}
-
-		return map;
-	}
-
 	protected static Document createDocumentContent(
 		String availableLocales, String defaultLocale) {
 
@@ -327,84 +289,6 @@ public class DDMStructureTestUtil {
 		rootElement.addElement("request");
 
 		return document;
-	}
-
-	protected static Document createDocumentStructure(
-		Locale[] availableLocales, Locale defaultLocale) {
-
-		Document document = SAXReaderUtil.createDocument();
-
-		Element rootElement = document.addElement("root");
-
-		rootElement.addAttribute(
-			"available-locales",
-			StringUtil.merge(LocaleUtil.toLanguageIds(availableLocales)));
-		rootElement.addAttribute(
-			"default-locale", LocaleUtil.toLanguageId(defaultLocale));
-
-		return document;
-	}
-
-	protected static Map<String, String> getElementMap(Element element) {
-		Map<String, String> elementMap = new HashMap<>();
-
-		// Attributes
-
-		for (Attribute attribute : element.attributes()) {
-			elementMap.put(attribute.getName(), attribute.getValue());
-		}
-
-		// Metadata
-
-		for (Element metadadataElement : element.elements("meta-data")) {
-			String metadataLanguageId = metadadataElement.attributeValue(
-				"locale");
-
-			for (Element entryElement : metadadataElement.elements("entry")) {
-				String entryName = entryElement.attributeValue("name");
-
-				elementMap.put(
-					entryName.concat(metadataLanguageId),
-					entryElement.getText());
-			}
-		}
-
-		return elementMap;
-	}
-
-	protected static String getElementName(Element element) {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(element.attributeValue("name"));
-
-		Element parentElement = element.getParent();
-
-		while (true) {
-			if (parentElement == null) {
-				break;
-			}
-
-			String parentName = parentElement.getName();
-
-			if (parentName.equals("root")) {
-				break;
-			}
-
-			sb.insert(
-				0, parentElement.attributeValue("name") + StringPool.SLASH);
-
-			parentElement = parentElement.getParent();
-		}
-
-		String type = element.attributeValue("type");
-
-		if (Objects.equals(type, "option")) {
-			sb.append(StringPool.SLASH);
-
-			sb.append(element.attributeValue("value"));
-		}
-
-		return sb.toString();
 	}
 
 }

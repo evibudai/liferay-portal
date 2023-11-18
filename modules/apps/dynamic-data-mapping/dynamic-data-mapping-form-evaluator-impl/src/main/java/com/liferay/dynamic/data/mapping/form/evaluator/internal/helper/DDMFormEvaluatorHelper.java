@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.evaluator.internal.helper;
@@ -40,11 +31,15 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.util.NumericDDMFormFieldUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -55,7 +50,6 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,10 +58,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Rafael Praxedes
@@ -89,7 +79,7 @@ public class DDMFormEvaluatorHelper {
 
 		_ddmFormEvaluatorFormValuesHelper =
 			new DDMFormEvaluatorFormValuesHelper(
-				_ddmFormEvaluatorEvaluateRequest.getDDMFormValues());
+				ddmFormEvaluatorEvaluateRequest.getDDMFormValues());
 
 		ddmFormEvaluatorExpressionObserver =
 			new DDMFormEvaluatorExpressionObserver(
@@ -111,7 +101,8 @@ public class DDMFormEvaluatorHelper {
 				ddmFormEvaluatorEvaluateRequest.getLocale());
 
 		ddmFormEvaluatorExpressionActionHandler =
-			new DDMFormEvaluatorExpressionActionHandler(_pageFlow);
+			new DDMFormEvaluatorExpressionActionHandler(
+				_pageFlow, getDisabledPagesIndexes());
 
 		ddmFormEvaluatorExpressionParameterAccessor =
 			new DDMFormEvaluatorExpressionParameterAccessor(
@@ -274,10 +265,17 @@ public class DDMFormEvaluatorHelper {
 		if (ddmFormRuleConditionEvaluationResult) {
 			List<String> actions = ddmFormRule.getActions();
 
-			Stream<String> stream = actions.stream();
+			StringBundler sb = new StringBundler((actions.size() * 2) - 1);
 
-			_evaluateDDMFormRuleAction(
-				stream.collect(Collectors.joining(" AND ")));
+			for (String action : actions) {
+				if (sb.length() > 0) {
+					sb.append(" AND ");
+				}
+
+				sb.append(action);
+			}
+
+			_evaluateDDMFormRuleAction(sb.toString());
 
 			_evaluatedActions = ListUtil.copy(actions);
 		}
@@ -285,17 +283,10 @@ public class DDMFormEvaluatorHelper {
 			DDMFormRule copyDDMFormRule = new DDMFormRule(ddmFormRule);
 
 			if (_evaluatedActions != null) {
-				List<String> actions = copyDDMFormRule.getActions();
-
-				Stream<String> stream = actions.stream();
-
-				List<String> unevaluatedActions = stream.filter(
-					action -> !_evaluatedActions.contains(action)
-				).collect(
-					Collectors.toList()
-				);
-
-				copyDDMFormRule.setActions(unevaluatedActions);
+				copyDDMFormRule.setActions(
+					ListUtil.filter(
+						copyDDMFormRule.getActions(),
+						action -> !_evaluatedActions.contains(action)));
 			}
 
 			_ddmFormEvaluatorRuleHelper.checkFieldAffectedByAction(
@@ -331,24 +322,20 @@ public class DDMFormEvaluatorHelper {
 		List<DDMFormRule> ddmFormRules,
 		Boolean ddmFormRuleConditionEvaluationResult) {
 
-		Stream<DDMFormRule> stream = ddmFormRules.stream();
-
-		stream.filter(
-			DDMFormRule::isEnabled
-		).filter(
-			ddmFormRule ->
+		for (DDMFormRule ddmFormRule : ddmFormRules) {
+			if (ddmFormRule.isEnabled() &&
 				Validator.isNotNull(ddmFormRule.getCondition()) &&
 				Objects.equals(
 					ddmFormRuleConditionEvaluationResult,
-					_evaluateDDMFormRuleCondition(ddmFormRule.getCondition()))
-		).forEach(
-			ddmFormRule -> {
+					_evaluateDDMFormRuleCondition(
+						ddmFormRule.getCondition()))) {
+
 				_evaluateDDMFormRule(
 					ddmFormRule, ddmFormRuleConditionEvaluationResult);
 
 				_resetInvisibleFieldValue();
 			}
-		);
+		}
 	}
 
 	private <T> T _evaluateExpression(String expression)
@@ -379,21 +366,21 @@ public class DDMFormEvaluatorHelper {
 	}
 
 	private void _evaluateVisibilityExpressions() {
-		Collection<DDMFormField> ddmFormFields = _ddmFormFieldsMap.values();
+		Map<String, String> nameVisibilityExpressionMap = new HashMap<>();
 
-		Stream<DDMFormField> ddmFormFieldsStream = ddmFormFields.stream();
+		for (DDMFormField ddmFormField : _ddmFormFieldsMap.values()) {
+			if (Validator.isNotNull(ddmFormField.getVisibilityExpression())) {
+				nameVisibilityExpressionMap.put(
+					ddmFormField.getName(),
+					ddmFormField.getVisibilityExpression());
+			}
+		}
 
-		Map<String, String> nameVisibilityExpressionMap =
-			ddmFormFieldsStream.filter(
-				field -> Validator.isNotNull(field.getVisibilityExpression())
-			).collect(
-				Collectors.toMap(
-					field -> field.getName(),
-					field -> field.getVisibilityExpression())
-			);
+		for (Map.Entry<String, String> entry :
+				nameVisibilityExpressionMap.entrySet()) {
 
-		_forEachEntry(
-			nameVisibilityExpressionMap, this::_evaluateVisibilityExpression);
+			_evaluateVisibilityExpression(entry);
+		}
 	}
 
 	private boolean _filterFieldsWithDDMFormFieldValidation(
@@ -435,23 +422,11 @@ public class DDMFormEvaluatorHelper {
 			ddmFormEvaluatorFieldContextKey, "visible", true);
 	}
 
-	private <K, V> void _forEachEntry(
-		Map<K, V> map, Consumer<Map.Entry<K, V>> entryConsumer) {
+	private Set<DDMFormEvaluatorFieldContextKey>
+		_getDDMFormEvaluatorFieldContextKeys(String name) {
 
-		Set<Map.Entry<K, V>> set = map.entrySet();
-
-		Stream<Map.Entry<K, V>> stream = set.stream();
-
-		stream.forEach(entryConsumer);
-	}
-
-	private Stream<DDMFormEvaluatorFieldContextKey>
-		_getDDMFormEvaluatorFieldContextKeysStream(String name) {
-
-		Set<DDMFormEvaluatorFieldContextKey> ddmFormFieldContextKeys =
-			_ddmFormEvaluatorFormValuesHelper.getDDMFormFieldContextKeys(name);
-
-		return ddmFormFieldContextKeys.stream();
+		return _ddmFormEvaluatorFormValuesHelper.getDDMFormFieldContextKeys(
+			name);
 	}
 
 	private DDMFormFieldValidation _getDDMFormFieldValidation(
@@ -480,6 +455,32 @@ public class DDMFormEvaluatorHelper {
 				builder.build());
 
 		return getFieldPropertyResponse.getValue();
+	}
+
+	private Set<String> _getNonevaluableDDMFormFieldNames() {
+		if (_ddmFormLayout == null) {
+			return Collections.emptySet();
+		}
+
+		Set<String> nonevaluableFieldNames = new HashSet<>();
+
+		for (Integer disabledPagesIndex : getDisabledPagesIndexes()) {
+			DDMFormLayoutPage ddmFormLayoutPage =
+				_ddmFormLayout.getDDMFormLayoutPage(disabledPagesIndex);
+
+			for (DDMFormLayoutRow ddmFormLayoutRow :
+					ddmFormLayoutPage.getDDMFormLayoutRows()) {
+
+				for (DDMFormLayoutColumn ddmFormLayoutColumn :
+						ddmFormLayoutRow.getDDMFormLayoutColumns()) {
+
+					nonevaluableFieldNames.addAll(
+						ddmFormLayoutColumn.getDDMFormFieldNames());
+				}
+			}
+		}
+
+		return nonevaluableFieldNames;
 	}
 
 	private boolean _isBooleanPropertyValue(
@@ -706,51 +707,52 @@ public class DDMFormEvaluatorHelper {
 			return;
 		}
 
-		_forEachEntry(
-			value.getValues(),
-			entry -> {
-				if (Validator.isNotNull(entry.getValue())) {
-					DDMFormFieldValueLocalizer ddmFormFieldValueLocalizer =
-						_ddmFormFieldTypeServicesRegistry.
-							getDDMFormFieldValueLocalizer(
-								ddmFormFieldValue.getType());
+		Map<Locale, String> map = value.getValues();
 
-					if (ddmFormFieldValueLocalizer != null) {
-						if (ddmFormFieldValueLocalizer instanceof
-								DDMFormFieldValueEditingAware) {
+		for (Map.Entry<Locale, String> entry : map.entrySet()) {
+			if (Validator.isNotNull(entry.getValue())) {
+				DDMFormFieldValueLocalizer ddmFormFieldValueLocalizer =
+					_ddmFormFieldTypeServicesRegistry.
+						getDDMFormFieldValueLocalizer(
+							ddmFormFieldValue.getType());
 
-							DDMFormFieldValueEditingAware
-								ddmFormFieldValueEditingAware =
-									(DDMFormFieldValueEditingAware)
-										ddmFormFieldValueLocalizer;
+				if (ddmFormFieldValueLocalizer != null) {
+					if (ddmFormFieldValueLocalizer instanceof
+							DDMFormFieldValueEditingAware) {
 
-							ddmFormFieldValueEditingAware.setEditingFieldValue(
-								_ddmFormEvaluatorEvaluateRequest.
-									isEditingFieldValue());
-						}
+						DDMFormFieldValueEditingAware
+							ddmFormFieldValueEditingAware =
+								(DDMFormFieldValueEditingAware)
+									ddmFormFieldValueLocalizer;
 
-						value.addString(
-							entry.getKey(),
-							ddmFormFieldValueLocalizer.localize(
-								entry.getValue(), entry.getKey()));
+						ddmFormFieldValueEditingAware.setEditingFieldValue(
+							_ddmFormEvaluatorEvaluateRequest.
+								isEditingFieldValue());
 					}
+
+					value.addString(
+						entry.getKey(),
+						ddmFormFieldValueLocalizer.localize(
+							entry.getValue(), entry.getKey()));
 				}
-			});
+			}
+		}
 	}
 
 	private void _localizeNumericDDMFormFieldValues() {
-		Collection<DDMFormField> ddmFormFields = _ddmFormFieldsMap.values();
+		for (DDMFormField ddmFormField : _ddmFormFieldsMap.values()) {
+			if (!_isNumericField(ddmFormField)) {
+				continue;
+			}
 
-		Stream<DDMFormField> stream = ddmFormFields.stream();
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(
+							ddmFormField.getName())) {
 
-		stream.filter(
-			this::_isNumericField
-		).flatMap(
-			ddmFormField -> _getDDMFormEvaluatorFieldContextKeysStream(
-				ddmFormField.getName())
-		).forEach(
-			this::_localizeDDMFormFieldValue
-		);
+				_localizeDDMFormFieldValue(ddmFormEvaluatorFieldContextKey);
+			}
+		}
 	}
 
 	private void _resetInvisibleFieldValue() {
@@ -807,27 +809,34 @@ public class DDMFormEvaluatorHelper {
 	}
 
 	private void _validateFields() {
-		_validateFieldsMarkedAsRequired();
-		_validateFieldsWithConfirmationField();
-		_validateFieldsWithDDMFormFieldValidation();
-		_validateNumericFieldsWithInputMask();
+		Set<String> nonevaluableFieldNames =
+			_getNonevaluableDDMFormFieldNames();
+
+		_validateFieldsMarkedAsRequired(nonevaluableFieldNames);
+		_validateFieldsWithConfirmationField(nonevaluableFieldNames);
+		_validateFieldsWithDDMFormFieldValidation(nonevaluableFieldNames);
+		_validateNumericFieldsWithInputMask(nonevaluableFieldNames);
+
 		_validateObjectRelationshipFields();
 	}
 
-	private void _validateFieldsMarkedAsRequired() {
-		Set<Map.Entry<String, DDMFormField>> entrySet =
-			_ddmFormFieldsMap.entrySet();
+	private void _validateFieldsMarkedAsRequired(
+		Set<String> nonevaluableFieldNames) {
 
-		Stream<Map.Entry<String, DDMFormField>> stream = entrySet.stream();
+		for (String key : _ddmFormFieldsMap.keySet()) {
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(key)) {
 
-		stream.flatMap(
-			entry -> _getDDMFormEvaluatorFieldContextKeysStream(entry.getKey())
-		).filter(
-			this::_filterVisibleFieldsMarkedAsRequired
-		).filter(
-			this::_isFieldEmpty
-		).forEach(
-			ddmFormEvaluatorFieldContextKey -> {
+				if (nonevaluableFieldNames.contains(
+						ddmFormEvaluatorFieldContextKey.getName()) ||
+					!_filterVisibleFieldsMarkedAsRequired(
+						ddmFormEvaluatorFieldContextKey) ||
+					!_isFieldEmpty(ddmFormEvaluatorFieldContextKey)) {
+
+					continue;
+				}
+
 				String requiredErrorMessage = LanguageUtil.get(
 					_ddmFormEvaluatorEvaluateRequest.getLocale(),
 					"this-field-is-required");
@@ -852,46 +861,63 @@ public class DDMFormEvaluatorHelper {
 				_setFieldAsInvalid(
 					ddmFormEvaluatorFieldContextKey, requiredErrorMessage);
 			}
-		);
+		}
 	}
 
-	private void _validateFieldsWithConfirmationField() {
-		Set<Map.Entry<String, DDMFormField>> entrySet =
-			_ddmFormFieldsMap.entrySet();
+	private void _validateFieldsWithConfirmationField(
+		Set<String> nonevaluableFieldNames) {
 
-		Stream<Map.Entry<String, DDMFormField>> stream = entrySet.stream();
+		for (String key : _ddmFormFieldsMap.keySet()) {
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(key)) {
 
-		stream.flatMap(
-			entry -> _getDDMFormEvaluatorFieldContextKeysStream(entry.getKey())
-		).filter(
-			this::_isFieldWithConfirmationFieldAndVisible
-		).filter(
-			this::_isConfirmationValueInvalid
-		).forEach(
-			ddmFormEvaluatorFieldContextKey -> _setFieldAsInvalid(
-				ddmFormEvaluatorFieldContextKey, StringPool.BLANK)
-		);
+				if (nonevaluableFieldNames.contains(
+						ddmFormEvaluatorFieldContextKey.getName()) ||
+					!_isConfirmationValueInvalid(
+						ddmFormEvaluatorFieldContextKey) ||
+					!_isFieldWithConfirmationFieldAndVisible(
+						ddmFormEvaluatorFieldContextKey)) {
+
+					continue;
+				}
+
+				_setFieldAsInvalid(
+					ddmFormEvaluatorFieldContextKey, StringPool.BLANK);
+			}
+		}
 	}
 
-	private void _validateFieldsWithDDMFormFieldValidation() {
-		Collection<DDMFormField> ddmFormFields = _ddmFormFieldsMap.values();
-
-		Stream<DDMFormField> ddmFormFieldsStream = ddmFormFields.stream();
+	private void _validateFieldsWithDDMFormFieldValidation(
+		Set<String> nonevaluableFieldNames) {
 
 		Map<DDMFormEvaluatorFieldContextKey, DDMFormFieldValidation>
-			ddmFormFieldValidations = ddmFormFieldsStream.filter(
-				this::_filterFieldsWithDDMFormFieldValidation
-			).flatMap(
-				ddmFormField -> _getDDMFormEvaluatorFieldContextKeysStream(
-					ddmFormField.getName())
-			).collect(
-				Collectors.toMap(
-					Function.identity(), this::_getDDMFormFieldValidation)
-			);
+			ddmFormFieldValidations = new HashMap<>();
 
-		_forEachEntry(
-			ddmFormFieldValidations,
-			this::_validateFieldWithDDMFormFieldValidation);
+		for (DDMFormField ddmFormField : _ddmFormFieldsMap.values()) {
+			if (nonevaluableFieldNames.contains(ddmFormField.getName()) ||
+				!_filterFieldsWithDDMFormFieldValidation(ddmFormField)) {
+
+				continue;
+			}
+
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(
+							ddmFormField.getName())) {
+
+				ddmFormFieldValidations.put(
+					ddmFormEvaluatorFieldContextKey,
+					_getDDMFormFieldValidation(
+						ddmFormEvaluatorFieldContextKey));
+			}
+		}
+
+		for (Map.Entry<DDMFormEvaluatorFieldContextKey, DDMFormFieldValidation>
+				entry : ddmFormFieldValidations.entrySet()) {
+
+			_validateFieldWithDDMFormFieldValidation(entry);
+		}
 	}
 
 	private void _validateFieldWithDDMFormFieldValidation(
@@ -1008,49 +1034,64 @@ public class DDMFormEvaluatorHelper {
 		ddmFormEvaluatorExpressionObserver.updateFieldProperty(builder.build());
 	}
 
-	private void _validateNumericFieldsWithInputMask() {
-		Collection<DDMFormField> ddmFormFields = _ddmFormFieldsMap.values();
+	private void _validateNumericFieldsWithInputMask(
+		Set<String> nonevaluableFieldNames) {
 
-		Stream<DDMFormField> stream = ddmFormFields.stream();
+		for (DDMFormField ddmFormField : _ddmFormFieldsMap.values()) {
+			if (nonevaluableFieldNames.contains(ddmFormField.getName()) ||
+				!_isIntegerNumericField(ddmFormField)) {
 
-		stream.filter(
-			this::_isIntegerNumericField
-		).flatMap(
-			ddmFormField -> _getDDMFormEvaluatorFieldContextKeysStream(
-				ddmFormField.getName())
-		).filter(
-			this::_filterVisibleFieldsWithInputMask
-		).filter(
-			this::_isValueWithInputMaskInvalid
-		).forEach(
-			ddmFormEvaluatorFieldContextKey -> _setFieldAsInvalid(
-				ddmFormEvaluatorFieldContextKey,
-				LanguageUtil.get(
-					_ddmFormEvaluatorEvaluateRequest.getLocale(),
-					"input-format-is-not-satisfied"))
-		);
+				continue;
+			}
+
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(
+							ddmFormField.getName())) {
+
+				if (!_filterVisibleFieldsWithInputMask(
+						ddmFormEvaluatorFieldContextKey) ||
+					!_isValueWithInputMaskInvalid(
+						ddmFormEvaluatorFieldContextKey)) {
+
+					continue;
+				}
+
+				_setFieldAsInvalid(
+					ddmFormEvaluatorFieldContextKey,
+					LanguageUtil.get(
+						_ddmFormEvaluatorEvaluateRequest.getLocale(),
+						"input-format-is-not-satisfied"));
+			}
+		}
 	}
 
 	private void _validateObjectRelationshipFields() {
-		Collection<DDMFormField> ddmFormFields = _ddmFormFieldsMap.values();
+		for (DDMFormField ddmFormField : _ddmFormFieldsMap.values()) {
+			if (!Objects.equals(
+					ddmFormField.getType(), "object-relationship")) {
 
-		Stream<DDMFormField> stream = ddmFormFields.stream();
+				continue;
+			}
 
-		stream.filter(
-			ddmFormField -> Objects.equals(
-				ddmFormField.getType(), "object-relationship")
-		).flatMap(
-			ddmFormField -> _getDDMFormEvaluatorFieldContextKeysStream(
-				ddmFormField.getName())
-		).filter(
-			this::_isObjectRelationshipFieldInvalid
-		).forEach(
-			ddmFormEvaluatorFieldContextKey -> _setFieldAsInvalid(
-				ddmFormEvaluatorFieldContextKey,
-				LanguageUtil.get(
-					_ddmFormEvaluatorEvaluateRequest.getLocale(),
-					"the-field-value-is-invalid"))
-		);
+			for (DDMFormEvaluatorFieldContextKey
+					ddmFormEvaluatorFieldContextKey :
+						_getDDMFormEvaluatorFieldContextKeys(
+							ddmFormField.getName())) {
+
+				if (!_isObjectRelationshipFieldInvalid(
+						ddmFormEvaluatorFieldContextKey)) {
+
+					continue;
+				}
+
+				_setFieldAsInvalid(
+					ddmFormEvaluatorFieldContextKey,
+					LanguageUtil.get(
+						_ddmFormEvaluatorEvaluateRequest.getLocale(),
+						"the-field-value-is-invalid"));
+			}
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

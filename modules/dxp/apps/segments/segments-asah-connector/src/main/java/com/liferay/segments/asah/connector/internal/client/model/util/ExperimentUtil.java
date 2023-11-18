@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.client.model.util;
@@ -27,6 +18,8 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.segments.asah.connector.internal.client.model.Experiment;
 import com.liferay.segments.asah.connector.internal.client.model.ExperimentStatus;
@@ -81,9 +74,9 @@ public class ExperimentUtil {
 
 		return toExperiment(
 			companyLocalService, dataSourceId, groupLocalService,
-			layoutLocalService.getLayout(segmentsExperiment.getClassPK()),
-			locale, portal, segmentsEntryLocalService,
-			segmentsExperienceLocalService, segmentsExperiment);
+			layoutLocalService.getLayout(segmentsExperiment.getPlid()), locale,
+			portal, segmentsEntryLocalService, segmentsExperienceLocalService,
+			segmentsExperiment);
 	}
 
 	protected static Experiment toExperiment(
@@ -111,7 +104,8 @@ public class ExperimentUtil {
 		if (ListUtil.isNotEmpty(segmentsExperimentRels)) {
 			experiment.setDXPVariants(
 				DXPVariantUtil.toDXPVariantList(
-					locale, segmentsExperimentRels));
+					locale, segmentsExperienceLocalService,
+					segmentsExperimentRels));
 		}
 
 		experiment.setExperimentStatus(
@@ -123,12 +117,18 @@ public class ExperimentUtil {
 		experiment.setPageRelativePath(layout.getFriendlyURL());
 		experiment.setPageTitle(layout.getTitle(locale));
 		experiment.setPageURL(pageURL);
+		experiment.setPublishable(true);
 
-		if (segmentsExperiment.getStatus() ==
-				SegmentsExperimentConstants.STATUS_COMPLETED) {
+		if ((segmentsExperiment.getStatus() ==
+				SegmentsExperimentConstants.STATUS_COMPLETED) ||
+			((segmentsExperiment.getStatus() ==
+				SegmentsExperimentConstants.STATUS_TERMINATED) &&
+			 (segmentsExperiment.getWinnerSegmentsExperienceId() > 0))) {
 
 			experiment.setPublishedDXPVariantId(
-				segmentsExperiment.getWinnerSegmentsExperienceKey());
+				_getSegmentsExperienceKey(
+					segmentsExperienceLocalService.getSegmentsExperience(
+						segmentsExperiment.getWinnerSegmentsExperienceId())));
 		}
 
 		SegmentsExperience segmentsExperience =
@@ -136,7 +136,7 @@ public class ExperimentUtil {
 				segmentsExperiment.getSegmentsExperienceId());
 
 		experiment.setDXPExperienceId(
-			segmentsExperience.getSegmentsExperienceKey());
+			_getSegmentsExperienceKey(segmentsExperience));
 		experiment.setDXPExperienceName(segmentsExperience.getName(locale));
 
 		SegmentsEntry segmentsEntry =
@@ -216,6 +216,23 @@ public class ExperimentUtil {
 		sb.append(layout.getFriendlyURL());
 
 		return sb.toString();
+	}
+
+	private static String _getSegmentsExperienceKey(
+		SegmentsExperience segmentsExperience) {
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			segmentsExperience.getTypeSettingsUnicodeProperties();
+
+		String segmentsExperimentSegmentsExperienceKey =
+			typeSettingsUnicodeProperties.get(
+				"segmentsExperimentSegmentsExperienceKey");
+
+		if (Validator.isNotNull(segmentsExperimentSegmentsExperienceKey)) {
+			return segmentsExperimentSegmentsExperienceKey;
+		}
+
+		return segmentsExperience.getSegmentsExperienceKey();
 	}
 
 	private static Goal _toExperimentGoal(SegmentsExperiment segmentsExperiment)

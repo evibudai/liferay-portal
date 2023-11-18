@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.item.selector.web.internal;
@@ -23,7 +14,6 @@ import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
-import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.item.selector.LayoutPageTemplateEntryItemSelectorReturnType;
 import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateEntryItemSelectorCriterion;
@@ -38,19 +28,15 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -65,7 +51,6 @@ import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
-import javax.portlet.ResourceURL;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -97,10 +82,7 @@ public class LayoutPageTemplateEntryItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return ResourceBundleUtil.getString(
-			ResourceBundleUtil.getBundle(
-				locale, LayoutPageTemplateEntryItemSelectorView.class),
-			"page-template");
+		return _language.get(locale, "page-template");
 	}
 
 	@Override
@@ -197,41 +179,44 @@ public class LayoutPageTemplateEntryItemSelectorView
 			).put(
 				"previewURL",
 				() -> {
-					Layout layout = _layoutLocalService.getLayout(
-						_layoutPageTemplateEntry.getPlid());
-
 					if (_layoutPageTemplateEntry.getType() ==
-							LayoutPageTemplateEntryTypeConstants.
-								TYPE_DISPLAY_PAGE) {
+							LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) {
 
-						ResourceURL getPagePreviewURL =
-							PortletURLFactoryUtil.create(
-								_httpServletRequest,
-								ContentPageEditorPortletKeys.
-									CONTENT_PAGE_EDITOR_PORTLET,
-								layout, PortletRequest.RESOURCE_PHASE);
-
-						getPagePreviewURL.setParameter(
+						String previewURL = HttpComponentsUtil.addParameters(
+							_themeDisplay.getPortalURL() +
+								_themeDisplay.getPathMain() +
+									"/portal/get_page_preview",
+							"p_l_mode", Constants.PREVIEW, "selPlid",
+							_layoutPageTemplateEntry.getPlid(),
 							"segmentsExperienceId",
-							String.valueOf(
-								_segmentsExperienceLocalService.
-									fetchDefaultSegmentsExperienceId(
-										_layoutPageTemplateEntry.getPlid())));
-						getPagePreviewURL.setResourceID(
-							"/layout_content_page_editor/get_page_preview");
+							_segmentsExperienceLocalService.
+								fetchDefaultSegmentsExperienceId(
+									_layoutPageTemplateEntry.getPlid()));
 
-						return HttpComponentsUtil.addParameter(
-							getPagePreviewURL.toString(), "p_l_mode",
-							Constants.PREVIEW);
+						if (Validator.isNotNull(
+								_themeDisplay.getDoAsUserId())) {
+
+							previewURL = _portal.addPreservedParameters(
+								_themeDisplay, previewURL, false, true);
+						}
+
+						return previewURL;
 					}
 
-					String layoutURL = HttpComponentsUtil.addParameter(
-						PortalUtil.getLayoutFullURL(layout, _themeDisplay),
-						"p_l_mode", Constants.PREVIEW);
-
-					return HttpComponentsUtil.addParameter(
-						layoutURL, "p_p_auth",
+					String previewURL = HttpComponentsUtil.addParameters(
+						PortalUtil.getLayoutFullURL(
+							_layoutLocalService.getLayout(
+								_layoutPageTemplateEntry.getPlid()),
+							_themeDisplay),
+						"p_l_mode", Constants.PREVIEW, "p_p_auth",
 						AuthTokenUtil.getToken(_httpServletRequest));
+
+					if (Validator.isNotNull(_themeDisplay.getDoAsUserId())) {
+						previewURL = _portal.addPreservedParameters(
+							_themeDisplay, previewURL, false, true);
+					}
+
+					return previewURL;
 				}
 			).put(
 				"url",
@@ -248,7 +233,7 @@ public class LayoutPageTemplateEntryItemSelectorView
 		public String getSubtitle(Locale locale) {
 			if (Objects.equals(
 					_layoutPageTemplateEntry.getType(),
-					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE)) {
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)) {
 
 				String typeLabel = _getTypeLabel();
 
@@ -275,8 +260,7 @@ public class LayoutPageTemplateEntryItemSelectorView
 			}
 			else if (Objects.equals(
 						_layoutPageTemplateEntry.getType(),
-						LayoutPageTemplateEntryTypeConstants.
-							TYPE_MASTER_LAYOUT)) {
+						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
 
 				return _language.format(
 					_httpServletRequest, "x-usages",
@@ -300,7 +284,7 @@ public class LayoutPageTemplateEntryItemSelectorView
 
 		@Override
 		public String getTitle(Locale locale) {
-			return HtmlUtil.escape(_layoutPageTemplateEntry.getName());
+			return _layoutPageTemplateEntry.getName();
 		}
 
 		@Override
@@ -372,9 +356,9 @@ public class LayoutPageTemplateEntryItemSelectorView
 				layoutPageTemplateEntryItemSelectorCriterion;
 			_portletURL = portletURL;
 
-			_portletRequest = (PortletRequest)_httpServletRequest.getAttribute(
+			_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_REQUEST);
-			_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 		}
 

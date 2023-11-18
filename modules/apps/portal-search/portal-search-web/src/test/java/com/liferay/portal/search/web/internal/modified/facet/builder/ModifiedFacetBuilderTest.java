@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.builder;
@@ -22,8 +13,7 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
-import com.liferay.portal.kernel.util.CalendarFactory;
-import com.liferay.portal.kernel.util.DateFormatFactory;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.facet.Facet;
 import com.liferay.portal.search.facet.modified.ModifiedFacetFactory;
@@ -31,7 +21,6 @@ import com.liferay.portal.search.filter.FilterBuilders;
 import com.liferay.portal.search.internal.facet.modified.ModifiedFacetFactoryImpl;
 import com.liferay.portal.search.internal.filter.FilterBuildersImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.util.DateFormatFactoryImpl;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -40,10 +29,12 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -56,10 +47,20 @@ public class ModifiedFacetBuilderTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() {
+		MockedStatic<CalendarFactoryUtil> calendarFactoryUtilMockedStatic =
+			Mockito.mockStatic(CalendarFactoryUtil.class);
+
+		calendarFactoryUtilMockedStatic.when(
+			CalendarFactoryUtil::getCalendar
+		).thenReturn(
+			new GregorianCalendar(2018, Calendar.MARCH, 1, 15, 19, 23)
+		);
+	}
+
 	@Before
 	public void setUp() {
-		calendarFactory = _createCalendarFactory();
-		dateFormatFactory = new DateFormatFactoryImpl();
 		filterBuilders = new FilterBuildersImpl();
 		jsonFactory = new JSONFactoryImpl();
 		searchContext = new SearchContext();
@@ -67,12 +68,6 @@ public class ModifiedFacetBuilderTest {
 
 	@Test
 	public void testBuiltInNamedRange() {
-		Mockito.doReturn(
-			new GregorianCalendar(2018, Calendar.MARCH, 1, 15, 19, 23)
-		).when(
-			calendarFactory
-		).getCalendar();
-
 		ModifiedFacetBuilder modifiedFacetBuilder =
 			_createModifiedFacetBuilder();
 
@@ -138,8 +133,6 @@ public class ModifiedFacetBuilderTest {
 		_assertRangesJSONArray(rangesJSONArray, modifiedFacetBuilder.build());
 	}
 
-	protected CalendarFactory calendarFactory;
-	protected DateFormatFactory dateFormatFactory;
 	protected FilterBuilders filterBuilders;
 	protected JSONFactory jsonFactory;
 	protected SearchContext searchContext;
@@ -204,25 +197,12 @@ public class ModifiedFacetBuilderTest {
 		}
 	}
 
-	private CalendarFactory _createCalendarFactory() {
-		CalendarFactory calendarFactory = Mockito.mock(CalendarFactory.class);
-
-		Mockito.doReturn(
-			Calendar.getInstance()
-		).when(
-			calendarFactory
-		).getCalendar();
-
-		return calendarFactory;
-	}
-
 	private ModifiedFacetBuilder _createModifiedFacetBuilder() {
 		ModifiedFacetFactory modifiedFacetFactory =
 			_createModifiedFacetFactory();
 
 		ModifiedFacetBuilder modifiedFacetBuilder = new ModifiedFacetBuilder(
-			modifiedFacetFactory, calendarFactory, dateFormatFactory,
-			jsonFactory);
+			modifiedFacetFactory, jsonFactory);
 
 		modifiedFacetBuilder.setSearchContext(searchContext);
 

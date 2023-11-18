@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.renderer.internal.helper;
@@ -22,6 +13,9 @@ import com.liferay.dynamic.data.mapping.form.field.type.internal.numeric.Numeric
 import com.liferay.dynamic.data.mapping.form.field.type.internal.radio.RadioDDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.internal.select.SelectDDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.internal.text.TextDDMFormFieldTemplateContextContributor;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
+import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
@@ -104,6 +98,43 @@ public class DDMFormFieldTemplateContextContributorTestHelper {
 			selectDDMFormFieldTemplateContextContributor =
 				new SelectDDMFormFieldTemplateContextContributor();
 
+		DDMFormInstanceLocalService ddmFormInstanceLocalService = Mockito.mock(
+			DDMFormInstanceLocalService.class);
+
+		Mockito.when(
+			ddmFormInstanceLocalService.fetchDDMFormInstance(0)
+		).thenReturn(
+			null
+		);
+
+		ReflectionTestUtil.setFieldValue(
+			selectDDMFormFieldTemplateContextContributor,
+			"_ddmFormInstanceLocalService", ddmFormInstanceLocalService);
+
+		ReflectionTestUtil.setFieldValue(
+			selectDDMFormFieldTemplateContextContributor, "_language",
+			_language);
+
+		ListTypeEntryLocalService listTypeEntryLocalService = Mockito.mock(
+			ListTypeEntryLocalService.class);
+
+		Mockito.when(
+			listTypeEntryLocalService.getListTypeEntries(Mockito.anyLong())
+		).thenReturn(
+			null
+		);
+
+		ReflectionTestUtil.setFieldValue(
+			selectDDMFormFieldTemplateContextContributor,
+			"_listTypeEntryLocalService", listTypeEntryLocalService);
+
+		ObjectDefinitionLocalService objectDefinitionLocalService =
+			Mockito.mock(ObjectDefinitionLocalService.class);
+
+		ReflectionTestUtil.setFieldValue(
+			selectDDMFormFieldTemplateContextContributor,
+			"_objectDefinitionLocalService", objectDefinitionLocalService);
+
 		ReflectionTestUtil.setFieldValue(
 			selectDDMFormFieldTemplateContextContributor,
 			"ddmFormFieldOptionsFactory", new DDMFormFieldOptionsFactoryImpl());
@@ -112,10 +143,6 @@ public class DDMFormFieldTemplateContextContributorTestHelper {
 			_jsonFactory);
 		ReflectionTestUtil.setFieldValue(
 			selectDDMFormFieldTemplateContextContributor, "portal", _portal);
-
-		ReflectionTestUtil.setFieldValue(
-			selectDDMFormFieldTemplateContextContributor, "_language",
-			_language);
 
 		return selectDDMFormFieldTemplateContextContributor;
 	}

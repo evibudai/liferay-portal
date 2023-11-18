@@ -1,10 +1,17 @@
 definition {
 
+	macro editText {
+		Type(
+			key_text = ${fieldLabel},
+			locator1 = "TextInput#ANY",
+			value1 = ${text});
+	}
+
 	macro viewText {
 		AssertTextEquals(
-			key_text = "${fieldLabel}",
+			key_text = ${fieldLabel},
 			locator1 = "TextInput#ANY",
-			value1 = "${text}");
+			value1 = ${text});
 	}
 
 }

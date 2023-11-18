@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,20 +13,24 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 
 <aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (selUser == null) ? Constants.ADD : Constants.UPDATE %>" />
 
-<div class="form-group">
-	<h3 class="sheet-subtitle"><liferay-ui:message key="user-display-data" /></h3>
+<div aria-labelledby="<portlet:namespace />userDisplayData" class="form-group" role="group">
+	<div class="sheet-subtitle" id="<portlet:namespace />userDisplayData">
+		<liferay-ui:message key="user-display-data" />
+	</div>
 
 	<liferay-util:include page="/user/user_display_data.jsp" servletContext="<%= application %>" />
 </div>
 
-<div class="form-group">
-	<h3 class="sheet-subtitle"><liferay-ui:message key="personal-information" /></h3>
+<div aria-labelledby="<portlet:namespace />personalInformation" class="form-group" role="group">
+	<div class="sheet-subtitle" id="<portlet:namespace />personalInformation">
+		<liferay-ui:message key="personal-information" />
+	</div>
 
 	<liferay-util:include page="/user/personal_information.jsp" servletContext="<%= application %>" />
 </div>
 
 <clay:sheet-section>
-	<h3 class="sheet-subtitle"><liferay-ui:message key="more-information" /></h3>
+	<div class="sheet-subtitle"><liferay-ui:message key="more-information" /></div>
 
 	<div class="form-group">
 		<liferay-util:include page="/user/categorization.jsp" servletContext="<%= application %>" />

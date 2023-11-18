@@ -1,0 +1,10 @@
+{
+	"callbackURL": null,
+	"className": "com.liferay.headless.delivery.dto.v1_0.StructuredContent",
+	"companyId": 20097,
+	"parameters": {
+		"createStrategy": "UPSERT",
+		"siteId": 20121
+	},
+	"version": "v1.0"
+}

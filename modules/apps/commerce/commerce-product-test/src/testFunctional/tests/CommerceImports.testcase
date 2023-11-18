@@ -16,9 +16,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanExcludeFieldsFromImport {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8515 CanExcludeFieldsFromImport pending implementation
 
@@ -26,9 +25,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanFilterAndOrderExecutions {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8518 CanFilterAndOrderExecutions pending implementation
 
@@ -36,9 +34,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanImportFileWithHeaders {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8516 CanImportFileWithHeaders pending implementation
 
@@ -46,9 +43,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanSaveTemplateDuringImport {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8520 CanSaveTemplateDuringImport pending implementation
 
@@ -56,9 +52,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanScheduleImport {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8558 CanScheduleImport pending implementation
 
@@ -66,9 +61,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CSVFieldsAreAutoMapped {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8543 CSVFieldsAreAutoMapped pending implementation
 
@@ -76,9 +70,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test JSONFieldsAreAutoMapped {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8547 JSONFieldsAreAutoMapped pending implementation
 
@@ -86,9 +79,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test JSONLFieldsAreAutoMapped {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8548 JSONLFieldsAreAutoMapped pending implementation
 

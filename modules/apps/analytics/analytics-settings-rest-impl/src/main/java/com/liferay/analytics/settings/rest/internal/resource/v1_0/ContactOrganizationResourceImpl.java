@@ -1,35 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.settings.rest.internal.resource.v1_0;
 
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.rest.dto.v1_0.ContactOrganization;
-import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactOrganizationDTOConverter;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactOrganizationDTOConverterContext;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactOrganizationResource;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
-import com.liferay.portal.kernel.model.OrganizationTable;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-
-import java.util.LinkedHashMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,40 +48,33 @@ public class ContactOrganizationResourceImpl
 
 		Sort sort = sorts[0];
 
+		BaseModelSearchResult<Organization> organizationBaseModelSearchResult =
+			_organizationLocalService.searchOrganizations(
+				contextCompany.getCompanyId(),
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, keywords,
+				null, pagination.getStartPosition(),
+				pagination.getEndPosition(), sort);
+
 		return Page.of(
 			transform(
-				_organizationLocalService.search(
-					contextCompany.getCompanyId(),
-					OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, keywords,
-					null, null, null, _getParams(),
-					pagination.getStartPosition(), pagination.getEndPosition(),
-					OrderByComparatorFactoryUtil.create(
-						OrganizationTable.INSTANCE.getTableName(),
-						sort.getFieldName(), !sort.isReverse())),
+				organizationBaseModelSearchResult.getBaseModels(),
 				organization -> _contactOrganizationDTOConverter.toDTO(
 					new ContactOrganizationDTOConverterContext(
 						organization.getOrganizationId(),
 						contextAcceptLanguage.getPreferredLocale(),
 						analyticsConfiguration.syncedOrganizationIds()),
 					organization)),
-			pagination,
-			_organizationLocalService.searchCount(
-				contextCompany.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, keywords,
-				null, null, null, _getParams()));
-	}
-
-	private LinkedHashMap<String, Object> _getParams() {
-		return LinkedHashMapBuilder.<String, Object>put(
-			"active", Boolean.TRUE
-		).build();
+			pagination, organizationBaseModelSearchResult.getLength());
 	}
 
 	@Reference
 	private AnalyticsSettingsManager _analyticsSettingsManager;
 
-	@Reference
-	private ContactOrganizationDTOConverter _contactOrganizationDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactOrganizationDTOConverter)"
+	)
+	private DTOConverter<Organization, ContactOrganization>
+		_contactOrganizationDTOConverter;
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;

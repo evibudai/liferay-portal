@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -19,7 +10,7 @@ import React, {useState} from 'react';
 import Table from '../table/Table';
 import {TColumn, TFormattedItems, TTableRequestParams} from '../table/types';
 
-type TRawItem = {
+export type TRawItem = {
 	example: string;
 	name: string;
 	required: boolean;
@@ -30,35 +21,38 @@ type TRawItem = {
 interface IModalProps {
 	observer: any;
 	onCancel: () => void;
-	onSubmit: () => void;
+	onSubmit: (items: TFormattedItems) => void;
 	requestFn: (params: TTableRequestParams) => Promise<any>;
 	title: string;
-	updateFn: (fields: TRawItem[]) => Promise<any>;
 }
 
-const columns: Array<TColumn> = [
-	{
-		expanded: true,
-		label: Liferay.Language.get('attribute'),
-		value: 'attribute',
-	},
+enum EColumn {
+	Name = 'name',
+	Type = 'type',
+	Example = 'example',
+	Source = 'source',
+}
 
+const columns: TColumn[] = [
 	{
 		expanded: true,
+		id: EColumn.Name,
+		label: Liferay.Language.get('attribute[noun]'),
+	},
+	{
+		expanded: true,
+		id: EColumn.Type,
 		label: Liferay.Language.get('data-type'),
-		value: 'dataType',
 	},
 	{
-		expanded: true,
+		id: EColumn.Example,
 		label: Liferay.Language.get('sample-data'),
-		value: 'sampleData',
+		sortable: false,
 	},
 	{
-		expanded: false,
+		id: EColumn.Source,
 		label: Liferay.Language.get('source'),
-		show: false,
 		sortable: false,
-		value: 'source',
 	},
 ];
 
@@ -68,7 +62,6 @@ const Modal: React.FC<IModalProps> = ({
 	onSubmit,
 	requestFn,
 	title,
-	updateFn,
 }) => {
 	const [items, setItems] = useState<TFormattedItems>({});
 
@@ -79,11 +72,14 @@ const Modal: React.FC<IModalProps> = ({
 			<ClayModal.Body>
 				<Table<TRawItem>
 					columns={columns}
-					emptyStateTitle={Liferay.Language.get(
-						'there-are-no-attributes'
-					)}
-					mapperItems={(items) => {
-						return items.map(
+					emptyState={{
+						noResultsTitle: Liferay.Language.get(
+							'no-attributes-were-found'
+						),
+						title: Liferay.Language.get('there-are-no-attributes'),
+					}}
+					mapperItems={(items) =>
+						items.map(
 							({
 								example,
 								name,
@@ -94,19 +90,19 @@ const Modal: React.FC<IModalProps> = ({
 							}) => ({
 								checked: selected,
 								columns: [
-									{label: name},
-									{label: type},
-									{label: example},
-									{label: source, show: false},
+									{id: EColumn.Name, value: name},
+									{id: EColumn.Type, value: type},
+									{
+										id: EColumn.Example,
+										value: example,
+									},
+									{id: EColumn.Source, value: source},
 								],
 								disabled: required,
-								id: name,
+								id: name + source,
 							})
-						);
-					}}
-					noResultsTitle={Liferay.Language.get(
-						'no-attributes-were-found'
-					)}
+						)
+					}
 					onItemsChange={setItems}
 					requestFn={requestFn}
 				/>
@@ -119,14 +115,7 @@ const Modal: React.FC<IModalProps> = ({
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
 
-						<ClayButton
-							onClick={async () => {
-								const fields: TRawItem[] = getFields(items);
-								const {ok} = await updateFn(fields);
-
-								ok && onSubmit();
-							}}
-						>
+						<ClayButton onClick={() => onSubmit(items)}>
 							{Liferay.Language.get('sync')}
 						</ClayButton>
 					</ClayButton.Group>
@@ -135,27 +124,5 @@ const Modal: React.FC<IModalProps> = ({
 		</ClayModal>
 	);
 };
-
-function getFields(items: TFormattedItems): TRawItem[] {
-	return Object.values(items).map(
-		({
-			checked,
-			columns: [
-				{label: name},
-				{label: type},
-				{label: example},
-				{label: source},
-			],
-			disabled,
-		}) => ({
-			example,
-			name,
-			required: disabled,
-			selected: checked,
-			source,
-			type,
-		})
-	);
-}
 
 export default Modal;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {openSelectionModal, toggleDisabled} from 'frontend-js-web';
@@ -20,15 +11,15 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 	const openGraphImageButton = document.getElementById(
 		`${namespace}openGraphImageButton`
 	);
-
+	const openGraphClearImageButton = document.getElementById(
+		`${namespace}openGraphClearImageButton`
+	);
+	const openGraphImageInput = document.getElementById(
+		`${namespace}openGraphImageInput`
+	);
 	const openGraphImageFileEntryId = document.getElementById(
 		`${namespace}openGraphImageFileEntryId`
 	);
-
-	const openGraphImageTitle = document.getElementById(
-		`${namespace}openGraphImageTitle`
-	);
-
 	const openGraphImageAltField = document.getElementById(
 		`${namespace}openGraphImageAlt`
 	);
@@ -39,42 +30,53 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 		`[for="${namespace}openGraphImageAlt"`
 	);
 
-	openGraphImageButton.addEventListener('click', () => {
+	const openImageSelector = () => {
 		openSelectionModal({
 			onSelect: (selectedItem) => {
 				if (selectedItem) {
 					const itemValue = JSON.parse(selectedItem.value);
 
 					openGraphImageFileEntryId.value = itemValue.fileEntryId;
-					openGraphImageTitle.value = itemValue.title;
+					openGraphImageInput.value = itemValue.title;
 
 					previewSeoFireChange(namespace, {
 						type: 'imgUrl',
 						value: itemValue.url,
 					});
 
-					toggleDisabled(openGraphImageAltField, false);
-					toggleDisabled(openGraphImageAltFieldDefaultLocale, false);
-					toggleDisabled(openGraphImageAltLabel, false);
+					toggleDisabled(
+						[
+							openGraphClearImageButton,
+							openGraphImageAltField,
+							openGraphImageAltFieldDefaultLocale,
+							openGraphImageAltLabel,
+						],
+						false
+					);
 				}
 			},
 			selectEventName: `${namespace}openGraphImageSelectedItem`,
-			title: Liferay.Language.get('open-graph-image'),
+			title: Liferay.Language.get('select-image'),
 			url: uploadOpenGraphImageURL,
 		});
-	});
+	};
 
-	const openGraphClearImageButton = document.getElementById(
-		`${namespace}openGraphClearImageButton`
-	);
+	openGraphImageButton.addEventListener('click', openImageSelector);
+	openGraphImageInput.addEventListener('click', openImageSelector);
 
 	openGraphClearImageButton.addEventListener('click', () => {
 		openGraphImageFileEntryId.value = '';
-		openGraphImageTitle.value = '';
+		openGraphImageInput.value = '';
 
-		toggleDisabled(openGraphImageAltField, true);
-		toggleDisabled(openGraphImageAltFieldDefaultLocale, true);
-		toggleDisabled(openGraphImageAltLabel, true);
+		toggleDisabled(
+			[
+				openGraphClearImageButton,
+				openGraphImageAltField,
+				openGraphImageAltFieldDefaultLocale,
+				openGraphImageAltLabel,
+			],
+			true
+		);
 
 		previewSeoFireChange(namespace, {
 			type: 'imgUrl',
@@ -91,12 +93,19 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 	const openGraphTitleFieldDefaultLocale = document.getElementById(
 		`${namespace}openGraphTitle_${Liferay.ThemeDisplay.getLanguageId()}`
 	);
+	const openGraphTitleWrapper = document.getElementById(
+		`${namespace}openGraphTitleWrapper`
+	);
 
 	openGraphTitleEnabledCheck.addEventListener('click', (event) => {
 		const disabled = !event.target.checked;
 
-		toggleDisabled(openGraphTitleField, disabled);
-		toggleDisabled(openGraphTitleFieldDefaultLocale, disabled);
+		const label = openGraphTitleWrapper.querySelector('label');
+
+		toggleDisabled(
+			[openGraphTitleField, openGraphTitleFieldDefaultLocale, label],
+			disabled
+		);
 
 		previewSeoFireChange(namespace, {
 			disabled,
@@ -114,12 +123,23 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 	const openGraphDescriptionFieldDefaultLocale = document.getElementById(
 		`${namespace}openGraphDescription_${Liferay.ThemeDisplay.getLanguageId()}`
 	);
+	const openGraphDescriptionWrapper = document.getElementById(
+		`${namespace}openGraphDescriptionWrapper`
+	);
 
 	openGraphDescriptionEnabledCheck.addEventListener('click', (event) => {
 		const disabled = !event.target.checked;
 
-		toggleDisabled(openGraphDescriptionField, disabled);
-		toggleDisabled(openGraphDescriptionFieldDefaultLocale, disabled);
+		const label = openGraphDescriptionWrapper.querySelector('label');
+
+		toggleDisabled(
+			[
+				openGraphDescriptionField,
+				openGraphDescriptionFieldDefaultLocale,
+				label,
+			],
+			disabled
+		);
 
 		previewSeoFireChange(namespace, {
 			disabled,

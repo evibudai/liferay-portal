@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Frontend Taglib
 Bundle-SymbolicName: com.liferay.frontend.taglib
-Bundle-Version: 10.0.1
+Bundle-Version: 13.0.1
 Export-Package:\
 	com.liferay.frontend.taglib.servlet.taglib,\
 	com.liferay.frontend.taglib.servlet.taglib.util
@@ -9,8 +9,5 @@ Provide-Capability:\
 	osgi.extender;\
 		osgi.extender="jsp.taglib";\
 		uri="http://liferay.com/tld/frontend";\
-		version:Version="${Bundle-Version}",\
-	soy;\
-		type="frontend-taglib";\
 		version:Version="${Bundle-Version}"
 Web-ContextPath: /frontend-taglib

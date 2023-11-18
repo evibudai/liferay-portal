@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.security.permission;
@@ -26,6 +17,8 @@ public class ActionKeys {
 
 	public static final String ACCESS_IN_CONTROL_PANEL =
 		"ACCESS_IN_CONTROL_PANEL";
+
+	public static final String ACTIVATE = "ACTIVATE";
 
 	public static final String ADD_ARTICLE = "ADD_ARTICLE";
 
@@ -143,6 +136,8 @@ public class ActionKeys {
 
 	public static final String CUSTOMIZE = "CUSTOMIZE";
 
+	public static final String DEACTIVATE = "DEACTIVATE";
+
 	public static final String DEFINE_PERMISSIONS = "DEFINE_PERMISSIONS";
 
 	public static final String DELEGATE = "DELEGATE";
@@ -154,6 +149,8 @@ public class ActionKeys {
 	public static final String DELETE_LAYOUT_BRANCH = "DELETE_LAYOUT_BRANCH";
 
 	public static final String DELETE_USER = "DELETE_USER";
+
+	public static final String DOWNLOAD = "DOWNLOAD";
 
 	public static final String EXPIRE = "EXPIRE";
 
@@ -173,6 +170,8 @@ public class ActionKeys {
 	public static final String IMPERSONATE = "IMPERSONATE";
 
 	public static final String IMPORT = "IMPORT";
+
+	public static final String LAYOUT_RULE_BUILDER = "LAYOUT_RULE_BUILDER";
 
 	public static final String LOCK_THREAD = "LOCK_THREAD";
 

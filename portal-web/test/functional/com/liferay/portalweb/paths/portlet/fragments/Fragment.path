@@ -42,6 +42,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTENT_DISPLAY_ASSET_BULLET_LIST_ITEM</td>
+	<td>//div[contains(@class,'lfr-layout-structure-item-collection')]/ul/li[contains(.,'${text}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONTENT_DISPLAY_ASSET_BULLET_LIST_TEXT</td>
 	<td>//div[contains(@class,'lfr-layout-structure-item-collection')]/ul/li</td>
 	<td></td>
@@ -124,7 +129,7 @@
 </tr>
 <tr>
 	<td>ALERT_INFO</td>
-	<td>//div[@aria-label='${key_fragmentName}']//div[contains(@class,'alert-info')][normalize-space()='${key_alertInfo}']</td>
+	<td>//div[@aria-label='${key_fragmentName}']//div[contains(@class,'alert')][normalize-space()='${key_alertInfo}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -140,6 +145,11 @@
 <tr>
 	<td>DROP_ZONE_NO_FRAGMENTS_MESSAGE</td>
 	<td>xpath=(//*[contains(@class,'fragment-${key_fragmentClass}')]//lfr-drop-zone//p[contains(@class,'no-fragments-state__message') and contains(.,'${key_content}')])[${key_position}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DROP_ZONE_NESTED_ELEMENT</td>
+	<td>xpath=(//lfr-drop-zone[${key_position}])//div[@aria-label='${key_elementName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -161,8 +171,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INPUT_FIELD_WITH_LABEL</td>
+	<td>xpath=(//div[contains(@id,'fragment-')]//div[contains(@class,'${type}')][.//label[normalize-space()='${fieldLabel}']]//input[contains(@id,'${type}')])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INPUT_LABEL</td>
-	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')])[${index}]//label[normalize-space()='${fieldLabel}']</td>
+	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')])[${index}]//*[self::label or self::legend or self::span][normalize-space()='${fieldLabel}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -176,13 +191,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INPUT_LENGTH_INFO</td>
+	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')]//p[contains(@id,'length-info')])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INPUT_REQUIRED</td>
-	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')]//label[normalize-space()='${fieldLabel}'])[${index}]//*[name()='svg'][contains(@class,'icon-asterisk')]</td>
+	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')]//*[self::label or self::legend or self::span][normalize-space()='${fieldLabel}'])[${index}]//*[name()='svg'][contains(@class,'icon-asterisk')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>INPUT_TOGGLE</td>
 	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')]//button[*[name()='svg'][contains(@class,'icon-caret-double')]])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXTAREA_FIELD</td>
+	<td>xpath=(//div[contains(@id,'fragment-')]/div[contains(@class,'${type}')]//textarea[contains(@id,'${type}')])[${index}]</td>
 	<td></td>
 </tr>
 
@@ -375,6 +400,14 @@
 <tr>
 	<td>FRAGMENT_HEADER_INSET_STYLE</td>
 	<td>//div[contains(@class,'topper__bar--inset')]//li[contains(@class,'topper__title') and contains(.,'${key_fragmentName}')]</td>
+	<td></td>
+</tr>
+
+<!--FORM_CONTAINER-->
+
+<tr>
+	<td>FORM_CONTAINER</td>
+	<td>//form[contains(@class,'lfr-layout-structure-item-form')]</td>
 	<td></td>
 </tr>
 

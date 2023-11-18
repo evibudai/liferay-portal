@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.servlet;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.SharedSession;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -33,8 +23,6 @@ public class SharedSessionServletRequest extends HttpServletRequestWrapper {
 		super(httpServletRequest);
 
 		_shared = shared;
-
-		_portalHttpSession = httpServletRequest.getSession();
 	}
 
 	@Override
@@ -44,53 +32,28 @@ public class SharedSessionServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public HttpSession getSession(boolean create) {
-		if (create) {
-			checkPortalSession();
+		if (!create || _shared) {
+			return _getPortalHttpSession(create);
 		}
 
-		if (_shared) {
-			return _portalHttpSession;
-		}
-
-		HttpSession portletHttpSession = super.getSession(create);
-
-		if ((portletHttpSession != null) &&
-			(portletHttpSession != _portalHttpSession)) {
-
-			return getSharedSessionWrapper(
-				_portalHttpSession, portletHttpSession);
-		}
-
-		return portletHttpSession;
+		return new SharedSession(
+			_getPortalHttpSession(true), super.getSession(true));
 	}
 
 	public HttpSession getSharedSession() {
-		return _portalHttpSession;
+		return _getPortalHttpSession(true);
 	}
 
-	protected void checkPortalSession() {
-		try {
-			_portalHttpSession.isNew();
+	private HttpSession _getPortalHttpSession(boolean create) {
+		HttpSession httpSession = super.getSession(false);
+
+		if (httpSession == null) {
+			httpSession = super.getSession(create);
 		}
-		catch (IllegalStateException illegalStateException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(illegalStateException);
-			}
 
-			_portalHttpSession = super.getSession(true);
-		}
+		return httpSession;
 	}
 
-	protected HttpSession getSharedSessionWrapper(
-		HttpSession portalHttpSession, HttpSession portletHttpSession) {
-
-		return new SharedSessionWrapper(portalHttpSession, portletHttpSession);
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		SharedSessionServletRequest.class);
-
-	private HttpSession _portalHttpSession;
 	private final boolean _shared;
 
 }

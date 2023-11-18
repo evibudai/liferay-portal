@@ -1,40 +1,30 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
-<liferay-ui:tabs
-	names="Alerts,Badges,Buttons,Cards,Dropdowns,Form Elements,Icons,Labels,Links,Management Toolbars,Navigation Bars,Pagination Bars,Progress Bars,Stickers"
-	refresh="<%= false %>"
+<%
+List<TabsItem> tabsItems = claySampleDisplayContext.getTabsItems();
+%>
+
+<clay:tabs
+	tabsItems="<%= tabsItems %>"
 >
 
 	<%
-	String[] sections = {"alerts", "badges", "buttons", "cards", "dropdowns", "form_elements", "icons", "labels", "links", "management_toolbars", "navigation_bars", "pagination_bars", "progress_bars", "stickers"};
-
-	for (int i = 0; i < sections.length; i++) {
+	for (TabsItem tabsItem : tabsItems) {
 	%>
 
-		<liferay-ui:section>
-			<clay:container-fluid>
-				<liferay-util:include page='<%= "/partials/" + sections[i] + ".jsp" %>' servletContext="<%= application %>" />
-			</clay:container-fluid>
-		</liferay-ui:section>
+		<clay:tabs-panel>
+			<liferay-util:include page='<%= "/partials/" + tabsItem.get("panelId") + ".jsp" %>' servletContext="<%= application %>" />
+		</clay:tabs-panel>
 
 	<%
 	}
 	%>
 
-</liferay-ui:tabs>
+</clay:tabs>

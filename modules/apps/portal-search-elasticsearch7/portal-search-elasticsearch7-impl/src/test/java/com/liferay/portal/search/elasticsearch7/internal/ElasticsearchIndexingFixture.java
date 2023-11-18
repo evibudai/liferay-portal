@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal;
@@ -18,6 +9,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.search.IndexSearcher;
 import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.suggest.QuerySuggester;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Localization;
@@ -30,23 +22,16 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.Elasticsearc
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexCreator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexName;
 import com.liferay.portal.search.elasticsearch7.internal.connection.helper.IndexCreationHelper;
-import com.liferay.portal.search.elasticsearch7.internal.facet.CompositeFacetProcessor;
-import com.liferay.portal.search.elasticsearch7.internal.facet.DefaultFacetProcessor;
 import com.liferay.portal.search.elasticsearch7.internal.facet.FacetProcessor;
-import com.liferay.portal.search.elasticsearch7.internal.facet.ModifiedFacetProcessor;
-import com.liferay.portal.search.elasticsearch7.internal.facet.NestedFacetProcessor;
 import com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.ElasticsearchEngineAdapterFixture;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
-import com.liferay.portal.search.internal.facet.ModifiedFacetImpl;
-import com.liferay.portal.search.internal.facet.NestedFacetImpl;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderFactoryImpl;
 import com.liferay.portal.search.internal.legacy.searcher.SearchResponseBuilderFactoryImpl;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
 import com.liferay.portal.util.DigesterImpl;
 import com.liferay.portal.util.LocalizationImpl;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -103,7 +88,7 @@ public class ElasticsearchIndexingFixture implements IndexingFixture {
 
 		ElasticsearchEngineAdapterFixture elasticsearchEngineAdapterFixture =
 			_createElasticsearchEngineAdapterFixture(
-				_elasticsearchFixture, _getFacetProcessor());
+				_elasticsearchFixture, _facetProcessor);
 
 		elasticsearchEngineAdapterFixture.setUp();
 
@@ -279,6 +264,9 @@ public class ElasticsearchIndexingFixture implements IndexingFixture {
 			new ElasticsearchIndexWriter();
 
 		ReflectionTestUtil.setFieldValue(
+			elasticsearchIndexWriter, "_companyLocalService",
+			Mockito.mock(CompanyLocalService.class));
+		ReflectionTestUtil.setFieldValue(
 			elasticsearchIndexWriter, "_elasticsearchConfigurationWrapper",
 			createElasticsearchConfigurationWrapper(
 				elasticsearchFixture.
@@ -308,27 +296,6 @@ public class ElasticsearchIndexingFixture implements IndexingFixture {
 		);
 
 		return props;
-	}
-
-	private FacetProcessor<SearchRequestBuilder> _getFacetProcessor() {
-		if (_facetProcessor != null) {
-			return _facetProcessor;
-		}
-
-		return new CompositeFacetProcessor() {
-			{
-				defaultFacetProcessor = new DefaultFacetProcessor();
-
-				setFacetProcessor(
-					new ModifiedFacetProcessor(),
-					Collections.singletonMap(
-						"class.name", ModifiedFacetImpl.class.getName()));
-				setFacetProcessor(
-					new NestedFacetProcessor(),
-					Collections.singletonMap(
-						"class.name", NestedFacetImpl.class.getName()));
-			}
-		};
 	}
 
 	private final long _companyId;

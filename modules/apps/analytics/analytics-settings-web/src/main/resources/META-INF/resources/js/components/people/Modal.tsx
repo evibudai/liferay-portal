@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,6 +8,7 @@ import ClayModal from '@clayui/modal';
 import React, {useState} from 'react';
 
 import {updateAttributesConfiguration} from '../../utils/api';
+import {TEmptyState} from '../table/StateRenderer';
 import Table from '../table/Table';
 import {TColumn, TFormattedItems, TTableRequestParams} from '../table/types';
 import {getIds} from '../table/utils';
@@ -40,9 +32,8 @@ export interface ICommonModalProps {
 
 interface IModalProps {
 	columns: TColumn[];
-	emptyStateTitle: string;
+	emptyState: TEmptyState;
 	name: EPeople;
-	noResultsTitle: string;
 	observer: any;
 	onCloseModal: () => void;
 	requestFn: (params: TTableRequestParams) => Promise<any>;
@@ -56,9 +47,8 @@ interface IModalProps {
 
 const Modal: React.FC<IModalProps> = ({
 	columns,
-	emptyStateTitle,
+	emptyState,
 	name,
-	noResultsTitle,
 	observer,
 	onCloseModal,
 	requestFn,
@@ -76,16 +66,20 @@ const Modal: React.FC<IModalProps> = ({
 			<ClayModal.Body>
 				<Table<TRawItem>
 					columns={columns}
-					emptyStateTitle={emptyStateTitle}
-					mapperItems={(items: TRawItem[]) => {
+					emptyState={emptyState}
+					mapperItems={(items) => {
 						return items.map(({id, name, selected}) => ({
 							checked: selected,
-							columns: [{label: name}],
+							columns: [
+								{
+									id: 'name',
+									value: name,
+								},
+							],
 							disabled: false,
 							id: String(id),
 						}));
 					}}
-					noResultsTitle={noResultsTitle}
 					onItemsChange={setItems}
 					requestFn={requestFn}
 				/>

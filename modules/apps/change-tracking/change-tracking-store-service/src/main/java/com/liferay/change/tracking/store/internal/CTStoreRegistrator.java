@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.store.internal;
@@ -20,7 +11,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portlet.documentlibrary.store.StoreFactory;
+import com.liferay.portlet.documentlibrary.store.DLStoreImpl;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -49,7 +40,7 @@ public class CTStoreRegistrator {
 					ServiceReference<Store> serviceReference) {
 
 					if (GetterUtil.getBoolean(
-							serviceReference.getProperty("ct.aware"))) {
+							serviceReference.getProperty("republished"))) {
 
 						return null;
 					}
@@ -57,13 +48,36 @@ public class CTStoreRegistrator {
 					String storeType = String.valueOf(
 						serviceReference.getProperty("store.type"));
 
+					if (GetterUtil.getBoolean(
+							serviceReference.getProperty("ct.aware"))) {
+
+						if (StringUtil.equals(
+								storeType, PropsValues.DL_STORE_IMPL)) {
+
+							Store ctStore = bundleContext.getService(
+								serviceReference);
+
+							DLStoreImpl.setStore(ctStore);
+
+							return bundleContext.registerService(
+								Store.class, ctStore,
+								HashMapDictionaryBuilder.<String, Object>put(
+									"default", true
+								).put(
+									"republished", true
+								).build());
+						}
+
+						return null;
+					}
+
 					Store ctStore = _ctStoreFactory.createCTStore(
 						bundleContext.getService(serviceReference), storeType);
 
 					if (StringUtil.equals(
 							storeType, PropsValues.DL_STORE_IMPL)) {
 
-						StoreFactory.setStore(ctStore);
+						DLStoreImpl.setStore(ctStore);
 					}
 
 					return bundleContext.registerService(
@@ -81,6 +95,8 @@ public class CTStoreRegistrator {
 
 								return null;
 							}
+						).put(
+							"republished", true
 						).put(
 							"store.type", storeType
 						).build());

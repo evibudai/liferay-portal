@@ -23,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,10 +37,9 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test WithdrawTaskAssignedToMeByActions {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
@@ -92,10 +91,8 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test WithdrawTaskAssignedToMeByDetails {
-		property portal.upstream = "quarantine";
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -149,10 +146,8 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test WithdrawTaskAssignedToMyRolesByActions {
-		property portal.upstream = "quarantine";
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -196,10 +191,8 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test WithdrawTaskAssignedToMyRolesByDetails {
-		property portal.upstream = "quarantine";
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -245,10 +238,8 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test WithdrawTaskCompletedNoByActions {
-		property portal.upstream = "quarantine";
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -290,7 +281,7 @@ definition {
 			workflowTask = "Approved");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test WithdrawTaskCompletedNoByDetails {
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";

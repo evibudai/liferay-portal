@@ -1,35 +1,33 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDropDown from '@clayui/drop-down';
 import ClayPopover from '@clayui/popover';
-import React, {Children, ReactNode, useEffect, useState} from 'react';
+import React, {Children, Fragment, ReactNode, useEffect, useState} from 'react';
 
 import {BaseSelect, CustomItem, SelectProps} from './BaseSelect';
 
 import './index.scss';
 
-interface IProps<T extends CustomItem<number | string> = CustomItem>
-	extends SelectProps {
+interface SingleSelectProps<T> extends SelectProps {
 	children?: ReactNode;
+	contentRight?: ReactNode;
 	onChange?: (selected: T) => void;
 	options: T[];
 }
 
 export function SingleSelect<
 	T extends CustomItem<number | string> = CustomItem
->({onChange = () => {}, options, children, ...otherProps}: IProps<T>) {
+>({
+	contentRight,
+	children,
+	onBlur,
+	onChange = () => {},
+	options,
+	...otherProps
+}: SingleSelectProps<T>) {
 	const [dropdownActive, setDropdownActive] = useState<boolean>(false);
 	const arrayChildren = Children.toArray(children);
 	const [showPopover, setShowPopover] = useState(false);
@@ -42,7 +40,9 @@ export function SingleSelect<
 
 	return (
 		<BaseSelect
+			contentRight={contentRight}
 			dropdownActive={dropdownActive}
+			onBlur={onBlur}
 			setDropdownActive={setDropdownActive}
 			{...otherProps}
 		>
@@ -56,7 +56,7 @@ export function SingleSelect<
 				}
 
 				return (
-					<>
+					<Fragment key={option.name ?? option.value ?? index}>
 						<ClayPopover
 							alignPosition="right"
 							disableScroll={false}
@@ -66,6 +66,7 @@ export function SingleSelect<
 							trigger={
 								<ClayDropDown.Item
 									{...events}
+									active={option.label === otherProps.value}
 									className={
 										option.type
 											? 'lfr-object__single-select--with-label'
@@ -92,7 +93,7 @@ export function SingleSelect<
 						>
 							{option.popover?.body}
 						</ClayPopover>
-					</>
+					</Fragment>
 				);
 			})}
 		</BaseSelect>

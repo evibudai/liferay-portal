@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.portlet.action;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
+import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.exception.ObjectDefinitionNameException;
+import com.liferay.object.exception.ObjectViewColumnFieldNameException;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -26,18 +20,15 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.upload.UploadPortletRequestImpl;
-import com.liferay.portal.util.PropsUtil;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -79,42 +70,35 @@ public class ImportObjectDefinitionMVCActionCommand
 
 			httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 
+			JSONObject jsonObject = null;
+
 			if (exception instanceof ObjectDefinitionNameException) {
 				Class<?> clazz = exception.getClass();
 
-				JSONPortletResponseUtil.writeJSON(
-					actionRequest, actionResponse,
-					JSONUtil.put(
-						"type",
-						"ObjectDefinitionNameException." +
-							clazz.getSimpleName()));
+				jsonObject = JSONUtil.put(
+					"type",
+					"ObjectDefinitionNameException." + clazz.getSimpleName());
+			}
+			else if (exception instanceof ObjectViewColumnFieldNameException) {
+				jsonObject = JSONUtil.put(
+					"title",
+					_language.get(
+						_portal.getHttpServletRequest(actionRequest),
+						"the-structure-was-imported-without-a-custom-view"));
 			}
 			else {
-				JSONPortletResponseUtil.writeJSON(
-					actionRequest, actionResponse,
-					JSONUtil.put(
-						"title",
-						_language.get(
-							_portal.getHttpServletRequest(actionRequest),
-							"the-structure-was-not-successfully-imported")));
+				jsonObject = JSONUtil.put(
+					"title",
+					_language.get(
+						_portal.getHttpServletRequest(actionRequest),
+						"the-structure-failed-to-import"));
 			}
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse, jsonObject);
 		}
 
 		hideDefaultSuccessMessage(actionRequest);
-	}
-
-	private UploadPortletRequest _getUploadPortletRequest(
-		ActionRequest actionRequest) {
-
-		LiferayPortletRequest liferayPortletRequest =
-			_portal.getLiferayPortletRequest(actionRequest);
-
-		return new UploadPortletRequestImpl(
-			_portal.getUploadServletRequest(
-				liferayPortletRequest.getHttpServletRequest()),
-			liferayPortletRequest,
-			_portal.getPortletNamespace(
-				liferayPortletRequest.getPortletName()));
 	}
 
 	private void _importObjectDefinition(ActionRequest actionRequest)
@@ -130,8 +114,8 @@ public class ImportObjectDefinitionMVCActionCommand
 			themeDisplay.getUser()
 		).build();
 
-		UploadPortletRequest uploadPortletRequest = _getUploadPortletRequest(
-			actionRequest);
+		UploadPortletRequest uploadPortletRequest =
+			_portal.getUploadPortletRequest(actionRequest);
 
 		String objectDefinitionJSON = FileUtil.read(
 			uploadPortletRequest.getFile("objectDefinitionJSON"));
@@ -146,7 +130,20 @@ public class ImportObjectDefinitionMVCActionCommand
 			objectDefinitionJSONObject.toString());
 
 		objectDefinition.setActive(false);
+
+		String externalReferenceCode = ParamUtil.getString(
+			actionRequest, "externalReferenceCode");
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			objectDefinition.setExternalReferenceCode(externalReferenceCode);
+		}
+
 		objectDefinition.setName(ParamUtil.getString(actionRequest, "name"));
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
+			objectDefinition.setObjectFolderExternalReferenceCode(
+				ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_UNCATEGORIZED);
+		}
 
 		ObjectDefinition putObjectDefinition =
 			objectDefinitionResource.putObjectDefinitionByExternalReferenceCode(
@@ -154,7 +151,7 @@ public class ImportObjectDefinitionMVCActionCommand
 
 		putObjectDefinition.setPortlet(objectDefinition.getPortlet());
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-135430"))) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 			putObjectDefinition.setStorageType(StringPool.BLANK);
 		}
 

@@ -3,7 +3,9 @@ html#{$cadmin-selector} {
 		.cadmin {
 			&.affix,
 			&.control-menu-container {
-				@include transition($control-menu-css-transition);
+				@media (prefers-reduced-motion: no-preference) {
+					@include transition($control-menu-css-transition);
+				}
 			}
 		}
 	}
@@ -14,30 +16,6 @@ html#{$cadmin-selector} {
 			position: sticky;
 			top: 0;
 			z-index: $control-menu-zindex;
-		}
-
-		.control-menu-icon {
-			display: inline-block;
-			height: 32px;
-			line-height: 32px;
-			text-align: center;
-			width: 32px;
-
-			.portlet-options {
-				display: flex;
-				height: 32px;
-			}
-		}
-
-		a.control-menu-icon,
-		.control-menu-icon .dropdown-toggle {
-			border-radius: 4px;
-			transition: box-shadow 0.15s ease-in-out;
-
-			&:focus {
-				box-shadow: $control-menu-focus-box-shadow;
-				outline: 0;
-			}
 		}
 
 		.control-menu-level-1 {
@@ -129,11 +107,6 @@ html#{$cadmin-selector} {
 		.control-menu-level-1-nav {
 			display: flex;
 			flex-wrap: wrap;
-			justify-content: space-between;
-
-			@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-				flex-wrap: nowrap;
-			}
 
 			> div,
 			> li {
@@ -240,7 +213,7 @@ html#{$cadmin-selector} {
 			display: inline-flex;
 		}
 
-		.control-menu-nav-item-content:last-child {
+		.control-menu-nav-item-content:last-child:not(:first-child) {
 			display: flex;
 			flex-basis: 0;
 			flex-grow: 1;
@@ -276,9 +249,6 @@ html#{$cadmin-selector} {
 		}
 
 		.tools-control-group {
-			flex: 1;
-			flex-wrap: nowrap;
-
 			> .control-menu-nav {
 				flex-wrap: nowrap;
 				justify-content: flex-start;
@@ -292,9 +262,23 @@ html#{$cadmin-selector} {
 		}
 
 		.user-control-group {
+			flex-grow: 1;
+
+			.control-menu-nav {
+				justify-content: end;
+			}
+
 			.portlet-options {
 				margin-right: -1px;
 			}
 		}
+	}
+}
+
+.has-control-menu {
+	--control-menu-height: 56px;
+
+	@include media-breakpoint-down(xs, $cadmin-grid-breakpoints) {
+		--control-menu-height: 48px;
 	}
 }

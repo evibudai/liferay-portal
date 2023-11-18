@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.search.test;
@@ -49,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -92,18 +82,8 @@ public class DLFileEntryIndexerLocalizedContentTest {
 		List<String> contentStrings = new ArrayList<>(
 			Collections.singletonList("content_ja_JP"));
 
-		String word1 = "新規";
-		String word2 = "作成";
-
-		Stream.of(
-			word1, word2
-		).forEach(
-			searchTerm -> {
-				Document document = _search(searchTerm, LocaleUtil.JAPAN);
-
-				assertLocalization(contentStrings, document);
-			}
-		);
+		assertLocalization(contentStrings, _search("新規", LocaleUtil.JAPAN));
+		assertLocalization(contentStrings, _search("作成", LocaleUtil.JAPAN));
 	}
 
 	@Test
@@ -118,18 +98,8 @@ public class DLFileEntryIndexerLocalizedContentTest {
 		List<String> contentStrings = new ArrayList<>(
 			Collections.singletonList("content_ja_JP"));
 
-		String word1 = "新規";
-		String word2 = "作成";
-
-		Stream.of(
-			word1, word2
-		).forEach(
-			searchTerm -> {
-				Document document = _search(searchTerm, LocaleUtil.JAPAN);
-
-				assertLocalization(contentStrings, document);
-			}
-		);
+		assertLocalization(contentStrings, _search("新規", LocaleUtil.JAPAN));
+		assertLocalization(contentStrings, _search("作成", LocaleUtil.JAPAN));
 	}
 
 	@Test

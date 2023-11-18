@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.store.azure;
@@ -58,10 +49,10 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -74,7 +65,7 @@ import org.osgi.service.component.annotations.Modified;
  */
 @Component(
 	configurationPid = "com.liferay.portal.store.azure.configuration.AzureStoreConfiguration",
-	configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true,
+	configurationPolicy = ConfigurationPolicy.REQUIRE,
 	property = "store.type=com.liferay.portal.store.azure.AzureStore",
 	service = Store.class
 )
@@ -200,6 +191,8 @@ public class AzureStore implements Store {
 	public String[] getFileNames(
 		long companyId, long repositoryId, String dirName) {
 
+		List<String> fileNames = new ArrayList<>();
+
 		ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
 
 		listBlobsOptions.setPrefix(
@@ -208,14 +201,11 @@ public class AzureStore implements Store {
 		PagedIterable<BlobItem> pagedIterable = _blobContainerClient.listBlobs(
 			listBlobsOptions, null);
 
-		Stream<BlobItem> stream = pagedIterable.stream();
+		pagedIterable.forEach(
+			blobItem -> fileNames.add(
+				_getFileName(companyId, repositoryId, blobItem.getName())));
 
-		return stream.map(
-			blobItem -> _getFileName(
-				companyId, repositoryId, blobItem.getName())
-		).toArray(
-			String[]::new
-		);
+		return fileNames.toArray(new String[0]);
 	}
 
 	@Override
@@ -246,6 +236,8 @@ public class AzureStore implements Store {
 	public String[] getFileVersions(
 		long companyId, long repositoryId, String fileName) {
 
+		List<String> fileVersions = new ArrayList<>();
+
 		ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
 
 		String prefix = _getPrefix(companyId, repositoryId, fileName);
@@ -256,21 +248,20 @@ public class AzureStore implements Store {
 			_blobContainerClient.listBlobsByHierarchy(
 				StringPool.SLASH, listBlobsOptions, null);
 
-		Stream<BlobItem> stream = pagedIterable.stream();
-
-		return stream.filter(
-			blobItem -> !GetterUtil.getBoolean(blobItem.isPrefix())
-		).map(
+		pagedIterable.forEach(
 			blobItem -> {
+				if (GetterUtil.getBoolean(blobItem.isPrefix())) {
+					return;
+				}
+
 				String blobItemName = blobItem.getName();
 
-				return blobItemName.substring(prefix.length());
-			}
-		).sorted(
-			DLUtil::compareVersions
-		).toArray(
-			String[]::new
-		);
+				fileVersions.add(blobItemName.substring(prefix.length()));
+			});
+
+		Collections.sort(fileVersions, DLUtil::compareVersions);
+
+		return fileVersions.toArray(new String[0]);
 	}
 
 	@Override

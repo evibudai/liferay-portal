@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.model.impl;
@@ -74,15 +65,16 @@ public class WikiNodeModelImpl
 	public static final String TABLE_NAME = "WikiNode";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"externalReferenceCode", Types.VARCHAR}, {"nodeId", Types.BIGINT},
-		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"lastPostDate", Types.TIMESTAMP}, {"lastPublishDate", Types.TIMESTAMP},
-		{"status", Types.INTEGER}, {"statusByUserId", Types.BIGINT},
-		{"statusByUserName", Types.VARCHAR}, {"statusDate", Types.TIMESTAMP}
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
+		{"nodeId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP}, {"name", Types.VARCHAR},
+		{"description", Types.VARCHAR}, {"lastPostDate", Types.TIMESTAMP},
+		{"lastPublishDate", Types.TIMESTAMP}, {"status", Types.INTEGER},
+		{"statusByUserId", Types.BIGINT}, {"statusByUserName", Types.VARCHAR},
+		{"statusDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -90,6 +82,7 @@ public class WikiNodeModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("nodeId", Types.BIGINT);
@@ -110,7 +103,7 @@ public class WikiNodeModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table WikiNode (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,nodeId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,description STRING null,lastPostDate DATE null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null)";
+		"create table WikiNode (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,nodeId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,description STRING null,lastPostDate DATE null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (nodeId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table WikiNode";
 
@@ -249,97 +242,125 @@ public class WikiNodeModelImpl
 	public Map<String, Function<WikiNode, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<WikiNode, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<WikiNode, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<WikiNode, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<WikiNode, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<WikiNode, Object>>();
-		Map<String, BiConsumer<WikiNode, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<WikiNode, ?>>();
+		private static final Map<String, Function<WikiNode, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", WikiNode::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<WikiNode, Long>)WikiNode::setMvccVersion);
-		attributeGetterFunctions.put("uuid", WikiNode::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<WikiNode, String>)WikiNode::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", WikiNode::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<WikiNode, String>)WikiNode::setExternalReferenceCode);
-		attributeGetterFunctions.put("nodeId", WikiNode::getNodeId);
-		attributeSetterBiConsumers.put(
-			"nodeId", (BiConsumer<WikiNode, Long>)WikiNode::setNodeId);
-		attributeGetterFunctions.put("groupId", WikiNode::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId", (BiConsumer<WikiNode, Long>)WikiNode::setGroupId);
-		attributeGetterFunctions.put("companyId", WikiNode::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<WikiNode, Long>)WikiNode::setCompanyId);
-		attributeGetterFunctions.put("userId", WikiNode::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<WikiNode, Long>)WikiNode::setUserId);
-		attributeGetterFunctions.put("userName", WikiNode::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<WikiNode, String>)WikiNode::setUserName);
-		attributeGetterFunctions.put("createDate", WikiNode::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate", (BiConsumer<WikiNode, Date>)WikiNode::setCreateDate);
-		attributeGetterFunctions.put("modifiedDate", WikiNode::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<WikiNode, Date>)WikiNode::setModifiedDate);
-		attributeGetterFunctions.put("name", WikiNode::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<WikiNode, String>)WikiNode::setName);
-		attributeGetterFunctions.put("description", WikiNode::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<WikiNode, String>)WikiNode::setDescription);
-		attributeGetterFunctions.put("lastPostDate", WikiNode::getLastPostDate);
-		attributeSetterBiConsumers.put(
-			"lastPostDate",
-			(BiConsumer<WikiNode, Date>)WikiNode::setLastPostDate);
-		attributeGetterFunctions.put(
-			"lastPublishDate", WikiNode::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<WikiNode, Date>)WikiNode::setLastPublishDate);
-		attributeGetterFunctions.put("status", WikiNode::getStatus);
-		attributeSetterBiConsumers.put(
-			"status", (BiConsumer<WikiNode, Integer>)WikiNode::setStatus);
-		attributeGetterFunctions.put(
-			"statusByUserId", WikiNode::getStatusByUserId);
-		attributeSetterBiConsumers.put(
-			"statusByUserId",
-			(BiConsumer<WikiNode, Long>)WikiNode::setStatusByUserId);
-		attributeGetterFunctions.put(
-			"statusByUserName", WikiNode::getStatusByUserName);
-		attributeSetterBiConsumers.put(
-			"statusByUserName",
-			(BiConsumer<WikiNode, String>)WikiNode::setStatusByUserName);
-		attributeGetterFunctions.put("statusDate", WikiNode::getStatusDate);
-		attributeSetterBiConsumers.put(
-			"statusDate", (BiConsumer<WikiNode, Date>)WikiNode::setStatusDate);
+		static {
+			Map<String, Function<WikiNode, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<WikiNode, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", WikiNode::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", WikiNode::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", WikiNode::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode", WikiNode::getExternalReferenceCode);
+			attributeGetterFunctions.put("nodeId", WikiNode::getNodeId);
+			attributeGetterFunctions.put("groupId", WikiNode::getGroupId);
+			attributeGetterFunctions.put("companyId", WikiNode::getCompanyId);
+			attributeGetterFunctions.put("userId", WikiNode::getUserId);
+			attributeGetterFunctions.put("userName", WikiNode::getUserName);
+			attributeGetterFunctions.put("createDate", WikiNode::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", WikiNode::getModifiedDate);
+			attributeGetterFunctions.put("name", WikiNode::getName);
+			attributeGetterFunctions.put(
+				"description", WikiNode::getDescription);
+			attributeGetterFunctions.put(
+				"lastPostDate", WikiNode::getLastPostDate);
+			attributeGetterFunctions.put(
+				"lastPublishDate", WikiNode::getLastPublishDate);
+			attributeGetterFunctions.put("status", WikiNode::getStatus);
+			attributeGetterFunctions.put(
+				"statusByUserId", WikiNode::getStatusByUserId);
+			attributeGetterFunctions.put(
+				"statusByUserName", WikiNode::getStatusByUserName);
+			attributeGetterFunctions.put("statusDate", WikiNode::getStatusDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<WikiNode, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<WikiNode, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<WikiNode, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<WikiNode, Long>)WikiNode::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<WikiNode, Long>)WikiNode::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<WikiNode, String>)WikiNode::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<WikiNode, String>)
+					WikiNode::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"nodeId", (BiConsumer<WikiNode, Long>)WikiNode::setNodeId);
+			attributeSetterBiConsumers.put(
+				"groupId", (BiConsumer<WikiNode, Long>)WikiNode::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<WikiNode, Long>)WikiNode::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<WikiNode, Long>)WikiNode::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<WikiNode, String>)WikiNode::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<WikiNode, Date>)WikiNode::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<WikiNode, Date>)WikiNode::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<WikiNode, String>)WikiNode::setName);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<WikiNode, String>)WikiNode::setDescription);
+			attributeSetterBiConsumers.put(
+				"lastPostDate",
+				(BiConsumer<WikiNode, Date>)WikiNode::setLastPostDate);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<WikiNode, Date>)WikiNode::setLastPublishDate);
+			attributeSetterBiConsumers.put(
+				"status", (BiConsumer<WikiNode, Integer>)WikiNode::setStatus);
+			attributeSetterBiConsumers.put(
+				"statusByUserId",
+				(BiConsumer<WikiNode, Long>)WikiNode::setStatusByUserId);
+			attributeSetterBiConsumers.put(
+				"statusByUserName",
+				(BiConsumer<WikiNode, String>)WikiNode::setStatusByUserName);
+			attributeSetterBiConsumers.put(
+				"statusDate",
+				(BiConsumer<WikiNode, Date>)WikiNode::setStatusDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -355,6 +376,21 @@ public class WikiNodeModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -918,6 +954,7 @@ public class WikiNodeModelImpl
 		WikiNodeImpl wikiNodeImpl = new WikiNodeImpl();
 
 		wikiNodeImpl.setMvccVersion(getMvccVersion());
+		wikiNodeImpl.setCtCollectionId(getCtCollectionId());
 		wikiNodeImpl.setUuid(getUuid());
 		wikiNodeImpl.setExternalReferenceCode(getExternalReferenceCode());
 		wikiNodeImpl.setNodeId(getNodeId());
@@ -947,6 +984,8 @@ public class WikiNodeModelImpl
 
 		wikiNodeImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		wikiNodeImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		wikiNodeImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
 		wikiNodeImpl.setExternalReferenceCode(
 			this.<String>getColumnOriginalValue("externalReferenceCode"));
@@ -1051,6 +1090,8 @@ public class WikiNodeModelImpl
 		WikiNodeCacheModel wikiNodeCacheModel = new WikiNodeCacheModel();
 
 		wikiNodeCacheModel.mvccVersion = getMvccVersion();
+
+		wikiNodeCacheModel.ctCollectionId = getCtCollectionId();
 
 		wikiNodeCacheModel.uuid = getUuid();
 
@@ -1221,6 +1262,7 @@ public class WikiNodeModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private String _externalReferenceCode;
 	private long _nodeId;
@@ -1243,8 +1285,9 @@ public class WikiNodeModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<WikiNode, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<WikiNode, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1270,6 +1313,7 @@ public class WikiNodeModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"externalReferenceCode", _externalReferenceCode);
@@ -1313,39 +1357,41 @@ public class WikiNodeModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("uuid_", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("externalReferenceCode", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("nodeId", 8L);
+		columnBitmasks.put("externalReferenceCode", 8L);
 
-		columnBitmasks.put("groupId", 16L);
+		columnBitmasks.put("nodeId", 16L);
 
-		columnBitmasks.put("companyId", 32L);
+		columnBitmasks.put("groupId", 32L);
 
-		columnBitmasks.put("userId", 64L);
+		columnBitmasks.put("companyId", 64L);
 
-		columnBitmasks.put("userName", 128L);
+		columnBitmasks.put("userId", 128L);
 
-		columnBitmasks.put("createDate", 256L);
+		columnBitmasks.put("userName", 256L);
 
-		columnBitmasks.put("modifiedDate", 512L);
+		columnBitmasks.put("createDate", 512L);
 
-		columnBitmasks.put("name", 1024L);
+		columnBitmasks.put("modifiedDate", 1024L);
 
-		columnBitmasks.put("description", 2048L);
+		columnBitmasks.put("name", 2048L);
 
-		columnBitmasks.put("lastPostDate", 4096L);
+		columnBitmasks.put("description", 4096L);
 
-		columnBitmasks.put("lastPublishDate", 8192L);
+		columnBitmasks.put("lastPostDate", 8192L);
 
-		columnBitmasks.put("status", 16384L);
+		columnBitmasks.put("lastPublishDate", 16384L);
 
-		columnBitmasks.put("statusByUserId", 32768L);
+		columnBitmasks.put("status", 32768L);
 
-		columnBitmasks.put("statusByUserName", 65536L);
+		columnBitmasks.put("statusByUserId", 65536L);
 
-		columnBitmasks.put("statusDate", 131072L);
+		columnBitmasks.put("statusByUserName", 131072L);
+
+		columnBitmasks.put("statusDate", 262144L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

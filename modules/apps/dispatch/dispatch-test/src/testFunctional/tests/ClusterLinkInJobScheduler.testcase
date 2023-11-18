@@ -3,7 +3,9 @@ definition {
 
 	property custom.properties = "cluster.link.enabled=true";
 	property osgi.modules.includes = "dispatch-executor-sample";
+	property portal.release = "true";
 	property portal.upstream = "true";
+	property remote.elasticsearch.enabled = "true";
 	property testray.main.component.name = "Job Scheduler";
 
 	setUp {
@@ -13,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,9 +29,10 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanTriggerJobWithClusterMode {
 		property portal.acceptance = "true";
+		property portal.release = "true";
 
 		task ("Given cluster.link.enabled") {
 			AssertConsoleTextPresent(value1 = "Autodetecting JGroups outgoing IP address and interface");
@@ -68,9 +71,10 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ClusterModeTaskExecutionIsAvailable {
 		property portal.acceptance = "true";
+		property portal.release = "true";
 
 		task ("Given cluster.link.enabled") {
 			AssertConsoleTextPresent(value1 = "Autodetecting JGroups outgoing IP address and interface");
@@ -97,7 +101,7 @@ definition {
 		task ("Then All Nodes, Single Node (Persisted), and Single Node (Memory clustered) options are available") {
 			for (var option : list "All Nodes,Single Node (Memory Clustered),Single Node (Persisted)") {
 				AssertElementPresent(
-					key_option = "${option}",
+					key_option = ${option},
 					locator1 = "JobScheduler#DISPATCH_CLUSTER_MODE_OPTION");
 			}
 		}

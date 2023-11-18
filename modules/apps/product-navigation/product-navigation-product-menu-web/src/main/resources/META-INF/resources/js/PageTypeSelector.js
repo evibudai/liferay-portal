@@ -1,18 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import {ClayButtonWithIcon} from '@clayui/button';
+import {Option, Picker} from '@clayui/core';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
@@ -27,16 +19,12 @@ function PageTypeSelector({
 	namespace,
 	pageTypeOptions,
 	pageTypeSelectedOption,
-	pageTypeSelectedOptionLabel,
 	pagesTreeURL,
 	showAddIcon,
 }) {
 	const [addPageDropdownActive, setAddPageDropdownActive] = useState(false);
-	const [pageTypeDropdownActive, setPageTypeDropdownActive] = useState(false);
 
 	const handleSelect = (type) => {
-		setPageTypeDropdownActive(false);
-
 		setSessionValue(`${namespace}PAGE_TYPE_SELECTED_OPTION`, type).then(
 			() => {
 				Liferay.Portlet.destroy(`#p_p_id${namespace}`, true);
@@ -88,53 +76,32 @@ function PageTypeSelector({
 
 	return (
 		<div className="align-items-center d-flex page-type-selector">
-			<ClayDropDown
-				active={pageTypeDropdownActive}
-				menuElementAttrs={{
-					containerProps: {
-						className: 'cadmin',
-					},
-				}}
-				onActiveChange={setPageTypeDropdownActive}
-				trigger={
-					<ClayButton
-						className="form-control-select text-left"
-						displayType="secondary"
-						small
-						type="button"
-					>
-						{pageTypeSelectedOptionLabel}
-					</ClayButton>
-				}
+			<Picker
+				UNSAFE_menuClassName="cadmin"
+				aria-label={Liferay.Language.get('pages-type')}
+				className="form-control-sm pr-5 w-auto"
+				items={pageTypeOptions.filter((option) => option.items.length)}
+				onSelectionChange={handleSelect}
+				selectedKey={pageTypeSelectedOption}
 			>
-				<ClayDropDown.ItemList>
-					{pageTypeOptions
-						.filter((option) => option.items.length)
-						.map((option, index) => (
-							<React.Fragment key={index}>
-								<ClayDropDown.Item disabled key={option.value}>
-									{option.name}
-								</ClayDropDown.Item>
-
-								{option.items.map((item) => (
-									<ClayDropDown.Item
-										className="page-type-selector-option"
-										key={item.value}
-										onClick={() => handleSelect(item.value)}
-										symbolRight={
-											item.value ===
-											pageTypeSelectedOption
-												? 'check'
-												: null
-										}
-									>
-										{item.name}
-									</ClayDropDown.Item>
-								))}
-							</React.Fragment>
-						))}
-				</ClayDropDown.ItemList>
-			</ClayDropDown>
+				{(group) => (
+					<ClayDropDown.Group
+						header={group.label}
+						items={group.items}
+						key={group.label}
+					>
+						{(item) => (
+							<Option
+								className="page-type-selector-option"
+								id={item.value}
+								key={item.value}
+							>
+								{item.label}
+							</Option>
+						)}
+					</ClayDropDown.Group>
+				)}
+			</Picker>
 
 			<div className="flex-fill flex-grow-1 text-right">
 				{showAddIcon && (

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -18,11 +9,11 @@ import {Dispatch, SetStateAction, useState} from 'react';
 import {useParams} from 'react-router-dom';
 
 import Form from '../../../../../components/Form';
+import SearchBuilder from '../../../../../core/SearchBuilder';
 import {useFetch} from '../../../../../hooks/useFetch';
 import useFormModal from '../../../../../hooks/useFormModal';
 import i18n from '../../../../../i18n';
 import {APIResponse, TestrayCase} from '../../../../../services/rest';
-import {searchUtil} from '../../../../../util/search';
 import {CaseListView} from '../../../Cases';
 import SuiteFormSelectModal from '../../../Suites/modal';
 import BuildSelectSuitesModal from '../BuildSelectSuitesModal';
@@ -44,12 +35,13 @@ const BuildFormCases: React.FC<BuildFormCasesProps> = ({
 }) => {
 	const {projectId} = useParams();
 
-	const {data: casesResponse} = useFetch<APIResponse<TestrayCase>>(
-		`/cases?filter=${searchUtil.eq(
-			'projectId',
-			projectId as string
-		)}&pageSize=1&fields=id`
-	);
+	const {data: casesResponse} = useFetch<APIResponse<TestrayCase>>('/cases', {
+		params: {
+			fields: 'id',
+			filter: SearchBuilder.eq('projectId', projectId as string),
+			pageSize: 1,
+		},
+	});
 
 	const [modalType, setModalType] = useState<ModalType>({
 		type: 'select-cases',
@@ -141,7 +133,7 @@ const BuildFormCases: React.FC<BuildFormCasesProps> = ({
 							],
 						},
 						variables: {
-							filter: searchUtil.in('id', caseIds),
+							filter: SearchBuilder.in('id', caseIds),
 						},
 					}}
 				/>

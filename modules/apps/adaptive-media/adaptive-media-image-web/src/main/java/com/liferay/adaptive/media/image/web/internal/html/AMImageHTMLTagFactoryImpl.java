@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.web.internal.html;
@@ -19,6 +10,7 @@ import com.liferay.adaptive.media.image.html.constants.AMImageHTMLConstants;
 import com.liferay.adaptive.media.image.media.query.Condition;
 import com.liferay.adaptive.media.image.media.query.MediaQuery;
 import com.liferay.adaptive.media.image.media.query.MediaQueryProvider;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,9 +18,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,11 +55,11 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 		return sb.toString();
 	}
 
-	private Optional<String> _getMediaQueryString(MediaQuery mediaQuery) {
+	private String _getMediaQueryString(MediaQuery mediaQuery) {
 		List<Condition> conditions = mediaQuery.getConditions();
 
 		if (conditions.isEmpty()) {
-			return Optional.empty();
+			return null;
 		}
 
 		String[] conditionStrings = new String[conditions.size()];
@@ -84,23 +73,23 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 				StringPool.CLOSE_PARENTHESIS);
 		}
 
-		return Optional.of(StringUtil.merge(conditionStrings, " and "));
+		return StringUtil.merge(conditionStrings, " and ");
 	}
 
 	private String _getSourceElement(MediaQuery mediaQuery) {
+		String mediaQueryString = _getMediaQueryString(mediaQuery);
+
+		if (mediaQueryString == null) {
+			return StringPool.BLANK;
+		}
+
 		StringBundler sb = new StringBundler(5);
 
-		Optional<String> mediaQueryStringOptional = _getMediaQueryString(
-			mediaQuery);
-
-		mediaQueryStringOptional.ifPresent(
-			mediaQueryString -> {
-				sb.append("<source media=\"");
-				sb.append(mediaQueryString);
-				sb.append("\" srcset=\"");
-				sb.append(mediaQuery.getSrc());
-				sb.append("\" />");
-			});
+		sb.append("<source media=\"");
+		sb.append(mediaQueryString);
+		sb.append("\" srcset=\"");
+		sb.append(mediaQuery.getSrc());
+		sb.append("\" />");
 
 		return sb.toString();
 	}
@@ -108,16 +97,9 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 	private List<String> _getSourceElements(FileEntry fileEntry)
 		throws PortalException {
 
-		List<MediaQuery> mediaQueries = _mediaQueryProvider.getMediaQueries(
-			fileEntry);
-
-		Stream<MediaQuery> mediaQueryStream = mediaQueries.stream();
-
-		return mediaQueryStream.map(
-			this::_getSourceElement
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			_mediaQueryProvider.getMediaQueries(fileEntry),
+			this::_getSourceElement);
 	}
 
 	@Reference

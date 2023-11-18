@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,7 +28,142 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@description = "This test checks that user can access an article in the search results from the side bar."
+	@priority = 4
+	test CanAccessArticleFromSearchResultsInSidebar {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Folders and Articles");
+
+		KBArticle.searchForKB(knowledgeBaseName = "KB");
+
+		KBArticle.viewChildArticleCP(
+			kbChildArticleContent = "Knowledge Base Article Content",
+			kbChildArticleTitle = "Knowledge Base Article Title",
+			pageTreePanel = "true");
+	}
+
+	@description = "This test checks that user can access a folder in the search results from the side bar."
+	@priority = 4
+	test CanAccessFolderFromSearchResultsInSidebar {
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderDescription = "KB Folder Description",
+			kbFolderName = "KB Folder");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Folders and Articles");
+
+		KBArticle.searchForKB(knowledgeBaseName = "KB");
+
+		KBArticle.selectFolderThroughPageTreePanel(kbFolderName = "KB Folder");
+
+		KBArticle.viewDefaultCP(newFolder = "true");
+	}
+
+	@description = "This test checks that an article can be searched for in the admin search bar."
+	@priority = 4
+	test CanSearchForArticleInAdmin {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Orange Color Text",
+			kbArticleTitle = "Orange");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Blue Color Text",
+			kbArticleTitle = "Blue");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.searchForKB(
+			knowledgeBaseName = "Orange",
+			searchFromCenterPanel = "true");
+
+		KBArticle.viewSearchResultNotPresent(kbArticleTitle = "Blue");
+
+		KBArticle.viewSearchResults(kbArticleTitle = "Orange");
+	}
+
+	@description = "This test checks that matched text from search results in the KB admin screen is highlighted in the search results."
+	@priority = 4
+	test ResultsAppearIfAtLeastThreeCharactersMatchQuery {
+		property portal.acceptance = "true";
+
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderDescription = "KBFolder 1 Description",
+			kbFolderName = "KBFolder 1");
+
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderDescription = "KBFolder 2 Description",
+			kbFolderName = "KBFolder 2");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "KBArticle Content 1",
+			kbArticleTitle = "KBArticle 1");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Folders and Articles");
+
+		KBArticle.searchForKB(knowledgeBaseName = "KBF");
+
+		AssertElementPresent(
+			key_itemName = "KBF",
+			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_HIGHLIGHT_1");
+
+		AssertElementPresent(
+			key_itemName = "KBF",
+			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_HIGHLIGHT_2");
+
+		AssertElementNotPresent(
+			key_itemName = "KBA",
+			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_HIGHLIGHT_1");
+	}
+
+	@description = "This test checks that no results appear after a user types two/three letters that don't match a KB article title into the KB admin screen searchbar."
+	@priority = 4
+	test ResultsDoNotAppearInSidebarIfThreeCharactersDontMatchQuery {
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderDescription = "KB Folder 1 Description",
+			kbFolderName = "KB Folder 1");
+
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderDescription = "KB Folder 2 Description",
+			kbFolderName = "KB Folder 2");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content 1",
+			kbArticleTitle = "Knowledge Base Article Title 1");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openPageTreePanel(section = "Folders and Articles");
+
+		KBArticle.searchForKB(knowledgeBaseName = "fo");
+
+		AssertElementPresent(locator1 = "KnowledgeBase#PAGE_TREE_PANEL_OPENED");
+
+		KBArticle.searchForKB(knowledgeBaseName = "foo");
+
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
+	}
+
+	@priority = 4
 	@refactorneeded
 	test SearchChildArticleViaSearchPortletPG {
 		JSONKnowledgeBase.addkBArticle(
@@ -48,15 +183,15 @@ definition {
 
 		Navigator.gotoPage(pageName = "Knowledge Base Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Child");
+		SearchPage.searchEmbedded(searchTerm = "Child");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Knowledge Base Child Article Content",
 			searchAssetTitle = "Knowledge Base Child Article Title",
 			searchAssetType = "Knowledge Base Article");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactorneeded
 	test SearchKBArticleInFolderViaSearchPortlet {
 		JSONLayout.addPublicLayout(
@@ -64,7 +199,7 @@ definition {
 			layoutName = "Knowledge Base Display Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Knowledge Base Display Page",
 			widgetName = "Knowledge Base Display");
@@ -94,15 +229,15 @@ definition {
 
 		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Knowledge");
+		SearchPage.searchEmbedded(searchTerm = "Knowledge");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Knowledge Base Article 2 Content",
 			searchAssetTitle = "Knowledge Base Article 2 Title",
 			searchAssetType = "Knowledge Base Article");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test SearchKBArticleViaSearchPortlet {
 		property portal.acceptance = "true";
@@ -118,15 +253,15 @@ definition {
 
 		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Knowledge");
+		SearchPage.searchEmbedded(searchTerm = "Knowledge");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Knowledge Base Article Content",
 			searchAssetTitle = "Knowledge Base Article Title",
 			searchAssetType = "Knowledge Base Article");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactorneeded
 	test SearchKBArticleWithSpecialCharactersViaSearchPortletPG {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
@@ -142,12 +277,28 @@ definition {
 
 		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Knowledge Base");
+		SearchPage.searchEmbedded(searchTerm = "Knowledge Base");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Knowledge Base Article",
 			searchAssetTitle = "Knowledge Base Article",
 			searchAssetType = "Knowledge Base Article");
+	}
+
+	@description = "This test ensures that no results are shown after the user clears the search query by clicking the X in the search field."
+	@priority = 4
+	test SidebarReturnsToTreeViewAfterClearingSearchResults {
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.searchForKB(knowledgeBaseName = "foo");
+
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
+
+		Click(locator1 = "Button#CLEAR");
+
+		AssertElementPresent(locator1 = "KnowledgeBase#HOME_FOLDER");
 	}
 
 }

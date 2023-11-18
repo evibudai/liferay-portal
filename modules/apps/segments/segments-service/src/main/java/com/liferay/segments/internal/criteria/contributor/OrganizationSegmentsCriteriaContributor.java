@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.criteria.contributor;
 
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
+import com.liferay.segments.criteria.mapper.SegmentsCriteriaJSONObjectMapper;
 import com.liferay.segments.field.Field;
 import com.liferay.segments.internal.odata.entity.EntityModelFieldMapper;
 import com.liferay.segments.internal.odata.entity.OrganizationEntityModel;
@@ -27,9 +20,6 @@ import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Eduardo García
@@ -46,6 +36,13 @@ public class OrganizationSegmentsCriteriaContributor
 	implements SegmentsCriteriaContributor {
 
 	public static final String KEY = "organization";
+
+	@Override
+	public JSONObject getCriteriaJSONObject(Criteria criteria)
+		throws Exception {
+
+		return _segmentsCriteriaJSONObjectMapper.toJSONObject(criteria, this);
+	}
 
 	@Override
 	public EntityModel getEntityModel() {
@@ -73,14 +70,14 @@ public class OrganizationSegmentsCriteriaContributor
 	}
 
 	@Reference(
-		cardinality = ReferenceCardinality.MANDATORY,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
 		target = "(entity.model.name=" + OrganizationEntityModel.NAME + ")"
 	)
-	private volatile EntityModel _entityModel;
+	private EntityModel _entityModel;
 
 	@Reference
 	private EntityModelFieldMapper _entityModelFieldMapper;
+
+	@Reference(target = "(segments.criteria.mapper.key=odata)")
+	private SegmentsCriteriaJSONObjectMapper _segmentsCriteriaJSONObjectMapper;
 
 }

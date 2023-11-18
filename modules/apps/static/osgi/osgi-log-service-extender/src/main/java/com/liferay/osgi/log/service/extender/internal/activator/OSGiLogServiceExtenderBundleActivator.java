@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osgi.log.service.extender.internal.activator;
 
 import com.liferay.osgi.log.service.extender.internal.osgi.commands.LoggingLevelsOSGiCommands;
+import com.liferay.osgi.util.osgi.commands.OSGiCommands;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -68,13 +60,11 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 
 	public static class Tracked
 		extends AbstractMap.SimpleEntry
-			<BundleTracker<LoggerContext>,
-			 ServiceRegistration<LoggingLevelsOSGiCommands>> {
+			<BundleTracker<LoggerContext>, ServiceRegistration<OSGiCommands>> {
 
 		public Tracked(
 			BundleTracker<LoggerContext> bundleTracker,
-			ServiceRegistration<LoggingLevelsOSGiCommands>
-				serviceRegistration) {
+			ServiceRegistration<OSGiCommands> serviceRegistration) {
 
 			super(bundleTracker, serviceRegistration);
 		}
@@ -158,7 +148,7 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 				serviceReference);
 
 			BundleTracker<LoggerContext> bundleTracker = new BundleTracker<>(
-				_bundleContext, ~(Bundle.INSTALLED | Bundle.UNINSTALLED),
+				_bundleContext, Bundle.ACTIVE,
 				new LoggerContextBundleTrackerCustomizer(loggerAdmin));
 
 			bundleTracker.open();
@@ -166,9 +156,9 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 			LoggingLevelsOSGiCommands loggingLevelsOSGiCommands =
 				new LoggingLevelsOSGiCommands(loggerAdmin);
 
-			ServiceRegistration<LoggingLevelsOSGiCommands> serviceRegistration =
+			ServiceRegistration<OSGiCommands> serviceRegistration =
 				_bundleContext.registerService(
-					LoggingLevelsOSGiCommands.class, loggingLevelsOSGiCommands,
+					OSGiCommands.class, loggingLevelsOSGiCommands,
 					HashMapDictionaryBuilder.<String, Object>put(
 						"osgi.command.function",
 						new String[] {"levels", "level"}
@@ -188,7 +178,7 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 		public void removedService(
 			ServiceReference<LoggerAdmin> serviceReference, Tracked tracked) {
 
-			ServiceRegistration<LoggingLevelsOSGiCommands> serviceRegistration =
+			ServiceRegistration<OSGiCommands> serviceRegistration =
 				tracked.getValue();
 
 			serviceRegistration.unregister();

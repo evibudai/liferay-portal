@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.relationship.document.library.internal;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
-import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,20 +21,21 @@ import com.liferay.portal.relationship.Relationship;
 import com.liferay.portal.relationship.RelationshipResource;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.NoSuchElementException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Máté Thurzó
+ *
+ * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
  */
 @Component(
 	property = "model.class.name=com.liferay.document.library.kernel.model.DLFileEntryType",
 	service = RelationshipResource.class
 )
+@Deprecated
 public class DLFileEntryTypeDLRelationshipResource
 	implements RelationshipResource<DLFileEntryType> {
 
@@ -62,44 +54,38 @@ public class DLFileEntryTypeDLRelationshipResource
 	}
 
 	private FileEntry _getFileEntry(DLFileEntryType fileEntryType) {
-		List<DLFileEntry> dlFileEntries =
-			_dlFileEntryLocalService.getFileEntries(-1, -1);
+		for (DLFileEntry dlFileEntry :
+				_dlFileEntryLocalService.getFileEntries(-1, -1)) {
 
-		Stream<DLFileEntry> stream = dlFileEntries.parallelStream();
+			if (dlFileEntry.getFileEntryTypeId() !=
+					fileEntryType.getFileEntryTypeId()) {
 
-		return stream.filter(
-			dlFileEntry ->
-				dlFileEntry.getFileEntryTypeId() ==
-					fileEntryType.getFileEntryTypeId()
-		).findFirst(
-		).map(
-			dlFileEntry -> {
-				try {
-					return _dlAppLocalService.getFileEntry(
-						dlFileEntry.getFileEntryId());
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(portalException);
-					}
-
-					return null;
-				}
+				continue;
 			}
-		).get();
+
+			try {
+				return _dlAppLocalService.getFileEntry(
+					dlFileEntry.getFileEntryId());
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
+				}
+
+				throw new NoSuchElementException();
+			}
+		}
+
+		throw new NoSuchElementException();
 	}
 
 	private List<Folder> _getFolders(DLFileEntryType fileEntryType) {
-		List<DLFolder> dlFolders =
-			_dlFolderLocalService.getDLFileEntryTypeDLFolders(
-				fileEntryType.getFileEntryTypeId());
-
-		Stream<DLFolder> stream = dlFolders.stream();
-
-		return stream.map(
-			dlFolder -> {
+		return TransformUtil.transformToList(
+			_dlFileEntryTypeLocalService.getDLFolderPrimaryKeys(
+				fileEntryType.getFileEntryTypeId()),
+			dlFolderId -> {
 				try {
-					return _dlAppLocalService.getFolder(dlFolder.getFolderId());
+					return _dlAppLocalService.getFolder(dlFolderId);
 				}
 				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
@@ -108,12 +94,7 @@ public class DLFileEntryTypeDLRelationshipResource
 
 					return null;
 				}
-			}
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

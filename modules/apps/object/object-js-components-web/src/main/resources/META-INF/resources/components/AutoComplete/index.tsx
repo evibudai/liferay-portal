@@ -1,25 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDropDown from '@clayui/drop-down';
+import {FieldBase} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
-import {FieldBase} from '../FieldBase';
-
-import './index.scss';
 import {CustomSelect} from './CustomSelect';
 
+import './index.scss';
 interface AutoCompleteProps<T> extends React.HTMLAttributes<HTMLElement> {
 	children: (item: T) => React.ReactNode;
 	contentRight?: React.ReactNode;
@@ -30,16 +20,19 @@ interface AutoCompleteProps<T> extends React.HTMLAttributes<HTMLElement> {
 	hasEmptyItem?: boolean;
 	items: T[];
 	label: string;
+	onActive?: (item: T) => boolean;
 	onChangeQuery: (value: string) => void;
 	onSelectEmptyStateItem?: (emptyStateItem: EmptyStateItem) => void;
 	onSelectItem: (item: T) => void;
 	placeholder?: string;
 	query: string;
 	required?: boolean;
+	tooltip?: string;
 	value?: string;
 }
 
 type EmptyStateItem = {
+	externalReferenceCode: string;
 	id: string;
 	label: string;
 };
@@ -56,20 +49,27 @@ export default function AutoComplete<T>({
 	id,
 	items,
 	label,
+	onActive,
+	onBlur,
 	onChangeQuery,
 	onSelectEmptyStateItem,
 	onSelectItem,
 	placeholder,
 	query,
 	required = false,
+	tooltip,
 	value,
 }: AutoCompleteProps<T>) {
 	const [active, setActive] = useState<boolean>(false);
 
 	const emptyStateItem = {
+		externalReferenceCode: '',
 		id: '',
 		label: Liferay.Language.get('choose-an-option'),
 	};
+
+	const element = document.querySelector(`.custom-select__content-${id}`);
+	const elementRect = element?.getBoundingClientRect();
 
 	return (
 		<FieldBase
@@ -80,16 +80,22 @@ export default function AutoComplete<T>({
 			id={id}
 			label={label}
 			required={required}
+			tooltip={tooltip}
 		>
 			<ClayDropDown
 				active={!disabled && active}
+				menuElementAttrs={{
+					style: {maxWidth: elementRect?.width, width: '100%'},
+				}}
 				onActiveChange={(value: boolean) =>
 					!disabled ? setActive(value) : setActive(false)
 				}
+				onBlur={onBlur}
 				trigger={
 					<CustomSelect
 						contentRight={<>{value && contentRight}</>}
 						disabled={disabled}
+						id={id}
 						placeholder={
 							placeholder ??
 							Liferay.Language.get('choose-an-option')
@@ -131,6 +137,7 @@ export default function AutoComplete<T>({
 						{items.map((item, index) => {
 							return (
 								<ClayDropDown.Item
+									active={onActive && onActive(item)}
 									key={index}
 									onClick={() => {
 										setActive(false);

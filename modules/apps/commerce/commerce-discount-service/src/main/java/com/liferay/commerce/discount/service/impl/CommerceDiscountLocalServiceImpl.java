@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.discount.service.impl;
@@ -24,6 +15,7 @@ import com.liferay.commerce.discount.exception.CommerceDiscountDisplayDateExcept
 import com.liferay.commerce.discount.exception.CommerceDiscountExpirationDateException;
 import com.liferay.commerce.discount.exception.CommerceDiscountLimitationTypeException;
 import com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException;
+import com.liferay.commerce.discount.exception.CommerceDiscountRuleTypeSettingsException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTargetException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTitleException;
 import com.liferay.commerce.discount.exception.DuplicateCommerceDiscountException;
@@ -34,7 +26,10 @@ import com.liferay.commerce.discount.model.CommerceDiscountAccountRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountOrderTypeRelTable;
 import com.liferay.commerce.discount.model.CommerceDiscountRelTable;
+import com.liferay.commerce.discount.model.CommerceDiscountRule;
 import com.liferay.commerce.discount.model.CommerceDiscountTable;
+import com.liferay.commerce.discount.rule.type.CommerceDiscountRuleType;
+import com.liferay.commerce.discount.rule.type.CommerceDiscountRuleTypeRegistry;
 import com.liferay.commerce.discount.service.CommerceDiscountCommerceAccountGroupRelLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountOrderTypeRelLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountRelLocalService;
@@ -52,14 +47,18 @@ import com.liferay.commerce.product.model.CommerceChannelAccountEntryRelTable;
 import com.liferay.commerce.product.model.CommerceChannelRelTable;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -81,8 +80,10 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -97,15 +98,12 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -385,6 +383,14 @@ public class CommerceDiscountLocalServiceImpl
 			commerceDiscount, serviceContext);
 
 		// Workflow
+
+		if (_isWorkflowEnabled(
+				serviceContext.getCompanyId(), serviceContext.getScopeGroupId(),
+				CommerceDiscount.class.getName())) {
+
+			serviceContext.setWorkflowAction(
+				WorkflowConstants.ACTION_SAVE_DRAFT);
+		}
 
 		return _startWorkflowInstance(
 			user.getUserId(), commerceDiscount, serviceContext);
@@ -672,13 +678,14 @@ public class CommerceDiscountLocalServiceImpl
 	@Override
 	public CommerceDiscount fetchDefaultCommerceDiscount(
 		long commerceChannelAccountEntryRelId, long cpDefinitionId,
-		long cpInstanceId) {
+		long cpInstanceId, String unitOfMeasureKey) {
 
 		List<CommerceDiscount> commerceDiscounts = dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
-				commerceChannelAccountEntryRelId, cpDefinitionId, cpInstanceId
+				commerceChannelAccountEntryRelId, cpDefinitionId, cpInstanceId,
+				unitOfMeasureKey
 			).limit(
 				0, 1
 			));
@@ -694,14 +701,16 @@ public class CommerceDiscountLocalServiceImpl
 	public List<CommerceDiscount>
 		getAccountAndChannelAndOrderTypeCommerceDiscounts(
 			long commerceAccountId, long commerceChannelId,
-			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId) {
+			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId,
+			String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, commerceChannelId,
-				commerceOrderTypeId, cpDefinitionId, cpInstanceId, null));
+				commerceOrderTypeId, cpDefinitionId, cpInstanceId, null,
+				unitOfMeasureKey));
 	}
 
 	@Override
@@ -715,20 +724,20 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, commerceChannelId,
-				commerceOrderTypeId, null, null, target));
+				commerceOrderTypeId, null, null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountAndChannelCommerceDiscounts(
 		long commerceAccountId, long commerceChannelId, long cpDefinitionId,
-		long cpInstanceId) {
+		long cpInstanceId, String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, commerceChannelId, null,
-				cpDefinitionId, cpInstanceId, null));
+				cpDefinitionId, cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -740,7 +749,7 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, commerceChannelId, null, null,
-				null, target));
+				null, target, null));
 	}
 
 	@Override
@@ -752,32 +761,33 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, null, commerceOrderTypeId, null,
-				null, target));
+				null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountCommerceAndOrderTypeDiscounts(
 		long commerceAccountId, long commerceOrderTypeId, long cpDefinitionId,
-		long cpInstanceId) {
+		long cpInstanceId, String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, null, commerceOrderTypeId,
-				cpDefinitionId, cpInstanceId, null));
+				cpDefinitionId, cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountCommerceDiscounts(
-		long commerceAccountId, long cpDefinitionId, long cpInstanceId) {
+		long commerceAccountId, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, commerceAccountId, null, null, null, cpDefinitionId,
-				cpInstanceId, null));
+				cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -788,21 +798,24 @@ public class CommerceDiscountLocalServiceImpl
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
-				null, commerceAccountId, null, null, null, null, null, target));
+				null, commerceAccountId, null, null, null, null, null, target,
+				null));
 	}
 
 	@Override
 	public List<CommerceDiscount>
 		getAccountGroupAndChannelAndOrderTypeCommerceDiscount(
 			long[] commerceAccountGroupIds, long commerceChannelId,
-			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId) {
+			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId,
+			String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, commerceChannelId,
-				commerceOrderTypeId, cpDefinitionId, cpInstanceId, null));
+				commerceOrderTypeId, cpDefinitionId, cpInstanceId, null,
+				unitOfMeasureKey));
 	}
 
 	@Override
@@ -816,20 +829,20 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, commerceChannelId,
-				commerceOrderTypeId, null, null, target));
+				commerceOrderTypeId, null, null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountGroupAndChannelCommerceDiscount(
 		long[] commerceAccountGroupIds, long commerceChannelId,
-		long cpDefinitionId, long cpInstanceId) {
+		long cpDefinitionId, long cpInstanceId, String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, commerceChannelId, null,
-				cpDefinitionId, cpInstanceId, null));
+				cpDefinitionId, cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -841,20 +854,20 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, commerceChannelId, null,
-				null, null, target));
+				null, null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountGroupAndOrderTypeCommerceDiscount(
 		long[] commerceAccountGroupIds, long commerceOrderTypeId,
-		long cpDefinitionId, long cpInstanceId) {
+		long cpDefinitionId, long cpInstanceId, String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, null, commerceOrderTypeId,
-				cpDefinitionId, cpInstanceId, null));
+				cpDefinitionId, cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -867,20 +880,20 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, null, commerceOrderTypeId,
-				null, null, target));
+				null, null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getAccountGroupCommerceDiscount(
-		long[] commerceAccountGroupIds, long cpDefinitionId,
-		long cpInstanceId) {
+		long[] commerceAccountGroupIds, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, null, null, cpDefinitionId,
-				cpInstanceId, null));
+				cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -892,7 +905,7 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, commerceAccountGroupIds, null, null, null, null,
-				target));
+				target, null));
 	}
 
 	@Override
@@ -915,14 +928,14 @@ public class CommerceDiscountLocalServiceImpl
 	@Override
 	public List<CommerceDiscount> getChannelAndOrderTypeCommerceDiscounts(
 		long commerceChannelId, long commerceOrderTypeId, long cpDefinitionId,
-		long cpInstanceId) {
+		long cpInstanceId, String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, null, commerceChannelId, commerceOrderTypeId,
-				cpDefinitionId, cpInstanceId, null));
+				cpDefinitionId, cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -934,19 +947,20 @@ public class CommerceDiscountLocalServiceImpl
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, null, commerceChannelId, commerceOrderTypeId, null,
-				null, target));
+				null, target, null));
 	}
 
 	@Override
 	public List<CommerceDiscount> getChannelCommerceDiscounts(
-		long commerceChannelId, long cpDefinitionId, long cpInstanceId) {
+		long commerceChannelId, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, null, commerceChannelId, null, cpDefinitionId,
-				cpInstanceId, null));
+				cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -957,7 +971,8 @@ public class CommerceDiscountLocalServiceImpl
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
-				null, null, null, commerceChannelId, null, null, null, target));
+				null, null, null, commerceChannelId, null, null, null, target,
+				null));
 	}
 
 	/**
@@ -998,14 +1013,15 @@ public class CommerceDiscountLocalServiceImpl
 
 	@Override
 	public List<CommerceDiscount> getOrderTypeCommerceDiscounts(
-		long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId) {
+		long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				null, null, null, null, commerceOrderTypeId, cpDefinitionId,
-				cpInstanceId, null));
+				cpInstanceId, null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -1016,8 +1032,8 @@ public class CommerceDiscountLocalServiceImpl
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
-				null, null, null, null, commerceOrderTypeId, null, null,
-				target));
+				null, null, null, null, commerceOrderTypeId, null, null, target,
+				null));
 	}
 
 	@Override
@@ -1033,14 +1049,15 @@ public class CommerceDiscountLocalServiceImpl
 
 	@Override
 	public List<CommerceDiscount> getUnqualifiedCommerceDiscounts(
-		long companyId, long cpDefinitionId, long cpInstanceId) {
+		long companyId, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQuery(
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
 				companyId, null, null, null, null, cpDefinitionId, cpInstanceId,
-				null));
+				null, unitOfMeasureKey));
 	}
 
 	@Override
@@ -1051,12 +1068,13 @@ public class CommerceDiscountLocalServiceImpl
 			_getGroupByStep(
 				DSLQueryFactoryUtil.selectDistinct(
 					CommerceDiscountTable.INSTANCE),
-				companyId, null, null, null, null, null, null, target));
+				companyId, null, null, null, null, null, null, target, null));
 	}
 
 	@Override
 	public int getValidCommerceDiscountsCount(
-		long commerceDiscountId, long cpDefinitionId, long cpInstanceId) {
+		long commerceDiscountId, long cpDefinitionId, long cpInstanceId,
+		String unitOfMeasureKey) {
 
 		return dslQueryCount(
 			DSLQueryFactoryUtil.countDistinct(
@@ -1071,7 +1089,8 @@ public class CommerceDiscountLocalServiceImpl
 				CommerceDiscountTable.INSTANCE.commerceDiscountId.eq(
 					commerceDiscountId
 				).and(
-					_toTargetPredicate(cpDefinitionId, cpInstanceId)
+					_toTargetPredicate(
+						cpDefinitionId, cpInstanceId, unitOfMeasureKey)
 				)
 			));
 	}
@@ -1540,7 +1559,6 @@ public class CommerceDiscountLocalServiceImpl
 			).put(
 				"skipCommerceAccountGroupValidation", true
 			).build());
-
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -1624,12 +1642,8 @@ public class CommerceDiscountLocalServiceImpl
 				assetCategories.addAll(assetCategory.getAncestors());
 			}
 
-			Stream<AssetCategory> stream = assetCategories.stream();
-
-			LongStream longStream = stream.mapToLong(
-				AssetCategory::getCategoryId);
-
-			return longStream.toArray();
+			return TransformUtil.transformToLongArray(
+				assetCategories, AssetCategory::getCategoryId);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -1674,7 +1688,7 @@ public class CommerceDiscountLocalServiceImpl
 
 	private GroupByStep _getGroupByStep(
 		FromStep fromStep, long commerceChannelAccountEntryRelId,
-		long cpDefinitionId, long cpInstanceId) {
+		long cpDefinitionId, long cpInstanceId, String unitOfMeasureKey) {
 
 		JoinStep joinStep = fromStep.from(
 			CommerceDiscountTable.INSTANCE
@@ -1694,17 +1708,22 @@ public class CommerceDiscountLocalServiceImpl
 					commerceChannelAccountEntryRelId
 				).and(
 					CommerceDiscountTable.INSTANCE.active.eq(true)
+				).and(
+					CommerceDiscountTable.INSTANCE.status.eq(
+						WorkflowConstants.STATUS_APPROVED)
 				);
 
 		return joinStep.where(
-			predicate.and(_toTargetPredicate(cpDefinitionId, cpInstanceId)));
+			predicate.and(
+				_toTargetPredicate(
+					cpDefinitionId, cpInstanceId, unitOfMeasureKey)));
 	}
 
 	private GroupByStep _getGroupByStep(
 		FromStep fromStep, Long companyId, Long commerceAccountId,
 		long[] commerceAccountGroupIds, Long commerceChannelId,
 		Long commerceOrderTypeId, Long cpDefinitionId, Long cpInstanceId,
-		String target) {
+		String target, String unitOfMeasureKey) {
 
 		JoinStep joinStep = fromStep.from(CommerceDiscountTable.INSTANCE);
 
@@ -1719,6 +1738,9 @@ public class CommerceDiscountLocalServiceImpl
 
 				return null;
 			}
+		).and(
+			CommerceDiscountTable.INSTANCE.status.eq(
+				WorkflowConstants.STATUS_APPROVED)
 		);
 
 		if (commerceAccountId != null) {
@@ -1751,15 +1773,10 @@ public class CommerceDiscountLocalServiceImpl
 					commerceDiscountId.eq(
 						CommerceDiscountTable.INSTANCE.commerceDiscountId));
 
-			LongStream longStream = Arrays.stream(commerceAccountGroupIds);
-
 			predicate = predicate.and(
 				CommerceDiscountCommerceAccountGroupRelTable.INSTANCE.
 					commerceAccountGroupId.in(
-						longStream.boxed(
-						).toArray(
-							Long[]::new
-						)));
+						ArrayUtil.toArray(commerceAccountGroupIds)));
 		}
 		else {
 			joinStep = joinStep.leftJoinOn(
@@ -1831,7 +1848,21 @@ public class CommerceDiscountLocalServiceImpl
 				CommerceDiscountTable.INSTANCE.commerceDiscountId));
 
 		return joinStep.where(
-			predicate.and(_toTargetPredicate(cpDefinitionId, cpInstanceId)));
+			predicate.and(
+				_toTargetPredicate(
+					cpDefinitionId, cpInstanceId, unitOfMeasureKey)));
+	}
+
+	private boolean _isWorkflowEnabled(
+		long companyId, long groupId, String className) {
+
+		if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
+				companyId, groupId, className, 0)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private CommerceDiscount _startWorkflowInstance(
@@ -1849,7 +1880,7 @@ public class CommerceDiscountLocalServiceImpl
 	}
 
 	private Predicate _toTargetPredicate(
-		long cpDefinitionId, long cpInstanceId) {
+		long cpDefinitionId, long cpInstanceId, String unitOfMeasureKey) {
 
 		Predicate predicate = CommerceDiscountTable.INSTANCE.target.eq(
 			CommerceDiscountConstants.TARGET_PRODUCTS
@@ -1861,16 +1892,27 @@ public class CommerceDiscountLocalServiceImpl
 					CPDefinition.class.getName()))
 		);
 
-		predicate = predicate.or(
-			CommerceDiscountTable.INSTANCE.target.eq(
-				CommerceDiscountConstants.TARGET_SKUS
-			).and(
-				CommerceDiscountRelTable.INSTANCE.classPK.eq(cpInstanceId)
-			).and(
-				CommerceDiscountRelTable.INSTANCE.classNameId.eq(
-					_classNameLocalService.getClassNameId(
-						CPInstance.class.getName()))
-			));
+		Predicate andPredicate = CommerceDiscountTable.INSTANCE.target.eq(
+			CommerceDiscountConstants.TARGET_SKUS
+		).and(
+			CommerceDiscountRelTable.INSTANCE.classPK.eq(cpInstanceId)
+		).and(
+			CommerceDiscountRelTable.INSTANCE.classNameId.eq(
+				_classNameLocalService.getClassNameId(
+					CPInstance.class.getName()))
+		);
+
+		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-11287") &&
+			!Validator.isBlank(unitOfMeasureKey)) {
+
+			andPredicate = andPredicate.and(
+				CommerceDiscountRelTable.INSTANCE.typeSettings.like(
+					StringBundler.concat(
+						"%unitOfMeasureKey=", unitOfMeasureKey,
+						StringPool.PERCENT)));
+		}
+
+		predicate = predicate.or(andPredicate);
 
 		long[] assetCategoryIds = _getAssetCategoryIds(cpDefinitionId);
 
@@ -1879,18 +1921,12 @@ public class CommerceDiscountLocalServiceImpl
 				assetCategoryIds = new long[] {0};
 			}
 
-			LongStream assetCategoryIdsLongStream = Arrays.stream(
-				assetCategoryIds);
-
 			predicate = predicate.or(
 				CommerceDiscountTable.INSTANCE.target.eq(
 					CommerceDiscountConstants.TARGET_CATEGORIES
 				).and(
 					CommerceDiscountRelTable.INSTANCE.classPK.in(
-						assetCategoryIdsLongStream.boxed(
-						).toArray(
-							Long[]::new
-						))
+						ArrayUtil.toArray(assetCategoryIds))
 				).and(
 					CommerceDiscountRelTable.INSTANCE.classNameId.eq(
 						_classNameLocalService.getClassNameId(
@@ -1907,18 +1943,12 @@ public class CommerceDiscountLocalServiceImpl
 				commercePricingClasses = new long[] {0};
 			}
 
-			LongStream commercePricingClassesLongStream = Arrays.stream(
-				commercePricingClasses);
-
 			predicate = predicate.or(
 				CommerceDiscountTable.INSTANCE.target.eq(
 					CommerceDiscountConstants.TARGET_PRODUCT_GROUPS
 				).and(
 					CommerceDiscountRelTable.INSTANCE.classPK.in(
-						commercePricingClassesLongStream.boxed(
-						).toArray(
-							Long[]::new
-						))
+						ArrayUtil.toArray(commercePricingClasses))
 				).and(
 					CommerceDiscountRelTable.INSTANCE.classNameId.eq(
 						_classNameLocalService.getClassNameId(
@@ -1982,6 +2012,29 @@ public class CommerceDiscountLocalServiceImpl
 
 			throw new CommerceDiscountMaxPriceValueException();
 		}
+
+		if (commerceDiscountId > 0) {
+			List<CommerceDiscountRule> commerceDiscountRules =
+				_commerceDiscountRuleLocalService.getCommerceDiscountRules(
+					commerceDiscountId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null);
+
+			for (CommerceDiscountRule commerceDiscountRule :
+					commerceDiscountRules) {
+
+				CommerceDiscountRuleType commerceDiscountRuleType =
+					_commerceDiscountRuleTypeRegistry.
+						getCommerceDiscountRuleType(
+							commerceDiscountRule.getType());
+
+				if (!commerceDiscountRuleType.validate(
+						commerceDiscountRule.getSettingsProperty(
+							commerceDiscountRule.getType()))) {
+
+					throw new CommerceDiscountRuleTypeSettingsException();
+				}
+			}
+		}
 	}
 
 	private static final String[] _SELECTED_FIELD_NAMES = {
@@ -2016,6 +2069,9 @@ public class CommerceDiscountLocalServiceImpl
 	private CommerceDiscountRuleLocalService _commerceDiscountRuleLocalService;
 
 	@Reference
+	private CommerceDiscountRuleTypeRegistry _commerceDiscountRuleTypeRegistry;
+
+	@Reference
 	private CommerceDiscountTargetRegistry _commerceDiscountTargetRegistry;
 
 	@Reference
@@ -2036,6 +2092,10 @@ public class CommerceDiscountLocalServiceImpl
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
+	private WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
 
 	@Reference
 	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;

@@ -21,18 +21,29 @@ definition {
 		task ("Create a new Raylife AP Site") {
 			Site.openSitesAdmin();
 
-			TeamExtranet.addSiteTemplateCP(
-				siteName = "${testSiteName}",
-				siteTemplateName = "Raylife AP");
+			HeadlessSite.addSite(
+				siteName = "Raylife D2C",
+				templateName = "Raylife D2C",
+				templateType = "Site Initializer");
+
+			Raylife.createRaylifeSite(siteName = "Raylife AP");
+		}
+
+		task ("Login as Scott Producer because of roles and permissions") {
+			User.logoutPG();
+
+			RaylifeAP.userLoginInRaylife(email = "scott.producer");
+
+			RaylifeAP.goToRaylifeUserProfileMenu(raylifeSite = "Raylife AP");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		RaylifeAP.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,11 +52,12 @@ definition {
 	}
 
 	@description = "LPS-151595 - Check if the left sidebar it should is expand is present"
-	@priority = "4"
+	@priority = 4
 	test CanViewSideBarExpand {
-		task ("Go to Raylife AP Site") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
-		}
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
 
 		task ("Can view Sidebar Expanded") {
 			RaylifeAP.expandedSidebar(key_menuSidebar = "policies");
@@ -57,11 +69,12 @@ definition {
 	}
 
 	@description = "LPS-151596 - Check that the 'Applications' section is present in the sidebar"
-	@priority = "4"
+	@priority = 4
 	test SectionApplicationsInTheSidebar {
-		task ("Go to Raylife AP Site") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
-		}
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
 
 		task ("Can view Sidebar Expanded") {
 			RaylifeAP.expandedSidebar(key_menuSidebar = "applications");

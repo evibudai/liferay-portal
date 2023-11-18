@@ -1,31 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.internal.upgrade.registry;
 
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.layout.helper.CollectionPaginationHelper;
 import com.liferay.layout.page.template.internal.upgrade.v1_1_0.LayoutPrototypeUpgradeProcess;
 import com.liferay.layout.page.template.internal.upgrade.v1_1_1.LayoutPageTemplateEntryUpgradeProcess;
 import com.liferay.layout.page.template.internal.upgrade.v1_2_0.LayoutPageTemplateStructureUpgradeProcess;
 import com.liferay.layout.page.template.internal.upgrade.v2_0_0.util.LayoutPageTemplateCollectionTable;
 import com.liferay.layout.page.template.internal.upgrade.v2_0_0.util.LayoutPageTemplateEntryTable;
 import com.liferay.layout.page.template.internal.upgrade.v2_1_0.LayoutUpgradeProcess;
-import com.liferay.layout.page.template.internal.upgrade.v3_1_3.ResourcePermissionUpgradeProcess;
+import com.liferay.layout.page.template.internal.upgrade.v3_1_4.ResourcePermissionUpgradeProcess;
 import com.liferay.layout.page.template.internal.upgrade.v3_3_0.LayoutPageTemplateStructureRelUpgradeProcess;
 import com.liferay.layout.page.template.internal.upgrade.v3_4_1.FragmentEntryLinkEditableValuesUpgradeProcess;
+import com.liferay.layout.page.template.internal.upgrade.v5_3_0.LayoutPageTemplateCollectionUpgradeProcess;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
@@ -34,6 +25,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
@@ -113,11 +105,13 @@ public class LayoutPageTemplateServiceUpgradeStepRegistrator
 
 		registry.register("3.1.1", "3.1.2", new DummyUpgradeStep());
 
-		registry.register(
-			"3.1.2", "3.1.3", new ResourcePermissionUpgradeProcess());
+		registry.register("3.1.2", "3.1.3", new DummyUpgradeStep());
 
 		registry.register(
-			"3.1.3", "3.2.0",
+			"3.1.3", "3.1.4", new ResourcePermissionUpgradeProcess());
+
+		registry.register(
+			"3.1.4", "3.2.0",
 			new com.liferay.layout.page.template.internal.upgrade.v3_2_0.
 				LayoutPageTemplateCollectionUpgradeProcess(),
 			new com.liferay.layout.page.template.internal.upgrade.v3_2_0.
@@ -162,16 +156,17 @@ public class LayoutPageTemplateServiceUpgradeStepRegistrator
 				ResourcePermissionUpgradeProcess(
 					_resourcePermissionLocalService));
 
+		registry.register("3.4.3", "3.4.4", new DummyUpgradeStep());
+
 		registry.register(
-			"3.4.3", "3.5.0",
+			"3.4.4", "3.5.0",
 			new com.liferay.layout.page.template.internal.upgrade.v3_5_0.
 				LayoutPageTemplateStructureRelUpgradeProcess());
 
 		registry.register(
 			"3.5.0", "4.0.0",
 			new com.liferay.layout.page.template.internal.upgrade.v4_0_0.
-				LayoutPageTemplateStructureRelUpgradeProcess(
-					_collectionPaginationHelper));
+				LayoutPageTemplateStructureRelUpgradeProcess());
 
 		registry.register(
 			"4.0.0", "5.0.0",
@@ -189,10 +184,19 @@ public class LayoutPageTemplateServiceUpgradeStepRegistrator
 			"5.1.0", "5.1.1",
 			new com.liferay.layout.page.template.internal.upgrade.v5_1_1.
 				LayoutPageTemplateStructureUpgradeProcess(_layoutLocalService));
-	}
 
-	@Reference
-	private CollectionPaginationHelper _collectionPaginationHelper;
+		registry.register(
+			"5.1.1", "5.2.0",
+			UpgradeProcessFactory.alterColumnName(
+				"LayoutPageTemplateStructure", "classPK", "plid LONG"),
+			UpgradeProcessFactory.dropColumns(
+				"LayoutPageTemplateStructure", "classNameId"));
+
+		registry.register(
+			"5.2.0", "5.3.0", new LayoutPageTemplateCollectionUpgradeProcess());
+
+		registry.register("5.3.0", "5.3.1", new DummyUpgradeProcess());
+	}
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

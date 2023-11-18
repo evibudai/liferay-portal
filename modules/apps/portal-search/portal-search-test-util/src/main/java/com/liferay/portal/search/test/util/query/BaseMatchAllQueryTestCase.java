@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.query;
@@ -21,9 +12,7 @@ import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,17 +26,12 @@ public abstract class BaseMatchAllQueryTestCase extends BaseIndexingTestCase {
 	public void testMatchAllQuery() {
 		int count = 20;
 
-		List<Double> list = IntStream.rangeClosed(
-			1, count
-		).mapToObj(
-			Double::valueOf
-		).collect(
-			Collectors.toList()
-		);
+		double[] sequence = _generateNumberSequenceClosed(count);
 
-		list.forEach(
-			i -> addDocument(
-				DocumentCreationHelpers.singleNumber(Field.PRIORITY, i)));
+		addDocuments(
+			number -> DocumentCreationHelpers.singleNumber(
+				Field.PRIORITY, number),
+			sequence);
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -73,8 +57,8 @@ public abstract class BaseMatchAllQueryTestCase extends BaseIndexingTestCase {
 
 						DocumentsAssert.assertValues(
 							searchResponse.getRequestString(),
-							searchResponse.getDocumentsStream(), Field.PRIORITY,
-							String.valueOf(list));
+							searchResponse.getDocuments(), Field.PRIORITY,
+							Arrays.toString(sequence));
 					});
 			});
 	}
@@ -83,12 +67,10 @@ public abstract class BaseMatchAllQueryTestCase extends BaseIndexingTestCase {
 	public void testMatchAllQueryWithSize0() {
 		int count = 20;
 
-		IntStream.rangeClosed(
-			1, count
-		).forEach(
-			i -> addDocument(
-				DocumentCreationHelpers.singleNumber(Field.PRIORITY, i))
-		);
+		addDocuments(
+			number -> DocumentCreationHelpers.singleNumber(
+				Field.PRIORITY, number),
+			_generateNumberSequenceClosed(count));
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -112,7 +94,7 @@ public abstract class BaseMatchAllQueryTestCase extends BaseIndexingTestCase {
 
 						DocumentsAssert.assertValues(
 							searchResponse.getRequestString(),
-							searchResponse.getDocumentsStream(), Field.PRIORITY,
+							searchResponse.getDocuments(), Field.PRIORITY,
 							"[]");
 					});
 			});
@@ -124,6 +106,14 @@ public abstract class BaseMatchAllQueryTestCase extends BaseIndexingTestCase {
 			).query(
 				queries.matchAll()
 			).build());
+	}
+
+	private double[] _generateNumberSequenceClosed(int count) {
+		double[] sequence = new double[count];
+
+		Arrays.setAll(sequence, i -> i + 1);
+
+		return sequence;
 	}
 
 }

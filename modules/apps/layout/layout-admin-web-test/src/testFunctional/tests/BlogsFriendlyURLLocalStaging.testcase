@@ -11,14 +11,14 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Staging Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Staging Blogs Page",
 			widgetName = "Blogs");
@@ -27,9 +27,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -40,7 +40,7 @@ definition {
 	}
 
 	@description = "This ensures that the friendlyURL in Blogs can be published when local staging is enabled."
-	@priority = "5"
+	@priority = 5
 	test CanPublishFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -92,7 +92,7 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL in Blogs can be removed and published when local staging is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanPublishRemovedOldFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -148,7 +148,7 @@ definition {
 	}
 
 	@description = "This ensures that the old friendlyURL in Blogs can be restored and published when local staging is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanPublishRestoredOldFriendlyURL {
 		var portalURL = PropsUtil.get("portal.url");
 

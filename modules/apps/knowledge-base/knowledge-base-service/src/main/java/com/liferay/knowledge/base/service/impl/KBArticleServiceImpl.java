@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service.impl;
@@ -88,8 +79,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 			String externalReferenceCode, String portletId,
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			String title, String urlTitle, String content, String description,
-			String[] sections, String sourceURL, Date expirationDate,
-			Date reviewDate, String[] selectedFileNames,
+			String[] sections, String sourceURL, Date displayDate,
+			Date expirationDate, Date reviewDate, String[] selectedFileNames,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -98,8 +89,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 		return kbArticleLocalService.addKBArticle(
 			externalReferenceCode, getUserId(), parentResourceClassNameId,
 			parentResourcePrimKey, title, urlTitle, content, description,
-			sections, sourceURL, expirationDate, reviewDate, selectedFileNames,
-			serviceContext);
+			sections, sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, serviceContext);
 	}
 
 	@Override
@@ -129,6 +120,13 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 		kbArticleLocalService.addTempAttachment(
 			groupId, getUserId(), fileName, tempFolderName, inputStream,
 			mimeType);
+	}
+
+	@Override
+	public int countKBArticlesByKeywords(
+		long groupId, String keywords, int status) {
+
+		return kbArticleFinder.filterCountByKeywords(groupId, keywords, status);
 	}
 
 	@Override
@@ -324,8 +322,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 
 	@Override
 	public String getGroupKBArticlesRSS(
-			int status, int rssDelta, String rssDisplayStyle, String rssFormat,
-			ThemeDisplay themeDisplay)
+			int status, int max, String type, double version,
+			String displayStyle, ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		Group group = themeDisplay.getScopeGroup();
@@ -339,11 +337,11 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 		String feedURL = _portal.getLayoutFullURL(themeDisplay);
 
 		List<KBArticle> kbArticles = getGroupKBArticles(
-			group.getGroupId(), status, 0, rssDelta,
+			group.getGroupId(), status, 0, max,
 			new KBArticleModifiedDateComparator());
 
 		return _exportToRSS(
-			rssDisplayStyle, rssFormat, name, description, feedURL, kbArticles,
+			name, description, feedURL, kbArticles, type, version, displayStyle,
 			themeDisplay);
 	}
 
@@ -370,8 +368,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 
 	@Override
 	public String getKBArticleRSS(
-			long resourcePrimKey, int status, int rssDelta,
-			String rssDisplayStyle, String rssFormat, ThemeDisplay themeDisplay)
+			long resourcePrimKey, int status, int max, String type,
+			double version, String displayStyle, ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		KBArticle kbArticle = kbArticleLocalService.getLatestKBArticle(
@@ -389,8 +387,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 			new KBArticleModifiedDateComparator());
 
 		return _exportToRSS(
-			rssDisplayStyle, rssFormat, name, description, feedURL,
-			ListUtil.subList(kbArticles, 0, rssDelta), themeDisplay);
+			name, description, feedURL, ListUtil.subList(kbArticles, 0, max),
+			type, version, displayStyle, themeDisplay);
 	}
 
 	@Override
@@ -460,6 +458,14 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 		return getKBArticles(
 			groupId, resourcePrimKeys, status, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, orderByComparator);
+	}
+
+	@Override
+	public List<KBArticle> getKBArticlesByKeywords(
+		long groupId, String keywords, int status, int start, int end) {
+
+		return kbArticleFinder.filterFindByKeywords(
+			groupId, keywords, status, start, end);
 	}
 
 	@Override
@@ -790,8 +796,9 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	public KBArticle updateKBArticle(
 			long resourcePrimKey, String title, String content,
 			String description, String[] sections, String sourceURL,
-			Date expirationDate, Date reviewDate, String[] selectedFileNames,
-			long[] removeFileEntryIds, ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate,
+			String[] selectedFileNames, long[] removeFileEntryIds,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_kbArticleModelResourcePermission.check(
@@ -799,8 +806,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 
 		return kbArticleLocalService.updateKBArticle(
 			getUserId(), resourcePrimKey, title, content, description, sections,
-			sourceURL, expirationDate, reviewDate, selectedFileNames,
-			removeFileEntryIds, serviceContext);
+			sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, removeFileEntryIds, serviceContext);
 	}
 
 	@Override
@@ -903,9 +910,9 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	private String _exportToRSS(
-		String rssDisplayStyle, String rssFormat, String name,
-		String description, String feedURL, List<KBArticle> kbArticles,
-		ThemeDisplay themeDisplay) {
+		String name, String description, String feedURL,
+		List<KBArticle> kbArticles, String type, double version,
+		String displayStyle, ThemeDisplay themeDisplay) {
 
 		SyndFeed syndFeed = _syndModelFactory.createSyndFeed();
 
@@ -926,7 +933,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 
 			String value = null;
 
-			if (rssDisplayStyle.equals(RSSUtil.DISPLAY_STYLE_ABSTRACT)) {
+			if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_ABSTRACT)) {
 				value = _htmlParser.extractText(kbArticle.getDescription());
 
 				if (Validator.isNull(value)) {
@@ -934,7 +941,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 						_htmlParser.extractText(kbArticle.getContent()), 200);
 				}
 			}
-			else if (rssDisplayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
+			else if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
 				value = StringPool.BLANK;
 			}
 			else {
@@ -965,10 +972,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 			syndEntries.add(syndEntry);
 		}
 
-		syndFeed.setFeedType(
-			RSSUtil.getFeedType(
-				RSSUtil.getFormatType(rssFormat),
-				RSSUtil.getFormatVersion(rssFormat)));
+		syndFeed.setFeedType(RSSUtil.getFeedType(type, version));
 
 		List<SyndLink> syndLinks = new ArrayList<>();
 

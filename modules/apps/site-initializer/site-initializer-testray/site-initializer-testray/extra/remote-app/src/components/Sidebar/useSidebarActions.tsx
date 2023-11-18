@@ -1,26 +1,37 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useContext} from 'react';
+
+import {TestrayContext} from '../../context/TestrayContext';
 import useModalContext from '../../hooks/useModalContext';
 import i18n from '../../i18n';
 import CaseTypeModal from '../../pages/Standalone/CaseType/CaseTypeModal';
 import FactorCategoryModal from '../../pages/Standalone/FactorCategory/FactorCategoryModal';
 import OptionsModal from '../../pages/Standalone/FactorOptions/FactorOptionsModal';
 import {LIFERAY_URLS} from '../../services/liferay';
+import {DispatchTriggerStatuses} from '../../util/statuses';
+import JobSchedulerModal from '../JobSchedulerModal';
 
 const useSidebarActions = () => {
 	const {onOpenModal} = useModalContext();
+	const [{testrayDispatchTriggers}] = useContext(TestrayContext);
+
+	const jobsInProgress =
+		testrayDispatchTriggers?.facets[0]?.facetValues
+			.filter((facetValue) =>
+				([
+					DispatchTriggerStatuses.INPROGRESS,
+					DispatchTriggerStatuses.SCHEDULED,
+				] as string[]).includes(facetValue.term)
+			)
+			.map((facetValue) => facetValue.numberOfOccurrences)
+			.reduce(
+				(previousValue, currentValue) => previousValue + currentValue,
+				0
+			) ?? 0;
 
 	const MANAGE_DROPDOWN = [
 		{
@@ -97,6 +108,26 @@ const useSidebarActions = () => {
 				},
 			],
 			title: '',
+		},
+		{
+			items: [
+				{
+					icon: 'bell-on',
+					label: i18n.sub('job-scheduler-x', `[ ${jobsInProgress} ]`),
+					onClick: () =>
+						onOpenModal({
+							body: (
+								<JobSchedulerModal
+									testrayDispatchTriggers={
+										testrayDispatchTriggers
+									}
+								/>
+							),
+							size: 'lg',
+							title: i18n.translate('job-scheduler'),
+						}),
+				},
+			],
 		},
 	];
 

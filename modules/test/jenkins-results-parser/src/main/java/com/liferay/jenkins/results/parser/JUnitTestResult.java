@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -20,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -65,9 +57,15 @@ public class JUnitTestResult extends BaseTestResult {
 		Element downstreamBuildListItemElement = Dom4JUtil.getNewElement(
 			"div", null);
 
-		downstreamBuildListItemElement.add(
-			Dom4JUtil.getNewAnchorElement(
-				getTestReportURL(), getDisplayName()));
+		if (Objects.equals(getStatus(), "UNTESTED")) {
+			downstreamBuildListItemElement.addText(
+				getDisplayName() + " - UNTESTED");
+		}
+		else {
+			downstreamBuildListItemElement.add(
+				Dom4JUtil.getNewAnchorElement(
+					getTestReportURL(), getDisplayName()));
+		}
 
 		TestHistory testHistory = getTestHistory();
 
@@ -208,19 +206,10 @@ public class JUnitTestResult extends BaseTestResult {
 
 		_className = caseJSONObject.getString("className");
 		_duration = (long)(caseJSONObject.getDouble("duration") * 1000);
+		_errorDetails = caseJSONObject.optString("errorDetails", null);
+		_errorStackTrace = caseJSONObject.optString("errorStackTrace", null);
 		_status = caseJSONObject.getString("status");
 		_testName = caseJSONObject.getString("name");
-
-		if (_status.equals("FAILED") && caseJSONObject.has("errorDetails") &&
-			caseJSONObject.has("errorStackTrace")) {
-
-			_errorDetails = caseJSONObject.optString("errorDetails");
-			_errorStackTrace = caseJSONObject.optString("errorStackTrace");
-		}
-		else {
-			_errorDetails = null;
-			_errorStackTrace = null;
-		}
 	}
 
 	protected String getEncodedTestName() {

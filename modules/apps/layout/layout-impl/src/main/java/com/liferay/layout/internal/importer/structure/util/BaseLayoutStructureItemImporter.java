@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.importer.structure.util;
@@ -391,7 +382,8 @@ public abstract class BaseLayoutStructureItemImporter {
 				borderColor, (String)borderColor);
 		}
 
-		String borderRadius = GetterUtil.getString(styles.get("borderRadius"));
+		String borderRadius = GetterUtil.getString(
+			styles.get("borderRadius"), null);
 
 		boolean hidden = GetterUtil.getBoolean(styles.get("hidden"));
 
@@ -401,7 +393,7 @@ public abstract class BaseLayoutStructureItemImporter {
 
 		Object shadow = styles.getOrDefault("boxShadow", styles.get("shadow"));
 
-		String textAlign = GetterUtil.getString(styles.get("textAlign"));
+		String textAlign = GetterUtil.getString(styles.get("textAlign"), null);
 
 		if (Validator.isNull(textAlign)) {
 			for (String alignKey : _ALIGN_KEYS) {
@@ -464,7 +456,7 @@ public abstract class BaseLayoutStructureItemImporter {
 			"paddingTop", styles.get("paddingTop")
 		).put(
 			"shadow",
-			_shadows.getOrDefault(shadow, GetterUtil.getString(shadow))
+			_shadows.getOrDefault(shadow, GetterUtil.getString(shadow, null))
 		).put(
 			"textAlign", textAlign
 		).put(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.testray;
@@ -88,7 +79,7 @@ public class TestrayProject {
 						this, jsonObject.getJSONObject("data"));
 
 				_testrayProductVersionsByID.put(
-					getID(), newTestrayProductVersion);
+					newTestrayProductVersion.getID(), newTestrayProductVersion);
 				_testrayProductVersionsByName.put(
 					testrayProductVersionName, newTestrayProductVersion);
 
@@ -146,8 +137,8 @@ public class TestrayProject {
 		return _jsonObject.getString("description");
 	}
 
-	public int getID() {
-		return _jsonObject.getInt("testrayProjectId");
+	public long getID() {
+		return _jsonObject.getLong("testrayProjectId");
 	}
 
 	public String getName() {
@@ -155,7 +146,7 @@ public class TestrayProject {
 	}
 
 	public TestrayProductVersion getTestrayProductVersionByID(
-		int productVersionID) {
+		long productVersionID) {
 
 		_initTestrayProductVersions();
 
@@ -170,7 +161,7 @@ public class TestrayProject {
 		return _testrayProductVersionsByName.get(productVersionName);
 	}
 
-	public TestrayRoutine getTestrayRoutineByID(int routineID) {
+	public TestrayRoutine getTestrayRoutineByID(long routineID) {
 		_initTestrayRoutines();
 
 		return _testrayRoutinesByID.get(routineID);
@@ -299,9 +290,9 @@ public class TestrayProject {
 	private static final int _DELTA = 25;
 
 	private final JSONObject _jsonObject;
-	private Map<Integer, TestrayProductVersion> _testrayProductVersionsByID;
+	private Map<Long, TestrayProductVersion> _testrayProductVersionsByID;
 	private Map<String, TestrayProductVersion> _testrayProductVersionsByName;
-	private Map<Integer, TestrayRoutine> _testrayRoutinesByID;
+	private Map<Long, TestrayRoutine> _testrayRoutinesByID;
 	private Map<String, TestrayRoutine> _testrayRoutinesByName;
 	private final TestrayServer _testrayServer;
 	private final URL _url;

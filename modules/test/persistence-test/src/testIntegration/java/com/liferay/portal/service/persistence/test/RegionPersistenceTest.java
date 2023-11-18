@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.persistence.test;
@@ -126,6 +117,8 @@ public class RegionPersistenceTest {
 
 		newRegion.setMvccVersion(RandomTestUtil.nextLong());
 
+		newRegion.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newRegion.setUuid(RandomTestUtil.randomString());
 
 		newRegion.setDefaultLanguageId(RandomTestUtil.randomString());
@@ -159,6 +152,8 @@ public class RegionPersistenceTest {
 
 		Assert.assertEquals(
 			existingRegion.getMvccVersion(), newRegion.getMvccVersion());
+		Assert.assertEquals(
+			existingRegion.getCtCollectionId(), newRegion.getCtCollectionId());
 		Assert.assertEquals(existingRegion.getUuid(), newRegion.getUuid());
 		Assert.assertEquals(
 			existingRegion.getDefaultLanguageId(),
@@ -263,11 +258,12 @@ public class RegionPersistenceTest {
 
 	protected OrderByComparator<Region> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"Region", "mvccVersion", true, "uuid", true, "defaultLanguageId",
-			true, "regionId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"countryId", true, "active", true, "name", true, "position", true,
-			"regionCode", true, "lastPublishDate", true);
+			"Region", "mvccVersion", true, "ctCollectionId", true, "uuid", true,
+			"defaultLanguageId", true, "regionId", true, "companyId", true,
+			"userId", true, "userName", true, "createDate", true,
+			"modifiedDate", true, "countryId", true, "active", true, "name",
+			true, "position", true, "regionCode", true, "lastPublishDate",
+			true);
 	}
 
 	@Test
@@ -537,6 +533,8 @@ public class RegionPersistenceTest {
 		Region region = _persistence.create(pk);
 
 		region.setMvccVersion(RandomTestUtil.nextLong());
+
+		region.setCtCollectionId(RandomTestUtil.nextLong());
 
 		region.setUuid(RandomTestUtil.randomString());
 

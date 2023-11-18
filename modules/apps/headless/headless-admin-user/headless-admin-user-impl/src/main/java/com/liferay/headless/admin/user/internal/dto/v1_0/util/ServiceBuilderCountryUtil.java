@@ -1,25 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.dto.v1_0.util;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.service.CountryServiceUtil;
+import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.model.impl.CountryImpl;
 
-import java.util.Optional;
+import java.util.List;
 
 /**
  * @author Drew Brokke
@@ -44,6 +41,20 @@ public class ServiceBuilderCountryUtil {
 				return country;
 			}
 
+			BaseModelSearchResult<Country> baseModelSearchResult =
+				CountryServiceUtil.searchCountries(
+					companyId, true,
+					StringUtil.quote(addressCountry, CharPool.QUOTE),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					OrderByComparatorFactoryUtil.create(
+						CountryImpl.TABLE_NAME, "name", true));
+
+			List<Country> countries = baseModelSearchResult.getBaseModels();
+
+			if (countries != null) {
+				return countries.get(0);
+			}
+
 			return CountryServiceUtil.getCountryByName(
 				companyId, addressCountry);
 		}
@@ -59,15 +70,17 @@ public class ServiceBuilderCountryUtil {
 	public static long toServiceBuilderCountryId(
 		long companyId, String addressCountry) {
 
-		return Optional.ofNullable(
-			addressCountry
-		).map(
-			country -> toServiceBuilderCountry(companyId, country)
-		).map(
-			Country::getCountryId
-		).orElse(
-			(long)0
-		);
+		if (addressCountry == null) {
+			return 0;
+		}
+
+		Country country = toServiceBuilderCountry(companyId, addressCountry);
+
+		if (country == null) {
+			return 0;
+		}
+
+		return country.getCountryId();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

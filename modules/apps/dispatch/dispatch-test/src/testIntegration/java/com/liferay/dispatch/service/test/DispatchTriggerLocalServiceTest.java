@@ -1,24 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dispatch.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dispatch.exception.DispatchTriggerDispatchTaskExecutorTypeException;
 import com.liferay.dispatch.exception.DispatchTriggerNameException;
 import com.liferay.dispatch.exception.DispatchTriggerSchedulerException;
 import com.liferay.dispatch.exception.DuplicateDispatchTriggerException;
 import com.liferay.dispatch.executor.DispatchTaskClusterMode;
+import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
 import com.liferay.dispatch.internal.messaging.TestDispatchTaskExecutor;
 import com.liferay.dispatch.model.DispatchLog;
@@ -51,6 +44,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.junit.Assert;
@@ -79,13 +73,15 @@ public class DispatchTriggerLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		_addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, _getRandomDispatchExecutorType(), 1));
 
 		Class<?> exceptionClass = Exception.class;
 
 		try {
 			_addDispatchTrigger(
-				DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+				DispatchTriggerTestUtil.randomDispatchTrigger(
+					user, _getRandomDispatchExecutorType(), 1));
 		}
 		catch (Exception exception) {
 			exceptionClass = exception.getClass();
@@ -97,7 +93,8 @@ public class DispatchTriggerLocalServiceTest {
 
 		try {
 			_addDispatchTrigger(
-				DispatchTriggerTestUtil.randomDispatchTrigger(user, -1));
+				DispatchTriggerTestUtil.randomDispatchTrigger(
+					user, _getRandomDispatchExecutorType(), -1));
 		}
 		catch (Exception exception) {
 			exceptionClass = exception.getClass();
@@ -106,6 +103,20 @@ public class DispatchTriggerLocalServiceTest {
 		Assert.assertEquals(
 			"Add dispatch trigger with no name",
 			DispatchTriggerNameException.class, exceptionClass);
+
+		try {
+			_addDispatchTrigger(
+				DispatchTriggerTestUtil.randomDispatchTrigger(
+					user, "INVALID EXECUTOR TYPE", 2));
+		}
+		catch (Exception exception) {
+			exceptionClass = exception.getClass();
+		}
+
+		Assert.assertEquals(
+			"Add dispatch trigger with invalid executor type",
+			DispatchTriggerDispatchTaskExecutorTypeException.class,
+			exceptionClass);
 	}
 
 	@Test
@@ -189,7 +200,8 @@ public class DispatchTriggerLocalServiceTest {
 			while (dispatchTriggersCount-- > 0) {
 				_addDispatchTrigger(
 					DispatchTriggerTestUtil.randomDispatchTrigger(
-						user, RandomTestUtil.nextInt()));
+						user, _getRandomDispatchExecutorType(),
+						RandomTestUtil.nextInt()));
 			}
 		}
 
@@ -224,7 +236,8 @@ public class DispatchTriggerLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger expectedDispatchTrigger =
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1);
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, _getRandomDispatchExecutorType(), 1);
 
 		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
 			expectedDispatchTrigger);
@@ -259,7 +272,7 @@ public class DispatchTriggerLocalServiceTest {
 			}
 
 			Assert.assertNull(
-				_schedulerEngineHelper.getJobState(
+				_schedulerEngineHelper.getScheduledJob(
 					String.format(
 						"DISPATCH_JOB_%07d",
 						dispatchTrigger.getDispatchTriggerId()),
@@ -275,9 +288,11 @@ public class DispatchTriggerLocalServiceTest {
 		User user = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger1 = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, _getRandomDispatchExecutorType(), 1));
 		DispatchTrigger dispatchTrigger2 = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user, 2));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user, _getRandomDispatchExecutorType(), 2));
 
 		Class<?> exceptionClass = Exception.class;
 
@@ -317,14 +332,16 @@ public class DispatchTriggerLocalServiceTest {
 		User user1 = UserTestUtil.addUser();
 
 		DispatchTrigger dispatchTrigger1 = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user1, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user1, _getRandomDispatchExecutorType(), 1));
 
 		Company company = CompanyTestUtil.addCompany();
 
 		User user2 = UserTestUtil.addUser(company);
 
 		DispatchTrigger dispatchTrigger2 = _addDispatchTrigger(
-			DispatchTriggerTestUtil.randomDispatchTrigger(user2, 1));
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				user2, _getRandomDispatchExecutorType(), 1));
 
 		Assert.assertEquals(
 			dispatchTrigger1.getName(), dispatchTrigger2.getName());
@@ -419,8 +436,28 @@ public class DispatchTriggerLocalServiceTest {
 				value));
 	}
 
+	private String _getRandomDispatchExecutorType() {
+		Set<String> dispatchTaskExecutorTypes =
+			_dispatchTaskExecutorRegistry.getDispatchTaskExecutorTypes();
+
+		int index = 0;
+		int randomIndex = RandomTestUtil.randomInt(
+			0, dispatchTaskExecutorTypes.size() - 1);
+
+		for (String dispatchTaskExecutorType : dispatchTaskExecutorTypes) {
+			if (index++ == randomIndex) {
+				return dispatchTaskExecutorType;
+			}
+		}
+
+		return TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST;
+	}
+
 	@Inject
 	private DispatchLogLocalService _dispatchLogLocalService;
+
+	@Inject
+	private DispatchTaskExecutorRegistry _dispatchTaskExecutorRegistry;
 
 	@Inject
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.invitation.invite.members.model.impl;
@@ -234,84 +225,109 @@ public class MemberRequestModelImpl
 	public Map<String, Function<MemberRequest, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<MemberRequest, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<MemberRequest, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<MemberRequest, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<MemberRequest, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<MemberRequest, Object>>();
-		Map<String, BiConsumer<MemberRequest, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<MemberRequest, ?>>();
+		private static final Map<String, Function<MemberRequest, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"memberRequestId", MemberRequest::getMemberRequestId);
-		attributeSetterBiConsumers.put(
-			"memberRequestId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setMemberRequestId);
-		attributeGetterFunctions.put("groupId", MemberRequest::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setGroupId);
-		attributeGetterFunctions.put("companyId", MemberRequest::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setCompanyId);
-		attributeGetterFunctions.put("userId", MemberRequest::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setUserId);
-		attributeGetterFunctions.put("userName", MemberRequest::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<MemberRequest, String>)MemberRequest::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", MemberRequest::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<MemberRequest, Date>)MemberRequest::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", MemberRequest::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<MemberRequest, Date>)MemberRequest::setModifiedDate);
-		attributeGetterFunctions.put("key", MemberRequest::getKey);
-		attributeSetterBiConsumers.put(
-			"key", (BiConsumer<MemberRequest, String>)MemberRequest::setKey);
-		attributeGetterFunctions.put(
-			"receiverUserId", MemberRequest::getReceiverUserId);
-		attributeSetterBiConsumers.put(
-			"receiverUserId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setReceiverUserId);
-		attributeGetterFunctions.put(
-			"invitedRoleId", MemberRequest::getInvitedRoleId);
-		attributeSetterBiConsumers.put(
-			"invitedRoleId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setInvitedRoleId);
-		attributeGetterFunctions.put(
-			"invitedTeamId", MemberRequest::getInvitedTeamId);
-		attributeSetterBiConsumers.put(
-			"invitedTeamId",
-			(BiConsumer<MemberRequest, Long>)MemberRequest::setInvitedTeamId);
-		attributeGetterFunctions.put("status", MemberRequest::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<MemberRequest, Integer>)MemberRequest::setStatus);
+		static {
+			Map<String, Function<MemberRequest, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<MemberRequest, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"memberRequestId", MemberRequest::getMemberRequestId);
+			attributeGetterFunctions.put("groupId", MemberRequest::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", MemberRequest::getCompanyId);
+			attributeGetterFunctions.put("userId", MemberRequest::getUserId);
+			attributeGetterFunctions.put(
+				"userName", MemberRequest::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", MemberRequest::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", MemberRequest::getModifiedDate);
+			attributeGetterFunctions.put("key", MemberRequest::getKey);
+			attributeGetterFunctions.put(
+				"receiverUserId", MemberRequest::getReceiverUserId);
+			attributeGetterFunctions.put(
+				"invitedRoleId", MemberRequest::getInvitedRoleId);
+			attributeGetterFunctions.put(
+				"invitedTeamId", MemberRequest::getInvitedTeamId);
+			attributeGetterFunctions.put("status", MemberRequest::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<MemberRequest, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<MemberRequest, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<MemberRequest, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"memberRequestId",
+				(BiConsumer<MemberRequest, Long>)
+					MemberRequest::setMemberRequestId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<MemberRequest, Long>)MemberRequest::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<MemberRequest, Long>)MemberRequest::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<MemberRequest, Long>)MemberRequest::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<MemberRequest, String>)MemberRequest::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<MemberRequest, Date>)MemberRequest::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<MemberRequest, Date>)
+					MemberRequest::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"key",
+				(BiConsumer<MemberRequest, String>)MemberRequest::setKey);
+			attributeSetterBiConsumers.put(
+				"receiverUserId",
+				(BiConsumer<MemberRequest, Long>)
+					MemberRequest::setReceiverUserId);
+			attributeSetterBiConsumers.put(
+				"invitedRoleId",
+				(BiConsumer<MemberRequest, Long>)
+					MemberRequest::setInvitedRoleId);
+			attributeSetterBiConsumers.put(
+				"invitedTeamId",
+				(BiConsumer<MemberRequest, Long>)
+					MemberRequest::setInvitedTeamId);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<MemberRequest, Integer>)MemberRequest::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -877,7 +893,8 @@ public class MemberRequestModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<MemberRequest, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

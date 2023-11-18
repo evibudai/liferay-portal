@@ -1,17 +1,18 @@
 definition {
 
-	@summary = "Add a web content article with title '${title}' and content '${content}' based on Basic Web Content via Headless"
 	macro addBasicWebContent {
-		Variables.assertDefined(parameterList = "${content},${groupName},${title}");
+		Variables.assertDefined(parameterList = "${content},${title}");
 
-		var groupId = JSONWebcontentSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+		if (!(isSet(groupId))) {
+			var groupId = JSONWebcontentSetter.setGroupId(
+				groupName = ${groupName},
+				site = ${site});
+		}
 
 		if (isSet(folderName)) {
 			var folderId = JSONWebcontentSetter.setFolderId(
-				folderName = "${folderName}",
-				groupId = "${groupId}");
+				folderName = ${folderName},
+				groupId = ${groupId});
 		}
 
 		var globalGroupId = JSONWebcontentSetter.setGroupId(
@@ -19,29 +20,37 @@ definition {
 			site = "true");
 		var classNameId = JSONClassname._getClassNameId(value = "com.liferay.journal.model.JournalArticle");
 
-		var structureId = JSONDDMstructure._getStructureId(
-			classNameId = "${classNameId}",
-			groupId = "${globalGroupId}",
+		var structureId = JSONDDMstructureAPI._getStructureId(
+			classNameId = ${classNameId},
+			groupId = ${globalGroupId},
 			structureName = "Basic Web Content");
 
-		if ("${source}" != "true") {
+		if (${source} != "true") {
 			var content = '''<p>${content}</p>''';
 		}
 
-		var articleId = HeadlessWebcontentAPI._addWebContent(
-			assetCategoryIds = "${assetCategoryIds}",
-			assetTagNames = "${assetTagNames}",
-			content = "${content}",
-			description = "${description}",
-			folderId = "${folderId}",
-			groupId = "${groupId}",
-			structureId = "${structureId}",
-			title = "${title}",
-			userEmailAddress = "${userEmailAddress}",
-			userPassword = "${userPassword}",
-			viewableBy = "${viewableBy}");
+		var titleMap = HeadlessWebcontentSetter.setTitleMap(titleMap = ${titleMap});
+		var contentMap = HeadlessWebcontentSetter.setContentMap(contentMap = ${contentMap});
+		var descriptionMap = HeadlessWebcontentSetter.setDescriptionMap(descriptionMap = ${descriptionMap});
 
-		return "${articleId}";
+		var articleId = HeadlessWebcontentAPI._addWebContent(
+			assetCategoryIds = ${assetCategoryIds},
+			assetTagNames = ${assetTagNames},
+			content = ${content},
+			contentMap = ${contentMap},
+			description = ${description},
+			descriptionMap = ${descriptionMap},
+			folderId = ${folderId},
+			groupId = ${groupId},
+			relatedContents = ${relatedContents},
+			structureId = ${structureId},
+			title = ${title},
+			titleMap = ${titleMap},
+			userEmailAddress = ${userEmailAddress},
+			userPassword = ${userPassword},
+			viewableBy = ${viewableBy});
+
+		return ${articleId};
 	}
 
 }

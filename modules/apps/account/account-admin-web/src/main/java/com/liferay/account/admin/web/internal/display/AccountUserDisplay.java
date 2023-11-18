@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.admin.web.internal.display;
@@ -18,12 +9,12 @@ import com.liferay.account.configuration.AccountEntryEmailDomainsConfiguration;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
-import com.liferay.account.model.AccountEntryUserRelModel;
 import com.liferay.account.service.AccountEntryLocalServiceUtil;
 import com.liferay.account.service.AccountEntryUserRelLocalServiceUtil;
 import com.liferay.account.service.AccountRoleLocalServiceUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -31,7 +22,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -42,8 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -163,38 +151,36 @@ public class AccountUserDisplay {
 	}
 
 	public String getValidDomainsString() {
-		List<Set<String>> accountEntryDomains = Stream.of(
-			_getAccountEntryUserRels(getUserId())
-		).flatMap(
-			List::stream
-		).map(
-			AccountEntryUserRelModel::getAccountEntryId
-		).map(
-			AccountEntryLocalServiceUtil::fetchAccountEntry
-		).filter(
-			Objects::nonNull
-		).map(
-			AccountEntry::getDomains
-		).map(
-			StringUtil::split
-		).map(
-			SetUtil::fromArray
-		).collect(
-			Collectors.toList()
-		);
+		Set<String> commonDomains = null;
 
-		if (ListUtil.isEmpty(accountEntryDomains)) {
-			return StringPool.BLANK;
-		}
+		for (AccountEntryUserRel accountEntryUserRel :
+				_getAccountEntryUserRels(getUserId())) {
 
-		Set<String> commonDomains = accountEntryDomains.remove(0);
+			AccountEntry accountEntry =
+				AccountEntryLocalServiceUtil.fetchAccountEntry(
+					accountEntryUserRel.getAccountUserId());
 
-		for (Set<String> domains : accountEntryDomains) {
-			commonDomains = SetUtil.intersect(commonDomains, domains);
+			if (accountEntry == null) {
+				continue;
+			}
 
-			if (SetUtil.isEmpty(commonDomains)) {
+			Set<String> domains = SetUtil.fromArray(
+				StringUtil.split(accountEntry.getDomains()));
+
+			if (commonDomains == null) {
+				commonDomains = domains;
+			}
+			else {
+				commonDomains = SetUtil.intersect(commonDomains, domains);
+			}
+
+			if (commonDomains.isEmpty()) {
 				return StringPool.BLANK;
 			}
+		}
+
+		if (commonDomains == null) {
+			return StringPool.BLANK;
 		}
 
 		return StringUtil.merge(commonDomains, StringPool.COMMA);

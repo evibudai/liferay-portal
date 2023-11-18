@@ -57,12 +57,12 @@
 </tr>
 <tr>
 	<td>CONFLICTING_CHANGES_DETAILS_IFRAME_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]/div[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
+	<td>//div[contains(@class,'modal-header')]//div[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CONFLICTING_CHANGES_DISCARD_ELLIPSIS</td>
-	<td>//div[contains(@class,'autofit-col-expand')]//following-sibling::div//button</td>
+	<td>//div[contains(@class,'autofit-col-expand')]//following-sibling::div//button[contains(@aria-label,'more-actions')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -71,13 +71,28 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DISABLE_SHOW_ALL_ITEMS_TOGGLE</td>
+	<td>//label[contains(@class,'simple-toggle-switch disabled')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DISCARD_CHANGE_BUTTON</td>
 	<td>//li[contains(.,'${key_changeTitle}') and contains(.,'${key_changeCategory}')]//a[contains(.,'Discard Change')]</td>
 	<td></td>
 </tr>
 <tr>
+	<td>INVITE_USERS_ICON</td>
+	<td>//span[contains(@title,'Invite Users')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MESSAGE_NO_CHANGES</td>
-	<td>//div[contains(@class, 'taglib-empty-result-message')]/div[contains(.,'No changes were found.')]</td>
+	<td>//div[contains(@class, 'c-empty-state-text') and contains(.,'No changes were found.')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATIONS_CHANGE_CATEGORY</td>
+	<td>//tr[contains(@class,'table-divider')]/td[contains(.,'${key_changeCategory}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -133,6 +148,40 @@
 <tr>
 	<td>SORTED_DESCENDING_ICON</td>
 	<td>//span//*[name()='svg'][contains(@class,'lexicon-icon-order-list-down')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CHANGES_CHECK_BOX</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[4][contains(.,'${key_changeTitle}')]//preceding-sibling::td//input[@type='checkbox']
+	</td>
+<td></td>
+</tr>
+
+<!--SHARE ACCESS-->
+
+<tr>
+	<td>COPY_URL_BUTTON</td>
+	<td>//div[contains (@class,'input-group-item-shrink')]//button[contains(text(),'Copy')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLE_SHARE_LINK_TOGGLE_SWITCH</td>
+	<td>//span[contains(.,'Allow anyone with the link to view this publication')]/..//input[contains(@type, 'checkbox')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SHARE_ACCESS_BUTTON</td>
+	<td>//div/button[contains(@class, 'sticker-user-icon')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SHARE_LINK_TAB</td>
+	<td>//button[contains(@class, 'nav-link btn') and (@aria-controls = 'share-link')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SHARE_LINK_URL</td>
+	<td>//div[@class='input-group-item']//input[@class='form-control' and @type='text']</td>
 	<td></td>
 </tr>
 </tbody>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context;
@@ -18,12 +9,12 @@ import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.service.ObjectDefinitionService;
-import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
-import com.liferay.object.web.internal.configuration.activator.FFOneToOneRelationshipConfigurationActivator;
+import com.liferay.object.service.ObjectFieldService;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -35,9 +26,11 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -48,44 +41,49 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 	extends BaseObjectDefinitionsDisplayContext {
 
 	public ObjectDefinitionsRelationshipsDisplayContext(
-		FFOneToOneRelationshipConfigurationActivator
-			ffOneToOneRelationshipConfigurationActivator,
 		HttpServletRequest httpServletRequest,
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectDefinitionService objectDefinitionService,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		ObjectFieldService objectFieldService,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
-		_ffOneToOneRelationshipConfigurationActivator =
-			ffOneToOneRelationshipConfigurationActivator;
-		_objectDefinitionModelResourcePermission =
-			objectDefinitionModelResourcePermission;
 		_objectDefinitionService = objectDefinitionService;
-		_systemObjectDefinitionMetadataRegistry =
-			systemObjectDefinitionMetadataRegistry;
+		_objectFieldService = objectFieldService;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 
 		_objectRequestHelper = new ObjectRequestHelper(httpServletRequest);
+	}
+
+	public String getEditObjectRelationshipURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_relationship"
+		).setParameter(
+			"objectRelationshipId", "{id}"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
 
+		boolean hasUpdatePermission = hasUpdateObjectDefinitionPermission();
+
 		return Arrays.asList(
 			new FDSActionDropdownItem(
-				PortletURLBuilder.create(
-					getPortletURL()
-				).setMVCRenderCommandName(
-					"/object_definitions/edit_object_relationship"
-				).setParameter(
-					"objectRelationshipId", "{id}"
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString(),
-				"view", "view",
-				LanguageUtil.get(objectRequestHelper.getRequest(), "view"),
+				getEditObjectRelationshipURL(),
+				hasUpdatePermission ? "pencil" : "view",
+				hasUpdatePermission ? "edit" : "view",
+				LanguageUtil.get(
+					objectRequestHelper.getRequest(),
+					hasUpdatePermission ? "edit" : "view"),
 				"get", null, "sidePanel"),
 			new FDSActionDropdownItem(
 				null, "trash", "deleteObjectRelationship",
@@ -128,6 +126,9 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 			ObjectRelationship objectRelationship)
 		throws PortalException {
 
+		ObjectDefinition objectDefinition1 =
+			_objectDefinitionService.getObjectDefinition(
+				objectRelationship.getObjectDefinitionId1());
 		ObjectDefinition objectDefinition2 =
 			_objectDefinitionService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId2());
@@ -135,9 +136,19 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 		return JSONUtil.put(
 			"deletionType", objectRelationship.getDeletionType()
 		).put(
+			"edge", objectRelationship.isEdge()
+		).put(
+			"id", Long.valueOf(objectRelationship.getObjectRelationshipId())
+		).put(
 			"label", objectRelationship.getLabelMap()
 		).put(
 			"name", objectRelationship.getName()
+		).put(
+			"objectDefinitionExternalReferenceCode1",
+			objectDefinition1.getExternalReferenceCode()
+		).put(
+			"objectDefinitionExternalReferenceCode2",
+			objectDefinition2.getExternalReferenceCode()
 		).put(
 			"objectDefinitionId1",
 			Long.valueOf(objectRelationship.getObjectDefinitionId1())
@@ -147,49 +158,47 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 		).put(
 			"objectDefinitionName2", objectDefinition2.getShortName()
 		).put(
-			"objectRelationshipId",
-			Long.valueOf(objectRelationship.getObjectRelationshipId())
-		).put(
 			"parameterObjectFieldId",
 			objectRelationship.getParameterObjectFieldId()
 		).put(
+			"parameterObjectFieldName",
+			() -> {
+				if (Validator.isNotNull(
+						objectRelationship.getParameterObjectFieldId())) {
+
+					ObjectField objectField =
+						_objectFieldService.getObjectField(
+							objectRelationship.getParameterObjectFieldId());
+
+					return objectField.getName();
+				}
+
+				return StringPool.BLANK;
+			}
+		).put(
 			"reverse", objectRelationship.isReverse()
+		).put(
+			"system", objectRelationship.isSystem()
 		).put(
 			"type", objectRelationship.getType()
 		);
 	}
 
-	public String getRESTContextPath(ObjectDefinition objectDefinition) {
-		if (!objectDefinition.isSystem()) {
-			return objectDefinition.getRESTContextPath();
-		}
+	public Set<String> getObjectRelationshipTypes(
+		ObjectDefinition objectDefinition) {
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
-
-		if (systemObjectDefinitionMetadata == null) {
-			return StringPool.BLANK;
-		}
-
-		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
-
-		return jaxRsApplicationDescriptor.getRESTContextPath();
+		return ObjectRelationshipUtil.getObjectRelationshipTypes(
+			objectDefinition, _systemObjectDefinitionManagerRegistry);
 	}
 
-	public boolean isFFOneToOneRelationshipConfigurationEnabled() {
-		return _ffOneToOneRelationshipConfigurationActivator.enabled();
+	public String getRESTContextPath(ObjectDefinition objectDefinition) {
+		return ObjectRelationshipUtil.getRESTContextPath(
+			objectDefinition, _systemObjectDefinitionManagerRegistry);
 	}
 
 	public boolean isParameterRequired(ObjectDefinition objectDefinition) {
-		String restContextPath = getRESTContextPath(objectDefinition);
-
-		if (restContextPath.matches(".*/\\{\\w+}/.*")) {
-			return true;
-		}
-
-		return false;
+		return ObjectRelationshipUtil.isParameterRequired(
+			objectDefinition, _systemObjectDefinitionManagerRegistry);
 	}
 
 	@Override
@@ -211,13 +220,10 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 		};
 	}
 
-	private final FFOneToOneRelationshipConfigurationActivator
-		_ffOneToOneRelationshipConfigurationActivator;
-	private final ModelResourcePermission<ObjectDefinition>
-		_objectDefinitionModelResourcePermission;
 	private final ObjectDefinitionService _objectDefinitionService;
+	private final ObjectFieldService _objectFieldService;
 	private final ObjectRequestHelper _objectRequestHelper;
-	private final SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private final SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

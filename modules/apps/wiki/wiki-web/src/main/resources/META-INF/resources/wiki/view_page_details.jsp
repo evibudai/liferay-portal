@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -93,7 +84,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 			<liferay-ui:message key="created-by" />
 		</th>
 		<td class="table-cell">
-			<%= HtmlUtil.escape(Validator.isNotNull(initialPage.getUserName()) ? initialPage.getUserName() : "Liferay") %> (<%= dateFormatDateTime.format(initialPage.getCreateDate()) %>)
+			<%= HtmlUtil.escape(Validator.isNotNull(initialPage.getUserName()) ? initialPage.getUserName() : "Liferay") %> (<%= dateTimeFormat.format(initialPage.getCreateDate()) %>)
 		</td>
 	</tr>
 	<tr>
@@ -101,7 +92,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 			<liferay-ui:message key="last-changed-by" />
 		</th>
 		<td class="table-cell">
-			<%= HtmlUtil.escape(wikiPage.getUserName()) %> (<%= dateFormatDateTime.format(wikiPage.getModifiedDate()) %>)
+			<%= HtmlUtil.escape(wikiPage.getUserName()) %> (<%= dateTimeFormat.format(wikiPage.getModifiedDate()) %>)
 		</td>
 	</tr>
 	<tr>
@@ -140,32 +131,30 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 				<liferay-ui:message key="convert-to" />
 			</th>
 			<td class="table-cell">
-				<liferay-ui:icon-list>
+				<div class="d-inline-flex">
 
 					<%
 					for (String conversion : conversions) {
 						exportPageURL.setParameter("targetExtension", conversion);
 					%>
 
-						<liferay-ui:icon
-							data='<%=
-								HashMapBuilder.<String, Object>put(
-									"resource-href", exportPageURL.toString()
-								).build()
-							%>'
+						<clay:link
+							aria-label='<%= LanguageUtil.format(request, "download-x-as-x", new Object[] {HtmlUtil.escape(wikiPage.getTitle()), StringUtil.toUpperCase(conversion)}) %>'
+							borderless="<%= true %>"
+							data-resource-href="<%= exportPageURL.toString() %>"
+							displayType="primary"
+							href="<%= exportPageURL.toString() %>"
 							icon="<%= DLUtil.getFileIconCssClass(conversion) %>"
-							label="<%= true %>"
-							markupView="lexicon"
-							message="<%= StringUtil.toUpperCase(conversion) %>"
-							method="get"
-							url="<%= exportPageURL.toString() %>"
+							label="<%= StringUtil.toUpperCase(conversion) %>"
+							small="<%= true %>"
+							type="button"
 						/>
 
 					<%
 					}
 					%>
 
-				</liferay-ui:icon-list>
+				</div>
 			</td>
 		</tr>
 	</c:if>
@@ -208,12 +197,12 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 											<portlet:param name="title" value="<%= String.valueOf(wikiPage.getTitle()) %>" />
 										</portlet:actionURL>
 
-										<liferay-ui:icon
+										<clay:link
+											aria-label='<%= LanguageUtil.get(request, "unsubscribe") %>'
+											href="<%= unsubscribeURL %>"
 											icon="times-circle"
-											label="<%= true %>"
-											markupView="lexicon"
-											message="unsubscribe"
-											url="<%= unsubscribeURL %>"
+											label="unsubscribe"
+											small="<%= true %>"
 										/>
 									</td>
 								</c:when>
@@ -229,12 +218,12 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 											<portlet:param name="title" value="<%= String.valueOf(wikiPage.getTitle()) %>" />
 										</portlet:actionURL>
 
-										<liferay-ui:icon
+										<clay:link
+											aria-label='<%= LanguageUtil.get(request, "subscribe") %>'
+											href="<%= subscribeURL %>"
 											icon="check-circle-full"
-											label="<%= true %>"
-											markupView="lexicon"
-											message="subscribe"
-											url="<%= subscribeURL %>"
+											label="subscribe"
+											small="<%= true %>"
 										/>
 									</td>
 								</c:otherwise>
@@ -256,12 +245,12 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 											<portlet:param name="nodeId" value="<%= String.valueOf(node.getNodeId()) %>" />
 										</portlet:actionURL>
 
-										<liferay-ui:icon
+										<clay:link
+											aria-label='<%= LanguageUtil.get(request, "unsubscribe") %>'
+											href="<%= unsubscribeURL %>"
 											icon="times-circle"
-											label="<%= true %>"
-											markupView="lexicon"
-											message="unsubscribe"
-											url="<%= unsubscribeURL %>"
+											label="unsubscribe"
+											small="<%= true %>"
 										/>
 									</td>
 								</c:when>
@@ -276,12 +265,12 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 											<portlet:param name="nodeId" value="<%= String.valueOf(node.getNodeId()) %>" />
 										</portlet:actionURL>
 
-										<liferay-ui:icon
+										<clay:link
+											aria-label='<%= LanguageUtil.get(request, "subscribe") %>'
+											href="<%= subscribeURL %>"
 											icon="check-circle-full"
-											label="<%= true %>"
-											markupView="lexicon"
-											message="subscribe"
-											url="<%= subscribeURL %>"
+											label="subscribe"
+											small="<%= true %>"
 										/>
 									</td>
 								</c:otherwise>
@@ -299,7 +288,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 				<liferay-ui:message key="advanced-actions" />
 			</th>
 			<td class="table-cell">
-				<liferay-ui:icon-list>
+				<div class="d-inline-flex">
 					<c:if test="<%= WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.PERMISSIONS) %>">
 						<liferay-security:permissionsURL
 							modelResource="<%= WikiPage.class.getName() %>"
@@ -309,24 +298,26 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 							windowState="<%= LiferayWindowState.POP_UP.toString() %>"
 						/>
 
-						<liferay-ui:icon
+						<clay:button
+							additionalProps='<%=
+								HashMapBuilder.<String, Object>put(
+									"url", permissionsURL
+								).build()
+							%>'
+							aria-label='<%= LanguageUtil.get(request, "permissions") %>'
+							displayType="link"
 							icon="lock"
-							label="<%= true %>"
-							markupView="lexicon"
-							message="permissions"
-							method="get"
-							url="<%= permissionsURL %>"
-							useDialog="<%= true %>"
+							label="permissions"
+							propsTransformer="wiki/js/WikiPagePermissionsButtonPropsTransformer"
+							small="<%= true %>"
 						/>
 					</c:if>
 
 					<c:if test="<%= WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.UPDATE) && WikiNodePermission.contains(permissionChecker, wikiPage.getNodeId(), ActionKeys.ADD_PAGE) %>">
-						<liferay-ui:icon
-							icon="paste"
-							label="<%= true %>"
-							markupView="lexicon"
-							message="copy"
-							url='<%=
+						<clay:link
+							aria-label='<%= LanguageUtil.get(request, "copy") %>'
+							displayType="link"
+							href='<%=
 								PortletURLBuilder.create(
 									PortletURLUtil.clone(viewPageURL, renderResponse)
 								).setMVCRenderCommandName(
@@ -343,16 +334,18 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 									"title", StringPool.BLANK
 								).buildString()
 							%>'
+							icon="paste"
+							label="copy"
+							small="<%= true %>"
+							type="button"
 						/>
 					</c:if>
 
 					<c:if test="<%= WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.UPDATE) && WikiNodePermission.contains(permissionChecker, wikiPage.getNodeId(), ActionKeys.ADD_PAGE) %>">
-						<liferay-ui:icon
-							icon="move"
-							label="<%= true %>"
-							markupView="lexicon"
-							message="move"
-							url='<%=
+						<clay:link
+							aria-label='<%= LanguageUtil.get(request, "move") %>'
+							displayType="link"
+							href='<%=
 								PortletURLBuilder.create(
 									PortletURLUtil.clone(viewPageURL, renderResponse)
 								).setMVCRenderCommandName(
@@ -361,6 +354,10 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 									viewPageURL
 								).buildString()
 							%>'
+							icon="move"
+							label="move"
+							small="<%= true %>"
+							type="button"
 						/>
 					</c:if>
 
@@ -389,13 +386,23 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "details
 							).buildString());
 						%>
 
-						<liferay-ui:icon-delete
-							label="<%= true %>"
-							trash="<%= trashHelper.isTrashEnabled(scopeGroupId) %>"
-							url="<%= deletePageURL.toString() %>"
+						<clay:button
+							additionalProps='<%=
+								HashMapBuilder.<String, Object>put(
+									"trashEnabled", trashHelper.isTrashEnabled(scopeGroupId)
+								).put(
+									"url", deletePageURL.toString()
+								).build()
+							%>'
+							aria-label='<%= LanguageUtil.get(request, "delete") %>'
+							displayType="link"
+							icon="trash"
+							label="delete"
+							propsTransformer="wiki/js/WikiPageDeleteButtonPropsTransformer"
+							small="<%= true %>"
 						/>
 					</c:if>
-				</liferay-ui:icon-list>
+				</div>
 			</td>
 		</tr>
 	</c:if>

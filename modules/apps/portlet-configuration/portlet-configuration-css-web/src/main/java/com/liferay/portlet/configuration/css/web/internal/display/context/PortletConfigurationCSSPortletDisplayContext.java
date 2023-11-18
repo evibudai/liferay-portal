@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.configuration.css.web.internal.display.context;
@@ -42,8 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -317,17 +306,9 @@ public class PortletConfigurationCSSPortletDisplayContext {
 
 		Theme theme = themeDisplay.getTheme();
 
-		List<PortletDecorator> portletDecorators = theme.getPortletDecorators();
-
-		Stream<PortletDecorator> portletDecoratorsStream =
-			portletDecorators.stream();
-
-		List<PortletDecorator> filteredPortletDecorators =
-			portletDecoratorsStream.filter(
-				portletDecorator -> portletDecorator.isDefaultPortletDecorator()
-			).collect(
-				Collectors.toList()
-			);
+		List<PortletDecorator> filteredPortletDecorators = ListUtil.filter(
+			theme.getPortletDecorators(),
+			PortletDecorator::isDefaultPortletDecorator);
 
 		if (ListUtil.isEmpty(filteredPortletDecorators)) {
 			return StringPool.BLANK;

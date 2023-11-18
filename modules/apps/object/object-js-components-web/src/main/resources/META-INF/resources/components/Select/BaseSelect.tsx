@@ -1,24 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import React, {ReactNode, cloneElement, useRef} from 'react';
-
-import {FieldBase} from '../FieldBase';
+import {FieldBase} from 'frontend-js-components-web';
+import React, {FocusEvent, ReactNode, cloneElement, useRef} from 'react';
 
 import './index.scss';
 
@@ -27,6 +17,7 @@ export interface CustomItem<T = string> {
 	description?: string;
 	disabled?: boolean;
 	label: string;
+	name?: string;
 	popover?: {body: string; header: string};
 	type?: string;
 	value?: T;
@@ -39,13 +30,16 @@ export interface SelectProps {
 	feedbackMessage?: string;
 	id?: string;
 	label?: string;
+	onBlur?: (event: FocusEvent<HTMLInputElement>) => void;
 	placeholder?: string;
+	readonly?: boolean;
 	required?: boolean;
 	value?: string;
 }
 
-interface IProps extends SelectProps {
+interface BaseSelectProps extends SelectProps {
 	children: ReactNode;
+	contentRight?: ReactNode;
 	dropdownActive: boolean;
 	setDropdownActive: React.Dispatch<React.SetStateAction<boolean>>;
 	trigger?: JSX.Element;
@@ -54,19 +48,22 @@ interface IProps extends SelectProps {
 export function BaseSelect({
 	children,
 	className,
+	contentRight,
 	disabled,
 	dropdownActive,
 	error,
 	feedbackMessage,
 	id,
 	label,
+	onBlur,
 	placeholder = Liferay.Language.get('choose-an-option'),
+	readonly,
 	required,
 	setDropdownActive,
 	trigger,
 	value,
 	...restProps
-}: IProps) {
+}: BaseSelectProps) {
 	const inputRef = useRef(null);
 
 	return (
@@ -79,7 +76,7 @@ export function BaseSelect({
 			label={label}
 			required={required}
 		>
-			<ClayAutocomplete>
+			<ClayAutocomplete onBlur={onBlur}>
 				{trigger ? (
 					cloneElement(trigger, {
 						disabled,
@@ -90,10 +87,20 @@ export function BaseSelect({
 					})
 				) : (
 					<>
+						{contentRight && (
+							<div className="base-select__trigger-content-right">
+								{contentRight}
+							</div>
+						)}
+
 						<ClayIcon
-							className={classNames('base-select__input-icon', {
-								'base-select__input-icon--disabled': disabled,
-							})}
+							className={classNames(
+								'base-select__trigger-input-icon',
+								{
+									'base-select__input-icon--disabled':
+										disabled || readonly,
+								}
+							)}
 							onClick={() =>
 								!disabled &&
 								setDropdownActive((active) => !active)
@@ -105,9 +112,11 @@ export function BaseSelect({
 							defaultValue={value}
 							disabled={disabled}
 							onClick={() =>
+								!readonly &&
 								setDropdownActive((active) => !active)
 							}
 							placeholder={placeholder}
+							readOnly={readonly}
 							ref={inputRef}
 							value={value}
 							{...restProps}

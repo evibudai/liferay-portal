@@ -1,13 +1,7 @@
 /* eslint-disable sort-keys */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import '@testing-library/jest-dom/extend-expect';
@@ -206,15 +200,15 @@ const mockLanguageTag = 'en-US';
 
 const mockTimeSpanOptions = [
 	{
-		timeSpanKey: 'last-30-days',
+		key: 'last-30-days',
 		label: 'Last 30 Days',
 	},
 	{
-		timeSpanKey: 'last-7-days',
+		key: 'last-7-days',
 		label: 'Last 7 Days',
 	},
 	{
-		timeSpanKey: 'last-24-hours',
+		key: 'last-24-hours',
 		label: 'Last 24 Hours',
 	},
 ];
@@ -280,7 +274,6 @@ const mockTrafficSourcesDataProvider = jest.fn(() =>
 );
 
 const noop = () => {};
-const formatter = new Intl.NumberFormat();
 const enFormatter = new Intl.NumberFormat(mockLanguageTag);
 
 describe('Detail', () => {
@@ -342,15 +335,23 @@ describe('Detail', () => {
 	describe('Organic Detail', () => {
 		it('displays the organic detail according to API', async () => {
 			const {getByText} = render(
-				<Detail
-					currentPage={mockCurrentPageOrganic}
-					onCurrentPageChange={mockOnCurrentPageChange}
-					onTrafficSourceNameChange={mockOnTrafficSourceNameChange}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficShareDataProvider={mockTrafficShareDataProvider}
-					trafficSourcesDataProvider={mockTrafficSourcesDataProvider}
-					trafficVolumeDataProvider={mockTrafficVolumeDataProvider}
-				/>
+				<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+					<Detail
+						currentPage={mockCurrentPageOrganic}
+						onCurrentPageChange={mockOnCurrentPageChange}
+						onTrafficSourceNameChange={
+							mockOnTrafficSourceNameChange
+						}
+						timeSpanOptions={mockTimeSpanOptions}
+						trafficShareDataProvider={mockTrafficShareDataProvider}
+						trafficSourcesDataProvider={
+							mockTrafficSourcesDataProvider
+						}
+						trafficVolumeDataProvider={
+							mockTrafficVolumeDataProvider
+						}
+					/>
+				</StoreContextProvider>
 			);
 
 			await waitFor(() => {
@@ -360,7 +361,7 @@ describe('Detail', () => {
 
 			expect(getByText('Organic')).toBeInTheDocument();
 			expect(getByText('90%')).toBeInTheDocument();
-			expect(getByText(formatter.format(278256))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(278256))).toBeInTheDocument();
 
 			expect(mockTrafficShareDataProvider).toHaveBeenCalledTimes(1);
 			expect(mockTrafficVolumeDataProvider).toHaveBeenCalledTimes(1);
@@ -368,15 +369,23 @@ describe('Detail', () => {
 
 		it('displays the top five relevant keywords by country sorted by traffic', async () => {
 			const {getByText} = render(
-				<Detail
-					currentPage={mockCurrentPageOrganic}
-					onCurrentPageChange={mockOnCurrentPageChange}
-					onTrafficSourceNameChange={mockOnTrafficSourceNameChange}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficShareDataProvider={mockTrafficShareDataProvider}
-					trafficSourcesDataProvider={mockTrafficSourcesDataProvider}
-					trafficVolumeDataProvider={mockTrafficVolumeDataProvider}
-				/>
+				<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+					<Detail
+						currentPage={mockCurrentPageOrganic}
+						onCurrentPageChange={mockOnCurrentPageChange}
+						onTrafficSourceNameChange={
+							mockOnTrafficSourceNameChange
+						}
+						timeSpanOptions={mockTimeSpanOptions}
+						trafficShareDataProvider={mockTrafficShareDataProvider}
+						trafficSourcesDataProvider={
+							mockTrafficSourcesDataProvider
+						}
+						trafficVolumeDataProvider={
+							mockTrafficVolumeDataProvider
+						}
+					/>
+				</StoreContextProvider>
 			);
 
 			await waitFor(() => {
@@ -388,21 +397,21 @@ describe('Detail', () => {
 			expect(getByText('Spain')).toBeInTheDocument();
 
 			expect(getByText('commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(90000))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(90000))).toBeInTheDocument();
 
 			expect(getByText('e-commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(14800))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(14800))).toBeInTheDocument();
 
 			expect(getByText('what is commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(14000))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(14000))).toBeInTheDocument();
 
 			expect(getByText('what is e-commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(12100))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(12100))).toBeInTheDocument();
 
 			expect(
 				getByText('commerce definition for new business strategy')
 			).toBeInTheDocument();
-			expect(getByText(formatter.format(10100))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(10100))).toBeInTheDocument();
 		});
 
 		it('displays a tooltip with info on hover tooltip signs', async () => {
@@ -457,15 +466,23 @@ describe('Detail', () => {
 
 		it('displays the top five relevant keywords sorted by search volume when user clicks on the dropdown option search volume', async () => {
 			const {getAllByText, getByText} = render(
-				<Detail
-					currentPage={mockCurrentPageOrganic}
-					onCurrentPageChange={mockOnCurrentPageChange}
-					onTrafficSourceNameChange={mockOnTrafficSourceNameChange}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficShareDataProvider={mockTrafficShareDataProvider}
-					trafficSourcesDataProvider={mockTrafficSourcesDataProvider}
-					trafficVolumeDataProvider={mockTrafficVolumeDataProvider}
-				/>
+				<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+					<Detail
+						currentPage={mockCurrentPageOrganic}
+						onCurrentPageChange={mockOnCurrentPageChange}
+						onTrafficSourceNameChange={
+							mockOnTrafficSourceNameChange
+						}
+						timeSpanOptions={mockTimeSpanOptions}
+						trafficShareDataProvider={mockTrafficShareDataProvider}
+						trafficSourcesDataProvider={
+							mockTrafficSourcesDataProvider
+						}
+						trafficVolumeDataProvider={
+							mockTrafficVolumeDataProvider
+						}
+					/>
+				</StoreContextProvider>
 			);
 
 			await waitFor(() => {
@@ -479,34 +496,42 @@ describe('Detail', () => {
 			userEvent.click(searchVolumeLabel);
 
 			expect(getByText('commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(12300))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(12300))).toBeInTheDocument();
 
 			expect(getByText('e-commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(9800))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(9800))).toBeInTheDocument();
 
 			expect(getByText('what is commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(9500))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(9500))).toBeInTheDocument();
 
 			expect(getByText('what is e-commerce')).toBeInTheDocument();
-			expect(getByText(formatter.format(8700))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(8700))).toBeInTheDocument();
 
 			expect(
 				getByText('commerce definition for new business strategy')
 			).toBeInTheDocument();
-			expect(getByText(formatter.format(7100))).toBeInTheDocument();
+			expect(getByText(enFormatter.format(7100))).toBeInTheDocument();
 		});
 
 		it('displays the top five relevant keywords sorted by position when user clicks on the dropdown option position', async () => {
 			const {getAllByText, getByText} = render(
-				<Detail
-					currentPage={mockCurrentPageOrganic}
-					onCurrentPageChange={mockOnCurrentPageChange}
-					onTrafficSourceNameChange={mockOnTrafficSourceNameChange}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficShareDataProvider={mockTrafficShareDataProvider}
-					trafficSourcesDataProvider={mockTrafficSourcesDataProvider}
-					trafficVolumeDataProvider={mockTrafficVolumeDataProvider}
-				/>
+				<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+					<Detail
+						currentPage={mockCurrentPageOrganic}
+						onCurrentPageChange={mockOnCurrentPageChange}
+						onTrafficSourceNameChange={
+							mockOnTrafficSourceNameChange
+						}
+						timeSpanOptions={mockTimeSpanOptions}
+						trafficShareDataProvider={mockTrafficShareDataProvider}
+						trafficSourcesDataProvider={
+							mockTrafficSourcesDataProvider
+						}
+						trafficVolumeDataProvider={
+							mockTrafficVolumeDataProvider
+						}
+					/>
+				</StoreContextProvider>
 			);
 
 			await waitFor(() => {

@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Source Formatter
 Bundle-SymbolicName: com.liferay.source.formatter
-Bundle-Version: 1.0.1271
+Bundle-Version: 1.0.1352
 Import-Package:\
 	!javax.portlet,\
 	\
@@ -17,6 +17,7 @@ Main-Class: com.liferay.source.formatter.SourceFormatter
 	@com.liferay.petra.concurrent-*.jar!/com/liferay/petra/concurrent/ConcurrentMapperHashMap.class,\
 	@com.liferay.petra.concurrent-*.jar!/com/liferay/petra/concurrent/ConcurrentReferenceKeyHashMap.class,\
 	@com.liferay.petra.concurrent-*.jar!/com/liferay/petra/concurrent/ConcurrentReferenceKeyHashMap$*.class,\
+	@com.liferay.petra.function-*.jar!/com/liferay/petra/function/transform/TransformUtil.class,\
 	@com.liferay.petra.memory-*.jar!/com/liferay/petra/memory/EqualityPhantomReference.class,\
 	@com.liferay.petra.memory-*.jar!/com/liferay/petra/memory/EqualitySoftReference.class,\
 	@com.liferay.petra.memory-*.jar!/com/liferay/petra/memory/EqualityWeakReference.class,\
@@ -70,8 +71,10 @@ Main-Class: com.liferay.source.formatter.SourceFormatter
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/search/highlight/HighlightUtil.class,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/security/RandomUtil.class,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/security/SecureRandomUtil.class,\
+	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/security/auth/CompanyThreadLocal.class,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/security/xml/SecureXMLFactoryProvider.class,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/security/xml/SecureXMLFactoryProviderUtil.class,\
+	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/service/UserLocalServiceUtil.class,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/util/*,\
 	@com.liferay.portal.kernel-*.jar!/com/liferay/portal/kernel/xml/XMLSchema.class,\
 	@com.liferay.portal.tools.java.parser-*.jar!/com/liferay/portal/tools/java/parser/*.class,\

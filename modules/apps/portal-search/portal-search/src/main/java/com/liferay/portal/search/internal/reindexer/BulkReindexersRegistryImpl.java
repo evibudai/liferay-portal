@@ -1,29 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.reindexer;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.search.spi.reindexer.BulkReindexer;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * @author André de Oliveira
@@ -33,49 +22,20 @@ public class BulkReindexersRegistryImpl implements BulkReindexersRegistry {
 
 	@Override
 	public BulkReindexer getBulkReindexer(String className) {
-		return _get(className);
+		return _serviceTrackerMap.getService(className);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		service = BulkReindexer.class
-	)
-	protected void addBulkReindexer(
-		BulkReindexer bulkReindexer, Map<?, ?> properties) {
-
-		Object object = properties.get("indexer.class.name");
-
-		if (object != null) {
-			_put(object.toString(), bulkReindexer);
-		}
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, BulkReindexer.class, "indexer.class.name");
 	}
 
-	protected void removeBulkReindexer(
-		BulkReindexer bulkReindexer, Map<?, ?> properties) {
-
-		Object object = properties.get("indexer.class.name");
-
-		if (object != null) {
-			_remove(object.toString());
-		}
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
-	private synchronized BulkReindexer _get(String className) {
-		return _map.get(className);
-	}
-
-	private synchronized void _put(
-		String className, BulkReindexer bulkReindexer) {
-
-		_map.put(className, bulkReindexer);
-	}
-
-	private synchronized void _remove(String className) {
-		_map.remove(className);
-	}
-
-	private final Map<String, BulkReindexer> _map = new HashMap<>();
+	private ServiceTrackerMap<String, BulkReindexer> _serviceTrackerMap;
 
 }

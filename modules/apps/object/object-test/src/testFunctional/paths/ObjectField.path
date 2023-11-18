@@ -8,6 +8,11 @@
 <thead><tr><td rowspan="1" colspan="3">ObjectField</td></tr></thead>
 <tbody>
 	<tr>
+		<td>ANY_DROPDOWN_LABEL</td>
+		<td>//*[@class='form-group' and contains(.,'${dropdownLabel}')] //*[@class="dropdown"]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>DOCUMENT_NAME</td>
 		<td>//p[contains(@class,'card-title text-truncate')]//a</td>
 		<td></td>
@@ -39,7 +44,7 @@
 	</tr>
 	<tr>
 		<td>LABEL_LOCALIZED</td>
-		<td>//div[contains(@class,'lfr-objects__input-localized')]//input</td>
+		<td>//div[contains(@class,'input-localized')]//input</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -73,6 +78,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>MANDATORY_FIELD</td>
+		<td>//label[contains(text(),'${key_fieldName}')]/*[contains(text(),'Mandatory')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>MANDATORY_TOGGLE_DISABLED</td>
 		<td>//input[@name="required" and @disabled]</td>
 		<td></td>
@@ -95,6 +105,11 @@
 	<tr>
 		<td>REQUEST_FILES_INPUT</td>
 		<td>//label[contains(text(), 'Request Files')]/..//input[@placeholder='Choose an Option']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SELECT_FORMULA_FIELD_OPTION</td>
+		<td>//*[contains(@class,'menu show')]//button[contains(@class,'dropdown-item')]//div[text()='${key_dropdownItem}']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -174,7 +189,7 @@
 	</tr>
 	<tr>
 		<td>LABEL_DEFAULT_VALUE</td>
-		<td>//label[contains(.,'Default Value')]//..//div[contains(@aria-controls,'clay-dropdown-menu')]</td>
+		<td>//label[contains(.,'Default Value')]//..//div[contains(@class,'input-group-item')]</td>
 		<td></td>
 	</tr>
 </tbody>

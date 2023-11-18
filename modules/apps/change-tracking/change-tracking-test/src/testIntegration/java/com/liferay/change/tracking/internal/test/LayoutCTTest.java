@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.test;
@@ -25,19 +16,28 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
+import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.expando.kernel.model.ExpandoColumnConstants;
+import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -75,8 +75,8 @@ public class LayoutCTTest {
 	@Before
 	public void setUp() throws Exception {
 		_ctCollection = _ctCollectionLocalService.addCTCollection(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			LayoutCTTest.class.getName(), null);
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, LayoutCTTest.class.getName(), null);
 		_group = GroupTestUtil.addGroup();
 		_layoutClassNameId = _classNameLocalService.getClassNameId(
 			Layout.class);
@@ -239,7 +239,7 @@ public class LayoutCTTest {
 			Assert.assertEquals(
 				layout, _layoutLocalService.fetchLayout(layout.getPlid()));
 
-			layout.setFriendlyURL("/testModifyLayout");
+			layout.setFriendlyURL("/" + RandomTestUtil.randomString());
 
 			layout = _layoutLocalService.updateLayout(layout);
 
@@ -407,7 +407,7 @@ public class LayoutCTTest {
 
 			_layoutLocalService.deleteLayout(deletedLayout);
 
-			modifiedLayout.setFriendlyURL("/testModifyLayout");
+			modifiedLayout.setFriendlyURL("/" + RandomTestUtil.randomString());
 
 			_layoutLocalService.updateLayout(modifiedLayout);
 		}
@@ -532,7 +532,7 @@ public class LayoutCTTest {
 
 	@Test
 	public void testPublishLayoutWithConflictingConstraints() throws Exception {
-		String friendlyURL = "/testModifyLayout";
+		String friendlyURL = "/" + RandomTestUtil.randomString();
 
 		Layout layout1 = LayoutTestUtil.addTypePortletLayout(_group);
 
@@ -588,9 +588,9 @@ public class LayoutCTTest {
 	}
 
 	@Test
-	public void testPublishLayoutWithConflictingUpdate() throws Exception {
-		String ctFriendlyURL = "/testCTLayout";
-		String conflictingFriendlyURL = "/testConflictingLayout";
+	public void testPublishLayoutWithFriendlyURLUpdate() throws Exception {
+		String ctFriendlyURL = "/" + RandomTestUtil.randomString();
+		String newCTFriendlyURL = "/" + RandomTestUtil.randomString();
 
 		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
 
@@ -600,10 +600,10 @@ public class LayoutCTTest {
 
 			layout.setFriendlyURL(ctFriendlyURL);
 
-			_layoutLocalService.updateLayout(layout);
+			layout = _layoutLocalService.updateLayout(layout);
 		}
 
-		layout.setFriendlyURL(conflictingFriendlyURL);
+		layout.setFriendlyURL(newCTFriendlyURL);
 
 		layout = _layoutLocalService.updateLayout(layout);
 
@@ -617,24 +617,14 @@ public class LayoutCTTest {
 
 			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
-
-			LogEntry logEntry = logEntries.get(0);
-
-			Throwable throwable = logEntry.getThrowable();
-
-			Assert.assertNotNull(throwable);
-
-			String message = throwable.getMessage();
-
-			Assert.assertTrue(message, message.startsWith("Unable to publish"));
+			Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
 		}
 
 		layout = _layoutLocalService.fetchLayout(layout.getPlid());
 
 		Assert.assertNotNull(layout);
 
-		Assert.assertEquals(layout.getFriendlyURL(), conflictingFriendlyURL);
+		Assert.assertEquals(layout.getFriendlyURL(), ctFriendlyURL);
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
@@ -644,7 +634,7 @@ public class LayoutCTTest {
 
 			Assert.assertNotNull(layout);
 
-			Assert.assertEquals(layout.getFriendlyURL(), ctFriendlyURL);
+			Assert.assertEquals(layout.getFriendlyURL(), newCTFriendlyURL);
 		}
 	}
 
@@ -656,7 +646,7 @@ public class LayoutCTTest {
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection.getCtCollectionId())) {
 
-			layout.setFriendlyURL("/testModifyLayout");
+			layout.setFriendlyURL("/" + RandomTestUtil.randomString());
 
 			layout = _layoutLocalService.updateLayout(layout);
 		}
@@ -818,7 +808,7 @@ public class LayoutCTTest {
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection.getCtCollectionId())) {
 
-			layout.setFriendlyURL("/testModifyLayout");
+			layout.setFriendlyURL("/" + RandomTestUtil.randomString());
 
 			layout = _layoutLocalService.updateLayout(layout);
 		}
@@ -1014,6 +1004,64 @@ public class LayoutCTTest {
 
 				Assert.assertFalse(resultSet.next());
 			}
+		}
+	}
+
+	@Test
+	public void testUpdateLayoutWithMultiplyExpandoBridgeAttributes()
+		throws Exception {
+
+		boolean active = CacheRegistryUtil.isActive();
+
+		try {
+			CacheRegistryUtil.setActive(false);
+
+			_classNameLocalService.checkClassNames();
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(
+					UserLocalServiceUtil.getUser(TestPropsValues.getUserId())));
+
+			ExpandoBridge expandoBridge =
+				ExpandoBridgeFactoryUtil.getExpandoBridge(
+					_group.getCompanyId(), Layout.class.getName());
+
+			expandoBridge.addAttribute(
+				RandomTestUtil.randomString(), ExpandoColumnConstants.BOOLEAN);
+
+			// Ensure that this second call to addAttribute works. See
+			// LPS-183421 in LayoutLocalServiceImpl.
+
+			expandoBridge.addAttribute(
+				RandomTestUtil.randomString(), ExpandoColumnConstants.BOOLEAN);
+
+			Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+			try (SafeCloseable safeCloseable1 =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						_ctCollection.getCtCollectionId())) {
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId(), TestPropsValues.getUserId());
+
+				serviceContext.setExpandoBridgeAttributes(
+					expandoBridge.getAttributes());
+
+				_layoutLocalService.updateLayout(
+					layout.getGroupId(), layout.isPrivateLayout(),
+					layout.getLayoutId(), layout.getParentLayoutId(),
+					layout.getNameMap(), layout.getTitleMap(),
+					layout.getDescriptionMap(), layout.getKeywordsMap(),
+					layout.getRobotsMap(), layout.getType(), layout.isHidden(),
+					layout.getFriendlyURLMap(), false, null,
+					layout.getStyleBookEntryId(),
+					layout.getFaviconFileEntryId(),
+					layout.getMasterLayoutPlid(), serviceContext);
+			}
+		}
+		finally {
+			CacheRegistryUtil.setActive(active);
 		}
 	}
 

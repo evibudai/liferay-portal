@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.portlet.bridges.mvc;
@@ -73,21 +64,18 @@ public class MVCCommandCache<T extends MVCCommand> {
 				"(&(mvc.command.name=*)(|(javax.portlet.name=", portletName,
 				")(javax.portlet.name=", portletId, ")))");
 		}
+
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			SystemBundleUtil.getBundleContext(), _mvcCommandClass,
+			_filterString, _SERVICE_REFERENCE_MAPPER);
 	}
 
 	public void close() {
-		ServiceTrackerMap<String, T> serviceTrackerMap = _serviceTrackerMap;
-
-		if (serviceTrackerMap != null) {
-			serviceTrackerMap.close();
-		}
+		_serviceTrackerMap.close();
 	}
 
 	public T getMVCCommand(String mvcCommandName) {
-		ServiceTrackerMap<String, T> serviceTrackerMap =
-			_getServiceTrackerMap();
-
-		T mvcCommand = serviceTrackerMap.getService(mvcCommandName);
+		T mvcCommand = _serviceTrackerMap.getService(mvcCommandName);
 
 		if (mvcCommand != null) {
 			return mvcCommand;
@@ -129,10 +117,7 @@ public class MVCCommandCache<T extends MVCCommand> {
 	}
 
 	public Set<String> getMVCCommandNames() {
-		ServiceTrackerMap<String, T> serviceTrackerMap =
-			_getServiceTrackerMap();
-
-		return serviceTrackerMap.keySet();
+		return _serviceTrackerMap.keySet();
 	}
 
 	public List<T> getMVCCommands(String key) {
@@ -184,26 +169,6 @@ public class MVCCommandCache<T extends MVCCommand> {
 		return _mvcCommandCache.isEmpty();
 	}
 
-	private ServiceTrackerMap<String, T> _getServiceTrackerMap() {
-		ServiceTrackerMap<String, T> serviceTrackerMap = _serviceTrackerMap;
-
-		if (serviceTrackerMap == null) {
-			synchronized (this) {
-				if (_serviceTrackerMap == null) {
-					_serviceTrackerMap =
-						ServiceTrackerMapFactory.openSingleValueMap(
-							SystemBundleUtil.getBundleContext(),
-							_mvcCommandClass, _filterString,
-							_SERVICE_REFERENCE_MAPPER);
-				}
-
-				serviceTrackerMap = _serviceTrackerMap;
-			}
-		}
-
-		return serviceTrackerMap;
-	}
-
 	private static final ServiceReferenceMapper<String, MVCCommand>
 		_SERVICE_REFERENCE_MAPPER = (serviceReference, emitter) -> {
 			List<String> mvcCommandNames = StringUtil.asList(
@@ -226,6 +191,6 @@ public class MVCCommandCache<T extends MVCCommand> {
 	private final String _mvcCommandPostFix;
 	private final Map<String, List<T>> _mvcCommands = new ConcurrentHashMap<>();
 	private final String _packagePrefix;
-	private volatile ServiceTrackerMap<String, T> _serviceTrackerMap;
+	private final ServiceTrackerMap<String, T> _serviceTrackerMap;
 
 }

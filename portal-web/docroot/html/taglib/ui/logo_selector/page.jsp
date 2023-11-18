@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -56,9 +47,9 @@ else {
 	<c:when test="<%= showButtons %>">
 		<div class="taglib-logo-selector" id="<%= randomNamespace %>taglibLogoSelector">
 			<div class="taglib-logo-selector-content" id="<%= randomNamespace %>taglibLogoSelectorContent">
-				<a class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>" href="javascript:void(0);">
+				<span class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>">
 					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="current-image" />" class="avatar img-fluid mw-100" id="<%= randomNamespace %>avatar" src="<%= HtmlUtil.escape(imageURL) %>" />
-				</a>
+				</span>
 
 				<c:if test='<%= Validator.isNull(imageURL) || imageURL.contains("/spacer.png") %>'>
 					<p class="text-muted" id="<%= randomNamespace %>emptyResultMessage">
@@ -67,10 +58,14 @@ else {
 				</c:if>
 
 				<div class="mb-4 mt-3 portrait-icons">
-					<div class="btn-group button-holder">
-						<aui:button cssClass="edit-logo modify-link mr-3" value="change" />
+					<div class="btn-group">
+						<div class="btn-group-item">
+							<aui:button aria-label='<%= LanguageUtil.get(request, "change-image") %>' cssClass="edit-logo modify-link" value="change" />
+						</div>
 
-						<aui:button cssClass="delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
+						<div class="btn-group-item">
+							<aui:button aria-label='<%= LanguageUtil.get(request, "delete-image") %>' cssClass="delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
+						</div>
 					</div>
 
 					<aui:input name="deleteLogo" type="hidden" value="<%= deleteLogo %>" />

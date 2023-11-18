@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.search.spi.model.query.contributor;
@@ -20,13 +11,18 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.ParseException;
+import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.MatchQuery;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.localization.SearchLocalizationHelper;
 import com.liferay.portal.search.query.QueryHelper;
 import com.liferay.portal.search.spi.model.query.contributor.KeywordQueryContributor;
 import com.liferay.portal.search.spi.model.query.contributor.helper.KeywordQueryContributorHelper;
+
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -52,50 +48,29 @@ public class DLFileEntryKeywordQueryContributor
 			keywordQueryContributorHelper.getSearchContext();
 
 		if (Validator.isNull(keywords)) {
-			queryHelper.addSearchLocalizedTerm(
+			_queryHelper.addSearchLocalizedTerm(
 				booleanQuery, searchContext, Field.DESCRIPTION, false);
-			queryHelper.addSearchTerm(
+			_queryHelper.addSearchTerm(
 				booleanQuery, searchContext, Field.USER_NAME, false);
 		}
 
-		queryHelper.addSearchTerm(
+		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "ddmContent", false);
-		queryHelper.addSearchTerm(
+		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "extension", false);
-		queryHelper.addSearchTerm(
+		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "fileEntryTypeId", false);
-		queryHelper.addSearchLocalizedTerm(
+		_queryHelper.addSearchLocalizedTerm(
 			booleanQuery, searchContext, Field.CONTENT, false);
-		queryHelper.addSearchLocalizedTerm(
+		_queryHelper.addSearchLocalizedTerm(
 			booleanQuery, searchContext, Field.TITLE, false);
 
 		if (Validator.isNotNull(keywords)) {
 			try {
 				BooleanQuery fileNameBooleanQuery = new BooleanQueryImpl();
 
-				String exactMatch = StringUtils.substringBetween(
-					keywords, StringPool.QUOTE);
-
-				if (Validator.isNotNull(exactMatch)) {
-					String notExactKeyword = keywords.replaceFirst(
-						StringPool.QUOTE + exactMatch + StringPool.QUOTE, "");
-
-					fileNameBooleanQuery.add(
-						_getMatchQuery(
-							"fileName", exactMatch, MatchQuery.Type.PHRASE),
-						BooleanClauseOccur.MUST);
-
-					if (Validator.isNotNull(notExactKeyword)) {
-						fileNameBooleanQuery.add(
-							_getShouldBooleanQuery(notExactKeyword),
-							BooleanClauseOccur.MUST);
-					}
-				}
-				else {
-					fileNameBooleanQuery.add(
-						_getShouldBooleanQuery(keywords),
-						BooleanClauseOccur.MUST);
-				}
+				_addKeywordsToFileNameBooleanQuery(
+					fileNameBooleanQuery, keywords);
 
 				booleanQuery.add(
 					_getMatchQuery(
@@ -114,10 +89,41 @@ public class DLFileEntryKeywordQueryContributor
 				throw new SystemException(parseException);
 			}
 		}
+
+		QueryConfig queryConfig = searchContext.getQueryConfig();
+
+		queryConfig.addHighlightFieldNames(
+			_searchLocalizationHelper.getLocalizedFieldNames(
+				new String[] {Field.CONTENT, Field.TITLE}, searchContext));
 	}
 
-	@Reference
-	protected QueryHelper queryHelper;
+	private void _addKeywordsToFileNameBooleanQuery(
+			BooleanQuery fileNameBooleanQuery, String keywords)
+		throws ParseException {
+
+		String exactMatch = StringUtils.substringBetween(
+			keywords, StringPool.QUOTE);
+
+		if (Validator.isNull(exactMatch)) {
+			fileNameBooleanQuery.add(
+				_getShouldBooleanQuery(StringUtil.trim(keywords)),
+				BooleanClauseOccur.MUST);
+		}
+		else {
+			fileNameBooleanQuery.add(
+				_getMatchQuery("fileName", exactMatch, MatchQuery.Type.PHRASE),
+				BooleanClauseOccur.MUST);
+
+			String remainingKeywords = keywords.replaceFirst(
+				Pattern.quote(StringPool.QUOTE + exactMatch + StringPool.QUOTE),
+				"");
+
+			if (Validator.isNotNull(remainingKeywords)) {
+				_addKeywordsToFileNameBooleanQuery(
+					fileNameBooleanQuery, remainingKeywords);
+			}
+		}
+	}
 
 	private MatchQuery _getMatchQuery(
 		String field, String keywords, MatchQuery.Type phrase) {
@@ -142,5 +148,11 @@ public class DLFileEntryKeywordQueryContributor
 
 		return booleanQuery;
 	}
+
+	@Reference
+	private QueryHelper _queryHelper;
+
+	@Reference
+	private SearchLocalizationHelper _searchLocalizationHelper;
 
 }

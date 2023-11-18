@@ -2,14 +2,18 @@ definition {
 
 	macro assertPageTitle {
 		AssertElementPresent(
-			key_title = "${pageTitle}",
+			key_title = ${pageTitle},
 			locator1 = "Header#H1_TITLE");
 	}
 
 	macro clickBannerButton {
+		Click(locator1 = "PRMPages#VIDEO_BUTTON");
+	}
+
+	macro clickBannerLink {
 		Click(
-			key_buttonText = "${buttonText}",
-			locator1 = "PRMPages#BANNER_BUTTON");
+			key_linkText = ${linkText},
+			locator1 = "PRMPages#BANNER_LINK");
 	}
 
 	macro dismissBanner {

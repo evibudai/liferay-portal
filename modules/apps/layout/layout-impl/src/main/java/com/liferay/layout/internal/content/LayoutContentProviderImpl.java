@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.content;
@@ -21,6 +12,7 @@ import com.liferay.layout.crawler.LayoutCrawler;
 import com.liferay.layout.internal.search.util.LayoutPageTemplateStructureRenderUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,11 +21,13 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.RenderLayoutContentThreadLocal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -46,7 +40,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * @author Eudaldo Alonso
@@ -82,7 +75,9 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 				String content = StringPool.BLANK;
 
 				try {
-					content = _layoutCrawler.getLayoutContent(layout, locale);
+					LayoutCrawler layoutCrawler = _layoutCrawlerSnapshot.get();
+
+					content = layoutCrawler.getLayoutContent(layout, locale);
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
@@ -98,7 +93,11 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 			}
 
 			httpServletRequest = DynamicServletRequest.addQueryString(
-				httpServletRequest, "p_l_id=" + layout.getPlid(), false);
+				httpServletRequest,
+				StringBundler.concat(
+					"p_l_id=", layout.getPlid(), "&p_l_mode=",
+					Constants.SEARCH),
+				false);
 
 			Layout originalRequestLayout =
 				(Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
@@ -107,16 +106,26 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
+			HttpServletRequest originalThemeDisplayHttpServletRequest =
+				themeDisplay.getRequest();
+
 			Layout originalThemeDisplayLayout = themeDisplay.getLayout();
 			long originalThemeDisplayPlid = themeDisplay.getPlid();
 
 			try {
-				httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 				httpServletRequest.setAttribute(
-					WebKeys.SHOW_PORTLET_TOPPER, Boolean.TRUE);
+					WebKeys.SHOW_PORTLET_TOPPER, Boolean.FALSE);
 
-				themeDisplay.setLayout(layout);
-				themeDisplay.setPlid(layout.getPlid());
+				if ((layout != originalRequestLayout) ||
+					(layout != themeDisplay.getLayout())) {
+
+					httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
+
+					themeDisplay.setLayout(layout);
+					themeDisplay.setPlid(layout.getPlid());
+				}
+
+				themeDisplay.setRequest(httpServletRequest);
 
 				long segmentsExperienceId =
 					_segmentsExperienceLocalService.
@@ -140,15 +149,22 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 					}
 				}
 
-				return _html.stripHtml(content);
+				return _htmlParser.extractText(content);
 			}
 			finally {
-				httpServletRequest.setAttribute(
-					WebKeys.LAYOUT, originalRequestLayout);
 				httpServletRequest.removeAttribute(WebKeys.SHOW_PORTLET_TOPPER);
 
-				themeDisplay.setLayout(originalThemeDisplayLayout);
-				themeDisplay.setPlid(originalThemeDisplayPlid);
+				if ((layout != originalRequestLayout) ||
+					(layout != themeDisplay.getLayout())) {
+
+					httpServletRequest.setAttribute(
+						WebKeys.LAYOUT, originalRequestLayout);
+
+					themeDisplay.setLayout(originalThemeDisplayLayout);
+					themeDisplay.setPlid(originalThemeDisplayPlid);
+				}
+
+				themeDisplay.setRequest(originalThemeDisplayHttpServletRequest);
 			}
 		}
 		finally {
@@ -164,12 +180,14 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 			return layoutContent;
 		}
 
-		return _html.stripHtml(
+		return _htmlParser.extractText(
 			layoutContent.substring(wrapperIndex + _WRAPPER_ELEMENT.length()));
 	}
 
 	private boolean _isUseLayoutCrawler(Layout layout) {
-		if ((_layoutCrawler == null) || layout.isPrivateLayout()) {
+		LayoutCrawler layoutCrawler = _layoutCrawlerSnapshot.get();
+
+		if ((layoutCrawler == null) || layout.isPrivateLayout()) {
 			return false;
 		}
 
@@ -200,14 +218,15 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutContentProviderImpl.class);
 
+	private static final Snapshot<LayoutCrawler> _layoutCrawlerSnapshot =
+		new Snapshot<>(
+			LayoutContentProviderImpl.class, LayoutCrawler.class, null, true);
+
 	@Reference
 	private FragmentRendererController _fragmentRendererController;
 
 	@Reference
-	private Html _html;
-
-	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
-	private LayoutCrawler _layoutCrawler;
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private LayoutPageTemplateStructureLocalService

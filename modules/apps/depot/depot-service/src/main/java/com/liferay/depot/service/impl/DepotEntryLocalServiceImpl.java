@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.depot.service.impl;
@@ -55,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -128,7 +118,7 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			Role role = _roleLocalService.getRole(
 				group.getCompanyId(), DepotRolesConstants.ASSET_LIBRARY_OWNER);
 
@@ -290,11 +280,11 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 		Locale locale = LocaleUtil.fromLanguageId(
 			currentTypeSettingsUnicodeProperties.getProperty("languageId"));
 
-		Optional<String> defaultNameOptional = _getDefaultNameOptional(
-			nameMap, locale);
+		String defaultName = _getDefaultName(nameMap, locale);
 
-		defaultNameOptional.ifPresent(
-			defaultName -> nameMap.put(locale, defaultName));
+		if (defaultName != null) {
+			nameMap.put(locale, defaultName);
+		}
 
 		group = _groupLocalService.updateGroup(
 			depotEntry.getGroupId(), group.getParentGroupId(), nameMap,
@@ -309,15 +299,14 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 		return depotEntry;
 	}
 
-	private Optional<String> _getDefaultNameOptional(
+	private String _getDefaultName(
 		Map<Locale, String> nameMap, Locale defaultLocale) {
 
 		if (Validator.isNotNull(nameMap.get(defaultLocale))) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(
-			_language.get(defaultLocale, "unnamed-asset-library"));
+		return _language.get(defaultLocale, "unnamed-asset-library");
 	}
 
 	private boolean _isStaged(DepotEntry depotEntry) throws PortalException {

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -56,18 +47,13 @@ for (String portletId : PortletCategoryUtil.getFirstChildPortletIds(portletCateg
 portlets = ListUtil.sort(portlets, new PortletTitleComparator(application, locale));
 %>
 
-<liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
-</liferay-util:html-top>
-
 <c:if test="<%= !portletCategories.isEmpty() || !portlets.isEmpty() %>">
-	<liferay-ui:panel
-		collapsible="<%= true %>"
-		cssClass="lfr-content-category list-unstyled panel-page-category"
-		extended="<%= true %>"
-		title="<%= Validator.isNotNull(externalPortletCategory) ? externalPortletCategory : LanguageUtil.get(request, portletCategory.getName()) %>"
+	<clay:panel
+		collapseClassNames="panel-page-category"
+		displayTitle="<%= Validator.isNotNull(externalPortletCategory) ? externalPortletCategory : LanguageUtil.get(request, portletCategory.getName()) %>"
+		expanded="<%= true %>"
 	>
-		<div class="list-group">
+		<div class="panel-body">
 
 			<%
 			for (PortletCategory curPortletCategory : portletCategories) {
@@ -86,14 +72,17 @@ portlets = ListUtil.sort(portlets, new PortletTitleComparator(application, local
 					<div>
 						<a
 							href="<%=
-PortletURLBuilder.create(
-						PortletURLFactoryUtil.create(request, portlet.getRootPortlet(), PortletRequest.ACTION_PHASE)
-					).setPortletMode(
-						PortletMode.VIEW
-					).setWindowState(
-						WindowState.MAXIMIZED
-					).buildPortletURL() %>"><%= PortalUtil.getPortletTitle(portlet, application, locale) %></a
+								PortletURLBuilder.create(
+									PortletURLFactoryUtil.create(request, portlet.getRootPortlet(), PortletRequest.ACTION_PHASE)
+								).setPortletMode(
+									PortletMode.VIEW
+								).setWindowState(
+									WindowState.MAXIMIZED
+								).buildPortletURL()
+							%>"
 						>
+							<%= PortalUtil.getPortletTitle(portlet, application, locale) %>
+						</a>
 					</div>
 				</c:if>
 
@@ -102,5 +91,5 @@ PortletURLBuilder.create(
 			%>
 
 		</div>
-	</liferay-ui:panel>
+	</clay:panel>
 </c:if>

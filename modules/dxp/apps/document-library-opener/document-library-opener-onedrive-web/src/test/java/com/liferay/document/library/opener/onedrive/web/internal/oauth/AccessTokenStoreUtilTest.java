@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.opener.onedrive.web.internal.oauth;
@@ -18,8 +9,6 @@ import com.github.scribejava.core.model.OAuth2AccessToken;
 
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -46,10 +35,8 @@ public class AccessTokenStoreUtilTest {
 
 		AccessTokenStoreUtil.add(companyId, userId, initialAccessToken);
 
-		Optional<AccessToken> accessTokenOptional =
-			AccessTokenStoreUtil.getAccessTokenOptional(companyId, userId);
-
-		AccessToken actualAccessToken = accessTokenOptional.get();
+		AccessToken actualAccessToken = AccessTokenStoreUtil.getAccessToken(
+			companyId, userId);
 
 		Assert.assertEquals(
 			initialAccessToken.getAccessToken(),
@@ -68,19 +55,15 @@ public class AccessTokenStoreUtilTest {
 
 		AccessTokenStoreUtil.delete(companyId, userId);
 
-		Optional<AccessToken> accessTokenOptional =
-			AccessTokenStoreUtil.getAccessTokenOptional(companyId, userId);
-
-		Assert.assertTrue(!accessTokenOptional.isPresent());
+		Assert.assertNull(
+			AccessTokenStoreUtil.getAccessToken(companyId, userId));
 	}
 
 	@Test
 	public void testGetWithEmptyAccessTokenStore() {
-		Optional<AccessToken> accessTokenOptional =
-			AccessTokenStoreUtil.getAccessTokenOptional(
-				RandomTestUtil.randomInt(), RandomTestUtil.randomInt());
-
-		Assert.assertTrue(!accessTokenOptional.isPresent());
+		Assert.assertNull(
+			AccessTokenStoreUtil.getAccessToken(
+				RandomTestUtil.randomInt(), RandomTestUtil.randomInt()));
 	}
 
 }

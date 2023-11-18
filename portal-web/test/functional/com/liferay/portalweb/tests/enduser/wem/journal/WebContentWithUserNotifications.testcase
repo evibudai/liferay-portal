@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -16,7 +17,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a new user") {
@@ -46,9 +47,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -59,7 +60,7 @@ definition {
 	}
 
 	@description = "When a new user subscribes a web content they should receive an email notification when the web content has a modification."
-	@priority = "4"
+	@priority = 4
 	test ViewEditWebContentEmailNotification {
 		task ("Given a user has subscribed a web content") {
 			JSONWebcontent.addWebContent(
@@ -95,7 +96,7 @@ definition {
 	}
 
 	@description = "When a new user subscribes a folder they should receive an email notification when the folder has a modification."
-	@priority = "4"
+	@priority = 4
 	test ViewFolderEmailNotification {
 		task ("Given a user has subscribed a folder") {
 			User.logoutAndLoginPG(userLoginEmailAddress = "userea@liferay.com");
@@ -130,7 +131,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151781. When a new user subscribes a web content folder, the Granted email should show the article diffs."
-	@priority = "4"
+	@priority = 4
 	test ViewGrantedEmailNotificationWithArticleDiffs {
 		task ("Given a user has subscribed a folder with Granted Email enabled") {
 			task ("Add a folder") {
@@ -195,7 +196,7 @@ definition {
 
 				WebContent.addCP(webContentContent = "Where does it come from?");
 
-				PortletEntry.submitForPublication();
+				PortletEntry.submitForWorkflow();
 			}
 		}
 
@@ -224,7 +225,7 @@ definition {
 	}
 
 	@description = "When a new user subscribes a web content they should receive an email notification when the web content is moved to a new folder."
-	@priority = "4"
+	@priority = 4
 	test ViewMoveWebContentEmailNotification {
 		task ("Given a user has subscribed a web content") {
 			JSONWebcontent.addWebContent(

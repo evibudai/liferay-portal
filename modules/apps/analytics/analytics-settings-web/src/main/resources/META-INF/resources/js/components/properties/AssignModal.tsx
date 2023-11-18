@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -27,7 +18,13 @@ import SitesTab from './SitesTab';
 interface IAssignModalProps {
 	observer: any;
 	onCancel: () => void;
-	onSubmit: () => void;
+	onSubmit: ({
+		commerceChannelIds,
+		siteIds,
+	}: {
+		commerceChannelIds: number[];
+		siteIds: number[];
+	}) => void;
 	property: TProperty;
 }
 
@@ -48,7 +45,7 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 			{
 				commerceChannelIds: initialCommerceChannelIds,
 				siteIds: initialSiteIds,
-			} = {commerceChannelIds: [], siteIds: []},
+			},
 		],
 	} = property;
 
@@ -91,7 +88,10 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 				</ClayTabs>
 
 				<ClayTabs.Content activeIndex={activeTabKeyValue} fade>
-					<ClayTabs.TabPane aria-labelledby="tab-1">
+					<ClayTabs.TabPane
+						aria-labelledby="tab-1"
+						data-testid={ETabs.Channel}
+					>
 						<ChannelTab
 							initialIds={commerceChannelIds}
 							onChannelsChange={setCommerceChannelIds}
@@ -99,7 +99,10 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 						/>
 					</ClayTabs.TabPane>
 
-					<ClayTabs.TabPane aria-labelledby="tab-2">
+					<ClayTabs.TabPane
+						aria-labelledby="tab-2"
+						data-testid={ETabs.Sites}
+					>
 						<SitesTab
 							initialIds={siteIds}
 							onSitesChange={setSiteIds}
@@ -139,7 +142,7 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 
 								setSubmitting(false);
 
-								ok && onSubmit();
+								ok && onSubmit({commerceChannelIds, siteIds});
 							}}
 						>
 							{submitting && <Loading inline />}
@@ -153,4 +156,28 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 	);
 };
 
-export default AssignModal;
+interface IAssignModalWrapperProps {
+	observer: any;
+	onCancel: () => void;
+	onSubmit: ({
+		commerceChannelIds,
+		siteIds,
+	}: {
+		commerceChannelIds: number[];
+		siteIds: number[];
+	}) => void;
+	property: TProperty | null;
+}
+
+const AssignModalWrapper: React.FC<IAssignModalWrapperProps> = ({
+	property,
+	...otherProps
+}) => {
+	if (!property) {
+		return null;
+	}
+
+	return <AssignModal {...otherProps} property={property} />;
+};
+
+export default AssignModalWrapper;

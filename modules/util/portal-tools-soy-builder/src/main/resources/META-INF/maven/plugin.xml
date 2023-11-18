@@ -152,7 +152,7 @@
 			<groupId>com.google.template</groupId>
 			<artifactId>soy</artifactId>
 			<type>jar</type>
-			<version>2015-04-10</version>
+			<version>2019-03-07</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.inject</groupId>
@@ -242,7 +242,7 @@
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-utils</artifactId>
 			<type>jar</type>
-			<version>3.0.15</version>
+			<version>3.0.16</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sonatype.plexus</groupId>

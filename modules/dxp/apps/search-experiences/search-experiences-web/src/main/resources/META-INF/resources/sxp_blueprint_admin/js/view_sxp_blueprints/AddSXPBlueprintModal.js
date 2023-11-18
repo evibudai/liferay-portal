@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,16 +11,16 @@ import getCN from 'classnames';
 import {fetch, navigate} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import {DEFAULT_ERROR} from '../utils/constants';
 import {
 	DEFAULT_ADVANCED_CONFIGURATION,
 	DEFAULT_HIGHLIGHT_CONFIGURATION,
 	DEFAULT_PARAMETER_CONFIGURATION,
 	DEFAULT_SORT_CONFIGURATION,
 } from '../utils/data';
-import {fetchData} from '../utils/fetch';
+import {DEFAULT_ERROR} from '../utils/errorMessages';
+import fetchData, {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
+import filterAndSortClassNames from '../utils/functions/filter_and_sort_class_names';
 import {setInitialSuccessToast} from '../utils/toasts';
-import {filterAndSortClassNames} from '../utils/utils';
 
 const ADD_EVENT = 'addSXPBlueprint';
 
@@ -76,9 +70,7 @@ const AddModal = ({
 				elementInstances: [],
 				title_i18n: {[defaultLocale]: titleInputValue},
 			}),
-			headers: new Headers({
-				'Content-Type': 'application/json',
-			}),
+			headers: DEFAULT_HEADERS,
 			method: 'POST',
 		})
 			.then((response) => {
@@ -135,7 +127,7 @@ const AddModal = ({
 
 	return (
 		<ClayModal
-			className="sxp-blueprint-edit-title-modal"
+			className="sxp-add-blueprint-modal-root"
 			observer={observer}
 			size="md"
 		>

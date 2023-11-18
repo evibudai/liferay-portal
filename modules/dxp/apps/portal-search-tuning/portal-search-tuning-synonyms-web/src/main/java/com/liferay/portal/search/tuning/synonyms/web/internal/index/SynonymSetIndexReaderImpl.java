@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.index;
@@ -27,7 +18,6 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,14 +29,16 @@ import org.osgi.service.component.annotations.Reference;
 public class SynonymSetIndexReaderImpl implements SynonymSetIndexReader {
 
 	@Override
-	public Optional<SynonymSet> fetchOptional(
+	public SynonymSet fetch(
 		SynonymSetIndexName synonymSetIndexName, String id) {
 
-		return _getDocumentOptional(
-			synonymSetIndexName, id
-		).map(
-			document -> translate(document, id)
-		);
+		Document document = _getDocument(synonymSetIndexName, id);
+
+		if (document == null) {
+			return null;
+		}
+
+		return translate(document, id);
 	}
 
 	@Override
@@ -81,11 +73,11 @@ public class SynonymSetIndexReaderImpl implements SynonymSetIndexReader {
 		return _documentToSynonymSetTranslator.translate(document, id);
 	}
 
-	private Optional<Document> _getDocumentOptional(
+	private Document _getDocument(
 		SynonymSetIndexName synonymSetIndexName, String id) {
 
 		if (Validator.isNull(id)) {
-			return Optional.empty();
+			return null;
 		}
 
 		GetDocumentRequest getDocumentRequest = new GetDocumentRequest(
@@ -98,11 +90,11 @@ public class SynonymSetIndexReaderImpl implements SynonymSetIndexReader {
 		GetDocumentResponse getDocumentResponse = _searchEngineAdapter.execute(
 			getDocumentRequest);
 
-		if (getDocumentResponse.isExists()) {
-			return Optional.of(getDocumentResponse.getDocument());
+		if (!getDocumentResponse.isExists()) {
+			return null;
 		}
 
-		return Optional.empty();
+		return getDocumentResponse.getDocument();
 	}
 
 	private static final int _SIZE = 10000;

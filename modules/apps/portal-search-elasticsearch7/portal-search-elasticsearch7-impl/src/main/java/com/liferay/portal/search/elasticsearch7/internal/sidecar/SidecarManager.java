@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.sidecar;
@@ -31,22 +22,15 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.Elasticsearc
 import com.liferay.portal.search.elasticsearch7.internal.connection.constants.ConnectionConstants;
 import com.liferay.portal.search.elasticsearch7.internal.index.constants.SidecarVersionConstants;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
-import com.liferay.portal.search.elasticsearch7.settings.SettingsContributor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Tina Tian
@@ -79,18 +63,6 @@ public class SidecarManager implements ElasticsearchConfigurationObserver {
 		applyConfigurations();
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(operation.mode=SIDECAR)"
-	)
-	protected void addSettingsContributor(
-		SettingsContributor settingsContributor) {
-
-		_settingsContributors.add(settingsContributor);
-	}
-
 	protected void applyConfigurations() {
 		if (operationModeResolver.isProductionModeEnabled()) {
 			elasticsearchConnectionManager.removeElasticsearchConnection(
@@ -118,8 +90,7 @@ public class SidecarManager implements ElasticsearchConfigurationObserver {
 			_sidecar = new Sidecar(
 				clusterExecutor, elasticsearchConfigurationWrapper,
 				_getElasticsearchInstancePaths(), processExecutor,
-				new ProcessExecutorPathsImpl(props), _settingsContributors,
-				this);
+				new ProcessExecutorPathsImpl(props), this);
 
 			ElasticsearchConnectionBuilder elasticsearchConnectionBuilder =
 				new ElasticsearchConnectionBuilder();
@@ -128,6 +99,10 @@ public class SidecarManager implements ElasticsearchConfigurationObserver {
 				true
 			).connectionId(
 				ConnectionConstants.SIDECAR_CONNECTION_ID
+			).maxConnections(
+				elasticsearchConfigurationWrapper.maxConnections()
+			).maxConnectionsPerRoute(
+				elasticsearchConfigurationWrapper.maxConnectionsPerRoute()
 			).postCloseRunnable(
 				_sidecar::stop
 			).preConnectElasticsearchConnectionConsumer(
@@ -153,12 +128,6 @@ public class SidecarManager implements ElasticsearchConfigurationObserver {
 
 	protected boolean isStartupSuccessful() {
 		return _startupSuccessful;
-	}
-
-	protected void removeSettingsContributor(
-		SettingsContributor settingsContributor) {
-
-		_settingsContributors.remove(settingsContributor);
 	}
 
 	@Reference
@@ -222,8 +191,6 @@ public class SidecarManager implements ElasticsearchConfigurationObserver {
 
 	private static final Log _log = LogFactoryUtil.getLog(SidecarManager.class);
 
-	private final Set<SettingsContributor> _settingsContributors =
-		new ConcurrentSkipListSet<>();
 	private Sidecar _sidecar;
 	private boolean _startupSuccessful;
 

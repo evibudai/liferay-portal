@@ -81,11 +81,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FILTER_CLEAR_ALL</td>
-	<td>//span[contains(text(),'Clear All')] | //button[contains(text(),'Clear All')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>PERFORMANCE_COMPLETED_ITEMS_BY_STATUS</td>
 	<td>//div[@class='header'][span[contains(text(),'${key_status}')]]/following-sibling::div[1]</td>
 	<td></td>
@@ -107,17 +102,17 @@
 </tr>
 <tr>
 	<td>PERFORMANCE_TOTAL_OVERDUE_ITEMS_VALUE</td>
-	<td>//div[@class='header'][span[contains(text(),'Overdue')]]/following-sibling::div</td>
+	<td>//div[@class='header'][span[contains(text(),'Overdue')]]//..//div[@class='body']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PERFORMANCE_TOTAL_ONTIME_ITEMS_VALUE</td>
-	<td>//div[@class='header'][span[contains(text(),'On Time')]]/following-sibling::div</td>
+	<td>//div[@class='header'][span[contains(text(),'On Time')]]//..//div[@class='body']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PERFORMANCE_TOTAL_UNTRACKED_ITEMS_VALUE</td>
-	<td>//div[@class='header'][span[contains(text(),'Untracked')]]/following-sibling::div</td>
+	<td>//div[@class='header'][span[contains(text(),'Untracked')]]//..//div[@class='body']</td>
 	<td></td>
 </tr>
 <tr>
@@ -322,7 +317,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_EMPTY_STATE</td>
-	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@class, 'panel-header')]/following-sibling::div//p[contains(.,'There is no data at the moment')]</td>
+	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@class, 'panel-header')]/following-sibling::div//div[contains(@class,'c-empty-state-text')][normalize-space(text())='There is no data at the moment.']</td>
 	<td></td>
 </tr>
 <tr>
@@ -338,11 +333,6 @@
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK_NEW_LANGUAGE</td>
 	<td>//a//span[contains(text(), '${key_newLangText} (${key_assigneesNumber})')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_NO_RESULTS</td>
-	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@class, 'panel-header')]/following-sibling::div//p[contains(.,'No results were found.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -407,7 +397,7 @@
 </tr>
 <tr>
 	<td>METRICS_WORKLOAD_BY_ASSIGNEE_CARD_EMPTY_MESSAGE</td>
-	<td>//div[contains(@class, 'panel-body')]//div[contains(@class, 'empty-message')] | //div[contains(@class, 'panel-body')]//p[contains(@class, 'small')]</td>
+	<td>//div[contains(@class, 'panel-body')]//div[contains(@class, 'c-empty-state-text')] | //div[contains(@class, 'panel-body')]//p[contains(@class, 'small')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -538,11 +528,6 @@
 <tr>
 	<td>KEBAB_BUTTON_DISABLED</td>
 	<td>//button[contains(@class,'dropdown-toggle component-action') and @disabled]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEARCH_FIELD_MAPPINGS_HEADER</td>
-	<td>//span[contains(text(),'Field Mappings')]</td>
 	<td></td>
 </tr>
 <tr>

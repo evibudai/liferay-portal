@@ -30,7 +30,6 @@ exports[`DigitalSignature renders 1`] = `
                   class="dropdown-toggle nav-link btn btn-unstyled"
                   disabled=""
                   id="filter-and-order"
-                  style=""
                   type="button"
                 >
                   <span
@@ -182,20 +181,42 @@ exports[`DigitalSignature renders 1`] = `
         </div>
       </nav>
       <div
-        class="taglib-empty-result-message"
+        class="c-empty-state c-empty-state-animation"
       >
         <div
-          class="text-center"
+          class="c-empty-state-image"
         >
           <div
-            class="taglib-empty-state"
-          />
-          <h1
-            class="taglib-empty-result-message-title"
+            class="c-empty-state-aspect-ratio"
           >
-            there-are-no-entries
-          </h1>
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
+              src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
+            />
+          </div>
         </div>
+        <div
+          class="c-empty-state-title"
+        >
+          <span
+            class="text-truncate-inline"
+          >
+            <span
+              class="text-truncate"
+            >
+              there-are-no-entries
+            </span>
+          </span>
+        </div>
+        <div
+          class="c-empty-state-text"
+        />
       </div>
     </div>
   </div>

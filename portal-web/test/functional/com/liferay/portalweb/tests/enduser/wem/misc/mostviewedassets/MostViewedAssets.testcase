@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Asset Publisher,Most Viewed Assets";
@@ -14,14 +15,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +31,7 @@ definition {
 	}
 
 	@description = "The assets should be ordered by view counts in Most Viewed Assets widget."
-	@priority = "4"
+	@priority = 4
 	test ViewMostViewedAsset {
 		task ("Add two widget pages") {
 			for (var i : list "1,2") {
@@ -83,9 +84,9 @@ definition {
 		}
 
 		task ("View first web content three times") {
-			var count = "0";
+			var count = 0;
 
-			while ("${count}" != "3") {
+			while (${count} != 3) {
 				Navigator.gotoSitePage(
 					pageName = "Test Page Name 2",
 					siteName = "Test Site Name");
@@ -113,9 +114,9 @@ definition {
 		}
 
 		task ("View second web content five times") {
-			var count = "0";
+			var count = 0;
 
-			while ("${count}" != "5") {
+			while (${count} != 5) {
 				Navigator.gotoSitePage(
 					pageName = "Test Page Name 2",
 					siteName = "Test Site Name");

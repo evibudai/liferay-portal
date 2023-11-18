@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.custom.facet.display.context.builder;
@@ -21,15 +12,16 @@ import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
-import com.liferay.portal.search.web.internal.util.SearchStringUtil;
+import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -73,11 +65,9 @@ public class CustomFacetDisplayContextBuilder {
 	}
 
 	public CustomFacetDisplayContextBuilder setCustomDisplayCaption(
-		Optional<String> customDisplayCaptionOptional) {
+		String customDisplayCaption) {
 
-		customDisplayCaptionOptional.ifPresent(
-			customDisplayCaption ->
-				_customDisplayCaption = customDisplayCaption);
+		_customDisplayCaption = customDisplayCaption;
 
 		return this;
 	}
@@ -118,6 +108,12 @@ public class CustomFacetDisplayContextBuilder {
 		return this;
 	}
 
+	public CustomFacetDisplayContextBuilder setOrder(String order) {
+		_order = order;
+
+		return this;
+	}
+
 	public CustomFacetDisplayContextBuilder setPaginationStartParameterName(
 		String paginationStartParameterName) {
 
@@ -148,22 +144,29 @@ public class CustomFacetDisplayContextBuilder {
 	}
 
 	public CustomFacetDisplayContextBuilder setParameterValues(
-		Optional<List<String>> parameterValuesOptional) {
+		String[] parameterValues) {
 
-		parameterValuesOptional.ifPresent(
-			parameterValues -> _parameterValues = parameterValues);
+		if (parameterValues != null) {
+			_parameterValues = Arrays.asList(parameterValues);
+		}
 
 		return this;
 	}
 
 	protected String getDisplayCaption() {
-		Optional<String> optional1 = SearchStringUtil.maybe(
-			_customDisplayCaption);
+		String customDisplayCaption = StringUtil.trim(_customDisplayCaption);
 
-		Optional<String> optional2 = SearchStringUtil.maybe(
-			optional1.orElse(_fieldToAggregate));
+		if (Validator.isNotNull(customDisplayCaption)) {
+			return customDisplayCaption;
+		}
 
-		return optional2.orElse("custom");
+		String fieldToAggregate = StringUtil.trim(_fieldToAggregate);
+
+		if (Validator.isNotNull(fieldToAggregate)) {
+			return fieldToAggregate;
+		}
+
+		return "custom";
 	}
 
 	protected List<TermCollector> getTermCollectors() {
@@ -235,6 +238,12 @@ public class CustomFacetDisplayContextBuilder {
 				_buildBucketDisplayContext(termCollector));
 		}
 
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
+		}
+
 		return bucketDisplayContexts;
 	}
 
@@ -269,6 +278,7 @@ public class CustomFacetDisplayContextBuilder {
 	private int _frequencyThreshold;
 	private final HttpServletRequest _httpServletRequest;
 	private int _maxTerms;
+	private String _order;
 	private String _paginationStartParameterName;
 	private String _parameterName;
 	private List<String> _parameterValues = Collections.emptyList();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.exportimport.service.impl;
@@ -27,6 +18,8 @@ import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.MissingReferences;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
+import com.liferay.exportimport.kernel.service.ExportImportLocalService;
 import com.liferay.exportimport.kernel.staging.StagingURLHelperUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
@@ -533,25 +526,25 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 					ExportImportConfigurationConstants.
 						TYPE_PUBLISH_PORTLET_REMOTE) {
 
-				exportImportLocalService.importPortletDataDeletions(
+				_exportImportLocalService.importPortletDataDeletions(
 					exportImportConfiguration, file);
 
 				missingReferences =
-					exportImportLocalService.validateImportPortletInfo(
+					_exportImportLocalService.validateImportPortletInfo(
 						exportImportConfiguration, file);
 
-				exportImportLocalService.importPortletInfo(
+				_exportImportLocalService.importPortletInfo(
 					exportImportConfiguration, file);
 			}
 			else {
-				exportImportLocalService.importLayoutsDataDeletions(
+				_exportImportLocalService.importLayoutsDataDeletions(
 					exportImportConfiguration, file);
 
 				missingReferences =
-					exportImportLocalService.validateImportLayoutsFile(
+					_exportImportLocalService.validateImportLayoutsFile(
 						exportImportConfiguration, file);
 
-				exportImportLocalService.importLayouts(
+				_exportImportLocalService.importLayouts(
 					exportImportConfiguration, file);
 			}
 
@@ -1075,8 +1068,8 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		}
 
 		List<ExportImportConfiguration> exportImportConfigurations =
-			exportImportConfigurationLocalService.getExportImportConfigurations(
-				groupId, configurationType);
+			_exportImportConfigurationLocalService.
+				getExportImportConfigurations(groupId, configurationType);
 
 		for (ExportImportConfiguration exportImportConfiguration :
 				exportImportConfigurations) {
@@ -1098,7 +1091,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			exportImportConfiguration.setSettings(
 				JSONFactoryUtil.serialize(settingsMap));
 
-			exportImportConfigurationLocalService.
+			_exportImportConfigurationLocalService.
 				updateExportImportConfiguration(exportImportConfiguration);
 		}
 	}
@@ -1270,6 +1263,13 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StagingLocalServiceImpl.class);
+
+	@BeanReference(type = ExportImportConfigurationLocalService.class)
+	private ExportImportConfigurationLocalService
+		_exportImportConfigurationLocalService;
+
+	@BeanReference(type = ExportImportLocalService.class)
+	private ExportImportLocalService _exportImportLocalService;
 
 	@BeanReference(type = GroupLocalService.class)
 	private GroupLocalService _groupLocalService;

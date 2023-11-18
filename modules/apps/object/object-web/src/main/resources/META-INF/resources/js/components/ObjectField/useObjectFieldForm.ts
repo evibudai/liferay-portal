@@ -1,20 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {invalidateRequired, useForm} from '@liferay/object-js-components-web';
+import {
+	REQUIRED_MSG,
+	invalidateRequired,
+	openToast,
+	useForm,
+} from '@liferay/object-js-components-web';
 import {sub} from 'frontend-js-web';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {normalizeFieldSettings} from '../../utils/fieldSettings';
 import {ObjectFieldErrors} from './ObjectFieldFormBase';
 
@@ -25,9 +22,6 @@ interface IUseObjectFieldForm {
 	initialValues: Partial<ObjectField>;
 	onSubmit: (field: ObjectField) => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-const REQUIRED_MSG = Liferay.Language.get('required');
 
 export function useObjectFieldForm({
 	forbiddenChars,
@@ -131,7 +125,9 @@ export function useObjectFieldForm({
 			if (!settings.maximumFileSize && settings.maximumFileSize !== 0) {
 				errors.maximumFileSize = REQUIRED_MSG;
 			}
-			else if (settings.maximumFileSize > uploadRequestSizeLimit) {
+			else if (
+				(settings.maximumFileSize as number) > uploadRequestSizeLimit
+			) {
 				errors.maximumFileSize = sub(
 					Liferay.Language.get(
 						'file-size-is-larger-than-the-allowed-overall-maximum-upload-request-size-x-mb'
@@ -139,7 +135,7 @@ export function useObjectFieldForm({
 					uploadRequestSizeLimit
 				);
 			}
-			else if (settings.maximumFileSize < 0) {
+			else if ((settings.maximumFileSize as number) < 0) {
 				errors.maximumFileSize = sub(
 					Liferay.Language.get(
 						'only-integers-greater-than-or-equal-to-x-are-allowed'
@@ -185,22 +181,56 @@ export function useObjectFieldForm({
 				errors.listTypeDefinitionId = REQUIRED_MSG;
 			}
 
-			if (field.state && !field.defaultValue) {
-				errors.defaultValue = REQUIRED_MSG;
+			const thereIsDefaultValueType = field.objectFieldSettings?.some(
+				(setting) =>
+					setting.name === 'defaultValueType' && setting.value
+			);
+
+			const thereIsDefaultValue = field.objectFieldSettings?.some(
+				(setting) => setting.name === 'defaultValue' && setting.value
+			);
+
+			if (!field.id) {
+				if (field.state && !thereIsDefaultValue) {
+					errors.defaultValue = REQUIRED_MSG;
+
+					openToast({
+						message: Liferay.Language.get(
+							'please-fill-out-all-required-fields'
+						),
+						type: 'danger',
+					});
+				}
+			}
+			else {
+				if (thereIsDefaultValueType && !thereIsDefaultValue) {
+					errors.defaultValue = REQUIRED_MSG;
+				}
 			}
 		}
 
 		return errors;
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} = useForm<
-		ObjectField,
-		{[key in ObjectFieldSettingName]: unknown}
-	>({
+	const {
+		errors,
+		handleChange,
+		handleSubmit,
+		handleValidate,
+		setValues,
+		values,
+	} = useForm<ObjectField, {[key in ObjectFieldSettingName]: unknown}>({
 		initialValues,
 		onSubmit,
 		validate,
 	});
 
-	return {errors, handleChange, handleSubmit, setValues, values};
+	return {
+		errors,
+		handleChange,
+		handleSubmit,
+		handleValidate,
+		setValues,
+		values,
+	};
 }

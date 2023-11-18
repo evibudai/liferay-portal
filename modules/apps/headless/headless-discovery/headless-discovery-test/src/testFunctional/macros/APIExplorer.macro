@@ -10,50 +10,116 @@ definition {
 		Type(
 			locator1 = "OpenAPI#HEADER_PARAMETER",
 			name = "key",
-			value1 = "${headerKey}");
+			value1 = ${headerKey});
 
 		Type(
 			locator1 = "OpenAPI#HEADER_PARAMETER",
 			name = "value",
-			value1 = "${headerValue}");
+			value1 = ${headerValue});
 
 		Button.clickSave();
 	}
 
-	macro executeAPIMethodWithParameters {
-		Variables.assertDefined(parameterList = "${service},${method},${parameter}");
+	macro assertExposedActionsInSchema {
+		Variables.assertDefined(parameterList = "${schema},${property},${method},${objectHref}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		AssertTextEquals(
+			field = "actions",
+			locator1 = "OpenAPI#SCHEMA_PROPERTY",
+			property = ${property},
+			schema = ${schema},
+			value1 = "${property} { method string default: ${method} href string default: ${portalURL}/o/${objectHref} }");
+	}
+
+	macro assertSchemaFieldsPresent {
+		Variables.assertDefined(parameterList = "${schemaEntity},${schemaFields}");
 
 		Click(
-			locator1 = "OpenAPI#API_METHOD",
-			method = "${method}",
-			service = "${service}");
+			locator1 = "OpenAPI#SCHEMA_COLLAPSED",
+			schema = ${schemaEntity});
 
-		if ("${parameter}" == "siteId") {
-			if (!(isSet(groupName))) {
-				var groupName = "Guest";
+		for (var schemaField : list ${schemaFields}) {
+			AssertElementPresent(
+				field = ${schemaField},
+				locator1 = "OpenAPI#SCHEMA_FIELD",
+				schema = ${schemaEntity});
+		}
+	}
+
+	macro executeAllActionInSchema {
+		Variables.assertDefined(parameterList = "${schema},${actionsList}");
+
+		Click(
+			locator1 = "OpenAPI#SCHEMA_COLLAPSED",
+			schema = ${schema});
+
+		Click(
+			field = "actions",
+			locator1 = "OpenAPI#SCHEMA_FIELD_COLLAPSED",
+			schema = ${schema});
+
+		for (var property : list ${actionsList}) {
+			Click(
+				field = "actions",
+				locator1 = "OpenAPI#SCHEMA_PROPERTY_COLLAPSED",
+				property = ${property},
+				schema = ${schema});
+		}
+	}
+
+	macro executeAPIMethod {
+		Variables.assertDefined(parameterList = "${service},${method}");
+
+		APIExplorer.expandAPIMethod(
+			method = ${method},
+			service = ${service});
+
+		if (isSet(parameter)) {
+			if (${parameter} == "siteId") {
+				if (!(isSet(groupName))) {
+					var groupName = "Guest";
+				}
+
+				var value = JSONGroupAPI._getGroupIdByNameNoSelenium(
+					groupName = ${groupName},
+					site = "true");
 			}
 
-			var value = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "${groupName}",
-				site = "true");
-		}
+			Type(
+				locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
+				method = ${method},
+				parameter = ${parameter},
+				value1 = ${value});
 
-		Type(
-			locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
-			method = "${method}",
-			parameter = "${parameter}",
-			value1 = "${value}");
+			if (isSet(parameter_two)) {
+				Type(
+					locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
+					method = ${method},
+					parameter = ${parameter_two},
+					value1 = ${value_two});
+			}
+
+			if (isSet(scopeKey)) {
+				Type(
+					locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
+					method = ${method},
+					parameter = "scopeKey",
+					value1 = ${scopeKey});
+			}
+		}
 
 		if (isSet(requestBody)) {
 			Type(
 				locator1 = "OpenAPI#REQUEST_BODY",
-				method = "${method}",
-				value1 = "${requestBody}");
+				method = ${method},
+				value1 = ${requestBody});
 		}
 
 		Click(
 			locator1 = "Button#EXECUTE",
-			method = "${method}");
+			method = ${method});
 	}
 
 	macro executeGraphqlQuery {
@@ -67,21 +133,68 @@ definition {
 			editor = "query-editor",
 			locator1 = "OpenAPI#GRAPHQL_EDITOR_LINE");
 
-		RobotType.robotTypeShortcut(locator1 = "Ctrl + a");
+		Type.sendKeys(
+			locator1 = "//body",
+			value1 = "keys=CONTROL,a");
 
-		RobotType(locator1 = "${query}");
+		Type.typeCodeMirrorEditorNoError(
+			locator1 = "OpenAPI#GRAPHQL_EDITOR",
+			value1 = ${query});
 
 		Click(
 			locator1 = "Button#BUTTON_WITH_VALUE",
 			value = "Execute Query (Ctrl-Enter)");
 	}
 
+	macro expandAPIMethod {
+		Variables.assertDefined(parameterList = "${service},${method}");
+
+		Click(
+			locator1 = "OpenAPI#API_METHOD",
+			method = ${method},
+			service = ${service});
+	}
+
+	macro expandPropertyInActionsSchema {
+		Variables.assertDefined(parameterList = "${schema},${property}");
+
+		Click(
+			locator1 = "OpenAPI#SCHEMA_COLLAPSED",
+			schema = ${schema});
+
+		Click(
+			field = "actions",
+			locator1 = "OpenAPI#SCHEMA_FIELD_COLLAPSED",
+			schema = ${schema});
+
+		Click(
+			field = "actions",
+			locator1 = "OpenAPI#SCHEMA_PROPERTY_COLLAPSED",
+			property = ${property},
+			schema = ${schema});
+	}
+
 	macro navigateToOpenAPI {
-		Variables.assertDefined(parameterList = "${api},${version}");
+		if (isSet(virtualHost)) {
+			if (!(isSet(port))) {
+				var port = 8080;
+			}
 
-		var portalURL = JSONCompany.getPortalURL();
+			var portalURL = "http://${virtualHost}:${port}";
+		}
+		else {
+			var portalURL = JSONCompany.getPortalURL();
+		}
 
-		Navigator.openSpecificURL(url = "${portalURL}/o/api?endpoint=${portalURL}/o/${api}/${version}/openapi.json");
+		if (isSet(api)) {
+			Navigator.openSpecificURL(url = "${portalURL}/o/api?endpoint=${portalURL}/o/${api}/${version}/openapi.json");
+		}
+		else if (isSet(customObjectPlural)) {
+			Navigator.openSpecificURL(url = "${portalURL}/o/api?endpoint=${portalURL}/o/c/${customObjectPlural}/openapi.json");
+		}
+		else {
+			Navigator.openSpecificURL(url = "${portalURL}/o/api");
+		}
 	}
 
 }

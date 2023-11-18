@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.events;
@@ -74,14 +65,13 @@ public class SegmentsServicePreAction extends Action {
 	private long[] _getSegmentsExperienceIds(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long groupId, long userId,
-		long classNameId, long classPK) {
+		long plid) {
 
 		try {
 			long[] segmentsExperienceIds =
 				_segmentsExperienceRequestProcessorRegistry.
 					getSegmentsExperienceIds(
-						httpServletRequest, httpServletResponse, groupId,
-						classNameId, classPK);
+						httpServletRequest, httpServletResponse, groupId, plid);
 
 			Set<Long> segmentsExperienceIdsSegmentsEntryIds = new HashSet<>();
 
@@ -90,8 +80,15 @@ public class SegmentsServicePreAction extends Action {
 					_segmentsExperienceLocalService.fetchSegmentsExperience(
 						segmentsExperienceId);
 
-				segmentsExperienceIdsSegmentsEntryIds.add(
-					segmentsExperience.getSegmentsEntryId());
+				if (segmentsExperience != null) {
+					segmentsExperienceIdsSegmentsEntryIds.add(
+						segmentsExperience.getSegmentsEntryId());
+				}
+				else if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to get segments experience " +
+							segmentsExperienceId);
+				}
 			}
 
 			long[] cachedSegmentsEntryIds =
@@ -117,8 +114,8 @@ public class SegmentsServicePreAction extends Action {
 
 			return _segmentsExperienceRequestProcessorRegistry.
 				getSegmentsExperienceIds(
-					httpServletRequest, httpServletResponse, groupId,
-					classNameId, classPK, segmentsEntryIds);
+					httpServletRequest, httpServletResponse, groupId, plid,
+					segmentsEntryIds);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
@@ -128,7 +125,7 @@ public class SegmentsServicePreAction extends Action {
 
 		return new long[] {
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				classPK)
+				plid)
 		};
 	}
 
@@ -156,9 +153,7 @@ public class SegmentsServicePreAction extends Action {
 			SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS,
 			_getSegmentsExperienceIds(
 				httpServletRequest, httpServletResponse, layout.getGroupId(),
-				themeDisplay.getUserId(),
-				_portal.getClassNameId(Layout.class.getName()),
-				layout.getPlid()));
+				themeDisplay.getUserId(), layout.getPlid()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

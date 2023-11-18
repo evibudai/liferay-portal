@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.checkstyle.check;
@@ -57,6 +48,16 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 
 		for (DetailAST curDetailAST : detailASTList) {
 			_checkReferenceAnnotation(curDetailAST);
+		}
+	}
+
+	private void _checkCardinality(
+		DetailAST annotationDetailAST, String cardinalityName) {
+
+		if ((cardinalityName != null) &&
+			cardinalityName.endsWith(_CARDINALITY_OPTIONAL)) {
+
+			log(annotationDetailAST, _MSG_USE_SNAPSHOT);
 		}
 	}
 
@@ -110,16 +111,10 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 	}
 
 	private void _checkDynamicOption(
-		DetailAST annotationDetailAST, String policyName) {
+		DetailAST annotationDetailAST, String cardinalityName,
+		String policyName) {
 
-		if (policyName.endsWith(_POLICY_DYNAMIC)) {
-			return;
-		}
-
-		String cardinalityName = _getAnnotationMemberValue(
-			annotationDetailAST, "cardinality", null);
-
-		if ((cardinalityName == null) ||
+		if (policyName.endsWith(_POLICY_DYNAMIC) || (cardinalityName == null) ||
 			!cardinalityName.endsWith(_CARDINALITY_OPTIONAL)) {
 
 			return;
@@ -145,10 +140,19 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 			return;
 		}
 
+		String cardinalityName = _getAnnotationMemberValue(
+			annotationDetailAST, "cardinality", null);
+
+		if (isAttributeValue(_CHECK_REFERENCE_CARDINALITY_OPTIONAL_KEY)) {
+			_checkCardinality(annotationDetailAST, cardinalityName);
+		}
+
 		String policyName = _getAnnotationMemberValue(
 			annotationDetailAST, "policy", _POLICY_STATIC);
 
-		_checkDynamicOption(annotationDetailAST, policyName);
+		_checkDynamicOption(annotationDetailAST, cardinalityName, policyName);
+
+		_checkTarget(annotationDetailAST);
 
 		if (detailAST.getType() == TokenTypes.VARIABLE_DEF) {
 			_checkVolatileVariable(detailAST, policyName);
@@ -180,8 +184,6 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 				classDefinitionDetailAST, detailAST, methodName,
 				defaultUnbindMethodName);
 		}
-
-		_checkTarget(annotationDetailAST);
 	}
 
 	private void _checkTarget(DetailAST annotationDetailAST) {
@@ -336,6 +338,9 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 
 	private static final String _CARDINALITY_OPTIONAL = "OPTIONAL";
 
+	private static final String _CHECK_REFERENCE_CARDINALITY_OPTIONAL_KEY =
+		"checkReferenceCardinalityOptional";
+
 	private static final String _FORBIDDEN_REFERENCE_TARGET_VALUES =
 		"forbiddenReferenceTargetValues";
 
@@ -357,6 +362,8 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 
 	private static final String _MSG_REDUNDANT_DEFAULT_UNBIND =
 		"default.unbind.redundant";
+
+	private static final String _MSG_USE_SNAPSHOT = "snapshot.use";
 
 	private static final String _NO_UNBIND = "\"-\"";
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -225,77 +216,98 @@ public class ObjectStateFlowModelImpl
 	public Map<String, Function<ObjectStateFlow, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ObjectStateFlow, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ObjectStateFlow, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ObjectStateFlow, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ObjectStateFlow, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<ObjectStateFlow, Object>>();
-		Map<String, BiConsumer<ObjectStateFlow, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ObjectStateFlow, ?>>();
+		private static final Map<String, Function<ObjectStateFlow, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ObjectStateFlow::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ObjectStateFlow, Long>)ObjectStateFlow::setMvccVersion);
-		attributeGetterFunctions.put("uuid", ObjectStateFlow::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<ObjectStateFlow, String>)ObjectStateFlow::setUuid);
-		attributeGetterFunctions.put(
-			"objectStateFlowId", ObjectStateFlow::getObjectStateFlowId);
-		attributeSetterBiConsumers.put(
-			"objectStateFlowId",
-			(BiConsumer<ObjectStateFlow, Long>)
-				ObjectStateFlow::setObjectStateFlowId);
-		attributeGetterFunctions.put(
-			"companyId", ObjectStateFlow::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ObjectStateFlow, Long>)ObjectStateFlow::setCompanyId);
-		attributeGetterFunctions.put("userId", ObjectStateFlow::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<ObjectStateFlow, Long>)ObjectStateFlow::setUserId);
-		attributeGetterFunctions.put("userName", ObjectStateFlow::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<ObjectStateFlow, String>)ObjectStateFlow::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", ObjectStateFlow::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<ObjectStateFlow, Date>)ObjectStateFlow::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", ObjectStateFlow::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ObjectStateFlow, Date>)
-				ObjectStateFlow::setModifiedDate);
-		attributeGetterFunctions.put(
-			"objectFieldId", ObjectStateFlow::getObjectFieldId);
-		attributeSetterBiConsumers.put(
-			"objectFieldId",
-			(BiConsumer<ObjectStateFlow, Long>)
-				ObjectStateFlow::setObjectFieldId);
+		static {
+			Map<String, Function<ObjectStateFlow, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ObjectStateFlow, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ObjectStateFlow::getMvccVersion);
+			attributeGetterFunctions.put("uuid", ObjectStateFlow::getUuid);
+			attributeGetterFunctions.put(
+				"objectStateFlowId", ObjectStateFlow::getObjectStateFlowId);
+			attributeGetterFunctions.put(
+				"companyId", ObjectStateFlow::getCompanyId);
+			attributeGetterFunctions.put("userId", ObjectStateFlow::getUserId);
+			attributeGetterFunctions.put(
+				"userName", ObjectStateFlow::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", ObjectStateFlow::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", ObjectStateFlow::getModifiedDate);
+			attributeGetterFunctions.put(
+				"objectFieldId", ObjectStateFlow::getObjectFieldId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ObjectStateFlow, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ObjectStateFlow, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ObjectStateFlow, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ObjectStateFlow, Long>)
+					ObjectStateFlow::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<ObjectStateFlow, String>)ObjectStateFlow::setUuid);
+			attributeSetterBiConsumers.put(
+				"objectStateFlowId",
+				(BiConsumer<ObjectStateFlow, Long>)
+					ObjectStateFlow::setObjectStateFlowId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ObjectStateFlow, Long>)
+					ObjectStateFlow::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<ObjectStateFlow, Long>)ObjectStateFlow::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<ObjectStateFlow, String>)
+					ObjectStateFlow::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<ObjectStateFlow, Date>)
+					ObjectStateFlow::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ObjectStateFlow, Date>)
+					ObjectStateFlow::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"objectFieldId",
+				(BiConsumer<ObjectStateFlow, Long>)
+					ObjectStateFlow::setObjectFieldId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -782,7 +794,8 @@ public class ObjectStateFlowModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<ObjectStateFlow, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

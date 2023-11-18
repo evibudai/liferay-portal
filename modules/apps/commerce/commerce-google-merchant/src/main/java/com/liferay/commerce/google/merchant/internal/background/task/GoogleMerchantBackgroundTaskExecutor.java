@@ -1,33 +1,39 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.google.merchant.internal.background.task;
 
-import com.liferay.commerce.google.merchant.internal.sftp.SftpUploader;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import com.liferay.commerce.google.merchant.internal.constants.CommerceGoogleMerchantConstants;
+import com.liferay.commerce.google.merchant.internal.jsch.FingerprintHostKeyRepository;
+import com.liferay.commerce.google.merchant.internal.sftp.SftpConfiguration;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import java.nio.charset.StandardCharsets;
+
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Thomas Stewart
  */
 @Component(
+	configurationPid = "com.liferay.commerce.google.merchant.internal.sftp.SftpConfiguration",
 	property = "background.task.executor.class.name=com.liferay.commerce.google.merchant.internal.background.task.GoogleMerchantBackgroundTaskExecutor",
 	service = BackgroundTaskExecutor.class
 )
@@ -46,7 +52,7 @@ public class GoogleMerchantBackgroundTaskExecutor
 		// TODO: product definition contents will be sent to the uploader once
 		// TODO: completed
 
-		_sftpUploader.upload("test.xml", "TEST");
+		_upload("test.xml", "TEST");
 
 		return BackgroundTaskResult.SUCCESS;
 	}
@@ -58,7 +64,59 @@ public class GoogleMerchantBackgroundTaskExecutor
 		return null;
 	}
 
-	@Reference
-	private SftpUploader _sftpUploader;
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		_sftpConfiguration = ConfigurableUtil.createConfigurable(
+			SftpConfiguration.class, properties);
+	}
+
+	private void _upload(String fileName, String fileContent) throws Exception {
+		ChannelSftp channelSftp = null;
+		Session jschSession = null;
+
+		try {
+			String host = _sftpConfiguration.host();
+			String password = _sftpConfiguration.password();
+			int port = _sftpConfiguration.port();
+			String username = _sftpConfiguration.username();
+
+			JSch jSch = new JSch();
+
+			FingerprintHostKeyRepository fingerprintHostKeyRepository =
+				new FingerprintHostKeyRepository(
+					jSch, _sftpConfiguration.fingerprint());
+
+			jSch.setHostKeyRepository(fingerprintHostKeyRepository);
+
+			jschSession = jSch.getSession(username, host);
+
+			jschSession.setPassword(password);
+			jschSession.setPort(port);
+
+			jschSession.connect();
+
+			channelSftp = (ChannelSftp)jschSession.openChannel(
+				CommerceGoogleMerchantConstants.JSCH_CHANNEL_SFTP);
+
+			channelSftp.connect();
+
+			InputStream inputStream = new ByteArrayInputStream(
+				fileContent.getBytes(StandardCharsets.UTF_8));
+
+			channelSftp.put(inputStream, fileName);
+		}
+		finally {
+			if (channelSftp != null) {
+				channelSftp.disconnect();
+				channelSftp.exit();
+			}
+
+			if (jschSession != null) {
+				jschSession.disconnect();
+			}
+		}
+	}
+
+	private SftpConfiguration _sftpConfiguration;
 
 }

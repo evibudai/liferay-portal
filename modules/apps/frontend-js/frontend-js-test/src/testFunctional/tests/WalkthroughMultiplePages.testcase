@@ -13,7 +13,7 @@ definition {
 		User.firstLoginPG();
 
 		task ("Given walkthrough enabled site-level") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			ApplicationsMenu.gotoSite(site = "Site Name");
 
@@ -46,9 +46,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -56,8 +56,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-159473. Assert walkthrough can navigate to the next page."
-	@priority = "5"
+	@description = "LPS-150895. Assert walkthrough can navigate to the next page."
+	@priority = 5
 	test CanNavigateToNextPage {
 		property portal.acceptance = "true";
 
@@ -72,7 +72,7 @@ definition {
 		}
 
 		task ("And When navigate to next step") {
-			Walkthrough.goToNextStep(key_step = "2");
+			Walkthrough.goToNextStep(key_step = 2);
 		}
 
 		task ("Then browser URL ends with /walkthrough-page-2") {
@@ -86,8 +86,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-159474. Assert walkthrough can navigate back to the previous page."
-	@priority = "5"
+	@description = "LPS-150895. Assert walkthrough can navigate back to the previous page."
+	@priority = 5
 	test CanNavigateToPreviousPage {
 		property portal.acceptance = "true";
 
@@ -96,7 +96,7 @@ definition {
 		task ("When on step 2") {
 			Walkthrough.enablePopoverMode();
 
-			Walkthrough.goToSpecificStep(key_step = "2");
+			Walkthrough.goToSpecificStep(key_step = 2);
 
 			VerifyElementPresent(
 				key_title = "Step 2 of 2: Enter Your Name",
@@ -104,7 +104,7 @@ definition {
 		}
 
 		task ("And When navigate to previous step") {
-			Walkthrough.goToPreviousStep(key_step = "1");
+			Walkthrough.goToPreviousStep(key_step = 1);
 		}
 
 		task ("Then browser URL ends with /walkthrough-page-1") {
@@ -118,15 +118,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-159475. Assert walkthrough can save current step when navigating through different pages."
-	@priority = "4"
+	@description = "LPS-150895. Assert walkthrough can save current step when navigating through different pages."
+	@priority = 4
 	test CurrentStepIsSavedWhenNavigatingPages {
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("When on step 2") {
 			Walkthrough.enablePopoverMode();
 
-			Walkthrough.goToSpecificStep(key_step = "2");
+			Walkthrough.goToSpecificStep(key_step = 2);
 
 			VerifyElementPresent(
 				key_title = "Step 2 of 2: Enter Your Name",
@@ -154,15 +154,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-159476. Assert walkthrough can save current step when user signs in and out."
-	@priority = "3"
+	@description = "LPS-150895. Assert walkthrough can save current step when user signs in and out."
+	@priority = 3
 	test CurrentStepIsSavedWhenUserSignsInAndOut {
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("When on step 2") {
 			Walkthrough.enablePopoverMode();
 
-			Walkthrough.goToSpecificStep(key_step = "2");
+			Walkthrough.goToSpecificStep(key_step = 2);
 
 			VerifyElementPresent(
 				key_title = "Step 2 of 2: Enter Your Name",

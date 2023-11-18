@@ -3,6 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Item Selector";
 	property testray.main.component.name = "Knowledge Base";
 
 	setUp {
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -19,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -32,7 +33,7 @@ definition {
 	}
 
 	@description = "This test ensures that the mapped author name field with KB article can be displayed on the content page."
-	@priority = "5"
+	@priority = 5
 	test CanMapAuthorNameToHeadingFragment {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Test Site Name",
@@ -74,7 +75,7 @@ definition {
 	}
 
 	@description = "This test ensures that the mapped author profile image field with KB article can be displayed on the content page."
-	@priority = "5"
+	@priority = 5
 	test CanMapAuthorProfileToImageFragment {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Test Site Name",
@@ -87,9 +88,9 @@ definition {
 
 		PortletEntry.save();
 
-		var userPortrait = selenium.getAttribute("//img[contains(@id,'avatar') and contains(@src,'image')]@src");
+		var userPortrait = selenium.getAttribute("//img[contains(@class,'logo-selector') and contains(@src,'image')]@src");
 
-		var userPortrait = StringUtil.extractLast("${userPortrait}", "image/");
+		var userPortrait = StringUtil.extractLast(${userPortrait}, "image/");
 
 		ContentPagesNavigator.openEditContentPage(
 			pageName = "Test Content Page Name",
@@ -121,12 +122,12 @@ definition {
 
 		AssertVisible(
 			fragmentId = "image-square",
-			key_authorProfileImage = "${userPortrait}",
+			key_authorProfileImage = ${userPortrait},
 			locator1 = "Fragment#FRAGMENT_AUTHOR_PROFILE_IMAGE");
 	}
 
 	@description = "This test ensures that the mapped content field with KB article can be displayed on the content page."
-	@priority = "5"
+	@priority = 5
 	test CanMapContentToHeadingFragment {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Test Site Name",
@@ -168,7 +169,7 @@ definition {
 	}
 
 	@description = "This test ensures that the mapped title field with KB article can be displayed on the content page."
-	@priority = "5"
+	@priority = 5
 	test CanMapTitleToHeadingFragment {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Test Site Name",

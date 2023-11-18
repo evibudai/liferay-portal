@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.query;
@@ -40,18 +31,13 @@ public abstract class BaseMatchPhrasePrefixQueryTestCase
 	@Test
 	public void testMatchPhrasePrefix() {
 		addDocuments(
+			value -> DocumentCreationHelpers.singleText(_FIELD_NAME, value),
 			"java eclipse", "java liferay", "liferay uses java for development",
 			"C is the best language");
 
 		assertSearch(
 			"liferay uses j",
 			Arrays.asList("liferay uses java for development"));
-	}
-
-	protected void addDocuments(String... values) {
-		addDocuments(
-			value -> DocumentCreationHelpers.singleText(_FIELD_NAME, value),
-			Arrays.asList(values));
 	}
 
 	protected void assertSearch(Object value, List<String> expectedValues) {
